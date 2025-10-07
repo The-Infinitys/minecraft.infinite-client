@@ -18,11 +18,9 @@ object InfiniteClient : ClientModInitializer {
     private val LOGGER = LoggerFactory.getLogger("InfiniteClient")
 
     override fun onInitializeClient() {
-        // ✅ Load translations before anything else
         Translation.load()
         println("[InfiniteClient] Translation system loaded.")
 
-        // --- Keybinds and features ---
         InfiniteKeyBind.registerKeybindings()
 
         for (category in featureCategories) {

@@ -7,5 +7,7 @@ object Translation {
         LanguageLoader.load()
     }
 
-    fun t(key: String): String = LanguageLoader.translate(key)
+    fun t(key: String): String {
+        return LanguageLoader.translate(key)
+    }
 }

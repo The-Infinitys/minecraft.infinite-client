@@ -6,7 +6,7 @@ import com.google.gson.JsonObject
 import net.minecraft.client.MinecraftClient
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import java.util.Locale
+import java.util.*
 
 object LanguageLoader {
     private val translations: MutableMap<String, JsonObject> = mutableMapOf()
@@ -18,29 +18,9 @@ object LanguageLoader {
         val detected = detectMinecraftLanguage()
         val candidates = listOf(detected, "en_us")
 
-<<<<<<< HEAD
         for (lang in candidates.distinct()) {
             if (!translations.containsKey(lang)) {
                 open(lang)?.use { stream ->
-=======
-        fun open(lang: String): java.io.InputStream? {
-            val stream = javaClass.getResourceAsStream("/assets/infinite/i18n/$lang.json")
-            if (stream != null) return stream
-
-            val devFile = java.io.File("src/main/resources/assets/infinite/i18n/$lang.json")
-            if (devFile.exists()) {
-                println("[Translation] Using dev language file: ${devFile.absolutePath}")
-                return devFile.inputStream()
-            }
-
-            println("[Translation] Could NOT find language file anywhere: $lang.json")
-            return null
-        }
-
-        for (lang in languages) {
-            open(lang).use { stream ->
-                if (stream != null) {
->>>>>>> 126e12847dadb5ae723ac63ab7de2db9aff7d2ee
                     println("[Translation] Loaded language file: $lang.json")
                     InputStreamReader(stream, StandardCharsets.UTF_8).use { reader ->
                         val json = gson.fromJson(reader, JsonObject::class.java)
@@ -50,97 +30,120 @@ object LanguageLoader {
             }
         }
 
-<<<<<<< HEAD
         val selected = when {
             translations.containsKey(detected) -> detected
             translations.containsKey("en_us") -> "en_us"
             else -> translations.keys.firstOrNull()
         }
-=======
-        val detected = detectLanguage()
-
-        val selected =
-            when {
-                translations.containsKey(detected) -> detected
-                translations.containsKey("en_US") -> "en_US"
-                translations.isNotEmpty() -> translations.keys.first()
-                else -> null
-            }
->>>>>>> 126e12847dadb5ae723ac63ab7de2db9aff7d2ee
 
         currentLangCode = selected ?: "en_us"
         currentLang = selected?.let { translations[it] }
 
-        if (currentLang == null)
-            println("[Translation] ⚠ No language files loaded! Check resource paths.")
-        else if (currentLangCode != detected)
-            println("[Translation] Detected Minecraft lang: $detected → fallback: $currentLangCode")
-        else
-            println("[Translation] Using Minecraft lang: $currentLangCode")
+        when {
+            currentLang == null ->
+                println("[Translation] ⚠ No language files loaded! Check resource paths.")
+            currentLangCode != detected ->
+                println("[Translation] Detected Minecraft lang: $detected → fallback: $currentLangCode")
+            else ->
+                println("[Translation] Using Minecraft lang: $currentLangCode")
+        }
     }
 
-    /** Detect Minecraft’s current language (Fabric). */
+    /**
+     * Detect Minecraft's current language more reliably.
+     * Uses both Options and LanguageManager, with fallback to en_us.
+     */
     private fun detectMinecraftLanguage(): String {
         return try {
-            val mcLang = MinecraftClient.getInstance().options.language ?: "en_us"
-            val normalized = mcLang.replace('-', '_').lowercase(Locale.ROOT)
+            val client = MinecraftClient.getInstance()
+
+            // Try options first
+            var lang: String? = client.options.language
+
+            // Try LanguageManager (if options isn't ready)
+            if (lang.isNullOrEmpty()) {
+                val managerLang = client.languageManager?.language
+                if (managerLang != null) {
+                    // Some MC versions use getCode(), others use code — handle both
+                    lang = try {
+                        managerLang.javaClass.getMethod("getCode").invoke(managerLang) as? String
+                    } catch (_: Exception) {
+                        try {
+                            managerLang.javaClass.getField("code").get(managerLang) as? String
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+                }
+            }
+
+            // Fallback
+            if (lang.isNullOrEmpty()) lang = "en_us"
+
+            val normalized = lang.replace('-', '_').lowercase(Locale.ROOT)
             println("[Translation] Detected Minecraft language: $normalized")
             normalized
         } catch (e: Exception) {
-            println("[Translation] Could not get Minecraft language; defaulting to en_us")
+            println("[Translation] Could not detect Minecraft language, defaulting to en_us (${e.javaClass.simpleName})")
             "en_us"
         }
     }
 
-<<<<<<< HEAD
-    /** Open from classpath or dev file. */
-    private fun open(lang: String): java.io.InputStream? {
-        val classpathPath = "/assets/infinite/i18n/${lang.uppercase(Locale.ROOT)}.json"
-        LanguageLoader::class.java.getResourceAsStream(classpathPath)?.let { return it }
 
-        val devFile = java.io.File("src/main/resources/assets/infinite/i18n/${lang.uppercase(Locale.ROOT)}.json")
-        if (devFile.exists()) {
-            println("[Translation] Using dev file: ${devFile.absolutePath}")
-            return devFile.inputStream()
+    /** Opens the translation file either from classpath or dev resources. */
+    private fun open(lang: String): java.io.InputStream? {
+        val variants = listOf(
+            lang.lowercase(Locale.ROOT),
+            lang.uppercase(Locale.ROOT),
+            lang.replace('-', '_'),
+            lang.replace('_', '-')
+        )
+
+        // Try from compiled mod resources
+        for (variant in variants) {
+            val classpathPath = "/assets/infinite/i18n/$variant.json"
+            LanguageLoader::class.java.getResourceAsStream(classpathPath)?.let {
+                return it
+            }
+        }
+
+        // Try from dev resources folder
+        for (variant in variants) {
+            val devFile = java.io.File("src/main/resources/assets/infinite/i18n/$variant.json")
+            if (devFile.exists()) {
+                println("[Translation] Using dev file: ${devFile.absolutePath}")
+                return devFile.inputStream()
+            }
         }
 
         return null
-=======
-    private fun detectLanguage(): String {
-        val tag = Locale.getDefault().toLanguageTag() // e.g., "en-US", "ja-JP"
-        val normalized =
-            when (val underscored = tag.replace("-", "_")) {
-                "en" -> "en_US"
-                else -> underscored
-            }
-        println("[Translation] Detected system locale: $normalized")
-        return normalized
->>>>>>> 126e12847dadb5ae723ac63ab7de2db9aff7d2ee
     }
 
+    /** Retrieves a translation by key, e.g., "fighting.killaura.description". */
     fun translate(key: String): String {
         val lang = currentLang ?: return "[Missing translation: $key]"
         val parts = key.split(".")
         var element: JsonElement? = lang
+
         for (part in parts) {
             element = (element as? JsonObject)?.getCaseInsensitive(part)
             if (element == null) break
         }
+
         return element?.asString ?: "[Missing translation: $key]"
     }
 
-<<<<<<< HEAD
+    /** Case-insensitive lookup helper. */
     private fun JsonObject.getCaseInsensitive(name: String): JsonElement? {
         if (this.has(name)) return this[name]
         val lower = name.lowercase(Locale.ROOT)
-        if (this.has(lower)) return this[lower]
-        val upper = name.uppercase(Locale.ROOT)
-        if (this.has(upper)) return this[upper]
+        for ((key, value) in this.entrySet()) {
+            if (key.equals(lower, ignoreCase = true)) return value
+        }
         return null
     }
 
-=======
->>>>>>> 126e12847dadb5ae723ac63ab7de2db9aff7d2ee
+    /** Allows switching the language manually in runtime. */
     fun setLanguage(lang: String): Boolean {
         val json = translations[lang] ?: open(lang)?.use {
             InputStreamReader(it, StandardCharsets.UTF_8).use { r ->
