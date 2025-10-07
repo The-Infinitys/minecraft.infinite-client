@@ -10,10 +10,11 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
     private val mc: MinecraftClient = MinecraftClient.getInstance()
 
     // 設定値の定義
-    override val settings: List<InfiniteSetting<*>> = listOf(
-        // HpThreshold: トーテムを持ち始めるHP (半ハートではない、実数値)
-        InfiniteSetting.IntSetting("HpThreshold", "トーテムを持ち始めるHP", 4, 1, 20),
-    )
+    override val settings: List<InfiniteSetting<*>> =
+        listOf(
+            // HpThreshold: トーテムを持ち始めるHP (半ハートではない、実数値)
+            InfiniteSetting.IntSetting("HpThreshold", "トーテムを持ち始めるHP", 4, 1, 20),
+        )
 
     /**
      * 毎ティック実行される処理。
@@ -44,8 +45,11 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
 
         if (totemSlot != -1) {
             mc.interactionManager!!.clickSlot(
-                mc.player!!.currentScreenHandler.syncId, totemSlot, 40, // オフハンドのスロットID (インベントリ外の特殊スロット)
-                SlotActionType.SWAP, mc.player!!
+                mc.player!!.currentScreenHandler.syncId,
+                totemSlot,
+                40, // オフハンドのスロットID (インベントリ外の特殊スロット)
+                SlotActionType.SWAP,
+                mc.player!!,
             )
         }
     }
@@ -57,11 +61,14 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
     private fun findTotemInInventory(): Int {
         // 0-35: ホットバー (0-8) + メインインベントリ (9-35)
         for (i in 0 until 36) {
-            if (mc.player!!.inventory.getStack(i).item == Items.TOTEM_OF_UNDYING) {
+            if (mc.player!!
+                    .inventory
+                    .getStack(i)
+                    .item == Items.TOTEM_OF_UNDYING
+            ) {
                 return i
             }
         }
         return -1
     }
-
 }
