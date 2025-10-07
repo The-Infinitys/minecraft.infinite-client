@@ -6,10 +6,9 @@ import com.google.gson.JsonObject
 import net.minecraft.client.MinecraftClient
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Locale
 
 object LanguageLoader {
-
     private val translations: MutableMap<String, JsonObject> = mutableMapOf()
     private var currentLang: JsonObject? = null
     private var currentLangCode: String = "en_us"
@@ -19,9 +18,29 @@ object LanguageLoader {
         val detected = detectMinecraftLanguage()
         val candidates = listOf(detected, "en_us")
 
+<<<<<<< HEAD
         for (lang in candidates.distinct()) {
             if (!translations.containsKey(lang)) {
                 open(lang)?.use { stream ->
+=======
+        fun open(lang: String): java.io.InputStream? {
+            val stream = javaClass.getResourceAsStream("/assets/infinite/i18n/$lang.json")
+            if (stream != null) return stream
+
+            val devFile = java.io.File("src/main/resources/assets/infinite/i18n/$lang.json")
+            if (devFile.exists()) {
+                println("[Translation] Using dev language file: ${devFile.absolutePath}")
+                return devFile.inputStream()
+            }
+
+            println("[Translation] Could NOT find language file anywhere: $lang.json")
+            return null
+        }
+
+        for (lang in languages) {
+            open(lang).use { stream ->
+                if (stream != null) {
+>>>>>>> 126e12847dadb5ae723ac63ab7de2db9aff7d2ee
                     println("[Translation] Loaded language file: $lang.json")
                     InputStreamReader(stream, StandardCharsets.UTF_8).use { reader ->
                         val json = gson.fromJson(reader, JsonObject::class.java)
@@ -31,11 +50,23 @@ object LanguageLoader {
             }
         }
 
+<<<<<<< HEAD
         val selected = when {
             translations.containsKey(detected) -> detected
             translations.containsKey("en_us") -> "en_us"
             else -> translations.keys.firstOrNull()
         }
+=======
+        val detected = detectLanguage()
+
+        val selected =
+            when {
+                translations.containsKey(detected) -> detected
+                translations.containsKey("en_US") -> "en_US"
+                translations.isNotEmpty() -> translations.keys.first()
+                else -> null
+            }
+>>>>>>> 126e12847dadb5ae723ac63ab7de2db9aff7d2ee
 
         currentLangCode = selected ?: "en_us"
         currentLang = selected?.let { translations[it] }
@@ -61,6 +92,7 @@ object LanguageLoader {
         }
     }
 
+<<<<<<< HEAD
     /** Open from classpath or dev file. */
     private fun open(lang: String): java.io.InputStream? {
         val classpathPath = "/assets/infinite/i18n/${lang.uppercase(Locale.ROOT)}.json"
@@ -73,6 +105,17 @@ object LanguageLoader {
         }
 
         return null
+=======
+    private fun detectLanguage(): String {
+        val tag = Locale.getDefault().toLanguageTag() // e.g., "en-US", "ja-JP"
+        val normalized =
+            when (val underscored = tag.replace("-", "_")) {
+                "en" -> "en_US"
+                else -> underscored
+            }
+        println("[Translation] Detected system locale: $normalized")
+        return normalized
+>>>>>>> 126e12847dadb5ae723ac63ab7de2db9aff7d2ee
     }
 
     fun translate(key: String): String {
@@ -86,6 +129,7 @@ object LanguageLoader {
         return element?.asString ?: "[Missing translation: $key]"
     }
 
+<<<<<<< HEAD
     private fun JsonObject.getCaseInsensitive(name: String): JsonElement? {
         if (this.has(name)) return this[name]
         val lower = name.lowercase(Locale.ROOT)
@@ -95,6 +139,8 @@ object LanguageLoader {
         return null
     }
 
+=======
+>>>>>>> 126e12847dadb5ae723ac63ab7de2db9aff7d2ee
     fun setLanguage(lang: String): Boolean {
         val json = translations[lang] ?: open(lang)?.use {
             InputStreamReader(it, StandardCharsets.UTF_8).use { r ->
