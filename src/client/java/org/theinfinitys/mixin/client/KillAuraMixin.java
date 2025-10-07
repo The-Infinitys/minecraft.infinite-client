@@ -24,8 +24,7 @@ import org.theinfinitys.settings.InfiniteSetting;
 
 @Mixin(ClientPlayerEntity.class)
 public class KillAuraMixin {
-  @Unique
-  private int attackCooldown = 0;
+  @Unique private int attackCooldown = 0;
 
   @Inject(method = "tick", at = @At("TAIL"))
   private void onTick(CallbackInfo ci) {
@@ -41,17 +40,29 @@ public class KillAuraMixin {
       return;
     }
 
-    float range = ((InfiniteSetting.FloatSetting) Objects.requireNonNull(killAuraFeature.getSetting("Range"))).getValue();
+    float range =
+        ((InfiniteSetting.FloatSetting) Objects.requireNonNull(killAuraFeature.getSetting("Range")))
+            .getValue();
     boolean targetPlayers =
-        ((InfiniteSetting.BooleanSetting) Objects.requireNonNull(killAuraFeature.getSetting("Players"))).getValue();
+        ((InfiniteSetting.BooleanSetting)
+                Objects.requireNonNull(killAuraFeature.getSetting("Players")))
+            .getValue();
     boolean targetMobs =
-        ((InfiniteSetting.BooleanSetting) Objects.requireNonNull(killAuraFeature.getSetting("Mobs"))).getValue();
+        ((InfiniteSetting.BooleanSetting)
+                Objects.requireNonNull(killAuraFeature.getSetting("Mobs")))
+            .getValue();
     int maxTargets =
-        ((InfiniteSetting.IntSetting) Objects.requireNonNull(killAuraFeature.getSetting("MaxTargets"))).getValue();
+        ((InfiniteSetting.IntSetting)
+                Objects.requireNonNull(killAuraFeature.getSetting("MaxTargets")))
+            .getValue();
     int attackFrequency =
-        ((InfiniteSetting.IntSetting) Objects.requireNonNull(killAuraFeature.getSetting("AttackFrequency"))).getValue();
+        ((InfiniteSetting.IntSetting)
+                Objects.requireNonNull(killAuraFeature.getSetting("AttackFrequency")))
+            .getValue();
     boolean changeAngle =
-        ((InfiniteSetting.BooleanSetting) Objects.requireNonNull(killAuraFeature.getSetting("ChangeAngle"))).getValue();
+        ((InfiniteSetting.BooleanSetting)
+                Objects.requireNonNull(killAuraFeature.getSetting("ChangeAngle")))
+            .getValue();
 
     // Calculate actual attack delay based on AttackFrequency setting
     int actualAttackDelay;

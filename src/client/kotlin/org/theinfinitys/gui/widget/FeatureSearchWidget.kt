@@ -38,10 +38,11 @@ class FeatureSearchWidget(
             } else {
                 allFeatures.filter { feature ->
                     val categoryName = featureCategories.find { it.features.contains(feature) }?.name ?: ""
-                    feature.name.contains(searchText, ignoreCase = true) || categoryName.contains(
-                        searchText,
-                        ignoreCase = true
-                    )
+                    feature.name.contains(searchText, ignoreCase = true) ||
+                        categoryName.contains(
+                            searchText,
+                            ignoreCase = true,
+                        )
                 }
             }.sortedBy { it.name } // Sort alphabetically for consistent ordering
 
