@@ -17,15 +17,14 @@ import kotlin.math.sqrt
 // =================================================================================================
 
 class Radar : ConfigurableFeature(initialEnabled = false) {
-    override val settings: List<InfiniteSetting<*>> =
-        listOf(
-            // RadiusとHeightは探知距離なのでピクセルやパーセントとは関係ありません
-            InfiniteSetting.IntSetting("Radius", "探知半径を設定します。", 10, 5, 64),
-            InfiniteSetting.IntSetting("Height", "探知する高さを設定します。", 5, 1, 32),
-            // MarginとSizeをパーセント単位（画面の短い辺に対する）として扱う
-            InfiniteSetting.IntSetting("Margin", "レーダーUIのマージン(% of screen short side)。", 10, 0, 40),
-            InfiniteSetting.IntSetting("Size", "レーダーUIの大きさ(% of screen short side)。", 25, 5, 100),
-        )
+    override val settings: List<InfiniteSetting<*>> = listOf(
+        // RadiusとHeightは探知距離なのでピクセルやパーセントとは関係ありません
+        InfiniteSetting.IntSetting("Radius", "探知半径を設定します。", 10, 5, 64),
+        InfiniteSetting.IntSetting("Height", "探知する高さを設定します。", 5, 1, 32),
+        // MarginとSizeをパーセント単位（画面の短い辺に対する）として扱う
+        InfiniteSetting.IntSetting("Margin", "レーダーUIのマージン(% of screen short side)。", 10, 0, 40),
+        InfiniteSetting.IntSetting("Size", "レーダーUIの大きさ(% of screen short side)。", 25, 5, 100),
+    )
 
     // ... (findTargetMobs() は変更なし) ...
     fun findTargetMobs(): List<LivingEntity> {
@@ -69,34 +68,28 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
     var nearbyMobs: List<LivingEntity> = listOf()
 
     override fun tick() {
-        nearbyMobs =
-            if (isEnabled()) {
-                findTargetMobs()
-            } else {
-                listOf()
-            }
+        nearbyMobs = if (isEnabled()) {
+            findTargetMobs()
+        } else {
+            listOf()
+        }
     }
 }
+
 // =================================================================================================
-// 2. Renderer Object: RadarRenderer (位置反転修正とパーセント計算導入)
+// 2. Renderer Object: RadarRenderer (十字線削除)
 // =================================================================================================
 
 object RadarRenderer {
+
     private fun toRadians(direction: Float) = direction / 180f * MathHelper.PI
 
     private fun getRainbowColor(): Int {
         val rainbowDuration = 6000L
-        val colors =
-            intArrayOf(
-                0xFFFF0000.toInt(),
-                0xFFFFFF00.toInt(),
-                0xFF00FF00.toInt(),
-                0xFF00FFFF.toInt(),
-                0xFF0000FF.toInt(),
-                0xFFFF00FF.toInt(),
-                0xFFFF0000.toInt(),
-            )
-        // ... (省略: 色の補間ロジック) ...
+        val colors = intArrayOf(
+            0xFFFF0000.toInt(), 0xFFFFFF00.toInt(), 0xFF00FF00.toInt(),
+            0xFF00FFFF.toInt(), 0xFF0000FF.toInt(), 0xFFFF00FF.toInt(), 0xFFFF0000.toInt(),
+        )
         val currentTime = System.currentTimeMillis()
         val elapsedTime = currentTime % rainbowDuration
         val progress = elapsedTime.toFloat() / rainbowDuration.toFloat()
@@ -115,15 +108,10 @@ object RadarRenderer {
         )
     }
 
-    fun render(
-        context: DrawContext,
-        client: MinecraftClient,
-        radarFeature: Radar,
-    ) {
+    fun render(context: DrawContext, client: MinecraftClient, radarFeature: Radar) {
         val player = client.player ?: return
         val font = client.textRenderer
 
-        // 1. パーセント設定をピクセルに変換
         val screenWidth = client.window.scaledWidth
         val screenHeight = client.window.scaledHeight
         val shortSide = screenWidth.coerceAtMost(screenHeight)
@@ -131,169 +119,78 @@ object RadarRenderer {
         val marginPercent = (radarFeature.getSetting("Margin") as? InfiniteSetting.IntSetting)?.value ?: 4
         val sizePercent = (radarFeature.getSetting("Size") as? InfiniteSetting.IntSetting)?.value ?: 10
 
-        // 短い辺に対するパーセントでピクセル数を計算
         val marginPx = (shortSide * marginPercent / 100.0).toInt()
         val sizePx = (shortSide * sizePercent / 100.0).toInt()
-        val radius = sizePx / 2
+        val halfSizePx = sizePx / 2
 
         // レーダーの中心座標を左下に設定
-        val centerX = marginPx + radius
-        val centerY = screenHeight - marginPx - radius
+        val centerX = marginPx + halfSizePx
+        val centerY = screenHeight - marginPx - halfSizePx
+
+        // レーダーの左上と右下の座標
+        val startX = centerX - halfSizePx
+        val startY = centerY - halfSizePx
+        val endX = centerX + halfSizePx
+        val endY = centerY + halfSizePx
 
         val rainbowColor = getRainbowColor()
-        val innerColor = ColorHelper.getArgb(128, 0, 0, 0)
-        val whiteColor = 0xFFFFFFFF.toInt()
-        val mobs = radarFeature.nearbyMobs
+        val innerColor = ColorHelper.getArgb(128, 0, 0, 0) // レーダー内部の背景色
 
-        val featureRadius = ((radarFeature.getSetting("Radius") as? InfiniteSetting.IntSetting)?.value ?: 10).toDouble()
-
-        // 2-5. 円、縁、十字線、方位の描画 (座標計算はcenterX/centerYの変更により対応済み)
-        context.fill(centerX - radius, centerY - radius, centerX + radius, centerY + radius, innerColor)
-
-        // 縁の描画 (既存: レインボーアニメーション)
-        drawCircleOutline(context, centerX, centerY, radius, rainbowColor)
-
+        // レーダー内部の背景を塗りつぶし
+        context.fill(startX, startY, endX, endY, innerColor)
+        context.drawBorder(startX, startY, 2 * halfSizePx, 2 * halfSizePx, rainbowColor)
         val playerYaw = player.headYaw
-        val yawRad = toRadians(playerYaw)
 
-        // 十字線の終点計算
-        val forwardX = centerX + (sin(yawRad) * radius).toInt()
-        val forwardY = centerY - (cos(yawRad) * radius).toInt()
-        val backwardX = centerX - (sin(yawRad) * radius).toInt()
-        val backwardY = centerY + (cos(yawRad) * radius).toInt()
-
-        val rightX = centerX + (cos(yawRad) * radius).toInt()
-        val rightY = centerY + (sin(yawRad) * radius).toInt()
-        val leftX = centerX - (cos(yawRad) * radius).toInt()
-        val leftY = centerY - (cos(yawRad) * radius).toInt()
-
-        // 十字線の描画: drawThickLineに修正し、レインボーカラーを使用
-        drawThickLine(context, centerX, centerY, forwardX, forwardY, rainbowColor)
-        drawThickLine(context, centerX, centerY, backwardX, backwardY, rainbowColor)
-        drawThickLine(context, centerX, centerY, rightX, rightY, rainbowColor)
-        drawThickLine(context, centerX, centerY, leftX, leftY, rainbowColor)
-
-        // 方位描画
-        val compassPoints =
-            mapOf(
-                0f to "S",
-                90f to "W",
-                180f to "N",
-                270f to "E",
-            )
-        val textRadius = radius + 5
-
+        // 方位描画 (正方形の枠の内側に収まるように)
+        val compassPoints = mapOf(
+            0f to "S", 90f to "W", 180f to "N", 270f to "E",
+        )
+        val clipOffset = (halfSizePx - (font.fontHeight / 2))
+        val textOffset = sqrt(2.0) * clipOffset
         for ((degree, char) in compassPoints) {
             val relativeYaw = MathHelper.wrapDegrees(degree - playerYaw)
             val relativeRad = toRadians(relativeYaw)
 
-            val textX = centerX + (sin(relativeRad) * textRadius).toInt()
-            val textY = centerY - (cos(relativeRad) * textRadius).toInt()
+            // 正方形の辺に沿って文字を配置
+            val textX = centerX + (sin(relativeRad) * textOffset).toInt().coerceIn(-clipOffset, clipOffset)
+            val textY = centerY - (cos(relativeRad) * textOffset).toInt().coerceIn(-clipOffset, clipOffset)
 
             val textWidth = font.getWidth(char)
+
             context.drawText(
                 font,
                 Text.literal(char),
                 textX - textWidth / 2,
                 textY - font.fontHeight / 2,
-                whiteColor, // 方位文字は白のまま
-                true,
+                0xFFFFFFFF.toInt(), // 方位文字は白のまま
+                true
             )
         }
 
-        // 6. モブの描画 (省略)
-        val mobDotRadius = 1
+        // モブの描画
+        val featureRadius = ((radarFeature.getSetting("Radius") as? InfiniteSetting.IntSetting)?.value ?: 10).toDouble()
+        val mobDotRadius = 1 // モブの点サイズ
+        val yawRad = toRadians(playerYaw) // モブの相対位置計算には必要
 
-        for (mob in mobs) {
-            val dx = (mob.x - player.x)
-            val dz = (mob.z - player.z)
+        for (mob in radarFeature.nearbyMobs) {
+            val dx = (player.x - mob.x)
+            val dz = (player.z - mob.z)
 
-            // 距離と角度の計算
             val distance = sqrt(dx * dx + dz * dz)
-            val scaledDistance = (distance / featureRadius * radius.toDouble()).coerceAtMost(radius.toDouble())
+            // レーダーの正方形の半分サイズ（halfSizePx）にスケール
+            val scaledDistance = (distance / featureRadius * halfSizePx.toDouble()).coerceAtMost(halfSizePx.toDouble())
 
-            // 角度修正
             val angleToMob = kotlin.math.atan2(dx, dz) - yawRad.toDouble()
 
-            // レーダー上の描画位置
             val mobX = centerX + (sin(angleToMob) * scaledDistance).toInt()
             val mobY = centerY - (cos(angleToMob) * scaledDistance).toInt()
 
-            val mobColor = 0xFFFF0000.toInt()
+            val mobColor = 0xFFFF0000.toInt() // モブの色は赤
 
             context.fill(
-                mobX - mobDotRadius,
-                mobY - mobDotRadius,
-                mobX + mobDotRadius,
-                mobY + mobDotRadius,
-                mobColor,
+                mobX - mobDotRadius, mobY - mobDotRadius, mobX + mobDotRadius, mobY + mobDotRadius, mobColor
             )
         }
     }
 
-    // 輪郭線（円の縁）を描画する簡易的な関数
-    private fun drawCircleOutline(
-        context: DrawContext,
-        centerX: Int,
-        centerY: Int,
-        radius: Int,
-        color: Int,
-    ) {
-        val detail = 36 // 分割数
-        val step = 2 * Math.PI / detail
-        var prevX: Int? = null
-        var prevY: Int? = null
-
-        for (i in 0..detail) {
-            val angle = i * step
-            val currentX = centerX + (radius * sin(angle)).toInt()
-            val currentY = centerY + (radius * cos(angle)).toInt()
-
-            if (prevX != null && prevY != null) {
-                // drawLineからdrawThickLineに変更
-                drawThickLine(context, prevX, prevY, currentX, currentY, color)
-            }
-            prevX = currentX
-            prevY = currentY
-        }
-    }
-
-    // 斜め線も描画できるように修正した近似描画関数
-    private fun drawThickLine(
-        context: DrawContext,
-        x1: Int,
-        y1: Int,
-        x2: Int,
-        y2: Int,
-        color: Int,
-        thickness: Int = 1,
-    ) {
-        val dx = (x2 - x1).toFloat()
-        val dy = (y2 - y1).toFloat()
-        val distance = sqrt(dx * dx + dy * dy)
-
-        if (distance < 1) {
-            // 点を描画
-            context.fill(x1, y1, x1 + thickness, y1 + thickness, color)
-            return
-        }
-
-        // 線を構成するセグメントの数
-        val numSegments = distance.toInt().coerceAtLeast(1)
-
-        for (i in 0..numSegments) {
-            val progress = i.toFloat() / numSegments.toFloat()
-            val currentX = x1 + (dx * progress).toInt()
-            val currentY = y1 + (dy * progress).toInt()
-
-            // thickness=1 の場合、1x1ピクセルを描画
-            context.fill(
-                currentX,
-                currentY,
-                currentX + thickness,
-                currentY + thickness,
-                color,
-            )
-        }
-    }
 }
