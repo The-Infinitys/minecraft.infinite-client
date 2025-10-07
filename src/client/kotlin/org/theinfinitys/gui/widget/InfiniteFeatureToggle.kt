@@ -5,6 +5,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
+import net.minecraft.util.math.ColorHelper
 import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.Feature
 import org.theinfinitys.InfiniteClient
@@ -15,9 +16,10 @@ class InfiniteFeatureToggle(
     width: Int,
     height: Int,
     val feature: Feature,
-    onSettings: () -> Unit,
+    private val isSelected: Boolean, // New parameter
+    val onSettings: () -> Unit, // Made public
 ) : ClickableWidget(x, y, width, height, Text.literal(feature.name)) {
-    private val toggleButton: InfiniteToggleButton
+    val toggleButton: InfiniteToggleButton
     private val settingsButton: InfiniteButton
     private val resetButton: InfiniteButton // New reset button
     private val textRenderer = MinecraftClient.getInstance().textRenderer
@@ -83,6 +85,7 @@ class InfiniteFeatureToggle(
         mouseY: Int,
         delta: Float,
     ) {
+        // Draw button text
         context.drawTextWithShadow(
             textRenderer,
             Text.literal(feature.name),
@@ -101,6 +104,41 @@ class InfiniteFeatureToggle(
         toggleButton.render(context, mouseX, mouseY, delta)
         settingsButton.render(context, mouseX, mouseY, delta)
         resetButton.render(context, mouseX, mouseY, delta) // Render reset button
+
+        if (isSelected) {
+            val animationDuration = 6000L // 6 seconds for full cycle
+            val colors =
+                intArrayOf(
+                    0xFFFF0000.toInt(), // #f00
+                    0xFFFFFF00.toInt(), // #ff0
+                    0xFF00FF00.toInt(), // #0f0
+                    0xFF00FFFF.toInt(), // #0ff
+                    0xFF0000FF.toInt(), // #00f
+                    0xFFFF00FF.toInt(), // #f0f
+                    0xFFFF0000.toInt(), // #f00 (for smooth loop)
+                )
+
+            val currentTime = System.currentTimeMillis()
+            val elapsedTime = currentTime % animationDuration
+            val progress = elapsedTime.toFloat() / animationDuration.toFloat()
+
+            val numSegments = colors.size - 1
+            val segmentLength = 1.0f / numSegments
+            val currentSegmentIndex = (progress / segmentLength).toInt().coerceAtMost(numSegments - 1)
+            val segmentProgress = (progress % segmentLength) / segmentLength
+
+            val startColor = colors[currentSegmentIndex]
+            val endColor = colors[currentSegmentIndex + 1]
+
+            val interpolatedColor =
+                ColorHelper.getArgb(
+                    255, // Alpha
+                    (ColorHelper.getRed(startColor) * (1 - segmentProgress) + ColorHelper.getRed(endColor) * segmentProgress).toInt(),
+                    (ColorHelper.getGreen(startColor) * (1 - segmentProgress) + ColorHelper.getGreen(endColor) * segmentProgress).toInt(),
+                    (ColorHelper.getBlue(startColor) * (1 - segmentProgress) + ColorHelper.getBlue(endColor) * segmentProgress).toInt(),
+                )
+            context.drawBorder(x, y, width, height, interpolatedColor)
+        }
     }
 
     override fun mouseClicked(

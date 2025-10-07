@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
+import org.lwjgl.glfw.GLFW
 import org.theinfinitys.Feature
 import org.theinfinitys.featureCategories
 import org.theinfinitys.gui.screen.FeatureSettingsScreen
@@ -24,6 +25,7 @@ class FeatureSearchWidget(
     private var allFeatures: List<Feature> = featureCategories.flatMap { it.features }
     private var filteredFeatures: List<Feature>
     private var isInitialized = false
+    private var selectedIndex: Int = -1 // -1 means no item is selected
 
     init {
         filteredFeatures = allFeatures
@@ -34,8 +36,16 @@ class FeatureSearchWidget(
             if (searchText.isBlank()) {
                 allFeatures
             } else {
-                allFeatures.filter { it.name.contains(searchText, ignoreCase = true) }
+                allFeatures.filter { feature ->
+                    val categoryName = featureCategories.find { it.features.contains(feature) }?.name ?: ""
+                    feature.name.contains(searchText, ignoreCase = true) || categoryName.contains(
+                        searchText,
+                        ignoreCase = true
+                    )
+                }
             }.sortedBy { it.name } // Sort alphabetically for consistent ordering
+
+        selectedIndex = -1 // Reset selection on filter change
 
         if (::scrollableContainer.isInitialized) {
             scrollableContainer.widgets.clear()
@@ -46,8 +56,16 @@ class FeatureSearchWidget(
     }
 
     private fun createFeatureToggleWidgets(features: List<Feature>): List<ClickableWidget> =
-        features.map { feature ->
-            InfiniteFeatureToggle(0, 0, scrollableContainer.width - scrollableContainer.internalPadding * 2, 20, feature) {
+        features.mapIndexed { index, feature ->
+            InfiniteFeatureToggle(
+                0,
+                0,
+                scrollableContainer.width - scrollableContainer.internalPadding * 2,
+                20,
+                feature,
+                index == selectedIndex, // isSelected
+            ) {
+                // onSettings lambda
                 MinecraftClient.getInstance().setScreen(FeatureSettingsScreen(parentScreen, feature))
             }
         }
@@ -117,6 +135,45 @@ class FeatureSearchWidget(
         if (searchField.keyPressed(keyCode, scanCode, modifiers)) {
             return true
         }
+
+        if (filteredFeatures.isNotEmpty()) {
+            when (keyCode) {
+                GLFW.GLFW_KEY_UP -> {
+                    selectedIndex = (selectedIndex - 1 + filteredFeatures.size) % filteredFeatures.size
+                    scrollableContainer.widgets.clear()
+                    scrollableContainer.widgets.addAll(createFeatureToggleWidgets(filteredFeatures))
+                    scrollableContainer.updateWidgetPositions()
+                    ensureSelectedVisible(MoveWay.Top)
+                    return true
+                }
+
+                GLFW.GLFW_KEY_DOWN -> {
+                    selectedIndex = (selectedIndex + 1) % filteredFeatures.size
+                    scrollableContainer.widgets.clear()
+                    scrollableContainer.widgets.addAll(createFeatureToggleWidgets(filteredFeatures))
+                    scrollableContainer.updateWidgetPositions()
+                    ensureSelectedVisible(MoveWay.Bottom)
+                    return true
+                }
+
+                GLFW.GLFW_KEY_ENTER -> {
+                    if (selectedIndex != -1) {
+                        val selectedToggle = scrollableContainer.widgets[selectedIndex] as? InfiniteFeatureToggle
+                        selectedToggle?.toggleButton?.onPress() // Simulate button press
+                        return true
+                    }
+                }
+
+                GLFW.GLFW_KEY_RIGHT -> {
+                    if (selectedIndex != -1) {
+                        val selectedToggle = scrollableContainer.widgets[selectedIndex] as? InfiniteFeatureToggle
+                        selectedToggle?.onSettings?.invoke() // Open settings
+                        return true
+                    }
+                }
+            }
+        }
+
         if (scrollableContainer.keyPressed(keyCode, scanCode, modifiers)) {
             return true
         }
@@ -184,5 +241,34 @@ class FeatureSearchWidget(
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {
         searchField.appendNarrations(builder)
         // scrollableContainer.appendClickableNarrations(builder) // Protected method
+    }
+
+    private enum class MoveWay {
+        Top,
+        Bottom,
+    }
+
+    private fun ensureSelectedVisible(moveWay: MoveWay) {
+        if (selectedIndex == -1 || !::scrollableContainer.isInitialized) return
+
+        val selectedWidget = scrollableContainer.widgets[selectedIndex]
+        val widgetContentTop = selectedWidget.y - scrollableContainer.y + scrollableContainer.scrollY.toInt()
+        val widgetHeight = selectedWidget.height
+
+        // If the selected widget is above the visible area
+        when (moveWay) {
+            MoveWay.Top -> {
+                if (widgetContentTop - widgetHeight < scrollableContainer.scrollY) {
+                    scrollableContainer.scrollY = widgetContentTop.toDouble() - widgetHeight
+                }
+            }
+
+            MoveWay.Bottom -> {
+                if (widgetContentTop + 2 * widgetHeight > scrollableContainer.scrollY + scrollableContainer.height) {
+                    scrollableContainer.scrollY =
+                        (widgetContentTop + 2 * widgetHeight - scrollableContainer.height).toDouble()
+                }
+            }
+        }
     }
 }
