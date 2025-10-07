@@ -19,9 +19,12 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
         listOf(
             InfiniteSetting.IntSetting("HpThreshold", "トーテムを持ち始めるHP（HP実数値）", 4, 1, 20),
             InfiniteSetting.IntSetting("Delay", "トーテムの再装備までの遅延（tick）", 2, 0, 20),
+            InfiniteSetting.BooleanSetting("AlwaysKeepTotem", "常にトーテムを持ち続ける（HPに関係なく）", false)
         )
+
     private val hpThresholdSetting get() = getSetting("HpThreshold") as InfiniteSetting.IntSetting
     private val delaySetting get() = getSetting("Delay") as InfiniteSetting.IntSetting
+    private val alwaysKeepTotemSetting get() = getSetting("AlwaysKeepTotem") as InfiniteSetting.BooleanSetting
 
     // --- 内部状態管理 ---
     private var timer = 0
@@ -68,7 +71,10 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
         if (nextTotemSlot == -1) return
 
         // --- 3. HPチェック ---
-        if (player.health > hpThresholdSetting.value) return
+        // if the alwayskeeptotemsetting aint active then it will depend on health
+        if (!alwaysKeepTotemSetting.value) {
+            if (player.health > hpThresholdSetting.value) return
+        }
 
         // --- 4. 【クラッシュ対策】開いているコンテナのチェック ---
         if (mc.currentScreen is HandledScreen<*>) {
