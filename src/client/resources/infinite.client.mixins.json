@@ -14,6 +14,7 @@
     "client.rendering.CameraMixin",
     "client.rendering.GameRendererMixin",
     "client.rendering.InGameHudMixin",
+    "client.rendering.RadarRendererMixin",
     "client.rendering.XRayBlockModelRendererMixin",
     "client.rendering.XRayBlockRenderInfoMixin",
     "client.rendering.XRayFluidRendererMixin",
