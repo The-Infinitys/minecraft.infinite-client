@@ -107,7 +107,7 @@ class InfinitePlayerListField(
                 y + headerHeight,
                 containerWidth,
                 scrollableListHeight,
-                playerItemWidgets,
+                playerItemWidgets.toMutableList() as MutableList<ClickableWidget>,
             )
 
         // 5. スクロール位置を復元

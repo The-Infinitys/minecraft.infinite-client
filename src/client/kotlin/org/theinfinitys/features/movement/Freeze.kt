@@ -1,7 +1,7 @@
 package org.theinfinitys.features.movement
 
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.client.MinecraftClient
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.settings.InfiniteSetting
 import org.theinfinitys.utils.FakePlayerEntity // 前回の回答で作成したユーティリティクラスを想定
@@ -12,7 +12,6 @@ import java.util.ArrayDeque
  * Mixinを使用してPlayerMoveC2SPacketの送信を停止し、蓄積することで瞬間移動を可能にする。
  */
 class Freeze : ConfigurableFeature(initialEnabled = false) {
-
     // 蓄積された移動パケットを保持するキュー
     val packets = ArrayDeque<PlayerMoveC2SPacket>() // Mixinからアクセスするためvalにしておく
 
@@ -24,21 +23,23 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
     private val mc: MinecraftClient = MinecraftClient.getInstance()
 
     // --- 設定 ---
-    private val durationSetting = InfiniteSetting.FloatSetting(
-        "Duration",
-        "フリーズが自動的に無効になるまでの最長持続時間（秒）。0で無制限。",
-        0.0f,
-        0.0f,
-        600.0f,
-    )
+    private val durationSetting =
+        InfiniteSetting.FloatSetting(
+            "Duration",
+            "フリーズが自動的に無効になるまでの最長持続時間（秒）。0で無制限。",
+            0.0f,
+            0.0f,
+            600.0f,
+        )
 
-    private val packetLimitSetting = InfiniteSetting.IntSetting(
-        "Packet Limit",
-        "フリーズが自動的に再起動するまでに蓄積されるパケットの最大数。0で無制限。",
-        0,
-        0,
-        500,
-    )
+    private val packetLimitSetting =
+        InfiniteSetting.IntSetting(
+            "Packet Limit",
+            "フリーズが自動的に再起動するまでに蓄積されるパケットの最大数。0で無制限。",
+            0,
+            0,
+            500,
+        )
 
     override val settings: List<InfiniteSetting<*>> = listOf(durationSetting, packetLimitSetting)
 
@@ -116,11 +117,18 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
 
         // パケットの内容が前のパケットと全て同一であれば、冗長なパケットとして無視
         // BlinkHackの冗長パケットチェックロジックを再現
-        if (prevPacket != null && packet.isOnGround == prevPacket.isOnGround && packet.getYaw(-1f) == prevPacket.getYaw(
-                -1f
-            ) && packet.getPitch(-1f) == prevPacket.getPitch(-1f) && packet.getX(-1.0) == prevPacket.getX(-1.0) && packet.getY(
-                -1.0
-            ) == prevPacket.getY(-1.0) && packet.getZ(-1.0) == prevPacket.getZ(-1.0)
+        if (prevPacket != null &&
+            packet.isOnGround == prevPacket.isOnGround &&
+            packet.getYaw(-1f) ==
+            prevPacket.getYaw(
+                -1f,
+            ) &&
+            packet.getPitch(-1f) == prevPacket.getPitch(-1f) &&
+            packet.getX(-1.0) == prevPacket.getX(-1.0) &&
+            packet.getY(
+                -1.0,
+            ) == prevPacket.getY(-1.0) &&
+            packet.getZ(-1.0) == prevPacket.getZ(-1.0)
         ) {
             return
         }

@@ -53,5 +53,5 @@ val movement =
             WaterHover(),
             "水中で勝手に沈まないようにします。",
         ),
-        feature("FreeCamera", FreeCamera(), "いつでもスペクテイターモードに慣れます。")
+        feature("FreeCamera", FreeCamera(), "いつでもスペクテイターモードに慣れます。"),
     )

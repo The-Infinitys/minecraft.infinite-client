@@ -107,7 +107,7 @@ class InfiniteEntityListField(
                 y + headerHeight,
                 containerWidth,
                 scrollableListHeight,
-                entityItemWidgets,
+                entityItemWidgets.toMutableList(),
             )
 
         // 5. スクロール位置を復元

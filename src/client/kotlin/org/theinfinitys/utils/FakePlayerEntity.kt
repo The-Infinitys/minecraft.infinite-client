@@ -1,7 +1,5 @@
 package org.theinfinitys.utils
 
-import java.util.UUID
-
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.OtherClientPlayerEntity
@@ -9,13 +7,13 @@ import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import org.jetbrains.annotations.Nullable
+import java.util.UUID
 
 /**
  * Creates a client-side "fake player" entity that mimics the real player's appearance and inventory.
  * This is typically used for client-side modding features like visual testing or movement tricks.
  */
 class FakePlayerEntity : OtherClientPlayerEntity {
-
     // MinecraftClientのインスタンスはシングルトンであるため、遅延初期化プロパティとして取得
     private val client: MinecraftClient = MinecraftClient.getInstance()
     private val player: ClientPlayerEntity =
@@ -28,7 +26,7 @@ class FakePlayerEntity : OtherClientPlayerEntity {
     constructor() : super(
         MinecraftClient.getInstance().world, // worldはコンストラクタでNullを許容しないが、ClientWorldが必須
         MinecraftClient.getInstance().player?.gameProfile
-            ?: throw IllegalStateException("Client player profile must be present.")
+            ?: throw IllegalStateException("Client player profile must be present."),
     ) {
         // UUIDをランダムに設定し、本物のプレイヤーと区別
         uuid = UUID.randomUUID()

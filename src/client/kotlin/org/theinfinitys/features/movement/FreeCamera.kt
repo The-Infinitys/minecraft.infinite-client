@@ -2,7 +2,6 @@ package org.theinfinitys.features.movement
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.entity.MovementType
 import net.minecraft.util.math.Vec3d
 import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.settings.InfiniteSetting
@@ -13,7 +12,6 @@ import org.theinfinitys.settings.InfiniteSetting
  * FakePlayerの管理は依存関係にあるFreeze Featureが行う。
  */
 class FreeCamera : ConfigurableFeature(initialEnabled = false) {
-
     private val mc: MinecraftClient = MinecraftClient.getInstance()
     override val available: Boolean = false
 
@@ -25,13 +23,14 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
     private var realPlayer: ClientPlayerEntity? = null
 
     // --- 設定 ---
-    private val speedSetting = InfiniteSetting.FloatSetting(
-        "Speed",
-        "Freecam中の移動速度を設定します。",
-        1.0f,
-        0.1f,
-        5.0f,
-    )
+    private val speedSetting =
+        InfiniteSetting.FloatSetting(
+            "Speed",
+            "Freecam中の移動速度を設定します。",
+            1.0f,
+            0.1f,
+            5.0f,
+        )
 
     override val settings: List<InfiniteSetting<*>> = listOf(speedSetting)
     override val depends: List<Class<out ConfigurableFeature>> = listOf(Freeze::class.java)

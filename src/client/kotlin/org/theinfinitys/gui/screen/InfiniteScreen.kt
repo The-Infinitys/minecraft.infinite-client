@@ -51,7 +51,7 @@ class InfiniteScreen(
         super.init()
 
         val dynamicSections = mutableListOf<UISection>()
-        dynamicSections.add(UISection("about", this))
+        dynamicSections.add(UISection("main", this))
 
         featureCategories.forEach { category ->
             dynamicSections.add(UISection(category.name.lowercase() + "-settings", this, category.features))
@@ -271,6 +271,17 @@ class InfiniteScreen(
         }
         sections[pageIndex].mouseReleased(mouseX, mouseY, button, true)
         return super.mouseReleased(mouseX, mouseY, button)
+    }
+
+    override fun charTyped(
+        chr: Char,
+        modifiers: Int,
+    ): Boolean {
+        if (System.currentTimeMillis() - animationStartTime < animationDurationMs) {
+            return true
+        }
+        sections[pageIndex].charTyped(chr, modifiers, true)
+        return super.charTyped(chr, modifiers)
     }
 
     override fun shouldPause(): Boolean = false

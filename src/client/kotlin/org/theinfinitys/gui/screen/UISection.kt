@@ -8,6 +8,7 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
 import org.theinfinitys.Feature
+import org.theinfinitys.gui.widget.FeatureSearchWidget
 import org.theinfinitys.gui.widget.InfiniteButton
 import org.theinfinitys.gui.widget.InfiniteFeatureToggle
 import org.theinfinitys.gui.widget.InfiniteScrollableContainer
@@ -19,10 +20,14 @@ class UISection(
 ) {
     private var closeButton: InfiniteButton? = null
     val widgets = mutableListOf<ClickableWidget>()
+    private var featureSearchWidget: FeatureSearchWidget? = null
+    private var isMainSectionInitialized = false
 
     init {
         when (id) {
-            "about" -> {}
+            "main" -> {
+                // Initialization moved to renderMain
+            }
             else -> {
                 featureList?.let {
                     setupFeatureWidgets(it)
@@ -35,13 +40,13 @@ class UISection(
         val featureWidgets =
             features.map { feature ->
                 feature.name
-                InfiniteFeatureToggle(0, 0, 280, 20, feature) {
+                InfiniteFeatureToggle(0, 0, 280, 20, feature, false) {
                     MinecraftClient.getInstance().setScreen(FeatureSettingsScreen(screen, feature))
                 }
             }
 
         if (featureWidgets.isNotEmpty()) {
-            val container = InfiniteScrollableContainer(0, 0, 300, 180, featureWidgets)
+            val container = InfiniteScrollableContainer(0, 0, 300, 180, featureWidgets.toMutableList())
             widgets.add(container)
         }
     }
@@ -68,7 +73,7 @@ class UISection(
 
         val titleText =
             when (id) {
-                "about" -> "About"
+                "main" -> "Main"
                 else ->
                     id
                         .replace("-settings", "")
@@ -76,8 +81,8 @@ class UISection(
                         " Settings"
             }
 
-        if (id == "about") {
-            renderAbout(context, x, y, width, textRenderer, isSelected, mouseX, mouseY, delta, renderContent)
+        if (id == "main") {
+            renderMain(context, x, y, width, height, textRenderer, isSelected, mouseX, mouseY, delta, renderContent)
         } else {
             renderSettings(context, x, y, width, height, textRenderer, titleText, isSelected, mouseX, mouseY, delta, renderContent)
         }
@@ -101,11 +106,12 @@ class UISection(
         }
     }
 
-    private fun renderAbout(
+    private fun renderMain(
         context: DrawContext,
         x: Int,
         y: Int,
         width: Int,
+        height: Int,
         textRenderer: TextRenderer,
         isSelected: Boolean,
         mouseX: Int,
@@ -113,26 +119,20 @@ class UISection(
         delta: Float,
         renderContent: Boolean,
     ) {
-        renderTitle(context, x, y, width, textRenderer, "About", isSelected)
+        renderTitle(context, x, y, width, textRenderer, "Main", isSelected)
         if (!renderContent) return
 
-        val lineY = y + 50
-        context.drawTextWithShadow(textRenderer, Text.literal("Version: 1.0"), x + 20, lineY, 0xFFFFFFFF.toInt())
-        context.drawTextWithShadow(textRenderer, Text.literal("Author: The Infinitys"), x + 20, lineY + 15, 0xFFFFFFFF.toInt())
-
-        val urlText = "URL: https://github.com/the-infinitys/minecraft.infinite-client"
-        val wrappedText = textRenderer.wrapLines(Text.literal(urlText), width - 40)
-        var textY = lineY + 30
-        for (line in wrappedText) {
-            context.drawTextWithShadow(textRenderer, line, x + 20, textY, 0xFFFFFFFF.toInt())
-            textY += textRenderer.fontHeight
+        if (!isMainSectionInitialized) {
+            featureSearchWidget = FeatureSearchWidget(x + 20, y + 50, width - 40, height - 70, screen)
+            isMainSectionInitialized = true
         }
 
-        val widgetY = textY + 10
-        widgets.forEach { widget ->
-            widget.x = x + 20
-            widget.y = widgetY
-            widget.render(context, mouseX, mouseY, delta)
+        featureSearchWidget?.let {
+            it.x = x + 20
+            it.y = y + 50
+            it.width = width - 40
+            it.height = height - 70
+            it.render(context, mouseX, mouseY, delta)
         }
     }
 
@@ -196,6 +196,10 @@ class UISection(
     ): Boolean { // ★ 戻り値を Boolean に変更
         if (!isSelected) return false
 
+        if (id == "main") {
+            featureSearchWidget?.mouseClicked(mouseX, mouseY, button)?.let { if (it) return true }
+        }
+
         // 1. closeButtonのクリック
         if (closeButton?.mouseClicked(mouseX, mouseY, button) == true) {
             return true
@@ -218,6 +222,11 @@ class UISection(
         isSelected: Boolean,
     ) {
         if (!isSelected) return
+
+        if (id == "main") {
+            featureSearchWidget?.keyPressed(keyCode, scanCode, modifiers)
+        }
+
         // keyPressed は一般的に全ての子に転送されます
         widgets.forEach { it.keyPressed(keyCode, scanCode, modifiers) }
     }
@@ -230,6 +239,11 @@ class UISection(
         isSelected: Boolean,
     ): Boolean {
         if (!isSelected) return false
+
+        if (id == "main") {
+            featureSearchWidget?.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)?.let { if (it) return true }
+        }
+
         for (widget in widgets) {
             if (widget.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) {
                 return true
@@ -248,6 +262,10 @@ class UISection(
         isSelected: Boolean,
     ): Boolean { // ★ 戻り値は Boolean
         if (!isSelected) return false
+
+        if (id == "main") {
+            featureSearchWidget?.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)?.let { if (it) return true }
+        }
 
         // closeButtonへのドラッグを処理
         if (closeButton?.mouseDragged(mouseX, mouseY, button, deltaX, deltaY) == true) {
@@ -272,6 +290,10 @@ class UISection(
     ): Boolean { // ★ 戻り値は Boolean
         if (!isSelected) return false
 
+        if (id == "main") {
+            featureSearchWidget?.mouseReleased(mouseX, mouseY, button)?.let { if (it) return true }
+        }
+
         // closeButtonの mouseReleased を処理
         if (closeButton?.mouseReleased(mouseX, mouseY, button) == true) {
             return true
@@ -280,6 +302,25 @@ class UISection(
         // ★ スクロールコンテナとその他のウィジェットの両方に転送
         for (widget in widgets) {
             if (widget.mouseReleased(mouseX, mouseY, button)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun charTyped(
+        chr: Char,
+        modifiers: Int,
+        isSelected: Boolean,
+    ): Boolean {
+        if (!isSelected) return false
+
+        if (id == "main") {
+            featureSearchWidget?.charTyped(chr, modifiers)?.let { if (it) return true }
+        }
+
+        for (widget in widgets) {
+            if (widget.charTyped(chr, modifiers)) {
                 return true
             }
         }

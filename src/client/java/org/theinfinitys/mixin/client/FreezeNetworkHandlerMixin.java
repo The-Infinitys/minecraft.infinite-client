@@ -13,19 +13,24 @@ import org.theinfinitys.features.movement.Freeze;
 @Mixin(ClientCommonNetworkHandler.class)
 public class FreezeNetworkHandlerMixin {
 
-    /**
-     * クライアントがパケットを送信する直前にフックし、Freezeが有効な場合は処理をブロックする。
-     *
-     * @param packet 送信されようとしているパケット
-     * @param ci     CallbackInfo
-     */
-    @Inject(method = "sendPacket(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), cancellable = true)
-    private void onSendPacket(Packet<?> packet, CallbackInfo ci) {
-        Freeze freezeFeature = InfiniteClient.INSTANCE.getFeature(Freeze.class);
-        if (!InfiniteClient.INSTANCE.isFeatureEnabled(Freeze.class) || !(packet instanceof PlayerMoveC2SPacket) || freezeFeature == null) {
-            return;
-        }
-        freezeFeature.processMovePacket((PlayerMoveC2SPacket) packet);
-        ci.cancel();
+  /**
+   * クライアントがパケットを送信する直前にフックし、Freezeが有効な場合は処理をブロックする。
+   *
+   * @param packet 送信されようとしているパケット
+   * @param ci CallbackInfo
+   */
+  @Inject(
+      method = "sendPacket(Lnet/minecraft/network/packet/Packet;)V",
+      at = @At("HEAD"),
+      cancellable = true)
+  private void onSendPacket(Packet<?> packet, CallbackInfo ci) {
+    Freeze freezeFeature = InfiniteClient.INSTANCE.getFeature(Freeze.class);
+    if (!InfiniteClient.INSTANCE.isFeatureEnabled(Freeze.class)
+        || !(packet instanceof PlayerMoveC2SPacket)
+        || freezeFeature == null) {
+      return;
     }
+    freezeFeature.processMovePacket((PlayerMoveC2SPacket) packet);
+    ci.cancel();
+  }
 }

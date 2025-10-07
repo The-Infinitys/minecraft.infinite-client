@@ -54,6 +54,7 @@ abstract class ConfigurableFeature(
     abstract val settings: List<InfiniteSetting<*>>
     open val depends: List<Class<out ConfigurableFeature>> = emptyList()
     open val conflicts: List<Class<out ConfigurableFeature>> = emptyList()
+
     open fun tick() {}
 
     open fun start() {}

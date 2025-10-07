@@ -1,6 +1,7 @@
 package org.theinfinitys.features
 
 import org.theinfinitys.feature
+import org.theinfinitys.features.fighting.AutoTotem
 import org.theinfinitys.features.fighting.CounterAttack
 import org.theinfinitys.features.fighting.ImpactAttack
 import org.theinfinitys.features.fighting.KillAura
@@ -46,4 +47,5 @@ val fighting =
             ImpactAttack(),
             "エンティティに連続攻撃を仕掛けます。",
         ),
+        feature("AutoTotem", AutoTotem(), "自動でトーテムを持ちます"),
     )
