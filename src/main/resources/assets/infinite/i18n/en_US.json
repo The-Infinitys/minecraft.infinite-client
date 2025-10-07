@@ -1,0 +1,285 @@
+{
+  "feature": {
+    "aimode": {
+      "description": "Delegates all operations to Minecraft's AI."
+    },
+    "woodcutter": {
+      "description": "Automatically collects wood."
+    },
+    "killaura": {
+      "description": "Automatically attacks nearby entities."
+    },
+    "reach": {
+      "description": "Extends player reach to interact with blocks and entities further away."
+    },
+    "noattack": {
+      "description": "Prevents attacking specific entities like villagers or pets."
+    },
+    "playermanager": {
+      "description": "Manages friendly and hostile players."
+    },
+    "superattack": {
+      "description": "Automatically performs critical attacks."
+    },
+    "counterattack": {
+      "description": "Automatically counter-attacks when hit by an entity."
+    },
+    "impactattack": {
+      "description": "Launches continuous attacks on entities."
+    },
+    "autototem": {
+      "description": "Automatically equips totems."
+    },
+    "supersprint": {
+      "description": "Extends sprinting capabilities."
+    },
+    "safewalk": {
+      "description": "Allows safe movement without falling off ledges."
+    },
+    "freeze": {
+      "description": "Prevents sending data to the server while active."
+    },
+    "autowalk": {
+      "description": "Automatically walks forward."
+    },
+    "automine": {
+      "description": "Automatically mines blocks."
+    },
+    "fastbreak": {
+      "description": "Removes the interval when breaking blocks."
+    },
+    "featherwalk": {
+      "description": "Prevents trampling crops and similar actions."
+    },
+    "waterhover": {
+      "description": "Prevents sinking in water."
+    },
+    "freecamera": {
+      "description": "Allows entering spectator mode at any time."
+    },
+    "antioverlay": {
+      "description": "Removes unnecessary visual overlays from the game screen."
+    },
+    "supersight": {
+      "description": "Enhances visual information."
+    },
+    "xray": {
+      "description": "Allows seeing through blocks to find ores, caves, and other hidden structures."
+    },
+    "cameraconfig": {
+      "description": "Changes camera settings."
+    },
+    "radar": {
+      "description": "Displays a radar."
+    },
+    "serverinfo": {
+      "description": "Retrieves server information."
+    }
+  },
+  "setting": {
+    "aimode": {
+      "allowplayerinput": {
+        "description": "Allows player input even in AI mode."
+      },
+      "cancelondamaged": {
+        "description": "Forces AI to interrupt when the player takes damage."
+      }
+    },
+    "woodcutter": {
+      "range": {
+        "description": "Search range. Searches for blocks within this range in x,z directions."
+      },
+      "height": {
+        "description": "Search range. Searches for blocks within this range in y direction."
+      },
+      "collectitems": {
+        "description": "Collects dropped items after felling."
+      }
+    },
+    "autototem": {
+      "hpthreshold": {
+        "description": "HP (actual HP value) at which totems start being held."
+      },
+      "delay": {
+        "description": "Delay (ticks) before re-equipping totems."
+      }
+    },
+    "counterattack": {
+      "range": {
+        "description": "Sets the maximum counter-attack distance."
+      },
+      "delay": {
+        "description": "Sets the delay (ticks) before counter-attacking."
+      }
+    },
+    "impactattack": {
+      "range": {
+        "description": "Sets the maximum attack range for auto-attack."
+      },
+      "cps": {
+        "description": "Sets the clicks per second for auto-attack."
+      }
+    },
+    "killaura": {
+      "range": {
+        "description": "Sets the maximum distance to attack entities."
+      },
+      "players": {
+        "description": "Targets players."
+      },
+      "mobs": {
+        "description": "Targets mobs."
+      },
+      "maxtargets": {
+        "description": "Maximum number of entities to attack simultaneously. (0 for unlimited)"
+      },
+      "attackfrequency": {
+        "description": "Sets the attack frequency. (0 for auto-adjust)"
+      },
+      "changeangle": {
+        "description": "Faces the entity when attacking."
+      }
+    },
+    "noattack": {
+      "protectedentities": {
+        "description": "List of entities not to attack."
+      }
+    },
+    "playermanager": {
+      "friends": {
+        "description": "List of players to treat as friends."
+      },
+      "enemies": {
+        "description": "List of players to treat as enemies."
+      }
+    },
+    "reach": {
+      "reachdistance": {
+        "description": "Extends interaction distance with blocks and entities."
+      }
+    },
+    "superattack": {
+      "method": {
+        "description": "Selects the critical attack method."
+      }
+    },
+    "antislowdown": {
+      "item": {
+        "description": "Disables slowdown when using items."
+      },
+      "cobweb": {
+        "description": "Disables slowdown in cobwebs."
+      }
+    },
+    "featherwalk": {
+      "allowedblocks": {
+        "description": "List of block IDs that suppress jumping and sprinting."
+      },
+      "disablejump": {
+        "description": "Disables jumping on configured blocks."
+      },
+      "disablesprint": {
+        "description": "Disables sprinting on configured blocks."
+      }
+    },
+    "freecamera": {
+      "speed": {
+        "description": "Sets movement speed during Freecam."
+      }
+    },
+    "freeze": {
+      "duration": {
+        "description": "Maximum duration (seconds) before Freeze automatically disables. 0 for unlimited."
+      },
+      "packetlimit": {
+        "description": "Maximum number of packets to accumulate before Freeze automatically restarts. 0 for unlimited."
+      }
+    },
+    "step": {
+      "adjuststepheight": {
+        "description": "Sets the maximum height (blocks) that can be climbed."
+      },
+      "autojumpallowed": {
+        "description": "Forces Minecraft's AutoJump to be disabled when Step is active."
+      }
+    },
+    "waterhover": {
+      "method": {
+        "description": "Changes the method for WaterHover."
+      }
+    },
+    "antioverlay": {
+      "nopumpkinoverlay": {
+        "description": "Removes pumpkin overlay."
+      },
+      "nodarknessoverlay": {
+        "description": "Removes darkness overlay (e.g., blindness effect)."
+      },
+      "noliquidoverlay": {
+        "description": "Removes overlay in water/lava."
+      },
+      "nofogoverlay": {
+        "description": "Disables fog effects."
+      }
+    },
+    "cameraconfig": {
+      "cameradistance": {
+        "description": "Sets the distance between the camera and the player."
+      },
+      "clipblock": {
+        "description": "Configures whether the camera penetrates terrain."
+      },
+      "antihurttilt": {
+        "description": "Camera no longer shakes when taking damage."
+      }
+    },
+    "radar": {
+      "radius": {
+        "description": "Sets the detection radius."
+      },
+      "height": {
+        "description": "Sets the detection height."
+      },
+      "margin": {
+        "description": "Radar UI margin (% of screen short side)."
+      },
+      "size": {
+        "description": "Radar UI size (% of screen short side)."
+      }
+    },
+    "supersight": {
+      "playeresp": {
+        "description": "Highlights players."
+      },
+      "chestesp": {
+        "description": "Highlights chests."
+      },
+      "mobesp": {
+        "description": "Highlights mobs."
+      },
+      "portalesp": {
+        "description": "Highlights portals."
+      },
+      "visiblerange": {
+        "description": "Sets the highlight distance."
+      },
+      "fullbright": {
+        "description": "Maximizes in-game brightness."
+      },
+      "antiblind": {
+        "description": "Disables blindness and darkness effects."
+      }
+    },
+    "xray": {
+      "method": {
+        "description": "XRay operation mode."
+      },
+      "throughblocklist": {
+        "description": "List of blocks that are always transparent."
+      },
+      "exposedblocklist": {
+        "description": "List of blocks to display with XRay when exposed."
+      }
+    }
+  }
+}

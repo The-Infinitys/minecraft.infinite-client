@@ -1,0 +1,285 @@
+{
+  "feature": {
+    "aimode": {
+      "description": "MinecraftのAIにすべての操作を任せます。"
+    },
+    "woodcutter": {
+      "description": "自動で木を集めます。"
+    },
+    "killaura": {
+      "description": "近くのエンティティを自動的に攻撃します。"
+    },
+    "reach": {
+      "description": "プレイヤーの到達距離を拡張し、より遠くのブロックやエンティティを操作できるようにします。"
+    },
+    "noattack": {
+      "description": "村人やペットなどの特定のエンティティへの攻撃を防止します。"
+    },
+    "playermanager": {
+      "description": "フレンドと敵のプレイヤーを管理します。"
+    },
+    "superattack": {
+      "description": "自動でクリティカル攻撃を出します。"
+    },
+    "counterattack": {
+      "description": "エンティティから攻撃を受けた際に、自動的に反撃します。"
+    },
+    "impactattack": {
+      "description": "エンティティに連続攻撃を仕掛けます。"
+    },
+    "autototem": {
+      "description": "自動でトーテムを持ちます"
+    },
+    "supersprint": {
+      "description": "スプリントを拡張します"
+    },
+    "safewalk": {
+      "description": "地形の橋から落下せずに安全に移動できるようになります"
+    },
+    "freeze": {
+      "description": "有効にしている間は、サーバーにデータを送信しません"
+    },
+    "autowalk": {
+      "description": "自動で前進します"
+    },
+    "automine": {
+      "description": "自動でブロックを採掘します"
+    },
+    "fastbreak": {
+      "description": "ブロックを壊す際のインターバルを削除します"
+    },
+    "featherwalk": {
+      "description": "畑などで走ったりしないようにします。"
+    },
+    "waterhover": {
+      "description": "水中で勝手に沈まないようにします。"
+    },
+    "freecamera": {
+      "description": "いつでもスペクテイターモードに慣れます。"
+    },
+    "antioverlay": {
+      "description": "ゲーム画面から不要な視覚的オーバーレイを削除します。"
+    },
+    "supersight": {
+      "description": "視覚情報を強化します。"
+    },
+    "xray": {
+      "description": "ブロックを透視して、鉱石、洞窟、その他の隠された構造物を見つけられるようにします。"
+    },
+    "cameraconfig": {
+      "description": "カメラの設定を変更します。"
+    },
+    "radar": {
+      "description": "レーダーを表示します。"
+    },
+    "serverinfo": {
+      "description": "サーバーの情報を取得します。"
+    }
+  },
+  "setting": {
+    "aimode": {
+      "allowplayerinput": {
+        "description": "AIモード中でもプレイヤーの入力を許可します。"
+      },
+      "cancelondamaged": {
+        "description": "プレイヤーがダメージを受けた際にAIを強制中断します。"
+      }
+    },
+    "woodcutter": {
+      "range": {
+        "description": "探索範囲。x,z方向にこの範囲内のブロックを捜索する。"
+      },
+      "height": {
+        "description": "探索範囲。y方向にこの範囲内のブロックを捜索する。"
+      },
+      "collectitems": {
+        "description": "伐採後にドロップアイテムを回収します。"
+      }
+    },
+    "autototem": {
+      "hpthreshold": {
+        "description": "トーテムを持ち始めるHP（HP実数値）"
+      },
+      "delay": {
+        "description": "トーテムの再装備までの遅延（tick）"
+      }
+    },
+    "counterattack": {
+      "range": {
+        "description": "反撃の最大距離を設定します。"
+      },
+      "delay": {
+        "description": "反撃までの遅延（tick）を設定します。"
+      }
+    },
+    "impactattack": {
+      "range": {
+        "description": "自動攻撃の最大射程距離を設定します。"
+      },
+      "cps": {
+        "description": "自動攻撃の秒間クリック数を設定します。"
+      }
+    },
+    "killaura": {
+      "range": {
+        "description": "エンティティを攻撃する最大距離を設定します。"
+      },
+      "players": {
+        "description": "プレイヤーをターゲットにします。"
+      },
+      "mobs": {
+        "description": "モブをターゲットにします。"
+      },
+      "maxtargets": {
+        "description": "同時に攻撃するエンティティの最大数。(0で無制限)"
+      },
+      "attackfrequency": {
+        "description": "攻撃頻度を設定します。(0で自動調整)"
+      },
+      "changeangle": {
+        "description": "攻撃時にエンティティの方向を向きます。"
+      }
+    },
+    "noattack": {
+      "protectedentities": {
+        "description": "攻撃しないエンティティのリスト。"
+      }
+    },
+    "playermanager": {
+      "friends": {
+        "description": "フレンドとして扱うプレイヤーのリスト。"
+      },
+      "enemies": {
+        "description": "敵として扱うプレイヤーのリスト。"
+      }
+    },
+    "reach": {
+      "reachdistance": {
+        "description": "ブロックおよびエンティティとの対話距離を拡張します。"
+      }
+    },
+    "superattack": {
+      "method": {
+        "description": "クリティカル攻撃の方法を選択します。"
+      }
+    },
+    "antislowdown": {
+      "item": {
+        "description": "アイテム使用時の減速を無効にします。"
+      },
+      "cobweb": {
+        "description": "クモの巣での減速を無効にします。"
+      }
+    },
+    "featherwalk": {
+      "allowedblocks": {
+        "description": "ジャンプ・ダッシュを抑制するブロックIDのリストです。"
+      },
+      "disablejump": {
+        "description": "設定されたブロック上でのジャンプを無効にします。"
+      },
+      "disablesprint": {
+        "description": "設定されたブロック上でのダッシュ（スプリント）を無効にします。"
+      }
+    },
+    "freecamera": {
+      "speed": {
+        "description": "Freecam中の移動速度を設定します。"
+      }
+    },
+    "freeze": {
+      "duration": {
+        "description": "フリーズが自動的に無効になるまでの最長持続時間（秒）。0で無制限。"
+      },
+      "packetlimit": {
+        "description": "フリーズが自動的に再起動するまでに蓄積されるパケットの最大数。0で無制限。"
+      }
+    },
+    "step": {
+      "adjuststepheight": {
+        "description": "上れる最大の高さ（ブロック）を設定します。"
+      },
+      "autojumpallowed": {
+        "description": "Stepが有効な時に、MinecraftのAutoJumpを強制的に無効化します。"
+      }
+    },
+    "waterhover": {
+      "method": {
+        "description": "WaterHoverを実現するメソッドを変更します。"
+      }
+    },
+    "antioverlay": {
+      "nopumpkinoverlay": {
+        "description": "カボチャのオーバーレイを削除します。"
+      },
+      "nodarknessoverlay": {
+        "description": "暗闇のオーバーレイ（盲目効果など）を削除します。"
+      },
+      "noliquidoverlay": {
+        "description": "水/溶岩中のオーバーレイを削除します。"
+      },
+      "nofogoverlay": {
+        "description": "フォグ(霧のようなエフェクト)を無効化します。"
+      }
+    },
+    "cameraconfig": {
+      "cameradistance": {
+        "description": "カメラとプレイヤーとの距離を設定します。"
+      },
+      "clipblock": {
+        "description": "カメラが地形を貫通するかを設定します。"
+      },
+      "antihurttilt": {
+        "description": "ダメージを受けた際にカメラが揺れなくなります。"
+      }
+    },
+    "radar": {
+      "radius": {
+        "description": "探知半径を設定します。"
+      },
+      "height": {
+        "description": "探知する高さを設定します。"
+      },
+      "margin": {
+        "description": "レーダーUIのマージン(% of screen short side)。"
+      },
+      "size": {
+        "description": "レーダーUIの大きさ(% of screen short side)。"
+      }
+    },
+    "supersight": {
+      "playeresp": {
+        "description": "プレイヤーをハイライトします。"
+      },
+      "chestesp": {
+        "description": "チェストをハイライトします。"
+      },
+      "mobesp": {
+        "description": "モブをハイライトします。"
+      },
+      "portalesp": {
+        "description": "ポータルをハイライトします。"
+      },
+      "visiblerange": {
+        "description": "ハイライトする距離を設定します。"
+      },
+      "fullbright": {
+        "description": "ゲーム内の明るさを最大にします。"
+      },
+      "antiblind": {
+        "description": "盲目や暗闇のエフェクトを無効にします。"
+      }
+    },
+    "xray": {
+      "method": {
+        "description": "XRayの動作モード。"
+      },
+      "throughblocklist": {
+        "description": "常に透過するブロックのリスト。"
+      },
+      "exposedblocklist": {
+        "description": "露出している際にXRayで表示するブロックのリスト。"
+      }
+    }
+  }
+}
