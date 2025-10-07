@@ -1,19 +1,18 @@
 package org.theinfinitys.features
 
 import org.theinfinitys.feature
-import org.theinfinitys.features.automatic.AIMode
-import org.theinfinitys.features.automatic.WoodCutter
+import org.theinfinitys.features.automatic.*
+import org.theinfinitys.utils.Translation
 
-val automatic =
-    listOf(
-        feature(
-            "AIMode",
-            AIMode(),
-            "MinecraftのAIにすべての操作を任せます。",
-        ),
-        feature(
-            "WoodCutter",
-            WoodCutter(),
-            "自動で木を集めます。",
-        ),
-    )
+val automatic = listOf(
+    feature(
+        "AIMode",
+        AIMode(),
+        Translation.t("automatic.aimode.description"),
+    ),
+    feature(
+        "WoodCutter",
+        WoodCutter(),
+        Translation.t("automatic.woodcutter.description"),
+    ),
+)

@@ -4,7 +4,7 @@ package org.theinfinitys.utils.translation
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 
-
+/* Translation layer made by noobyetpro */
 fun JsonObject.deepGet(keyPath: String): JsonElement? {
     val parts = keyPath.split(".")
     var element: JsonElement? = this
