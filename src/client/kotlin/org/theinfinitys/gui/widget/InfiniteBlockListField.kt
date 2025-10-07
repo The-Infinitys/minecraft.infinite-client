@@ -112,7 +112,7 @@ class InfiniteBlockListField(
                 y + headerHeight,
                 containerWidth,
                 scrollableListHeight,
-                blockItemWidgets,
+                blockItemWidgets.toMutableList(),
             )
 
         // 5. スクロール位置を復元

@@ -1,0 +1,188 @@
+package org.theinfinitys.gui.widget
+
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
+import net.minecraft.client.gui.widget.ClickableWidget
+import net.minecraft.text.Text
+import org.theinfinitys.Feature
+import org.theinfinitys.featureCategories
+import org.theinfinitys.gui.screen.FeatureSettingsScreen
+
+class FeatureSearchWidget(
+    x: Int,
+    y: Int,
+    width: Int,
+    height: Int,
+    private val parentScreen: Screen,
+) : ClickableWidget(x, y, width, height, Text.empty()) {
+    private val textRenderer: TextRenderer = MinecraftClient.getInstance().textRenderer
+    private lateinit var searchField: InfiniteTextField
+    private lateinit var scrollableContainer: InfiniteScrollableContainer
+    private var allFeatures: List<Feature> = featureCategories.flatMap { it.features }
+    private var filteredFeatures: List<Feature>
+    private var isInitialized = false
+
+    init {
+        filteredFeatures = allFeatures
+    }
+
+    private fun filterFeatures(searchText: String) {
+        filteredFeatures =
+            if (searchText.isBlank()) {
+                allFeatures
+            } else {
+                allFeatures.filter { it.name.contains(searchText, ignoreCase = true) }
+            }.sortedBy { it.name } // Sort alphabetically for consistent ordering
+
+        if (::scrollableContainer.isInitialized) {
+            scrollableContainer.widgets.clear()
+            scrollableContainer.widgets.addAll(createFeatureToggleWidgets(filteredFeatures))
+            scrollableContainer.scrollY = 0.0 // Reset scroll position on filter
+            scrollableContainer.updateWidgetPositions() // Update positions after changing widgets
+        }
+    }
+
+    private fun createFeatureToggleWidgets(features: List<Feature>): List<ClickableWidget> =
+        features.map { feature ->
+            InfiniteFeatureToggle(0, 0, scrollableContainer.width - scrollableContainer.internalPadding * 2, 20, feature) {
+                MinecraftClient.getInstance().setScreen(FeatureSettingsScreen(parentScreen, feature))
+            }
+        }
+
+    override fun renderWidget(
+        context: DrawContext,
+        mouseX: Int,
+        mouseY: Int,
+        delta: Float,
+    ) {
+        if (!isInitialized) {
+            searchField =
+                InfiniteTextField(
+                    textRenderer,
+                    x,
+                    y,
+                    width,
+                    20, // Height of the search field
+                    Text.literal("Search features..."),
+                    InfiniteTextField.InputType.ANY_TEXT,
+                )
+            searchField.setChangedListener { newText ->
+                filterFeatures(newText)
+            }
+
+            scrollableContainer =
+                InfiniteScrollableContainer(
+                    x,
+                    y + searchField.height + 5, // Position below search field
+                    width,
+                    height - searchField.height - 5, // Remaining height for scrollable container
+                    mutableListOf(), // Initialize with an empty list
+                )
+            filterFeatures("") // Initial filter to populate the scrollable container
+            isInitialized = true
+        }
+
+        searchField.x = x
+        searchField.y = y
+        searchField.render(context, mouseX, mouseY, delta)
+        searchField.isFocused = true // Always keep focus on the search field
+
+        scrollableContainer.x = x
+        scrollableContainer.y = y + searchField.height + 5
+        scrollableContainer.render(context, mouseX, mouseY, delta)
+    }
+
+    override fun mouseClicked(
+        mouseX: Double,
+        mouseY: Double,
+        button: Int,
+    ): Boolean {
+        if (searchField.mouseClicked(mouseX, mouseY, button)) {
+            return true
+        }
+        if (scrollableContainer.mouseClicked(mouseX, mouseY, button)) {
+            return true
+        }
+        return super.mouseClicked(mouseX, mouseY, button)
+    }
+
+    override fun keyPressed(
+        keyCode: Int,
+        scanCode: Int,
+        modifiers: Int,
+    ): Boolean {
+        if (searchField.keyPressed(keyCode, scanCode, modifiers)) {
+            return true
+        }
+        if (scrollableContainer.keyPressed(keyCode, scanCode, modifiers)) {
+            return true
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers)
+    }
+
+    override fun mouseScrolled(
+        mouseX: Double,
+        mouseY: Double,
+        horizontalAmount: Double,
+        verticalAmount: Double,
+    ): Boolean {
+        if (searchField.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) {
+            return true
+        }
+        if (scrollableContainer.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) {
+            return true
+        }
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+    }
+
+    override fun mouseDragged(
+        mouseX: Double,
+        mouseY: Double,
+        button: Int,
+        deltaX: Double,
+        deltaY: Double,
+    ): Boolean {
+        if (searchField.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+            return true
+        }
+        if (scrollableContainer.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+            return true
+        }
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+    }
+
+    override fun mouseReleased(
+        mouseX: Double,
+        mouseY: Double,
+        button: Int,
+    ): Boolean {
+        if (searchField.mouseReleased(mouseX, mouseY, button)) {
+            return true
+        }
+        if (scrollableContainer.mouseReleased(mouseX, mouseY, button)) {
+            return true
+        }
+        return super.mouseReleased(mouseX, mouseY, button)
+    }
+
+    override fun charTyped(
+        chr: Char,
+        modifiers: Int,
+    ): Boolean {
+        if (searchField.charTyped(chr, modifiers)) {
+            return true
+        }
+        if (scrollableContainer.charTyped(chr, modifiers)) {
+            return true
+        }
+        return super.charTyped(chr, modifiers)
+    }
+
+    override fun appendClickableNarrations(builder: NarrationMessageBuilder) {
+        searchField.appendNarrations(builder)
+        // scrollableContainer.appendClickableNarrations(builder) // Protected method
+    }
+}

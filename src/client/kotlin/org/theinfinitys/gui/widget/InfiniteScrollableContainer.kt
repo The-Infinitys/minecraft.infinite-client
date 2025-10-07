@@ -15,20 +15,20 @@ class InfiniteScrollableContainer(
     y: Int,
     width: Int,
     height: Int,
-    private val widgets: List<ClickableWidget>,
+    var widgets: MutableList<ClickableWidget>, // Made mutable and public
 ) : ClickableWidget(x, y, width, height, Text.literal("")) {
-    public var scrollY: Double = 0.0
+    var scrollY: Double = 0.0
         set(value) {
-            val contentHeight = widgets.sumOf { it.height + padding }
+            val contentHeight = widgets.sumOf { it.height + internalPadding }
             field = MathHelper.clamp(value, 0.0, max(0.0, contentHeight - height.toDouble()))
         }
     private val scrollbarWidth = 6
-    private val padding = 5
+    internal val internalPadding = 5 // Made internal
     private var isDragging = false
     private var dragYOffset = 0.0
 
     private val shouldShowScrollbar: Boolean
-        get() = widgets.sumOf { it.height + padding } > height
+        get() = widgets.sumOf { it.height + internalPadding } > height
 
     init {
         updateWidgetPositions()
@@ -45,16 +45,16 @@ class InfiniteScrollableContainer(
         updateWidgetPositions()
     }
 
-    private fun updateWidgetPositions() {
+    internal fun updateWidgetPositions() { // Made internal
         val effectiveScrollbarWidth = if (shouldShowScrollbar) scrollbarWidth else 0
-        val contentWidth = this.width - 2 * padding - effectiveScrollbarWidth
+        val contentWidth = this.width - 2 * internalPadding - effectiveScrollbarWidth
 
         // currentY は、親コンテナの Y 座標（this.y）からの相対 Y 座標（スクロールオフセット適用済み）
-        var currentRelativeContentY = padding - scrollY.toInt()
+        var currentRelativeContentY = internalPadding - scrollY.toInt()
 
         for (widget in widgets) {
             // X座標: このコンテナの絶対X + パディング
-            widget.x = this.x + padding
+            widget.x = this.x + internalPadding
 
             // Y座標: このコンテナの絶対Y + 相対Y
             // これにより、子の widget.x と widget.y は常にグローバル座標を保持する
@@ -63,7 +63,7 @@ class InfiniteScrollableContainer(
             // 幅の更新
             widget.setWidth(contentWidth)
 
-            currentRelativeContentY += widget.height + padding
+            currentRelativeContentY += widget.height + internalPadding
         }
     }
 
@@ -92,7 +92,7 @@ class InfiniteScrollableContainer(
     // 前回の最終版のロジック（親へのスクロール伝播、子のイベント処理優先、ドラッグ処理）を維持します。
 
     private fun renderScrollbar(context: DrawContext) {
-        val contentHeight = widgets.sumOf { it.height + padding }
+        val contentHeight = widgets.sumOf { it.height + internalPadding }
         if (contentHeight > height) {
             val maxScrollY = max(0.0, contentHeight - height.toDouble())
             val scrollbarHeight = MathHelper.clamp((height.toDouble() / contentHeight * height).toInt(), 32, height - 8)
@@ -165,7 +165,7 @@ class InfiniteScrollableContainer(
         }
 
         // 2. 子ウィジェットが処理しなかった場合、このコンテナ自身のスクロール処理を行う
-        val contentHeight = widgets.sumOf { it.height + padding }
+        val contentHeight = widgets.sumOf { it.height + internalPadding }
         var scrolledSelf = false
         if (isMouseOver(mouseX, mouseY) && contentHeight > height) {
             val oldScrollY = scrollY
@@ -191,7 +191,7 @@ class InfiniteScrollableContainer(
             return false
         }
 
-        val contentHeight = widgets.sumOf { it.height + padding }
+        val contentHeight = widgets.sumOf { it.height + internalPadding }
 
         for (widget in widgets) {
             if (widget.y + widget.height > y && widget.y < y + height) {
@@ -233,7 +233,7 @@ class InfiniteScrollableContainer(
     ): Boolean {
         // 1. スクロールバーのドラッグ処理（最優先）
         if (isDragging) {
-            val contentHeight = widgets.sumOf { it.height + padding }
+            val contentHeight = widgets.sumOf { it.height + internalPadding }
             if (contentHeight > height) {
                 val maxScrollY = max(0.0, contentHeight - height.toDouble())
                 val scrollbarHeight =
@@ -296,7 +296,7 @@ class InfiniteScrollableContainer(
         scanCode: Int,
         modifiers: Int,
     ): Boolean {
-        val contentHeight = widgets.sumOf { it.height + padding }
+        val contentHeight = widgets.sumOf { it.height + internalPadding }
         if (contentHeight > height) {
             if (keyCode == GLFW.GLFW_KEY_DOWN) {
                 scrollY += 10

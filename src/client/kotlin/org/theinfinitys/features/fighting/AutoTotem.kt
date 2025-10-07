@@ -13,7 +13,7 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
     private val mc: MinecraftClient = MinecraftClient.getInstance()
     override val available: Boolean = false
 
-    private val OFFHAND_NETWORK_SLOT_ID = 45
+    private val offhandNetworkSlotId = 45
 
     override val settings: List<InfiniteSetting<*>> =
         listOf(
@@ -97,7 +97,7 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
         // 2. オフハンド (ID 45) に置く
         interactionManager.clickSlot(
             player.currentScreenHandler.syncId,
-            OFFHAND_NETWORK_SLOT_ID,
+            offhandNetworkSlotId,
             0,
             SlotActionType.PICKUP,
             player,
