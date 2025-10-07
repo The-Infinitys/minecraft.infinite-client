@@ -2,7 +2,7 @@ package org.theinfinitys.mixin.client;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import java.util.stream.StreamSupport;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -12,6 +12,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -23,6 +24,7 @@ import org.theinfinitys.settings.InfiniteSetting;
 
 @Mixin(ClientPlayerEntity.class)
 public class KillAuraMixin {
+  @Unique
   private int attackCooldown = 0;
 
   @Inject(method = "tick", at = @At("TAIL"))
@@ -39,19 +41,17 @@ public class KillAuraMixin {
       return;
     }
 
-    float range = ((InfiniteSetting.FloatSetting) killAuraFeature.getSetting("Range")).getValue();
-    int attackDelaySetting =
-        ((InfiniteSetting.IntSetting) killAuraFeature.getSetting("AttackDelay")).getValue();
+    float range = ((InfiniteSetting.FloatSetting) Objects.requireNonNull(killAuraFeature.getSetting("Range"))).getValue();
     boolean targetPlayers =
-        ((InfiniteSetting.BooleanSetting) killAuraFeature.getSetting("Players")).getValue();
+        ((InfiniteSetting.BooleanSetting) Objects.requireNonNull(killAuraFeature.getSetting("Players"))).getValue();
     boolean targetMobs =
-        ((InfiniteSetting.BooleanSetting) killAuraFeature.getSetting("Mobs")).getValue();
+        ((InfiniteSetting.BooleanSetting) Objects.requireNonNull(killAuraFeature.getSetting("Mobs"))).getValue();
     int maxTargets =
-        ((InfiniteSetting.IntSetting) killAuraFeature.getSetting("MaxTargets")).getValue();
+        ((InfiniteSetting.IntSetting) Objects.requireNonNull(killAuraFeature.getSetting("MaxTargets"))).getValue();
     int attackFrequency =
-        ((InfiniteSetting.IntSetting) killAuraFeature.getSetting("AttackFrequency")).getValue();
+        ((InfiniteSetting.IntSetting) Objects.requireNonNull(killAuraFeature.getSetting("AttackFrequency"))).getValue();
     boolean changeAngle =
-        ((InfiniteSetting.BooleanSetting) killAuraFeature.getSetting("ChangeAngle")).getValue();
+        ((InfiniteSetting.BooleanSetting) Objects.requireNonNull(killAuraFeature.getSetting("ChangeAngle"))).getValue();
 
     // Calculate actual attack delay based on AttackFrequency setting
     int actualAttackDelay;
@@ -88,7 +88,7 @@ public class KillAuraMixin {
                 })
             .sorted(Comparator.comparingDouble(player::distanceTo))
             .limit(maxTargets == 0 ? Long.MAX_VALUE : maxTargets)
-            .collect(Collectors.toList());
+            .toList();
 
     for (Entity target : targets) {
       if (changeAngle) {
@@ -97,12 +97,10 @@ public class KillAuraMixin {
       client.interactionManager.attackEntity(player, target);
       attackCooldown = actualAttackDelay;
       // Only attack one target per tick if attackDelaySetting is not 0
-      if (attackDelaySetting != 0) {
-        break;
-      }
     }
   }
 
+  @Unique
   private boolean isFriendlyPlayer(PlayerEntity targetPlayer) {
     PlayerManager playerManagerFeature = InfiniteClient.INSTANCE.getFeature(PlayerManager.class);
     if (playerManagerFeature != null && playerManagerFeature.isEnabled()) {
@@ -115,6 +113,7 @@ public class KillAuraMixin {
     return false;
   }
 
+  @Unique
   private boolean isProtectedEntity(Entity targetEntity) {
     NoAttack noAttackFeature = InfiniteClient.INSTANCE.getFeature(NoAttack.class);
     if (noAttackFeature != null && noAttackFeature.isEnabled()) {
@@ -128,6 +127,7 @@ public class KillAuraMixin {
     return false;
   }
 
+  @Unique
   private void faceEntity(ClientPlayerEntity player, Entity target) {
     double x = target.getX() - player.getX();
     double y = target.getY() - (player.getY() + player.getEyeHeight(player.getPose()));

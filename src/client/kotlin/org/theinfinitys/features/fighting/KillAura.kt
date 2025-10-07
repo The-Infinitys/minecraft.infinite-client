@@ -13,13 +13,6 @@ class KillAura : ConfigurableFeature(initialEnabled = false) {
                 3.0f,
                 7.0f,
             ),
-            InfiniteSetting.IntSetting(
-                "AttackDelay",
-                "攻撃間のティック遅延を設定します。（0 = 最速）",
-                1,
-                0,
-                20,
-            ),
             InfiniteSetting.BooleanSetting(
                 "Players",
                 "プレイヤーをターゲットにします。",
