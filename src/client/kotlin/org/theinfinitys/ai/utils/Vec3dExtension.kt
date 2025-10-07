@@ -17,8 +17,10 @@ operator fun Vec3d.minus(other: Vec3d): Vec3d = this.subtract(other)
 operator fun Vec3d.times(multiplier: Double): Vec3d = this.multiply(multiplier)
 
 // MoveTask で使用している Vec3dのプロパティを解決
+@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 val Vec3d.x: Double
     get() = this.getX()
 
+@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 val Vec3d.z: Double
     get() = this.getZ()
