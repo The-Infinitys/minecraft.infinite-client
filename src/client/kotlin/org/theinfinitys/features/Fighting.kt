@@ -2,7 +2,7 @@ package org.theinfinitys.features
 
 import org.theinfinitys.feature
 import org.theinfinitys.features.fighting.*
-import org.theinfinitys.utils.translation.Translation
+import org.theinfinitys.utils.Translation
 
 
 
