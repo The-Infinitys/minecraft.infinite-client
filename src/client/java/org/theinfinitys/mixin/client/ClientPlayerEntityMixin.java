@@ -143,13 +143,11 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
     // Feature: SuperSight
 
     // NightVision
-    if (InfiniteClient.INSTANCE.isFeatureEnabled(SuperSight.class)
-        && effect == StatusEffects.NIGHT_VISION
+    if (effect == StatusEffects.NIGHT_VISION
         && InfiniteClient.INSTANCE.isSettingEnabled(SuperSight.class, "FullBright")) return true;
 
     // AntiBlind (BLINDNESS, DARKNESS)
-    if (InfiniteClient.INSTANCE.isFeatureEnabled(SuperSight.class)
-        && InfiniteClient.INSTANCE.isSettingEnabled(SuperSight.class, "AntiBlind")) {
+    if (InfiniteClient.INSTANCE.isSettingEnabled(SuperSight.class, "AntiBlind")) {
       if (effect == StatusEffects.BLINDNESS || effect == StatusEffects.DARKNESS) return false;
     }
 

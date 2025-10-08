@@ -124,7 +124,7 @@ object RadarRenderer {
     /**
      * エンティティの種類に基づいてドットの色を決定します。（アルファ値は含まない）
      */
-    private fun getBaseDotColor(entity: LivingEntity): Int =
+    fun getBaseDotColor(entity: LivingEntity): Int =
         when (entity) {
             is PlayerEntity -> 0x00FFFF // プレイヤー: 水色 (ARGBのAなし)
             is HostileEntity -> 0xFF0000 // 敵対モブ: 赤色

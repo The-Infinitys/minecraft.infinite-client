@@ -3,6 +3,7 @@ package org.theinfinitys.features
 import org.theinfinitys.feature
 import org.theinfinitys.features.rendering.AntiOverlay
 import org.theinfinitys.features.rendering.CameraConfig
+import org.theinfinitys.features.rendering.ExtraSensory
 import org.theinfinitys.features.rendering.Radar
 import org.theinfinitys.features.rendering.SuperSight
 import org.theinfinitys.features.rendering.XRay
@@ -34,5 +35,10 @@ val rendering =
             "Radar",
             Radar(),
             Translation.t("rendering.radar.description"),
+        ),
+        feature(
+            "ExtraSensory",
+            ExtraSensory(),
+            Translation.t("rendering.extrasensory.description"),
         ),
     )
