@@ -1,15 +1,13 @@
 package org.theinfinitys.utils.translation
 
-
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Locale
 
 object LanguageLoader {
-
     private val translations: MutableMap<String, JsonObject> = mutableMapOf()
     private var currentLang: JsonObject? = null
     private var currentLangCode: String = "en_US"
@@ -18,9 +16,7 @@ object LanguageLoader {
     fun load() {
         val languages = listOf("en_US", "ja_JP")
 
-
         fun open(lang: String): java.io.InputStream? {
-
             val stream = javaClass.getResourceAsStream("/assets/infinite/i18n/$lang.json")
             if (stream != null) return stream
 
@@ -50,12 +46,13 @@ object LanguageLoader {
 
         val detected = detectLanguage()
 
-        val selected = when {
-            translations.containsKey(detected) -> detected
-            translations.containsKey("en_US") -> "en_US"
-            translations.isNotEmpty() -> translations.keys.first()
-            else -> null
-        }
+        val selected =
+            when {
+                translations.containsKey(detected) -> detected
+                translations.containsKey("en_US") -> "en_US"
+                translations.isNotEmpty() -> translations.keys.first()
+                else -> null
+            }
 
         currentLangCode = selected ?: "en_US"
         currentLang = selected?.let { translations[it] }
@@ -73,10 +70,11 @@ object LanguageLoader {
 
     private fun detectLanguage(): String {
         val tag = Locale.getDefault().toLanguageTag() // e.g., "en-US", "ja-JP"
-        val normalized = when (val underscored = tag.replace("-", "_")) {
-            "en" -> "en_US"
-            else -> underscored
-        }
+        val normalized =
+            when (val underscored = tag.replace("-", "_")) {
+                "en" -> "en_US"
+                else -> underscored
+            }
         println("[Translation] Detected system locale: $normalized")
         return normalized
     }
@@ -92,7 +90,6 @@ object LanguageLoader {
         }
         return element?.asString ?: "[Missing translation: $key]"
     }
-
 
     fun setLanguage(lang: String): Boolean {
         val json = translations[lang] ?: return false

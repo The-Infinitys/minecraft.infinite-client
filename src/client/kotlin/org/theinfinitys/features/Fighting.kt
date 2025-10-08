@@ -1,10 +1,14 @@
 package org.theinfinitys.features
 
 import org.theinfinitys.feature
-import org.theinfinitys.features.fighting.*
+import org.theinfinitys.features.fighting.CounterAttack
+import org.theinfinitys.features.fighting.ImpactAttack
+import org.theinfinitys.features.fighting.KillAura
+import org.theinfinitys.features.fighting.NoAttack
+import org.theinfinitys.features.fighting.PlayerManager
+import org.theinfinitys.features.fighting.Reach
+import org.theinfinitys.features.fighting.SuperAttack
 import org.theinfinitys.utils.Translation
-
-
 
 val fighting =
     listOf(
