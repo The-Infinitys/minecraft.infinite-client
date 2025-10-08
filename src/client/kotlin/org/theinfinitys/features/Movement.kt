@@ -10,13 +10,14 @@ import org.theinfinitys.features.movement.Freeze
 import org.theinfinitys.features.movement.SafeWalk
 import org.theinfinitys.features.movement.SuperSprint
 import org.theinfinitys.features.movement.WaterHover
+import org.theinfinitys.utils.Translation
 
 val movement =
     listOf(
         feature(
             "SuperSprint",
             SuperSprint(),
-            "スプリントを拡張します",
+            Translation.t(""),
         ),
         feature(
             "SafeWalk",

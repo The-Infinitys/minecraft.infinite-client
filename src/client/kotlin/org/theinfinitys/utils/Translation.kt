@@ -1,4 +1,13 @@
 package org.theinfinitys.utils
 
-class Translation {
+import org.theinfinitys.utils.translation.LanguageLoader
+
+object Translation {
+    fun load() {
+        LanguageLoader.load()
+    }
+
+    fun t(key: String): String {
+        return LanguageLoader.translate(key)
+    }
 }
