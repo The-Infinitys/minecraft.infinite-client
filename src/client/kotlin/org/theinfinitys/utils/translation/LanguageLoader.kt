@@ -24,7 +24,7 @@ object LanguageLoader {
             val stream = javaClass.getResourceAsStream("/assets/infinite/i18n/$lang.json")
             if (stream != null) return stream
 
-            val devFile = java.io.File("src/client/resources/infinite/i18n/$lang.json")
+            val devFile = java.io.File("src/main/resources/assets/infinite/i18n/$lang.json")
             if (devFile.exists()) {
                 println("[Translation] Using dev language file: ${devFile.absolutePath}")
                 return devFile.inputStream()
