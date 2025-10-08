@@ -2,10 +2,13 @@ package org.theinfinitys.gui.widget
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
+import net.minecraft.client.input.CharInput
+import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.lwjgl.glfw.GLFW
 import org.theinfinitys.Feature
@@ -48,7 +51,7 @@ class FeatureSearchWidget(
 
         selectedIndex = -1 // Reset selection on filter change
 
-        if (::scrollableContainer.isInitialized) {
+        if (isInitialized) {
             scrollableContainer.widgets.clear()
             scrollableContainer.widgets.addAll(createFeatureToggleWidgets(filteredFeatures))
             scrollableContainer.scrollY = 0.0 // Reset scroll position on filter
@@ -115,29 +118,25 @@ class FeatureSearchWidget(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
-        if (searchField.mouseClicked(mouseX, mouseY, button)) {
+        if (searchField.mouseClicked(click, doubled)) {
             return true
         }
-        if (scrollableContainer.mouseClicked(mouseX, mouseY, button)) {
+        if (scrollableContainer.mouseClicked(click, doubled)) {
             return true
         }
-        return super.mouseClicked(mouseX, mouseY, button)
+        return super.mouseClicked(click, doubled)
     }
 
-    override fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
-    ): Boolean {
-        if (searchField.keyPressed(keyCode, scanCode, modifiers)) {
+    override fun keyPressed(input: KeyInput): Boolean {
+        if (searchField.keyPressed(input)) {
             return true
         }
 
         if (filteredFeatures.isNotEmpty()) {
+            val keyCode = input.key
             when (keyCode) {
                 GLFW.GLFW_KEY_UP -> {
                     selectedIndex = (selectedIndex - 1 + filteredFeatures.size) % filteredFeatures.size
@@ -160,7 +159,7 @@ class FeatureSearchWidget(
                 GLFW.GLFW_KEY_ENTER -> {
                     if (selectedIndex != -1) {
                         val selectedToggle = scrollableContainer.widgets[selectedIndex] as? InfiniteFeatureToggle
-                        selectedToggle?.toggleButton?.onPress() // Simulate button press
+                        selectedToggle?.toggleButton?.onPress(input) // Simulate button press
                         return true
                     }
                 }
@@ -175,10 +174,10 @@ class FeatureSearchWidget(
             }
         }
 
-        if (scrollableContainer.keyPressed(keyCode, scanCode, modifiers)) {
+        if (scrollableContainer.keyPressed(input)) {
             return true
         }
-        return super.keyPressed(keyCode, scanCode, modifiers)
+        return super.keyPressed(input)
     }
 
     override fun mouseScrolled(
@@ -197,46 +196,37 @@ class FeatureSearchWidget(
     }
 
     override fun mouseDragged(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-        deltaX: Double,
-        deltaY: Double,
+        click: Click,
+        offsetX: Double,
+        offsetY: Double,
     ): Boolean {
-        if (searchField.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+        if (searchField.mouseDragged(click, offsetX, offsetY)) {
             return true
         }
-        if (scrollableContainer.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+        if (scrollableContainer.mouseDragged(click, offsetX, offsetY)) {
             return true
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+        return super.mouseDragged(click, offsetX, offsetY)
     }
 
-    override fun mouseReleased(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-    ): Boolean {
-        if (searchField.mouseReleased(mouseX, mouseY, button)) {
+    override fun mouseReleased(click: Click): Boolean {
+        if (searchField.mouseReleased(click)) {
             return true
         }
-        if (scrollableContainer.mouseReleased(mouseX, mouseY, button)) {
+        if (scrollableContainer.mouseReleased(click)) {
             return true
         }
-        return super.mouseReleased(mouseX, mouseY, button)
+        return super.mouseReleased(click)
     }
 
-    override fun charTyped(
-        chr: Char,
-        modifiers: Int,
-    ): Boolean {
-        if (searchField.charTyped(chr, modifiers)) {
+    override fun charTyped(input: CharInput): Boolean {
+        if (searchField.charTyped(input)) {
             return true
         }
-        if (scrollableContainer.charTyped(chr, modifiers)) {
+        if (scrollableContainer.charTyped(input)) {
             return true
         }
-        return super.charTyped(chr, modifiers)
+        return super.charTyped(input)
     }
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {

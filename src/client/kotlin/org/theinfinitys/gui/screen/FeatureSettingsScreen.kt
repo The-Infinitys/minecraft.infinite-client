@@ -1,8 +1,11 @@
 package org.theinfinitys.gui.screen
 
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.ClickableWidget
+import net.minecraft.client.input.CharInput
+import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.Feature
@@ -23,84 +26,136 @@ class FeatureSettingsScreen(
     private val feature: Feature,
 ) : Screen(Text.literal(feature.name)) {
     private var savedPageIndex: Int = 0
+
+    // 遅延初期化を維持
     private lateinit var scrollableContainer: InfiniteScrollableContainer
 
     override fun init() {
         super.init()
-        // ... (initのコードは変更なし) ...
 
         if (parent is InfiniteScreen) {
             savedPageIndex = parent.pageIndex
         }
 
         val settingWidgets = mutableListOf<ClickableWidget>()
-        var currentY = 50 // Starting Y position for settings
-        val widgetWidth = width - 40 // Adjust width for padding
-        val defaultWidgetHeight = 20 // Standard height for most setting widgets
-        val blockListFieldHeight = height / 2 // Height for InfiniteBlockListField
-        val padding = 5 // Padding between widgets
+        var currentY = 50
+        val widgetWidth = width - 40
+        val defaultWidgetHeight = 20
+        val blockListFieldHeight = height / 2
+        val padding = 5
 
+        // (ウィジェットの生成ロジックは変更なし)
         (feature.instance as? ConfigurableFeature)?.settings?.forEach { setting ->
+            // ... (ウィジェット生成ロジックは省略) ...
             when (setting) {
                 is InfiniteSetting.BooleanSetting -> {
                     settingWidgets.add(InfiniteSettingToggle(20, currentY, widgetWidth, defaultWidgetHeight, setting))
                     currentY += defaultWidgetHeight + padding
                 }
+
                 is InfiniteSetting.IntSetting -> {
                     settingWidgets.add(InfiniteSlider(20, currentY, widgetWidth, defaultWidgetHeight, setting))
                     currentY += defaultWidgetHeight + padding
                 }
+
                 is InfiniteSetting.FloatSetting -> {
                     settingWidgets.add(InfiniteSlider(20, currentY, widgetWidth, defaultWidgetHeight, setting))
                     currentY += defaultWidgetHeight + padding
                 }
+
                 is InfiniteSetting.StringSetting -> {
-                    settingWidgets.add(InfiniteSettingTextField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(
+                        InfiniteSettingTextField(
+                            20,
+                            currentY,
+                            widgetWidth,
+                            defaultWidgetHeight,
+                            setting,
+                        ),
+                    )
                     currentY += defaultWidgetHeight + padding
                 }
+
                 is InfiniteSetting.StringListSetting -> {
                     settingWidgets.add(InfiniteStringListField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
                     currentY += defaultWidgetHeight + padding
                 }
+
                 is InfiniteSetting.EnumSetting<*> -> {
                     settingWidgets.add(InfiniteSelectionList(20, currentY, widgetWidth, defaultWidgetHeight, setting))
                     currentY += defaultWidgetHeight + padding
                 }
+
                 is InfiniteSetting.BlockIDSetting -> {
-                    settingWidgets.add(InfiniteSettingTextField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(
+                        InfiniteSettingTextField(
+                            20,
+                            currentY,
+                            widgetWidth,
+                            defaultWidgetHeight,
+                            setting,
+                        ),
+                    )
                     currentY += defaultWidgetHeight + padding
                 }
+
                 is InfiniteSetting.EntityIDSetting -> {
-                    settingWidgets.add(InfiniteSettingTextField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(
+                        InfiniteSettingTextField(
+                            20,
+                            currentY,
+                            widgetWidth,
+                            defaultWidgetHeight,
+                            setting,
+                        ),
+                    )
                     currentY += defaultWidgetHeight + padding
                 }
+
                 is InfiniteSetting.BlockListSetting -> {
                     settingWidgets.add(InfiniteBlockListField(20, currentY, widgetWidth, blockListFieldHeight, setting))
-                    currentY += blockListFieldHeight + padding // Use blockListFieldHeight here
+                    currentY += blockListFieldHeight + padding
                 }
+
                 is InfiniteSetting.EntityListSetting -> {
-                    settingWidgets.add(InfiniteEntityListField(20, currentY, widgetWidth, blockListFieldHeight, setting))
-                    currentY += blockListFieldHeight + padding // Use blockListFieldHeight here
+                    settingWidgets.add(
+                        InfiniteEntityListField(
+                            20,
+                            currentY,
+                            widgetWidth,
+                            blockListFieldHeight,
+                            setting,
+                        ),
+                    )
+                    currentY += blockListFieldHeight + padding
                 }
+
                 is InfiniteSetting.PlayerListSetting -> {
-                    settingWidgets.add(InfinitePlayerListField(20, currentY, widgetWidth, blockListFieldHeight, setting))
-                    currentY += blockListFieldHeight + padding // Use blockListFieldHeight here
+                    settingWidgets.add(
+                        InfinitePlayerListField(
+                            20,
+                            currentY,
+                            widgetWidth,
+                            blockListFieldHeight,
+                            setting,
+                        ),
+                    )
+                    currentY += blockListFieldHeight + padding
                 }
             }
         }
 
         val scrollableContainer =
             InfiniteScrollableContainer(
-                20, // x
-                50, // y (below feature name/description)
-                width - 40, // width
-                height - 100, // height (leaving space for title and close button)
+                20,
+                50,
+                width - 40,
+                height - 100,
                 settingWidgets,
             )
         addDrawableChild(scrollableContainer)
         this.scrollableContainer = scrollableContainer
 
-        // Add a close button to return to the parent screen
         addDrawableChild(
             InfiniteButton(
                 width / 2 - 50,
@@ -117,67 +172,61 @@ class FeatureSettingsScreen(
         )
     }
 
-    // --- イベント転送メソッドの追加と修正 ---
+    // --- マウスイベント (Screen.java のシグネチャに合わせる) ---
+    // ScreenクラスがAbstractParentElementの古いメソッドをオーバーライドして保持しているため、この形式を維持。
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
-        // addDrawableChildで追加されたウィジェットはsuper.mouseClickedで処理される。
-        // ただし、scrollableContainer は他のウィジェットの親であるため、最初に転送を試みるのが安全。
-        if (scrollableContainer.mouseClicked(mouseX, mouseY, button)) return true
-        return super.mouseClicked(mouseX, mouseY, button)
+        if (scrollableContainer.mouseClicked(click, doubled)) return true
+        return super.mouseClicked(click, doubled)
     }
 
-    /**
-     * ★ 追加・修正箇所 1: mouseDragged イベントを子のコンテナに転送
-     * mouseClickedで true を返したウィジェットが mouseDragged を受け取る
-     */
     override fun mouseDragged(
+        click: Click,
+        offsetX: Double,
+        offsetY: Double,
+    ): Boolean {
+        if (scrollableContainer.mouseDragged(click, offsetX, offsetY)) return true
+        return super.mouseDragged(click, offsetX, offsetY)
+    }
+
+    override fun mouseReleased(click: Click): Boolean {
+        if (scrollableContainer.mouseReleased(click)) return true
+        return super.mouseReleased(click)
+    }
+
+    // --- スクロールイベント (ParentElement.java の新しいシグネチャに合わせる) ---
+
+    override fun mouseScrolled(
         mouseX: Double,
         mouseY: Double,
-        button: Int,
-        deltaX: Double,
-        deltaY: Double,
+        horizontalAmount: Double,
+        verticalAmount: Double,
     ): Boolean {
-        // scrollableContainer は addDrawableChild に登録されているため、
-        // super.mouseDragged が自動的に転送を試みるはずだが、念のため明示的に呼び出す。
-        if (scrollableContainer.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+        // InfiniteScrollableContainer は古い amount 引数 (垂直スクロール) を期待すると仮定し、verticalAmount を転送
+        if (scrollableContainer.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) return true
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
     }
 
-    /**
-     * ★ 追加・修正箇所 2: mouseReleased イベントを子のコンテナに転送
-     */
-    override fun mouseReleased(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-    ): Boolean {
-        // super.mouseReleased の前に明示的に呼び出すことで、確実にイベントを処理させる
-        if (scrollableContainer.mouseReleased(mouseX, mouseY, button)) return true
-        return super.mouseReleased(mouseX, mouseY, button)
+    // --- キーボードイベント (ParentElement.java の新しいシグネチャに合わせる) ---
+
+    // ParentElement.java で確認された KeyInput シグネチャを使用
+    override fun keyPressed(input: KeyInput): Boolean {
+        // scrollableContainer の古い keyPressed(keyCode, scanCode, modifiers) に転送
+        if (scrollableContainer.keyPressed(input)) return true
+        return super.keyPressed(input)
     }
 
-    override fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
-    ): Boolean {
-        if (scrollableContainer.keyPressed(keyCode, scanCode, modifiers)) return true
-        return super.keyPressed(keyCode, scanCode, modifiers)
+    // ParentElement.java で確認された CharInput シグネチャを使用
+    override fun charTyped(input: CharInput): Boolean {
+        // scrollableContainer の古い charTyped(chr, modifiers) に転送
+        if (scrollableContainer.charTyped(input)) return true
+        return super.charTyped(input)
     }
 
-    override fun charTyped(
-        chr: Char,
-        modifiers: Int,
-    ): Boolean {
-        if (scrollableContainer.charTyped(chr, modifiers)) return true
-        return super.charTyped(chr, modifiers)
-    }
-
-    // ... (render と shouldPause は変更なし) ...
+    // --- レンダリングなど (変更なし) ---
 
     override fun render(
         context: DrawContext,
@@ -185,8 +234,7 @@ class FeatureSettingsScreen(
         mouseY: Int,
         delta: Float,
     ) {
-        // Render a semi-transparent background to make it look like a popup
-        // renderBackground(context, mouseX, mouseY, delta) // This causes a crash
+        // 背景の描画 (半透明の黒)
         context.fill(0, 0, width, height, 0x80000000.toInt())
 
         context.drawCenteredTextWithShadow(
@@ -204,7 +252,7 @@ class FeatureSettingsScreen(
             0xFFAAAAAA.toInt(),
         )
 
-        // Render other widgets for the feature settings here
+        // ウィジェットの描画 (scrollableContainerを含む)
         super.render(context, mouseX, mouseY, delta)
     }
 

@@ -1,6 +1,7 @@
 package org.theinfinitys.gui.widget
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
@@ -68,10 +69,12 @@ class InfiniteSlider<T : Number>(
                 val range = (setting.max - setting.min).toFloat()
                 (setting.value.toFloat() - setting.min) / range
             }
+
             is InfiniteSetting.FloatSetting -> {
                 val range = (setting.max - setting.min)
                 (setting.value - setting.min) / range
             }
+
             else -> throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
         }
 
@@ -92,11 +95,13 @@ class InfiniteSlider<T : Number>(
                 val newValue = (setting.min + progress * (setting.max - setting.min)).toInt()
                 (setting as InfiniteSetting.IntSetting).value = newValue
             }
+
             is InfiniteSetting.FloatSetting -> {
                 // 新しい値を計算
                 val newValue = setting.min + progress * (setting.max - setting.min)
                 (setting as InfiniteSetting.FloatSetting).value = newValue
             }
+
             else -> throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
         }
         updateMessage()
@@ -106,14 +111,13 @@ class InfiniteSlider<T : Number>(
      * マウスがクリックされたとき、ドラッグ状態を開始し、初期値を設定します。
      */
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
-        if (isMouseOver(mouseX, mouseY) && button == 0) {
+        if (isMouseOver(click.x, click.y) && click.button() == 0) {
             dragging = true
             // 値を設定し、mouseDraggedで継続して処理されるように true を返す
-            setValueFromMouse(mouseX)
+            setValueFromMouse(click.x)
             return true
         }
         return false
@@ -123,14 +127,12 @@ class InfiniteSlider<T : Number>(
      * マウスがドラッグされているとき、スライダーの値を更新します。
      */
     override fun mouseDragged(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-        deltaX: Double,
-        deltaY: Double,
+        click: Click,
+        offsetX: Double,
+        offsetY: Double,
     ): Boolean {
         if (dragging) {
-            setValueFromMouse(mouseX)
+            setValueFromMouse(click.x)
             return true
         }
         return false
@@ -139,16 +141,12 @@ class InfiniteSlider<T : Number>(
     /**
      * マウスがリリースされたとき、ドラッグ状態を終了します。
      */
-    override fun mouseReleased(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-    ): Boolean {
+    override fun mouseReleased(click: Click): Boolean {
         if (dragging) {
             dragging = false
             return true // ドラッグを終了したので true を返す
         }
-        return super.mouseReleased(mouseX, mouseY, button)
+        return super.mouseReleased(click)
     }
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {

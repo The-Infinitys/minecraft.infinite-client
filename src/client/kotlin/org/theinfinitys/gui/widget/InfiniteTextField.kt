@@ -2,9 +2,11 @@ package org.theinfinitys.gui.widget
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.TextFieldWidget
+import net.minecraft.client.input.CharInput
+import net.minecraft.client.input.KeyInput
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.math.MathHelper
@@ -43,27 +45,24 @@ class InfiniteTextField(
         updateSuggestions()
     }
 
-    override fun charTyped(
-        chr: Char,
-        modifiers: Int,
-    ): Boolean {
+    override fun charTyped(input: CharInput): Boolean {
         if (!isFocused) return false
-
+        val chr = input.toString().toCharArray().first()
         // ID入力時は、IDに使用可能な文字のみ許可する
         if (inputType == InputType.BLOCK_ID || inputType == InputType.ENTITY_ID) {
             if (chr.isLetterOrDigit() || chr == ':' || chr == '_' || chr == '/') {
-                val result = super.charTyped(chr, modifiers)
+                val result = super.charTyped(input)
                 updateSuggestions()
                 return result
             }
             return false
         }
 
-        val result = super.charTyped(chr, modifiers)
+        val result = super.charTyped(input)
         // 数値/フロートの検証ロジック（簡略化）
-        if (result && (inputType == InputType.NUMERIC || inputType == InputType.FLOAT)) {
-            // 有効性の詳細なチェックは keyPressed に依存
-        }
+//        if (result && (inputType == InputType.NUMERIC || inputType == InputType.FLOAT)) {
+        // 有効性の詳細なチェックは keyPressed に依存
+//        }
         return result
     }
 
@@ -85,6 +84,7 @@ class InfiniteTextField(
                         .networkHandler
                         ?.playerList
                         ?.map { it.profile.name } ?: emptyList()
+
                 else -> emptyList()
             }.filter { it.startsWith(text, ignoreCase = true) }
                 .sorted()
@@ -93,18 +93,15 @@ class InfiniteTextField(
         suggestionScrollY = 0.0
     }
 
-    override fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
-    ): Boolean {
-        if (!isFocused) return super.keyPressed(keyCode, scanCode, modifiers)
+    override fun keyPressed(input: KeyInput): Boolean {
+        if (!isFocused) return super.keyPressed(input)
 
         // Tabキーでのオートコンプリート処理 (スクロール調整付き)
+        val keyCode = input.key
         if (keyCode == GLFW.GLFW_KEY_TAB && (inputType == InputType.BLOCK_ID || inputType == InputType.ENTITY_ID)) {
             if (suggestions.isNotEmpty()) {
                 suggestionIndex =
-                    if (Screen.hasShiftDown()) {
+                    if (input.hasShift()) {
                         // Shift + Tab で前の候補
                         (suggestionIndex - 1 + suggestions.size) % suggestions.size
                     } else {
@@ -136,9 +133,9 @@ class InfiniteTextField(
         }
 
         // 共通の編集キーなどの処理
-        val result = super.keyPressed(keyCode, scanCode, modifiers)
+        val result = super.keyPressed(input)
         if ((inputType == InputType.BLOCK_ID || inputType == InputType.ENTITY_ID) &&
-            (keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE || Screen.hasControlDown())
+            (keyCode == GLFW.GLFW_KEY_BACKSPACE || keyCode == GLFW.GLFW_KEY_DELETE || input.hasCtrl())
         ) {
             updateSuggestions()
         }
@@ -196,7 +193,13 @@ class InfiniteTextField(
             val displayHeight = min(contentCount, maxVisibleSuggestions) * suggestionItemHeight
 
             // スクロールコンテナの背景
-            context.fill(suggestionX, suggestionY, suggestionX + suggestionWidth, suggestionY + displayHeight, 0xCC000000.toInt())
+            context.fill(
+                suggestionX,
+                suggestionY,
+                suggestionX + suggestionWidth,
+                suggestionY + displayHeight,
+                0xCC000000.toInt(),
+            )
 
             // クリップ (Scissor) を設定して、枠外の描画を防ぐ
             context.enableScissor(suggestionX, suggestionY, suggestionX + suggestionWidth, suggestionY + displayHeight)
@@ -269,15 +272,15 @@ class InfiniteTextField(
 
     // --- mouseClicked: フォーカス解除ロジックを修正 ---
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
         // 1. サジェストリスト内のクリック処理
         val suggestionAreaY = y + height + 2
         val suggestionAreaHeight = min(suggestions.size, maxVisibleSuggestions) * suggestionItemHeight
         val suggestionAreaBottom = suggestionAreaY + suggestionAreaHeight
-
+        val mouseX = click.x
+        val mouseY = click.y
         if (isFocused &&
             suggestions.isNotEmpty() &&
             (inputType == InputType.BLOCK_ID || inputType == InputType.ENTITY_ID) &&
@@ -300,7 +303,7 @@ class InfiniteTextField(
 
         // 2. 通常のクリック処理
         // super.mouseClicked() がクリック位置に基づいて isFocused を適切に設定/解除します。
-        return super.mouseClicked(mouseX, mouseY, button)
+        return super.mouseClicked(click, doubled)
     }
     // -----------------------------------------------------------
 }

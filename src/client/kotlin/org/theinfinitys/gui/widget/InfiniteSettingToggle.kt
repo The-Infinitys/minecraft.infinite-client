@@ -1,6 +1,7 @@
 package org.theinfinitys.gui.widget
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
@@ -52,10 +53,9 @@ class InfiniteSettingToggle(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-    ): Boolean = toggleButton.mouseClicked(mouseX, mouseY, button)
+        click: Click,
+        doubled: Boolean,
+    ): Boolean = toggleButton.mouseClicked(click, doubled)
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {
         this.appendDefaultNarrations(builder)

@@ -48,7 +48,7 @@ class PlayerController(
      * @param targetPos 視線を向ける目標のワールド座標
      */
     fun lookAt(targetPos: Vec3d) {
-        // デフォルトで目線から目標を見る
+        // デフォルトで視線から目標を見る
         lookAt(targetPos, EntityAnchorArgumentType.EntityAnchor.EYES)
     }
 
@@ -67,8 +67,8 @@ class PlayerController(
 
         val startPos: Vec3d =
             when (anchor) {
-                EntityAnchorArgumentType.EntityAnchor.FEET -> player.pos // プレイヤーの足元
-                EntityAnchorArgumentType.EntityAnchor.EYES -> player.getCameraPosVec(1.0f) // プレイヤーの目線
+                EntityAnchorArgumentType.EntityAnchor.FEET -> Vec3d(player.x, player.y, player.z) // プレイヤーの足元
+                EntityAnchorArgumentType.EntityAnchor.EYES -> player.getCameraPosVec(1.0f) // プレイヤーの視線
             }
 
         val dx = targetPos.x - startPos.x
@@ -78,15 +78,15 @@ class PlayerController(
         val horizontalDistance = kotlin.math.sqrt(dx * dx + dz * dz)
 
         // Yawの計算
-        val yawToTarget = kotlin.math.atan2(dz, dx)
+        val yawToTarget = atan2(dz, dx)
         val targetYaw = (yawToTarget * 180.0 / Math.PI).toFloat() - 90.0f
 
         // Pitchの計算
-        val pitchToTarget = kotlin.math.atan2(dy, horizontalDistance)
+        val pitchToTarget = atan2(dy, horizontalDistance)
         val targetPitch = (-pitchToTarget * 180.0 / Math.PI).toFloat()
 
-        player.setYaw(targetYaw)
-        player.setPitch(targetPitch)
+        player.yaw = targetYaw
+        player.pitch = targetPitch
     }
 
     /**

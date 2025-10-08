@@ -26,7 +26,7 @@ class BreakBlockTask(
         // --- 修正箇所: ブロックの状態の取得 ---
         // PlayerControllerからワールド（クライアントワールド）を取得
         val world: ClientWorld =
-            controller.getPlayer().clientWorld ?: // ワールド情報が取得できない場合は失敗として処理
+            controller.client.world ?: // ワールド情報が取得できない場合は失敗として処理
                 return TaskTickResult.Failure // 実際のメソッド名は環境に依存する場合があります
 
         // 指定された座標のBlockStateを取得

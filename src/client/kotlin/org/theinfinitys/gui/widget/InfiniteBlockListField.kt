@@ -1,9 +1,12 @@
 package org.theinfinitys.gui.widget
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
+import net.minecraft.client.input.CharInput
+import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.lwjgl.glfw.GLFW
 import org.theinfinitys.settings.InfiniteSetting
@@ -216,27 +219,28 @@ class InfiniteBlockListField(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
-        if (textField.mouseClicked(mouseX, mouseY, button)) {
+        if (textField.mouseClicked(click, doubled)) {
             textField.isFocused = true
             return true
         }
 
         val addButtonX = textField.x + textField.width + padding
         val addButtonY = textField.y
+        val mouseX = click.x
+        val mouseY = click.y
         if (mouseX >= addButtonX && mouseX < addButtonX + buttonSize && mouseY >= addButtonY && mouseY < addButtonY + buttonSize) {
             addIdToList()
             return true
         }
 
-        if (scrollableContainer.mouseClicked(mouseX, mouseY, button)) {
+        if (scrollableContainer.mouseClicked(click, doubled)) {
             return true
         }
 
-        return super.mouseClicked(mouseX, mouseY, button)
+        return super.mouseClicked(click, doubled)
     }
 
     override fun mouseScrolled(
@@ -252,58 +256,43 @@ class InfiniteBlockListField(
     }
 
     override fun mouseDragged(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-        deltaX: Double,
-        deltaY: Double,
+        click: Click,
+        offsetX: Double,
+        offsetY: Double,
     ): Boolean {
-        if (scrollableContainer.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
-            return true
-        }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+        if (scrollableContainer.mouseDragged(click, offsetX, offsetY)) return true
+        return super.mouseDragged(click, offsetX, offsetY)
     }
 
-    override fun mouseReleased(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-    ): Boolean {
-        if (scrollableContainer.mouseReleased(mouseX, mouseY, button)) {
-            return true
-        }
-        return super.mouseReleased(mouseX, mouseY, button)
+    override fun mouseReleased(click: Click): Boolean {
+        if (scrollableContainer.mouseReleased(click)) return true
+        return super.mouseReleased(click)
     }
 
-    override fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
-    ): Boolean {
+    override fun keyPressed(input: KeyInput): Boolean {
+        val keyCode = input?.key
+
         if (keyCode == GLFW.GLFW_KEY_ENTER && textField.isFocused) {
             addIdToList()
             return true
         }
-        if (textField.keyPressed(keyCode, scanCode, modifiers)) {
+        if (textField.keyPressed(input)) {
             return true
         }
-        if (scrollableContainer.keyPressed(keyCode, scanCode, modifiers)) {
+        if (scrollableContainer.keyPressed(input)) {
             return true
         }
-        return super.keyPressed(keyCode, scanCode, modifiers)
+        return super.keyPressed(input)
     }
 
-    override fun charTyped(
-        chr: Char,
-        modifiers: Int,
-    ): Boolean {
-        if (textField.charTyped(chr, modifiers)) {
+    override fun charTyped(input: CharInput): Boolean {
+        if (textField.charTyped(input)) {
             return true
         }
-        if (scrollableContainer.charTyped(chr, modifiers)) {
+        if (scrollableContainer.charTyped(input)) {
             return true
         }
-        return super.charTyped(chr, modifiers)
+        return super.charTyped(input)
     }
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {

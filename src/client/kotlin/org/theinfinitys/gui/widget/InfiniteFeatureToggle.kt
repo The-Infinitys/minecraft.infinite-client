@@ -1,6 +1,8 @@
 package org.theinfinitys.gui.widget
 
+import drawBorder
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
@@ -98,7 +100,8 @@ class InfiniteFeatureToggle(
         toggleButton.y = y
         settingsButton.x = x + width - toggleButton.width - 5 - settingsButton.width
         settingsButton.y = y
-        resetButton.x = x + width - toggleButton.width - 5 * 2 - settingsButton.width - resetButton.width // Position reset button
+        resetButton.x =
+            x + width - toggleButton.width - 5 * 2 - settingsButton.width - resetButton.width // Position reset button
         resetButton.y = y
 
         toggleButton.render(context, mouseX, mouseY, delta)
@@ -142,13 +145,12 @@ class InfiniteFeatureToggle(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean =
-        toggleButton.mouseClicked(mouseX, mouseY, button) ||
-            settingsButton.mouseClicked(mouseX, mouseY, button) ||
-            resetButton.mouseClicked(mouseX, mouseY, button) // Handle reset button click
+        toggleButton.mouseClicked(click, doubled) ||
+            settingsButton.mouseClicked(click, doubled) ||
+            resetButton.mouseClicked(click, doubled) // Handle reset button click
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {
         this.appendDefaultNarrations(builder)

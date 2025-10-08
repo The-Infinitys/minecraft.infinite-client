@@ -18,7 +18,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 // =================================================================================================
-// 1. Feature Class: Radar (設定値の範囲をパーセント単位に変更)
+// 1. Feature Class: Radar (変更なし)
 // =================================================================================================
 
 class Radar : ConfigurableFeature(initialEnabled = false) {
@@ -83,11 +83,13 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
 }
 
 // =================================================================================================
-// 2. Renderer Object: RadarRenderer (ドット描画)
+// 2. Renderer Object: RadarRenderer (修正あり)
 // =================================================================================================
 
 object RadarRenderer {
     private fun toRadians(direction: Float) = direction / 180f * MathHelper.PI
+
+    // ... (getRainbowColor, getBaseDotColor, getAlphaBasedOnHeight の実装は変更なし)
 
     private fun getRainbowColor(): Int {
         val rainbowDuration = 6000L
@@ -132,7 +134,6 @@ object RadarRenderer {
 
     /**
      * y軸方向のズレに基づいてアルファ値（透明度）を決定します。
-     * ズレが小さいほど不透明（アルファ値255）に、探知高さの限界に近いほど透明（アルファ値の最小値）になります。
      */
     private fun getAlphaBasedOnHeight(
         entity: LivingEntity,
@@ -190,10 +191,22 @@ object RadarRenderer {
 
         val rainbowColor = getRainbowColor()
         val innerColor = ColorHelper.getArgb(128, 0, 0, 0) // レーダー内部の背景色
+        val borderWidth = 1 // 境界線の太さ
 
         // レーダー内部の背景を塗りつぶし
         context.fill(startX, startY, endX, endY, innerColor)
-        context.drawBorder(startX, startY, 2 * halfSizePx, 2 * halfSizePx, rainbowColor)
+
+        // --- 修正箇所: drawBorder の代わりに fill を使用して枠を描画 ---
+        // 上枠
+        context.fill(startX, startY, endX, startY + borderWidth, rainbowColor)
+        // 下枠
+        context.fill(startX, endY - borderWidth, endX, endY, rainbowColor)
+        // 左枠
+        context.fill(startX, startY + borderWidth, startX + borderWidth, endY - borderWidth, rainbowColor)
+        // 右枠
+        context.fill(endX - borderWidth, startY + borderWidth, endX, endY - borderWidth, rainbowColor)
+        // -----------------------------------------------------------------
+
         val playerYaw = player.headYaw
 
         // 方位描画 (omitted for brevity, remains unchanged)

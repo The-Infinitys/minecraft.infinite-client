@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import org.lwjgl.glfw.GLFW
 import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.featureCategories
@@ -22,13 +23,14 @@ object InfiniteKeyBind {
     private val toggleKeyBindings: MutableList<ToggleKeyBindingHandler> = mutableListOf()
 
     fun registerKeybindings() {
+        val keyBindingCategory = KeyBinding.Category.create(Identifier.of("gameplay", "infinite"))
         menuKeyBinding =
             KeyBindingHelper.registerKeyBinding(
                 KeyBinding(
                     "key.infinite-client.open_menu",
                     InputUtil.Type.KEYSYM,
                     GLFW.GLFW_KEY_LEFT_CONTROL,
-                    "category.infinite-client.main",
+                    keyBindingCategory,
                 ),
             )
 
@@ -44,7 +46,7 @@ object InfiniteKeyBind {
                                     "key.infinite-client.toggle.${category.name}.${feature.name}",
                                     InputUtil.Type.KEYSYM,
                                     configurableFeature.toggleKeyBind.value,
-                                    "category.infinite-client.main",
+                                    keyBindingCategory,
                                 ),
                             ),
                             configurableFeature,

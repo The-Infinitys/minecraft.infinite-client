@@ -51,17 +51,14 @@ class FeatherWalk : ConfigurableFeature(initialEnabled = false) {
         // プレイヤーの足元（Y-1）ではなく、プレイヤーの中心ブロックを取得する
         val playerX =
             mc.player
-                ?.pos
                 ?.x
                 ?.toInt() ?: return
         val playerY =
             mc.player
-                ?.pos
                 ?.y
                 ?.toInt() ?: return
         val playerZ =
             mc.player
-                ?.pos
                 ?.z
                 ?.toInt() ?: return
 

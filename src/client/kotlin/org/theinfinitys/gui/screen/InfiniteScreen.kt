@@ -1,7 +1,10 @@
 package org.theinfinitys.gui.screen
 
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.input.CharInput
+import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.lwjgl.glfw.GLFW
 import org.theinfinitys.featureCategories
@@ -172,11 +175,7 @@ class InfiniteScreen(
         }
     }
 
-    override fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
-    ): Boolean {
+    override fun keyPressed(input: KeyInput): Boolean {
         if (System.currentTimeMillis() - animationStartTime < animationDurationMs) {
             return true
         }
@@ -185,7 +184,7 @@ class InfiniteScreen(
         val oldPageIndex = pageIndex
 
         pageIndex =
-            when (keyCode) {
+            when (input.key) {
                 GLFW.GLFW_KEY_LEFT -> {
                     (pageIndex - 1 + sections.size) % sections.size
                 }
@@ -195,8 +194,8 @@ class InfiniteScreen(
                 }
 
                 else -> {
-                    sections[pageIndex].keyPressed(keyCode, scanCode, modifiers, true)
-                    return super.keyPressed(keyCode, scanCode, modifiers)
+                    sections[pageIndex].keyPressed(input, true)
+                    return super.keyPressed(input)
                 }
             }
 
@@ -222,16 +221,15 @@ class InfiniteScreen(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
         if (System.currentTimeMillis() - animationStartTime < animationDurationMs) {
             return true
         }
         val isSelected = true
-        sections[pageIndex].mouseClicked(mouseX, mouseY, button, isSelected)
-        return super.mouseClicked(mouseX, mouseY, button)
+        sections[pageIndex].mouseClicked(click, doubled, isSelected)
+        return super.mouseClicked(click, doubled)
     }
 
     override fun mouseScrolled(
@@ -248,40 +246,31 @@ class InfiniteScreen(
     }
 
     override fun mouseDragged(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-        deltaX: Double,
-        deltaY: Double,
+        click: Click,
+        offsetX: Double,
+        offsetY: Double,
     ): Boolean {
         if (System.currentTimeMillis() - animationStartTime < animationDurationMs) {
             return true
         }
-        sections[pageIndex].mouseDragged(mouseX, mouseY, button, deltaX, deltaY, true)
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+        sections[pageIndex].mouseDragged(click, offsetX, offsetY, true)
+        return super.mouseDragged(click, offsetX, offsetY)
     }
 
-    override fun mouseReleased(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-    ): Boolean {
+    override fun mouseReleased(click: Click): Boolean {
         if (System.currentTimeMillis() - animationStartTime < animationDurationMs) {
             return true
         }
-        sections[pageIndex].mouseReleased(mouseX, mouseY, button, true)
-        return super.mouseReleased(mouseX, mouseY, button)
+        sections[pageIndex].mouseReleased(click, true)
+        return super.mouseReleased(click)
     }
 
-    override fun charTyped(
-        chr: Char,
-        modifiers: Int,
-    ): Boolean {
+    override fun charTyped(input: CharInput): Boolean {
         if (System.currentTimeMillis() - animationStartTime < animationDurationMs) {
             return true
         }
-        sections[pageIndex].charTyped(chr, modifiers, true)
-        return super.charTyped(chr, modifiers)
+        sections[pageIndex].charTyped(input, true)
+        return super.charTyped(input)
     }
 
     override fun shouldPause(): Boolean = false

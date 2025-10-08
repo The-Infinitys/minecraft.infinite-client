@@ -1,6 +1,7 @@
 package org.theinfinitys.gui.widget
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.screen.narration.NarrationPart
@@ -67,7 +68,13 @@ class EntityListItemWidget(
 
         val removeColor = if (isRemoveButtonHovered) 0xFFAA4444.toInt() else 0xFF882222.toInt()
 
-        context.fill(removeButtonX, removeButtonY, removeButtonX + removeButtonWidth, removeButtonY + this.height, removeColor)
+        context.fill(
+            removeButtonX,
+            removeButtonY,
+            removeButtonX + removeButtonWidth,
+            removeButtonY + this.height,
+            removeColor,
+        )
         context.drawText(
             textRenderer,
             "x",
@@ -79,13 +86,13 @@ class EntityListItemWidget(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
         val removeButtonX = x + width - padding - removeButtonWidth
         val removeButtonY = y
-
+        val mouseX = click.x
+        val mouseY = click.y
         if (mouseX >= removeButtonX &&
             mouseX < removeButtonX + removeButtonWidth &&
             mouseY >= removeButtonY &&
@@ -94,7 +101,7 @@ class EntityListItemWidget(
             onRemove(entityId)
             return true
         }
-        return super.mouseClicked(mouseX, mouseY, button)
+        return super.mouseClicked(click, doubled)
     }
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {

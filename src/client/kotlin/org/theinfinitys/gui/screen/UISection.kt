@@ -1,10 +1,14 @@
 package org.theinfinitys.gui.screen
 
+import drawBorder
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.ClickableWidget
+import net.minecraft.client.input.CharInput
+import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
 import org.theinfinitys.Feature
@@ -28,6 +32,7 @@ class UISection(
             "main" -> {
                 // Initialization moved to renderMain
             }
+
             else -> {
                 featureList?.let {
                     setupFeatureWidgets(it)
@@ -67,9 +72,8 @@ class UISection(
         renderContent: Boolean,
     ) {
         val backgroundColor = ColorHelper.getArgb(alpha, 0, 0, 0)
-
-        context.fill(x, y, x + width, y + height, backgroundColor)
         context.drawBorder(x, y, width, height, borderColor)
+        context.fill(x, y, x + width, y + height, backgroundColor)
 
         val titleText =
             when (id) {
@@ -84,7 +88,20 @@ class UISection(
         if (id == "main") {
             renderMain(context, x, y, width, height, textRenderer, isSelected, mouseX, mouseY, delta, renderContent)
         } else {
-            renderSettings(context, x, y, width, height, textRenderer, titleText, isSelected, mouseX, mouseY, delta, renderContent)
+            renderSettings(
+                context,
+                x,
+                y,
+                width,
+                height,
+                textRenderer,
+                titleText,
+                isSelected,
+                mouseX,
+                mouseY,
+                delta,
+                renderContent,
+            )
         }
 
         if (isSelected && renderContent) {
@@ -189,25 +206,24 @@ class UISection(
     // ★ 修正点: mouseClicked を Boolean 戻り値に変更し、
     // イベントを処理したウィジェットでループを停止する
     fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
         isSelected: Boolean,
     ): Boolean { // ★ 戻り値を Boolean に変更
         if (!isSelected) return false
 
         if (id == "main") {
-            featureSearchWidget?.mouseClicked(mouseX, mouseY, button)?.let { if (it) return true }
+            featureSearchWidget?.mouseClicked(click, doubled)?.let { if (it) return true }
         }
 
         // 1. closeButtonのクリック
-        if (closeButton?.mouseClicked(mouseX, mouseY, button) == true) {
+        if (closeButton?.mouseClicked(click, doubled) == true) {
             return true
         }
 
         // 2. 他のウィジェットのクリック
         for (widget in widgets) {
-            if (widget.mouseClicked(mouseX, mouseY, button)) {
+            if (widget.mouseClicked(click, doubled)) {
                 return true // ★ 最初に応答したウィジェットで停止し、フォーカスを与える
             }
         }
@@ -216,19 +232,17 @@ class UISection(
     }
 
     fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
+        input: KeyInput,
         isSelected: Boolean,
     ) {
         if (!isSelected) return
 
         if (id == "main") {
-            featureSearchWidget?.keyPressed(keyCode, scanCode, modifiers)
+            featureSearchWidget?.keyPressed(input)
         }
 
         // keyPressed は一般的に全ての子に転送されます
-        widgets.forEach { it.keyPressed(keyCode, scanCode, modifiers) }
+        widgets.forEach { it.keyPressed(input) }
     }
 
     fun mouseScrolled(
@@ -241,7 +255,9 @@ class UISection(
         if (!isSelected) return false
 
         if (id == "main") {
-            featureSearchWidget?.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)?.let { if (it) return true }
+            featureSearchWidget
+                ?.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+                ?.let { if (it) return true }
         }
 
         for (widget in widgets) {
@@ -254,27 +270,25 @@ class UISection(
 
     // ★ 修正点: mouseDragged を全てのウィジェットに転送
     fun mouseDragged(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-        deltaX: Double,
-        deltaY: Double,
+        click: Click,
+        offsetX: Double,
+        offsetY: Double,
         isSelected: Boolean,
     ): Boolean { // ★ 戻り値は Boolean
         if (!isSelected) return false
 
         if (id == "main") {
-            featureSearchWidget?.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)?.let { if (it) return true }
+            featureSearchWidget?.mouseDragged(click, offsetX, offsetY)?.let { if (it) return true }
         }
 
         // closeButtonへのドラッグを処理
-        if (closeButton?.mouseDragged(mouseX, mouseY, button, deltaX, deltaY) == true) {
+        if (closeButton?.mouseDragged(click, offsetX, offsetY) == true) {
             return true
         }
 
         // ★ スクロールコンテナとその他のウィジェット（スライダーなど）の両方に転送
         for (widget in widgets) {
-            if (widget.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+            if (widget.mouseDragged(click, offsetX, offsetY)) {
                 return true
             }
         }
@@ -283,25 +297,23 @@ class UISection(
 
     // ★ 修正点: mouseReleased を全てのウィジェットに転送
     fun mouseReleased(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
         isSelected: Boolean,
     ): Boolean { // ★ 戻り値は Boolean
         if (!isSelected) return false
 
         if (id == "main") {
-            featureSearchWidget?.mouseReleased(mouseX, mouseY, button)?.let { if (it) return true }
+            featureSearchWidget?.mouseReleased(click)?.let { if (it) return true }
         }
 
         // closeButtonの mouseReleased を処理
-        if (closeButton?.mouseReleased(mouseX, mouseY, button) == true) {
+        if (closeButton?.mouseReleased(click) == true) {
             return true
         }
 
         // ★ スクロールコンテナとその他のウィジェットの両方に転送
         for (widget in widgets) {
-            if (widget.mouseReleased(mouseX, mouseY, button)) {
+            if (widget.mouseReleased(click)) {
                 return true
             }
         }
@@ -309,18 +321,17 @@ class UISection(
     }
 
     fun charTyped(
-        chr: Char,
-        modifiers: Int,
+        input: CharInput,
         isSelected: Boolean,
     ): Boolean {
         if (!isSelected) return false
 
         if (id == "main") {
-            featureSearchWidget?.charTyped(chr, modifiers)?.let { if (it) return true }
+            featureSearchWidget?.charTyped(input)?.let { if (it) return true }
         }
 
         for (widget in widgets) {
-            if (widget.charTyped(chr, modifiers)) {
+            if (widget.charTyped(input)) {
                 return true
             }
         }

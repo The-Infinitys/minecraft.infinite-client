@@ -2,6 +2,7 @@ package org.theinfinitys.gui.widget
 
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
+import net.minecraft.client.input.AbstractInput
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
 import kotlin.math.sin
@@ -26,7 +27,7 @@ class InfiniteToggleButton(
     private var animationStartTime: Long = -1L
     private val animationDuration = 200L // アニメーションにかける時間（ミリ秒）
 
-    override fun onPress() {
+    override fun onPress(input: AbstractInput?) {
         if (isEnabled) {
             state = !state
             onToggle(state)

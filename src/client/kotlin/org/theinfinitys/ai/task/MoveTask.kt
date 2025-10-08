@@ -33,7 +33,7 @@ class MoveTask(
         }
 
         val player = controller.getPlayer()
-        val playerPos = player.pos
+        val playerPos = Vec3d(player.x, player.y, player.z)
         val distanceSq = playerPos.squaredDistanceTo(targetPos)
 
         // 目標に十分近づいたらタスク完了

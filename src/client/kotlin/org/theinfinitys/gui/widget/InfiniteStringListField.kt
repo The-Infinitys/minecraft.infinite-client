@@ -1,9 +1,12 @@
 package org.theinfinitys.gui.widget
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
+import net.minecraft.client.input.CharInput
+import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.theinfinitys.settings.InfiniteSetting
 
@@ -54,27 +57,19 @@ class InfiniteStringListField(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
-        val handled = textField.mouseClicked(mouseX, mouseY, button)
+        val handled = textField.mouseClicked(click, doubled)
         if (handled) {
             textField.isFocused = true
         }
         return handled
     }
 
-    override fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
-    ): Boolean = textField.keyPressed(keyCode, scanCode, modifiers)
+    override fun keyPressed(input: KeyInput): Boolean = textField.keyPressed(input)
 
-    override fun charTyped(
-        chr: Char,
-        modifiers: Int,
-    ): Boolean = textField.charTyped(chr, modifiers)
+    override fun charTyped(input: CharInput): Boolean = textField.charTyped(input)
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {
         this.appendDefaultNarrations(builder)

@@ -1,9 +1,12 @@
 package org.theinfinitys.gui.widget
 
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.screen.narration.NarrationPart
 import net.minecraft.client.gui.widget.ClickableWidget
+import net.minecraft.client.input.CharInput
+import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
@@ -183,10 +186,11 @@ class InfiniteScrollableContainer(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
+        click: Click,
+        doubled: Boolean,
     ): Boolean {
+        val mouseX = click.x
+        val mouseY = click.y
         if (!isMouseOver(mouseX, mouseY)) {
             return false
         }
@@ -195,7 +199,7 @@ class InfiniteScrollableContainer(
 
         for (widget in widgets) {
             if (widget.y + widget.height > y && widget.y < y + height) {
-                if (widget.mouseClicked(mouseX, mouseY, button)) {
+                if (widget.mouseClicked(click, doubled)) {
                     isDragging = false
                     return true
                 }
@@ -222,14 +226,10 @@ class InfiniteScrollableContainer(
         return false
     }
 
-    // InfiniteScrollableContainer.kt (修正後の mouseDragged)
-
     override fun mouseDragged(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-        deltaX: Double,
-        deltaY: Double,
+        click: Click,
+        offsetX: Double,
+        offsetY: Double,
     ): Boolean {
         // 1. スクロールバーのドラッグ処理（最優先）
         if (isDragging) {
@@ -240,7 +240,7 @@ class InfiniteScrollableContainer(
                     MathHelper.clamp((height.toDouble() / contentHeight * height).toInt(), 32, height - 8)
                 val maxScrollbarY = height - scrollbarHeight
 
-                val newScrollbarY = mouseY - dragYOffset
+                val newScrollbarY = click.y - dragYOffset
 
                 val clampedScrollbarY = MathHelper.clamp(newScrollbarY - y, 0.0, maxScrollbarY.toDouble())
 
@@ -261,7 +261,7 @@ class InfiniteScrollableContainer(
             // 表示範囲内のウィジェットにのみ伝播
             if (widget.y + widget.height > y && widget.y < y + height) {
                 // mouseDragged が true を返した場合、イベントを消費
-                if (widget.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+                if (widget.mouseDragged(click, offsetX, offsetY)) {
                     return true
                 }
             }
@@ -271,11 +271,7 @@ class InfiniteScrollableContainer(
         return false
     }
 
-    override fun mouseReleased(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-    ): Boolean {
+    override fun mouseReleased(click: Click): Boolean {
         val wasDragging = isDragging
         isDragging = false
         if (wasDragging) {
@@ -283,7 +279,7 @@ class InfiniteScrollableContainer(
         }
 
         for (widget in widgets) {
-            if (widget.mouseReleased(mouseX, mouseY, button)) {
+            if (widget.mouseReleased(click)) {
                 return true
             }
         }
@@ -291,11 +287,8 @@ class InfiniteScrollableContainer(
         return false
     }
 
-    override fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
-    ): Boolean {
+    override fun keyPressed(input: KeyInput): Boolean {
+        val keyCode = input.key
         val contentHeight = widgets.sumOf { it.height + internalPadding }
         if (contentHeight > height) {
             if (keyCode == GLFW.GLFW_KEY_DOWN) {
@@ -311,23 +304,20 @@ class InfiniteScrollableContainer(
             }
         }
         for (widget in widgets) {
-            if (widget.keyPressed(keyCode, scanCode, modifiers)) {
+            if (widget.keyPressed(input)) {
                 return true
             }
         }
-        return super.keyPressed(keyCode, scanCode, modifiers)
+        return super.keyPressed(input)
     }
 
-    override fun charTyped(
-        chr: Char,
-        modifiers: Int,
-    ): Boolean {
+    override fun charTyped(input: CharInput): Boolean {
         for (widget in widgets) {
-            if (widget.charTyped(chr, modifiers)) {
+            if (widget.charTyped(input)) {
                 return true
             }
         }
-        return super.charTyped(chr, modifiers)
+        return super.charTyped(input)
     }
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {

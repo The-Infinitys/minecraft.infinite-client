@@ -1,9 +1,11 @@
 package org.theinfinitys.gui.widget
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
+import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.theinfinitys.settings.InfiniteSetting
 
@@ -76,16 +78,11 @@ class InfiniteSettingTextField(
     }
 
     override fun mouseClicked(
-        mouseX: Double,
-        mouseY: Double,
-        button: Int,
-    ): Boolean = textField.mouseClicked(mouseX, mouseY, button)
+        click: Click,
+        doubled: Boolean,
+    ): Boolean = textField.mouseClicked(click, doubled)
 
-    override fun keyPressed(
-        keyCode: Int,
-        scanCode: Int,
-        modifiers: Int,
-    ): Boolean = textField.keyPressed(keyCode, scanCode, modifiers)
+    override fun keyPressed(input: KeyInput): Boolean = textField.keyPressed(input)
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {
         this.appendDefaultNarrations(builder)
