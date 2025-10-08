@@ -15,5 +15,6 @@ class CameraConfig : ConfigurableFeature(initialEnabled = false) {
             ),
             InfiniteSetting.BooleanSetting("ClipBlock", "カメラが地形を貫通するかを設定します。", true),
             InfiniteSetting.BooleanSetting("AntiHurtTilt", "ダメージを受けた際にカメラが揺れなくなります。", true),
+            InfiniteSetting.BooleanSetting("ExtraCamera", "カメラがプレイヤーの向きに依存しなくなります", false),
         )
 }
