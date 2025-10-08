@@ -9,7 +9,7 @@ import org.theinfinitys.settings.InfiniteSetting
 class ServerInfo : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<InfiniteSetting<*>> = emptyList()
 
-    override fun enabled() {
+    override fun tick() {
         val info = getCurrentServerInfo()
         if (info != null) {
             var serverInfoText = ""

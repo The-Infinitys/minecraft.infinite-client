@@ -59,14 +59,15 @@ object InfiniteClient : ClientModInitializer {
     // ============================
 
     fun rainbowText(text: String): MutableText {
-        val colors = intArrayOf(
-            0xFFFF0000.toInt(),
-            0xFFFFFF00.toInt(),
-            0xFF00FF00.toInt(),
-            0xFF00FFFF.toInt(),
-            0xFF0000FF.toInt(),
-            0xFFFF00FF.toInt(),
-        )
+        val colors =
+            intArrayOf(
+                0xFFFF0000.toInt(),
+                0xFFFFFF00.toInt(),
+                0xFF00FF00.toInt(),
+                0xFF00FFFF.toInt(),
+                0xFF0000FF.toInt(),
+                0xFFFF00FF.toInt(),
+            )
 
         val totalLength = text.length
         val rainbowText = Text.empty()
@@ -102,8 +103,12 @@ object InfiniteClient : ClientModInitializer {
         return rainbowText
     }
 
-    private fun createPrefixedMessage(prefixType: String, textColor: Formatting): MutableText =
-        Text.literal("[")
+    private fun createPrefixedMessage(
+        prefixType: String,
+        textColor: Formatting,
+    ): MutableText =
+        Text
+            .literal("[")
             .formatted(Formatting.BOLD)
             .append(rainbowText("Infinite Client").formatted(Formatting.BOLD))
             .append(Text.literal(prefixType).formatted(Formatting.RESET).formatted(textColor))
@@ -111,29 +116,33 @@ object InfiniteClient : ClientModInitializer {
 
     fun log(text: String) {
         LOGGER.info("[Infinite Client]: $text")
-        val message = createPrefixedMessage("", Formatting.RESET)
-            .append(Text.literal(text).formatted(Formatting.RESET))
+        val message =
+            createPrefixedMessage("", Formatting.RESET)
+                .append(Text.literal(text).formatted(Formatting.RESET))
         MinecraftClient.getInstance().player?.sendMessage(message, false)
     }
 
     fun info(text: String) {
         LOGGER.info("[Infinite Client - Info]: $text")
-        val message = createPrefixedMessage(" - Info ", Formatting.AQUA)
-            .append(Text.literal(text).formatted(Formatting.AQUA))
+        val message =
+            createPrefixedMessage(" - Info ", Formatting.AQUA)
+                .append(Text.literal(text).formatted(Formatting.AQUA))
         MinecraftClient.getInstance().player?.sendMessage(message, false)
     }
 
     fun warn(text: String) {
         LOGGER.warn("[Infinite Client - Warn]: $text")
-        val message = createPrefixedMessage(" - Warn ", Formatting.YELLOW)
-            .append(Text.literal(text).formatted(Formatting.YELLOW))
+        val message =
+            createPrefixedMessage(" - Warn ", Formatting.YELLOW)
+                .append(Text.literal(text).formatted(Formatting.YELLOW))
         MinecraftClient.getInstance().player?.sendMessage(message, false)
     }
 
     fun error(text: String) {
         LOGGER.error("[Infinite Client - Error]: $text")
-        val message = createPrefixedMessage(" - Error", Formatting.RED)
-            .append(Text.literal(text).formatted(Formatting.RED))
+        val message =
+            createPrefixedMessage(" - Error", Formatting.RED)
+                .append(Text.literal(text).formatted(Formatting.RED))
         MinecraftClient.getInstance().player?.sendMessage(message, false)
     }
 
@@ -149,7 +158,10 @@ object InfiniteClient : ClientModInitializer {
         return null
     }
 
-    fun searchFeature(category: String, name: String): ConfigurableFeature? =
+    fun searchFeature(
+        category: String,
+        name: String,
+    ): ConfigurableFeature? =
         featureCategories
             .find { it.name.equals(category, ignoreCase = true) }
             ?.features
@@ -161,21 +173,32 @@ object InfiniteClient : ClientModInitializer {
         return feature != null && feature.isEnabled()
     }
 
-    fun <T : ConfigurableFeature> isSettingEnabled(featureClass: Class<T>, settingName: String): Boolean {
+    fun <T : ConfigurableFeature> isSettingEnabled(
+        featureClass: Class<T>,
+        settingName: String,
+    ): Boolean {
         val feature = getFeature(featureClass)
         if (feature == null || !feature.isEnabled()) return false
         val setting = feature.getSetting(settingName)
         return setting != null && setting.value is Boolean && setting.value as Boolean
     }
 
-    fun <T : ConfigurableFeature> getSettingFloat(featureClass: Class<T>, settingName: String, defaultValue: Float): Float {
+    fun <T : ConfigurableFeature> getSettingFloat(
+        featureClass: Class<T>,
+        settingName: String,
+        defaultValue: Float,
+    ): Float {
         val feature = getFeature(featureClass)
         if (feature == null || !feature.isEnabled()) return defaultValue
         val setting = feature.getSetting(settingName)
         return if (setting != null && setting.value is Float) setting.value as Float else defaultValue
     }
 
-    fun <T : ConfigurableFeature> getSettingInt(featureClass: Class<T>, settingName: String, defaultValue: Int): Int {
+    fun <T : ConfigurableFeature> getSettingInt(
+        featureClass: Class<T>,
+        settingName: String,
+        defaultValue: Int,
+    ): Int {
         val feature = getFeature(featureClass)
         if (feature == null || !feature.isEnabled()) return defaultValue
         val setting = feature.getSetting(settingName)

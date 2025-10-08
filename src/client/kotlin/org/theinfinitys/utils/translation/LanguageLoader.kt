@@ -6,7 +6,7 @@ import com.google.gson.JsonObject
 import net.minecraft.client.MinecraftClient
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Locale
 
 object LanguageLoader {
     private val translations: MutableMap<String, JsonObject> = mutableMapOf()
@@ -30,11 +30,12 @@ object LanguageLoader {
             }
         }
 
-        val selected = when {
-            translations.containsKey(detected) -> detected
-            translations.containsKey("en_us") -> "en_us"
-            else -> translations.keys.firstOrNull()
-        }
+        val selected =
+            when {
+                translations.containsKey(detected) -> detected
+                translations.containsKey("en_us") -> "en_us"
+                else -> translations.keys.firstOrNull()
+            }
 
         currentLangCode = selected ?: "en_us"
         currentLang = selected?.let { translations[it] }
@@ -53,8 +54,8 @@ object LanguageLoader {
      * Detect Minecraft's current language more reliably.
      * Uses both Options and LanguageManager, with fallback to en_us.
      */
-    private fun detectMinecraftLanguage(): String {
-        return try {
+    private fun detectMinecraftLanguage(): String =
+        try {
             val client = MinecraftClient.getInstance()
 
             // Try options first
@@ -65,15 +66,16 @@ object LanguageLoader {
                 val managerLang = client.languageManager?.language
                 if (managerLang != null) {
                     // Some MC versions use getCode(), others use code — handle both
-                    lang = try {
-                        managerLang.javaClass.getMethod("getCode").invoke(managerLang) as? String
-                    } catch (_: Exception) {
+                    lang =
                         try {
-                            managerLang.javaClass.getField("code").get(managerLang) as? String
+                            managerLang.javaClass.getMethod("getCode").invoke(managerLang) as? String
                         } catch (_: Exception) {
-                            null
+                            try {
+                                managerLang.javaClass.getField("code").get(managerLang) as? String
+                            } catch (_: Exception) {
+                                null
+                            }
                         }
-                    }
                 }
             }
 
@@ -87,17 +89,16 @@ object LanguageLoader {
             println("[Translation] Could not detect Minecraft language, defaulting to en_us (${e.javaClass.simpleName})")
             "en_us"
         }
-    }
-
 
     /** Opens the translation file either from classpath or dev resources. */
     private fun open(lang: String): java.io.InputStream? {
-        val variants = listOf(
-            lang.lowercase(Locale.ROOT),
-            lang.uppercase(Locale.ROOT),
-            lang.replace('-', '_'),
-            lang.replace('_', '-')
-        )
+        val variants =
+            listOf(
+                lang.lowercase(Locale.ROOT),
+                lang.uppercase(Locale.ROOT),
+                lang.replace('-', '_'),
+                lang.replace('_', '-'),
+            )
 
         // Try from compiled mod resources
         for (variant in variants) {
@@ -145,11 +146,12 @@ object LanguageLoader {
 
     /** Allows switching the language manually in runtime. */
     fun setLanguage(lang: String): Boolean {
-        val json = translations[lang] ?: open(lang)?.use {
-            InputStreamReader(it, StandardCharsets.UTF_8).use { r ->
-                gson.fromJson(r, JsonObject::class.java)
-            }
-        } ?: return false
+        val json =
+            translations[lang] ?: open(lang)?.use {
+                InputStreamReader(it, StandardCharsets.UTF_8).use { r ->
+                    gson.fromJson(r, JsonObject::class.java)
+                }
+            } ?: return false
 
         translations[lang] = json
         currentLang = json

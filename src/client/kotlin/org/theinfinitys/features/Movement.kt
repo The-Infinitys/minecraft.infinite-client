@@ -58,7 +58,5 @@ val movement =
             "FreeCamera",
             FreeCamera(),
             Translation.t("movement.FreeCamera.description"),
-            )
-
-
+        ),
     )
