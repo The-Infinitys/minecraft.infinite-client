@@ -17,42 +17,48 @@ val movement =
         feature(
             "SuperSprint",
             SuperSprint(),
-            Translation.t(""),
+            Translation.t("movement.SuperSprint.description"),
         ),
         feature(
             "SafeWalk",
             SafeWalk(),
-            "地形の橋から落下せずに安全に移動できるようになります",
+            Translation.t("movement.SafeWalk.description"),
         ),
         feature(
             "Freeze",
             Freeze(),
-            "有効にしている間は、サーバーにデータを送信しません",
+            Translation.t("movement.Freeze.description"),
         ),
         feature(
             "AutoWalk",
             AutoWalk(),
-            "自動で前進します",
+            Translation.t("movement.AutoWalk.description"),
         ),
         feature(
             "AutoMine",
             AutoMine(),
-            "自動でブロックを採掘します",
+            Translation.t("movement.AutoMine.description"),
         ),
         feature(
             "FastBreak",
             FastBreak(),
-            "ブロックを壊す際のインターバルを削除します",
+            Translation.t("movement.FastBreak.description"),
         ),
         feature(
             "FeatherWalk",
             FeatherWalk(),
-            "畑などで走ったりしないようにします。",
+            Translation.t("movement.FeatherWalk.description"),
         ),
         feature(
             "WaterHover",
             WaterHover(),
-            "水中で勝手に沈まないようにします。",
+            Translation.t("movement.WaterHover.description"),
         ),
-        feature("FreeCamera", FreeCamera(), "いつでもスペクテイターモードに慣れます。"),
+        feature(
+            "FreeCamera",
+            FreeCamera(),
+            Translation.t("movement.FreeCamera.description"),
+            )
+
+
     )

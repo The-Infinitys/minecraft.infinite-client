@@ -1,37 +1,33 @@
 package org.theinfinitys.features
 
 import org.theinfinitys.feature
-import org.theinfinitys.features.rendering.AntiOverlay
-import org.theinfinitys.features.rendering.CameraConfig
-import org.theinfinitys.features.rendering.Radar
-import org.theinfinitys.features.rendering.SuperSight
-import org.theinfinitys.features.rendering.XRay
+import org.theinfinitys.features.rendering.*
+import org.theinfinitys.utils.Translation
 
-val rendering =
-    listOf(
-        feature(
-            "AntiOverlay",
-            AntiOverlay(),
-            "ゲーム画面から不要な視覚的オーバーレイを削除します。",
-        ),
-        feature(
-            "SuperSight",
-            SuperSight(),
-            "視覚情報を強化します。",
-        ),
-        feature(
-            "XRay",
-            XRay(),
-            "ブロックを透視して、鉱石、洞窟、その他の隠された構造物を見つけられるようにします。",
-        ),
-        feature(
-            "CameraConfig",
-            CameraConfig(),
-            "カメラの設定を変更します。",
-        ),
-        feature(
-            "Radar",
-            Radar(),
-            " レーダーを表示します。",
-        ),
-    )
+val rendering = listOf(
+    feature(
+        "AntiOverlay",
+        AntiOverlay(),
+        Translation.t("rendering.antioverlay.description"),
+    ),
+    feature(
+        "SuperSight",
+        SuperSight(),
+        Translation.t("rendering.supersight.description"),
+    ),
+    feature(
+        "XRay",
+        XRay(),
+        Translation.t("rendering.xray.description"),
+    ),
+    feature(
+        "CameraConfig",
+        CameraConfig(),
+        Translation.t("rendering.cameraconfig.description"),
+    ),
+    feature(
+        "Radar",
+        Radar(),
+        Translation.t("rendering.radar.description"),
+    ),
+)
