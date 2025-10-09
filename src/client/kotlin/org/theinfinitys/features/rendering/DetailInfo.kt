@@ -60,6 +60,10 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
 
     var targetDetail: TargetDetail? = null
 
+    // --- 追加: リーチ判定結果を保持するフィールド ---
+    var isTargetInReach: Boolean = false
+    // ---------------------------------------------
+
     sealed class TargetDetail(
         val pos: BlockPos?,
         val name: String,
@@ -78,10 +82,23 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
 
     override fun tick() {
         targetDetail = null
+        isTargetInReach = false // 毎ティックリセット
+
         val client = MinecraftClient.getInstance() ?: return
         val world = client.world ?: return
         val clientCommonNetworkHandler = client.networkHandler ?: return
         val hitResult = client.crosshairTarget ?: return
+        val player = client.player ?: return
+
+        // 目の位置からの距離を計算
+        val hitDistance = hitResult.pos.distanceTo(player.eyePos)
+        // クライアント側の標準的なリーチ距離を設定 (クリエイティブ: 6.0, サバイバル: 4.5)
+        // 厳密には属性に依存しますが、ここでは一般的な値を採用
+        val reachDistance = if (player.abilities.creativeMode) 6.0 else 4.5
+
+        if (hitDistance <= reachDistance) {
+            isTargetInReach = true
+        }
 
         when (hitResult.type) {
             HitResult.Type.ENTITY -> {
@@ -103,10 +120,13 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
 
                     targetDetail = TargetDetail.BlockDetail(blockState.block, blockPos)
 
-                    // LootableContainerBlockEntity をチェック (InventoryBlockEntityから変更)
-                    if (blockEntity is LootableContainerBlockEntity) {
+                    // LootableContainerBlockEntity (チェストなど) および Furnace系, Hopper系をチェック
+                    if (blockEntity is LootableContainerBlockEntity || blockEntity is FurnaceBlockEntity || blockEntity is SmokerBlockEntity || blockEntity is BlastFurnaceBlockEntity || blockEntity is HopperBlockEntity) {
                         if (scanTimer <= 0) {
                             if (getSetting("InnerChest")?.value == true) {
+                                // リーチ外でもインベントリをスキャンするために、ヒットしたブロックの情報を利用してパケットを送信
+                                // 注意: サーバー側はリーチチェックを行うため、実際にリーチ外のインベントリは開けません。
+                                // このロジックは、クライアントが**開こうとする**モーションを利用して、サーバーが送り返す**コンテナ情報**を捕まえることを意図しています。
                                 if (client.currentScreen == null) {
                                     clientCommonNetworkHandler.sendPacket(
                                         PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, blockHitResultCasted, 0),
@@ -119,6 +139,9 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                         } else {
                             scanTimer--
                         }
+                    } else {
+                        // 対象ブロックがコンテナでなくなった場合、インベントリ情報をクリアする（任意）
+                        scannedInventoryData.remove(blockPos)
                     }
                 }
             }
@@ -142,8 +165,11 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                     is FurnaceBlockEntity, is SmokerBlockEntity, is BlastFurnaceBlockEntity -> InventoryType.FURNACE
                     is HopperBlockEntity -> InventoryType.HOPPER
                     is ChestBlockEntity -> {
-                        if (itemStacks.size <= 63) {
-                            itemStacks = itemStacks.dropLast((itemStacks.size - 27).coerceAtLeast(0))
+                        // チェストの場合、アイテムリストが大型チェストのサイズ(54)やそれ以上で送られてくる可能性があるため、標準の27スロットに絞る (大型チェストの場合は最大54)
+                        // ここでは、LootableContainerBlockEntityだがChestBlockEntityとして、27スロットを想定する
+                        if (itemStacks.size > 54) {
+                            // 念の為、過剰なスロットをカット
+                            itemStacks = itemStacks.take(54)
                         }
                         InventoryType.CHEST
                     }
@@ -167,6 +193,10 @@ object DetailInfoRenderer {
     private const val BAR_PADDING = 5
     private val INNER_COLOR = ColorHelper.getArgb(192, 0, 0, 0) // 背景色 (半透明の黒)
 
+    // --- 追加: リーチ外の場合に使用する灰色 ---
+    private val OUT_OF_REACH_COLOR = ColorHelper.getArgb(255, 150, 150, 150) // 明るめの灰色
+    // -----------------------------------------
+
     // HPバーや破壊バー用のグラデーションを計算するヘルパー関数
     private fun getGradientColor(progress: Float): Int {
         val clampedProgress = progress.coerceIn(0.0f, 1.0f)
@@ -181,6 +211,7 @@ object DetailInfoRenderer {
             g = (255 * p).toInt()
             b = 0
         } else {
+            // 0.5 ~ 1.0: 黄色から水色 (Rが減少し、Bが増加)
             val p = (clampedProgress - 0.5f) * 2.0f
             r = (255 * (1.0f - p)).toInt()
             g = 255
@@ -189,6 +220,20 @@ object DetailInfoRenderer {
 
         return ColorHelper.getArgb(255, r, g, b)
     }
+
+    // --- 追加: リーチに応じて色を切り替える関数 ---
+    /**
+     * ターゲットがリーチ内の場合は虹色、リーチ外の場合は灰色を返します。
+     * @param isInReach ターゲットがリーチ内かどうか
+     */
+    private fun getFeatureColor(isInReach: Boolean): Int {
+        return if (isInReach) {
+            getRainbowColor()
+        } else {
+            OUT_OF_REACH_COLOR
+        }
+    }
+    // ---------------------------------------------
 
     /**
      * UIの背景と枠を描画します。
@@ -199,16 +244,16 @@ object DetailInfoRenderer {
         startY: Int,
         endX: Int,
         endY: Int,
-        rainbowColor: Int,
+        featureColor: Int, // 修正: rainbowColor から featureColor に
     ) {
         // 1. 内部の背景を塗りつぶし
         context.fill(startX, startY, endX, endY, INNER_COLOR)
 
-        // 2. 虹色の枠を描画
-        context.fill(startX, startY, endX, startY + BORDER_WIDTH, rainbowColor) // 上枠
-        context.fill(startX, endY - BORDER_WIDTH, endX, endY, rainbowColor) // 下枠
-        context.fill(startX, startY + BORDER_WIDTH, startX + BORDER_WIDTH, endY - BORDER_WIDTH, rainbowColor) // 左枠
-        context.fill(endX - BORDER_WIDTH, startY + BORDER_WIDTH, endX, endY - BORDER_WIDTH, rainbowColor) // 右枠
+        // 2. 虹色/灰色の枠を描画
+        context.fill(startX, startY, endX, startY + BORDER_WIDTH, featureColor) // 上枠
+        context.fill(startX, endY - BORDER_WIDTH, endX, endY, featureColor) // 下枠
+        context.fill(startX, startY + BORDER_WIDTH, startX + BORDER_WIDTH, endY - BORDER_WIDTH, featureColor) // 左枠
+        context.fill(endX - BORDER_WIDTH, startY + BORDER_WIDTH, endX, endY - BORDER_WIDTH, featureColor) // 右枠
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -217,7 +262,7 @@ object DetailInfoRenderer {
 
     /**
      * インベントリの内容を描画し、描画に必要な**総高さ**を返します。
-     * (アイテムアイコンの描画は行わず、高さ計算のみを行う。実際の描画は drawBlockContent の後に行う)
+     * (アイテムアイコンの描画は行わず、高さ計算のみを行う。)
      */
     private fun calculateInventoryHeight(
         client: MinecraftClient,
@@ -252,7 +297,7 @@ object DetailInfoRenderer {
 
             InventoryType.CHEST -> {
                 maxItemsPerRow = 9
-                fixedRows = 6
+                fixedRows = null // 大型チェスト(54)も考慮し、自動計算を優先
             }
 
             InventoryType.GENERIC -> {
@@ -273,7 +318,7 @@ object DetailInfoRenderer {
 
         // アイテムスロットの高さ
         if (rowsNeeded > 0) {
-            requiredHeight += rowsNeeded * slotSize + (rowsNeeded - 1) * itemPadding
+            requiredHeight += rowsNeeded * slotSize + (rowsNeeded - 1).coerceAtLeast(0) * itemPadding
             requiredHeight += padding // アイテム表示後の下部パディング
         }
 
@@ -282,7 +327,6 @@ object DetailInfoRenderer {
 
     /**
      * インベントリの内容を描画し、描画後の次のY座標を返します。
-     * （calculateInventoryHeight の結果を反映するために、描画を render から移動）
      */
     private fun drawInventoryContents(
         context: DrawContext,
@@ -291,6 +335,9 @@ object DetailInfoRenderer {
         startX: Int,
         currentY: Int,
         uiWidth: Int,
+        // --- 修正: isTargetInReach を引数に追加 ---
+        isTargetInReach: Boolean,
+        // -------------------------------------
     ): Int {
         val font = client.textRenderer
         val padding = 5
@@ -336,7 +383,7 @@ object DetailInfoRenderer {
 
             InventoryType.CHEST -> {
                 maxItemsPerRow = 9
-                fixedRows = 6
+                fixedRows = null
             }
 
             InventoryType.GENERIC -> {
@@ -375,11 +422,16 @@ object DetailInfoRenderer {
 
             for (col in 0 until itemsInCurrentRow) {
                 val index = startItemIndex + col
+                // 範囲外アクセスを避けるためにチェック
+                if (index >= inventoryData.items.size) continue
+
                 val itemStack = inventoryData.items[index]
 
                 val itemX = rowStartX + col * (slotSize + itemPadding)
-                val rainbowColor = getRainbowColor()
-                context.drawBorder(itemX, itemDrawingY, slotSize, slotSize, rainbowColor)
+                // --- 修正: リーチ判定に基づいて色を取得 ---
+                val featureColor = getFeatureColor(isTargetInReach)
+                context.drawBorder(itemX, itemDrawingY, slotSize, slotSize, featureColor)
+                // -------------------------------------
                 context.drawItem(itemStack, itemX, itemDrawingY)
                 val itemCount = itemStack.count
                 if (itemCount > 1)
@@ -396,7 +448,6 @@ object DetailInfoRenderer {
         }
 
         // 描画が完了したY座標 + アイテムの高さ + パディングを次の描画開始Y座標とする
-        // rowCount が 0 のケースは既に上で除外されています
         return itemsStartY + rowCount * (slotSize + itemPadding) + padding
     }
 
@@ -416,6 +467,9 @@ object DetailInfoRenderer {
         startY: Int,
         uiWidth: Int,
         drawOnly: Boolean, // true の場合、実際に描画。false の場合、高さのみを計算。
+        // --- 修正: isTargetInReach を引数に追加 ---
+        isTargetInReach: Boolean,
+        // -------------------------------------
     ): Int {
         val font = client.textRenderer
         val padding = 5
@@ -458,17 +512,23 @@ object DetailInfoRenderer {
             requiredHeight += inventoryHeight
 
             if (drawOnly) {
-                contentY = drawInventoryContents(context, client, inventoryData, startX, contentY, uiWidth)
+                // --- 修正: drawInventoryContents に isTargetInReach を渡す ---
+                contentY =
+                    drawInventoryContents(context, client, inventoryData, startX, contentY, uiWidth, isTargetInReach)
+                // --------------------------------------------------------
             }
         }
 
         // 4. Pos情報の行
-        requiredHeight += font.fontHeight // PosTextの高さ
+        requiredHeight += font.fontHeight + 2 // PosTextの高さ + 少しのパディング
 
         if (drawOnly) {
             val infoPos = detail.pos
             val posText = "Pos: x=${infoPos?.x}, y=${infoPos?.y}, z=${infoPos?.z}"
             context.drawText(font, Text.literal(posText), iconX, contentY, 0xFFFFFFFF.toInt(), true)
+            contentY += font.fontHeight + 2
+        } else {
+            contentY += font.fontHeight + 2
         }
 
         // 5. 枠線と下部パディング
@@ -527,6 +587,21 @@ object DetailInfoRenderer {
             // TextHeight + TextPadding + BarHeight + BarPadding + Border
             requiredHeight += font.fontHeight + 2 + BAR_HEIGHT + BAR_PADDING
         }
+
+        // 3. Pos情報の行 (エンティティなので常に表示)
+        requiredHeight += font.fontHeight + 2 // PosTextの高さ + 少しのパディング
+
+        var contentY = startY + requiredHeight - (font.fontHeight + 2) // PosTextのY座標
+
+        if (drawOnly) {
+            val infoPos = detail.entity.blockPos
+            val posText = "Pos: x=${infoPos.x}, y=${infoPos.y}, z=${infoPos.z}"
+            context.drawText(font, Text.literal(posText), iconX, contentY, 0xFFFFFFFF.toInt(), true)
+        }
+
+
+        // 4. 枠線と下部パディング
+        requiredHeight += font.fontHeight + 2 + BORDER_WIDTH + padding // 下部の境界線とパディング
 
         return requiredHeight
     }
@@ -590,12 +665,13 @@ object DetailInfoRenderer {
 
         val blockPos = interactionManager.currentBreakingPos
         val blockState = client.world?.getBlockState(blockPos)
+        // calcBlockBreakingDelta は、そのブロックを破壊するのに必要な進行度（1.0fで破壊完了）を1ティックあたりで返す
         val destroySpeed = blockState?.calcBlockBreakingDelta(player, world, blockPos) ?: 0.0f
 
         if (destroySpeed <= 0.0001f) return Text.literal("Indestructible")
 
         val totalTicks = 1.0f / destroySpeed
-        val remainingTicks = (1.0f - progress) / destroySpeed
+        val remainingTicks = (1.0f - progress) * totalTicks
         val totalSeconds = totalTicks / 20.0f
         val remainingSeconds = remainingTicks / 20.0f
 
@@ -615,6 +691,9 @@ object DetailInfoRenderer {
     ) {
         val detail = detailInfoFeature.targetDetail ?: return
         val interactionManager = client.interactionManager ?: return
+        // --- 修正: リーチ判定結果を取得 ---
+        val isTargetInReach = detailInfoFeature.isTargetInReach
+        // --------------------------------
 
         val screenWidth = client.window.scaledWidth
 
@@ -631,6 +710,7 @@ object DetailInfoRenderer {
             when (detail) {
                 is DetailInfo.TargetDetail.BlockDetail -> {
                     // drawOnly=falseで高さを計算
+                    // --- 修正: isTargetInReach を渡す ---
                     drawBlockContent(
                         context,
                         client,
@@ -639,8 +719,10 @@ object DetailInfoRenderer {
                         startX,
                         startY,
                         uiWidth,
-                        drawOnly = false
+                        drawOnly = false,
+                        isTargetInReach = isTargetInReach
                     )
+                    // ----------------------------------
                 }
 
                 is DetailInfo.TargetDetail.EntityDetail -> {
@@ -651,18 +733,33 @@ object DetailInfoRenderer {
 
         val endY = startY + requiredHeight
 
-        // 枠の色は虹色のまま維持
-        val rainbowColor = getRainbowColor()
+        // --- 修正: リーチ判定に基づいて色を取得 ---
+        val featureColor = getFeatureColor(isTargetInReach)
+        // --------------------------------------
 
         // --- 2. 背景と枠の描画 ---
-        drawBackgroundAndBorder(context, startX, startY, endX, endY, rainbowColor)
+        // --- 修正: featureColor を渡す ---
+        drawBackgroundAndBorder(context, startX, startY, endX, endY, featureColor)
+        // --------------------------------
 
         // --- 3. 詳細情報コンテンツとバーの描画 (drawOnly=trueで実際の描画) ---
         when (detail) {
             is DetailInfo.TargetDetail.BlockDetail -> {
-                drawBlockContent(context, client, detail, detailInfoFeature, startX, startY, uiWidth, drawOnly = true)
+                // --- 修正: isTargetInReach を渡す ---
+                drawBlockContent(
+                    context,
+                    client,
+                    detail,
+                    detailInfoFeature,
+                    startX,
+                    startY,
+                    uiWidth,
+                    drawOnly = true,
+                    isTargetInReach = isTargetInReach
+                )
+                // ----------------------------------
 
-                // 破壊バーの描画
+                // 破壊バーの描画 (リーチ外でも破壊状態は表示)
                 if (interactionManager.isBreakingBlock) {
                     val progress = interactionManager.currentBreakingProgress.coerceIn(0.0f, 1.0f)
                     val infoText = getBreakingTimeText(progress, client)
