@@ -5,6 +5,7 @@
   "client": [
     "client.ClientPlayerEntityMixin",
     "client.ClientPlayerInteractionManagerAccessor",
+    "client.ClientPlayNetworkHandlerMixin",
     "client.FastBreakMixin",
     "client.FreezeNetworkHandlerMixin",
     "client.KillAuraMixin",

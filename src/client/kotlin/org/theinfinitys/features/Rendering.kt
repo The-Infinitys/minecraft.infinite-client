@@ -4,6 +4,7 @@ import org.theinfinitys.feature
 import org.theinfinitys.features.rendering.AntiOverlay
 import org.theinfinitys.features.rendering.CameraConfig
 import org.theinfinitys.features.rendering.ExtraSensory
+import org.theinfinitys.features.rendering.InnerChest
 import org.theinfinitys.features.rendering.Radar
 import org.theinfinitys.features.rendering.SuperSight
 import org.theinfinitys.features.rendering.XRay
@@ -41,4 +42,5 @@ val rendering =
             ExtraSensory(),
             Translation.t("rendering.extrasensory.description"),
         ),
+        feature("InnerChest", InnerChest(), Translation.t("rendering.innerchest.description")),
     )
