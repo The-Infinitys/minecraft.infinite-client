@@ -121,7 +121,12 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                     targetDetail = TargetDetail.BlockDetail(blockState.block, blockPos)
 
                     // LootableContainerBlockEntity (チェストなど) および Furnace系, Hopper系をチェック
-                    if (blockEntity is LootableContainerBlockEntity || blockEntity is FurnaceBlockEntity || blockEntity is SmokerBlockEntity || blockEntity is BlastFurnaceBlockEntity || blockEntity is HopperBlockEntity) {
+                    if (blockEntity is LootableContainerBlockEntity ||
+                        blockEntity is FurnaceBlockEntity ||
+                        blockEntity is SmokerBlockEntity ||
+                        blockEntity is BlastFurnaceBlockEntity ||
+                        blockEntity is HopperBlockEntity
+                    ) {
                         if (scanTimer <= 0) {
                             if (getSetting("InnerChest")?.value == true) {
                                 // リーチ外でもインベントリをスキャンするために、ヒットしたブロックの情報を利用してパケットを送信
@@ -222,17 +227,17 @@ object DetailInfoRenderer {
     }
 
     // --- 追加: リーチに応じて色を切り替える関数 ---
+
     /**
      * ターゲットがリーチ内の場合は虹色、リーチ外の場合は灰色を返します。
      * @param isInReach ターゲットがリーチ内かどうか
      */
-    private fun getFeatureColor(isInReach: Boolean): Int {
-        return if (isInReach) {
+    private fun getFeatureColor(isInReach: Boolean): Int =
+        if (isInReach) {
             getRainbowColor()
         } else {
             OUT_OF_REACH_COLOR
         }
-    }
     // ---------------------------------------------
 
     /**
@@ -397,7 +402,9 @@ object DetailInfoRenderer {
         // 3. アイテムの行と列を計算
         val totalItems = inventoryData.items.size
         val rowsNeeded =
-            if (totalItems == 0) 0 else {
+            if (totalItems == 0) {
+                0
+            } else {
                 val calculatedRows = (totalItems + maxItemsPerRow - 1) / maxItemsPerRow
                 if (fixedRows != null) calculatedRows.coerceAtMost(fixedRows) else calculatedRows
             }
@@ -434,15 +441,16 @@ object DetailInfoRenderer {
                 // -------------------------------------
                 context.drawItem(itemStack, itemX, itemDrawingY)
                 val itemCount = itemStack.count
-                if (itemCount > 1)
+                if (itemCount > 1) {
                     context.drawText(
                         font,
                         itemCount.toString(),
                         itemX + slotSize / 2,
                         itemDrawingY + slotSize / 2,
                         0xFFFFFFFF.toInt(),
-                        true
+                        true,
                     )
+                }
             }
             rowCount = row + 1
         }
@@ -599,7 +607,6 @@ object DetailInfoRenderer {
             context.drawText(font, Text.literal(posText), iconX, contentY, 0xFFFFFFFF.toInt(), true)
         }
 
-
         // 4. 枠線と下部パディング
         requiredHeight += font.fontHeight + 2 + BORDER_WIDTH + padding // 下部の境界線とパディング
 
@@ -720,7 +727,7 @@ object DetailInfoRenderer {
                         startY,
                         uiWidth,
                         drawOnly = false,
-                        isTargetInReach = isTargetInReach
+                        isTargetInReach = isTargetInReach,
                     )
                     // ----------------------------------
                 }
@@ -755,7 +762,7 @@ object DetailInfoRenderer {
                     startY,
                     uiWidth,
                     drawOnly = true,
-                    isTargetInReach = isTargetInReach
+                    isTargetInReach = isTargetInReach,
                 )
                 // ----------------------------------
 
