@@ -2,19 +2,31 @@ package org.theinfinitys.features.rendering
 
 import drawBorder
 import net.minecraft.block.Block
-import net.minecraft.block.entity.*
+import net.minecraft.block.Blocks
+import net.minecraft.block.entity.BlastFurnaceBlockEntity
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.ChestBlockEntity
+import net.minecraft.block.entity.FurnaceBlockEntity
+import net.minecraft.block.entity.HopperBlockEntity
+import net.minecraft.block.entity.LootableContainerBlockEntity
+import net.minecraft.block.entity.SmokerBlockEntity
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.predicate.entity.EntityPredicates
 import net.minecraft.registry.Registries
+import net.minecraft.registry.tag.BlockTags
+import net.minecraft.registry.tag.EnchantmentTags
 import net.minecraft.text.Text
 import net.minecraft.util.Hand
+import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
@@ -61,23 +73,19 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
         val vec3d2 = camera.getRotationVec(1f)
         val vec3d3 = vec3d.add(vec3d2.x * d, vec3d2.y * d, vec3d2.z * d)
         val box = camera.boundingBox.stretch(vec3d2.multiply(d)).expand(1.0, 1.0, 1.0)
-        val entityHitResult =
-            ProjectileUtil.raycast(camera, vec3d, vec3d3, box, EntityPredicates.CAN_HIT, e)
-        return if (entityHitResult != null && entityHitResult.getPos()
-                .squaredDistanceTo(vec3d) < f
-        ) entityHitResult
+        val entityHitResult = ProjectileUtil.raycast(camera, vec3d, vec3d3, box, EntityPredicates.CAN_HIT, e)
+        return if (entityHitResult != null && entityHitResult.getPos().squaredDistanceTo(vec3d) < f) entityHitResult
         else hitResult
     }
 
-    override val settings: List<InfiniteSetting<*>> =
-        listOf(
-            InfiniteSetting.BooleanSetting("BlockInfo", "ブロック情報を表示します。", true),
-            InfiniteSetting.BooleanSetting("InnerChest", "チェストの中身も取得します。", true),
-            InfiniteSetting.BooleanSetting("EntityInfo", "エンティティ情報を表示します。", true),
-            InfiniteSetting.IntSetting("PaddingTop", "上からの余白", 0, 0, 100),
-            InfiniteSetting.FloatSetting("Reach", "情報を表示する再長距離", 20f, 10f, 100f),
-            InfiniteSetting.IntSetting("Width", "ウィジェットの幅を設定します。", 50, 25, 100),
-        )
+    override val settings: List<InfiniteSetting<*>> = listOf(
+        InfiniteSetting.BooleanSetting("BlockInfo", "ブロック情報を表示します。", true),
+        InfiniteSetting.BooleanSetting("InnerChest", "チェストの中身も取得します。", true),
+        InfiniteSetting.BooleanSetting("EntityInfo", "エンティティ情報を表示します。", true),
+        InfiniteSetting.IntSetting("PaddingTop", "上からの余白", 0, 0, 100),
+        InfiniteSetting.FloatSetting("Reach", "情報を表示する再長距離", 20f, 10f, 100f),
+        InfiniteSetting.IntSetting("Width", "ウィジェットの幅を設定します。", 50, 25, 100),
+    )
 
     var shouldCancelScanScreen: Boolean = false
     var scanTargetBlockEntity: BlockEntity? = null
@@ -145,11 +153,7 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                     targetDetail = TargetDetail.BlockDetail(blockState.block, blockPos)
 
                     // LootableContainerBlockEntity (チェストなど) および Furnace系, Hopper系をチェック
-                    if (blockEntity is LootableContainerBlockEntity ||
-                        blockEntity is FurnaceBlockEntity ||
-                        blockEntity is SmokerBlockEntity ||
-                        blockEntity is BlastFurnaceBlockEntity
-                    ) {
+                    if (blockEntity is LootableContainerBlockEntity || blockEntity is FurnaceBlockEntity || blockEntity is SmokerBlockEntity || blockEntity is BlastFurnaceBlockEntity) {
                         if (scanTimer <= 0) {
                             if (getSetting("InnerChest")?.value == true) {
                                 // リーチ外でもインベントリをスキャンするために、ヒットしたブロックの情報を利用してパケットを送信
@@ -188,22 +192,21 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
             shouldCancelScanScreen = false
             val entity = scanTargetBlockEntity as BlockEntity
             var itemStacks = items as List<ItemStack>
-            val inventoryType =
-                when (entity) {
-                    is FurnaceBlockEntity, is SmokerBlockEntity, is BlastFurnaceBlockEntity -> InventoryType.FURNACE
-                    is HopperBlockEntity -> InventoryType.HOPPER
-                    is ChestBlockEntity -> {
-                        val line = 9
-                        itemStacks = if (itemStacks.size > 7 * line) {
-                            itemStacks.dropLast(itemStacks.size - line * 6)
-                        } else {
-                            itemStacks.dropLast(itemStacks.size - line * 3)
-                        }
-                        InventoryType.CHEST
+            val inventoryType = when (entity) {
+                is FurnaceBlockEntity, is SmokerBlockEntity, is BlastFurnaceBlockEntity -> InventoryType.FURNACE
+                is HopperBlockEntity -> InventoryType.HOPPER
+                is ChestBlockEntity -> {
+                    val line = 9
+                    itemStacks = if (itemStacks.size > 7 * line) {
+                        itemStacks.dropLast(itemStacks.size - line * 6)
+                    } else {
+                        itemStacks.dropLast(itemStacks.size - line * 3)
                     }
-
-                    else -> InventoryType.GENERIC
+                    InventoryType.CHEST
                 }
+
+                else -> InventoryType.GENERIC
+            }
 
             scannedInventoryData[entity.pos] = InventoryData(inventoryType, itemStacks)
             scanTargetBlockEntity = null
@@ -255,12 +258,11 @@ object DetailInfoRenderer {
      * ターゲットがリーチ内の場合は虹色、リーチ外の場合は灰色を返します。
      * @param isInReach ターゲットがリーチ内かどうか
      */
-    private fun getFeatureColor(isInReach: Boolean): Int =
-        if (isInReach) {
-            getRainbowColor()
-        } else {
-            OUT_OF_REACH_COLOR
-        }
+    private fun getFeatureColor(isInReach: Boolean): Int = if (isInReach) {
+        getRainbowColor()
+    } else {
+        OUT_OF_REACH_COLOR
+    }
     // ---------------------------------------------
 
     /**
@@ -336,13 +338,12 @@ object DetailInfoRenderer {
         }
 
         val totalItems = inventoryData.items.size
-        val rowsNeeded =
-            if (totalItems == 0) {
-                0
-            } else {
-                val calculatedRows = (totalItems + maxItemsPerRow - 1) / maxItemsPerRow
-                if (fixedRows != null) calculatedRows.coerceAtMost(fixedRows) else calculatedRows
-            }
+        val rowsNeeded = if (totalItems == 0) {
+            0
+        } else {
+            val calculatedRows = (totalItems + maxItemsPerRow - 1) / maxItemsPerRow
+            if (fixedRows != null) calculatedRows.coerceAtMost(fixedRows) else calculatedRows
+        }
 
         // アイテムスロットの高さ
         if (rowsNeeded > 0) {
@@ -416,21 +417,19 @@ object DetailInfoRenderer {
 
             InventoryType.GENERIC -> {
                 // GENERICの場合、表示領域から計算
-                maxItemsPerRow =
-                    (innerContentWidth / (slotSize + itemPadding)).coerceAtLeast(1)
+                maxItemsPerRow = (innerContentWidth / (slotSize + itemPadding)).coerceAtLeast(1)
                 fixedRows = null
             }
         }
 
         // 3. アイテムの行と列を計算
         val totalItems = inventoryData.items.size
-        val rowsNeeded =
-            if (totalItems == 0) {
-                0
-            } else {
-                val calculatedRows = (totalItems + maxItemsPerRow - 1) / maxItemsPerRow
-                if (fixedRows != null) calculatedRows.coerceAtMost(fixedRows) else calculatedRows
-            }
+        val rowsNeeded = if (totalItems == 0) {
+            0
+        } else {
+            val calculatedRows = (totalItems + maxItemsPerRow - 1) / maxItemsPerRow
+            if (fixedRows != null) calculatedRows.coerceAtMost(fixedRows) else calculatedRows
+        }
 
         val itemsStartY = drawingY
         var rowCount = 0
@@ -489,6 +488,251 @@ object DetailInfoRenderer {
     /**
      * ブロックコンテンツを描画し、描画に必要な**総高さ**を返します。
      */
+    private enum class ToolKind {
+        Sword, Axe, PickAxe, Shovel, Hoe,
+    }
+
+    private class CorrectTool(val toolKind: ToolKind?, val toolLevel: Int, val isSilkTouchRequired: Boolean = false) {
+        /**
+         * プレイヤーが手に持っているツールが、要求された条件を満たしているかを確認する。
+         * @return 0:緑(OK), 1:黄(シルクタッチ不足), 2:赤(ツール不足/不適正)
+         */
+        fun checkPlayerToolStatus(): Int {
+            val client = MinecraftClient.getInstance()
+            val player = client.player ?: return 2 // プレイヤーがいなければ赤
+            val heldItem: ItemStack = player.mainHandStack
+
+            // 1. ツールが不要な場合 (toolKind が null の場合) は緑
+            if (toolKind == null) {
+                return 0 // ツールは不要なのでOK (緑)
+            }
+
+            // 2. ツール種別が一致しているか確認
+            val toolId = Registries.ITEM.getId(heldItem.item).toString()
+            val isCorrectToolKind = when (toolKind) {
+                ToolKind.PickAxe ->
+                    toolId.endsWith("_pickaxe")
+
+                ToolKind.Axe ->
+                    toolId.endsWith("_axe")
+
+                ToolKind.Shovel ->
+                    toolId.endsWith("_shovel")
+
+                ToolKind.Sword ->
+                    toolId.endsWith("_sword")
+
+                ToolKind.Hoe ->
+                    toolId.endsWith("_hoe")
+
+            }
+
+            // 3. ツール種別が不適正なら赤
+            if (!isCorrectToolKind) {
+                return 2 // ツール種別が不適正 (赤)
+            }
+
+            // 4. 採掘レベルはここでは省略 (本来はツール素材もチェックすべきだが、複雑になるためスキップし、シルクタッチに集中)
+
+            // 5. シルクタッチの要件チェック
+            if (isSilkTouchRequired) {
+                // シルクタッチエンチャントを持っているか確認
+                val hasSilkTouch =
+                    EnchantmentHelper.getEnchantments(heldItem)
+                        .enchantments.any { it.isIn(EnchantmentTags.PREVENTS_BEE_SPAWNS_WHEN_MINING) }
+
+                if (!hasSilkTouch) {
+                    return 1 // シルクタッチ不足 (黄)
+                }
+            }
+
+            // 6. 全ての要件 (ツール種類、シルクタッチ) を満たした場合
+            return 0 // OK (緑)
+        }
+
+        /**
+         * このブロックの採掘に適した、要求レベルを満たす最高のツールのIDを返す。
+         * 例: toolKind=PickAxe, toolLevel=2 の場合 -> "minecraft:iron_pickaxe"
+         * toolKind=Axe, toolLevel=3 の場合 -> "minecraft:diamond_axe"
+         * @return 該当するツールのアイテムID文字列、またはツールが不要な場合は null
+         */
+        fun getId(): String? {
+            if (toolKind == null) {
+                return null // 適正ツールが設定されていない
+            }
+
+            // 1. レベルに応じた素材のプレフィックスを決定
+            val material: String = when (toolLevel) {
+                3 -> "diamond"   // レベル3はダイヤモンド
+                2 -> "iron"      // レベル2は鉄
+                1 -> "stone"     // レベル1は石
+                0 -> "wooden"    // レベル0は木材
+                else -> "wooden" // 予期せぬレベルの場合は木材
+            }
+
+            // 2. 種類に応じたツールのサフィックスを決定し、IDを結合
+            val toolSuffix: String = when (toolKind) {
+                ToolKind.PickAxe -> "pickaxe"
+                ToolKind.Shovel -> "shovel"
+                ToolKind.Axe -> "axe"
+                ToolKind.Hoe -> "hoe"
+                ToolKind.Sword -> "sword"
+                // 予期せぬToolKindの場合
+            }
+
+            return "minecraft:${material}_$toolSuffix"
+        }
+    }
+
+
+    fun isSilkTouchRequiredClient(block: Block): Boolean {
+        val state = block.defaultState
+        val id = Registries.BLOCK.getId(block).path
+
+        // -------------------------------------------------------------
+        // 1. 鉱石・石・深層岩 (通常はアイテム/丸石をドロップ)
+        // -------------------------------------------------------------
+
+        // id.endsWith("_ore")で多くの鉱石をカバー
+        if (id.endsWith("_ore") || id == "ancient_debris") {
+            return true
+        }
+
+        // 石、深層岩 (丸石をドロップ)
+        if (block == Blocks.STONE || block == Blocks.DEEPSLATE) {
+            return true
+        }
+
+        // きらめくブラックストーン (通常は金塊をドロップ)
+        if (block == Blocks.GILDED_BLACKSTONE) {
+            return true
+        }
+
+        // -------------------------------------------------------------
+        // 2. ツールで破壊するとドロップが変わるブロック (通常はなし/別アイテムをドロップ)
+        // -------------------------------------------------------------
+
+        // ガラス、ガラス板、氷、青氷、氷塊、薄氷 (通常はなし)
+        if (id.contains("glass") || id.contains("ice") || block == Blocks.BLUE_ICE || block == Blocks.PACKED_ICE || block == Blocks.FROSTED_ICE) {
+            // 薄氷（FROSTED_ICE）はリストで「いいえ」だが、他の氷類と区別
+            return block != Blocks.FROSTED_ICE
+        }
+
+        // グロウストーン (通常はダストをドロップ)
+        if (block == Blocks.GLOWSTONE) {
+            return true
+        }
+
+        // クモの巣 (通常は糸。ハサミはOKだが、ツルハシなど適正ツールではない)
+        if (block == Blocks.COBWEB) {
+            return true
+        }
+
+        // シーランタン (通常はプリズマリンクリスタルをドロップ)
+        if (block == Blocks.SEA_LANTERN) {
+            return true
+        }
+
+        // -------------------------------------------------------------
+        // 3. 土壌系 (通常は土をドロップ)
+        // -------------------------------------------------------------
+
+        // 草ブロック、菌糸、ポドゾル、土の道 (通常は土をドロップ)
+        if (block == Blocks.GRASS_BLOCK || block == Blocks.MYCELIUM || block == Blocks.PODZOL || block == Blocks.DIRT_PATH) {
+            return true
+        }
+
+        // -------------------------------------------------------------
+        // 4. コンテナ/特殊ブロック
+        // -------------------------------------------------------------
+
+        // エンダーチェスト
+        if (block == Blocks.ENDER_CHEST) {
+            return true
+        }
+
+        // 養蜂箱、ミツバチの巣 (通常は空き/なし)
+        if (block == Blocks.BEEHIVE || block == Blocks.BEE_NEST) {
+            return true
+        }
+
+        // -------------------------------------------------------------
+        // 5. 葉、ツタ、装飾品
+        // -------------------------------------------------------------
+
+        // 葉 (通常は苗木/棒)
+        if (state.isIn(BlockTags.LEAVES)) {
+            return true
+        }
+
+        // アメジストの芽、アメジストの塊 (通常は欠片/なし)
+        val amethistId = Registries.BLOCK.getId(block).path
+        if (amethistId.startsWith("small_amethyst_bud") || amethistId.startsWith("medium_amethyst_bud") || amethistId.startsWith(
+                "large_amethyst_bud"
+            ) || amethistId == "amethyst_cluster"
+        ) {
+            return true
+        }
+
+        // サンゴブロック、サンゴ (通常は死んだサンゴ/なし)
+        if (state.isIn(BlockTags.CORAL_BLOCKS) || state.isIn(BlockTags.CORAL_PLANTS)) {
+            return true
+        }
+
+        // -------------------------------------------------------------
+        // 6. 該当しないもの (通常破壊でブロック自身がドロップするもの)
+        // -------------------------------------------------------------
+
+        // 砂利 (90%の確率で砂利がドロップするため、シルクタッチは必須ではないが、100%回収には必要) -> 必須ではないと判断
+        // 飾り壺 (道具で壊さない場合は自身をドロップするため、必須ではない) -> 必須ではないと判断
+
+        return false
+    }
+
+    private fun getCorrectTool(block: Block): CorrectTool {
+        val state = block.defaultState
+        val toolLevel = if (state.isIn(BlockTags.NEEDS_STONE_TOOL)) {
+            1
+        } else if (state.isIn(BlockTags.NEEDS_IRON_TOOL)) {
+            2
+        } else if (state.isIn(BlockTags.NEEDS_DIAMOND_TOOL)) {
+            3
+        } else {
+            0
+        }
+        val toolKind = if (state.isIn(BlockTags.AXE_MINEABLE)) {
+            ToolKind.Axe
+        } else if (state.isIn(BlockTags.AXE_MINEABLE)) {
+            ToolKind.Axe
+        } else if (state.isIn(BlockTags.PICKAXE_MINEABLE)) {
+            ToolKind.PickAxe
+        } else if (state.isIn(BlockTags.SHOVEL_MINEABLE)) {
+            ToolKind.Shovel
+        } else if (state.isIn(BlockTags.HOE_MINEABLE)) {
+            ToolKind.Hoe
+        } else if (state.isIn(BlockTags.LEAVES) || Registries.BLOCK.getId(block).toString() == "minecraft:cobweb") {
+            ToolKind.Sword
+        } else {
+            null
+        }
+
+        val isSilkTouchRequired = isSilkTouchRequiredClient(block)
+
+        return CorrectTool(toolKind, toolLevel, isSilkTouchRequired)
+    }
+
+    private fun getItemStackFromId(id: String): ItemStack = try {
+        val identifier = Identifier.of(id)
+        val block = Registries.ITEM.get(identifier)
+        if (block != Blocks.AIR) {
+            block.asItem().defaultStack
+        } else {
+            Items.BARRIER.defaultStack
+        }
+    } catch (_: Exception) {
+        Items.BARRIER.defaultStack
+    }
+
     private fun drawBlockContent(
         context: DrawContext,
         client: MinecraftClient,
@@ -516,8 +760,11 @@ object DetailInfoRenderer {
         if (drawOnly) {
             // 1. アイコンの描画
             val blockIconStack = ItemStack(detail.block)
-            context.drawItemWithoutEntity(blockIconStack, iconX, iconY, 0)
+            context.drawItemWithoutEntity(
+                blockIconStack, iconX, iconY, 0
+            )
 
+            val correctTool = getCorrectTool(detail.block)
             // 2. 名前とIDの描画
             val blockId = Registries.BLOCK.getId(detail.block).toString()
             val infoName = detail.block.name.string
@@ -532,6 +779,26 @@ object DetailInfoRenderer {
                 ColorHelper.getArgb(192, 255, 255, 255),
                 true,
             )
+            val correctToolId = correctTool.getId()
+            if (correctToolId != null) {
+                val toolIconX = startX + uiWidth - iconSize - padding
+                context.fill(
+                    toolIconX, iconY, toolIconX + iconSize, iconY + iconSize,
+                    when (correctTool.checkPlayerToolStatus()) {
+                        0 -> 0x8800FF00
+                        1 -> 0x88FFFF00
+                        2 -> 0x88FF0000
+                        else -> 0x88FFFFFF
+
+                    }.toInt()
+                )
+                context.drawItemWithoutEntity(
+                    getItemStackFromId(correctToolId),
+                    toolIconX,
+                    iconY,
+                    0
+                )
+            }
         }
 
         // 3. チェストの中身の計算/描画
@@ -544,9 +811,9 @@ object DetailInfoRenderer {
 
             if (drawOnly) {
                 // --- 修正: drawInventoryContents に isTargetInReach を渡す ---
-                contentY =
-                    drawInventoryContents(context, client, inventoryData, startX, contentY, uiWidth, isTargetInReach)
-                // --------------------------------------------------------
+                contentY = drawInventoryContents(
+                    context, client, inventoryData, startX, contentY, uiWidth, isTargetInReach
+                )
             }
         }
 
@@ -729,30 +996,29 @@ object DetailInfoRenderer {
         val endX = startX + uiWidth
 
         // **高さを動的に計算**
-        val requiredHeight =
-            when (detail) {
-                is DetailInfo.TargetDetail.BlockDetail -> {
-                    // drawOnly=falseで高さを計算
-                    // --- 修正: isTargetInReach を渡す ---
-                    drawBlockContent(
-                        context,
-                        client,
-                        detail,
-                        detailInfoFeature,
-                        startX,
-                        startY,
-                        uiWidth,
-                        drawOnly = false,
-                        isTargetInReach = isTargetInReach,
-                    )
-                    // ----------------------------------
-                }
-
-                is DetailInfo.TargetDetail.EntityDetail -> {
-                    // drawOnly=falseで高さを計算
-                    drawEntityContent(context, client, detail, startX, startY, uiWidth, drawOnly = false)
-                }
+        val requiredHeight = when (detail) {
+            is DetailInfo.TargetDetail.BlockDetail -> {
+                // drawOnly=falseで高さを計算
+                // --- 修正: isTargetInReach を渡す ---
+                drawBlockContent(
+                    context,
+                    client,
+                    detail,
+                    detailInfoFeature,
+                    startX,
+                    startY,
+                    uiWidth,
+                    drawOnly = false,
+                    isTargetInReach = isTargetInReach,
+                )
+                // ----------------------------------
             }
+
+            is DetailInfo.TargetDetail.EntityDetail -> {
+                // drawOnly=falseで高さを計算
+                drawEntityContent(context, client, detail, startX, startY, uiWidth, drawOnly = false)
+            }
+        }
 
         val endY = startY + requiredHeight
 
@@ -806,16 +1072,15 @@ object DetailInfoRenderer {
 
     private fun getRainbowColor(): Int {
         val rainbowDuration = 6000L
-        val colors =
-            intArrayOf(
-                0xFFFF0000.toInt(),
-                0xFFFFFF00.toInt(),
-                0xFF00FF00.toInt(),
-                0xFF00FFFF.toInt(),
-                0xFF0000FF.toInt(),
-                0xFFFF00FF.toInt(),
-                0xFFFF0000.toInt(),
-            )
+        val colors = intArrayOf(
+            0xFFFF0000.toInt(),
+            0xFFFFFF00.toInt(),
+            0xFF00FF00.toInt(),
+            0xFF00FFFF.toInt(),
+            0xFF0000FF.toInt(),
+            0xFFFF00FF.toInt(),
+            0xFFFF0000.toInt(),
+        )
         val currentTime = System.currentTimeMillis()
         val elapsedTime = currentTime % rainbowDuration
         val progress = elapsedTime.toFloat() / rainbowDuration.toFloat()
@@ -833,4 +1098,5 @@ object DetailInfoRenderer {
             (ColorHelper.getBlue(startColor) * (1 - segmentProgress) + ColorHelper.getBlue(endColor) * segmentProgress).toInt(),
         )
     }
+
 }
