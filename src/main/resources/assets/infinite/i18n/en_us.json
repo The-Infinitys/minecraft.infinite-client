@@ -70,8 +70,8 @@
     "radar": {
       "description": "Displays nearby entities and players on a radar overlay."
     },
-    "innerchest": {
-      "description": "displays chest info"
+    "detailinfo": {
+      "description": "displays detailed informations"
     }
   },
   "visual": {

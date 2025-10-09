@@ -67,8 +67,8 @@
     "radar": {
       "description": "周囲のエンティティやプレイヤーをレーダーに表示します。"
     },
-    "innerchest": {
-      "description": "チェストの中身を表示します"
+    "detailinfo": {
+      "description": "詳細な情報を表示します。"
     }
   },
   "visual": {

@@ -12,6 +12,7 @@
     "client.NoAttackMixin",
     "client.SuperAttackMixin",
     "client.rendering.AIModeHudMixin",
+    "client.rendering.DetailInfoRenderingMixin",
     "client.rendering.CameraMixin",
     "client.rendering.GameRendererMixin",
     "client.rendering.InGameHudMixin",

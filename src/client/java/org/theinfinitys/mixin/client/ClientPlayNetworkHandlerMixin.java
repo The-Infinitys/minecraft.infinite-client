@@ -8,32 +8,32 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.rendering.InnerChest;
+import org.theinfinitys.features.rendering.DetailInfo;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class ClientPlayNetworkHandlerMixin {
 
-  // 既に実装済み: GUIが開くパケットをキャンセルする
-  @Inject(method = "onOpenScreen", at = @At("HEAD"), cancellable = true)
-  private void innerChest$cancelOpenScreen(OpenScreenS2CPacket packet, CallbackInfo ci) {
-    // InnerChestが有効な場合のみキャンセル
-    InnerChest innerChest = InfiniteClient.INSTANCE.getFeature(InnerChest.class);
-    if (innerChest != null && innerChest.isEnabled() && innerChest.getShouldCancelScreen()) {
-      innerChest.setShouldCancelScreen(false);
-      ci.cancel();
+    @Inject(method = "onOpenScreen", at = @At("HEAD"), cancellable = true)
+    private void DetailInfo$cancelOpenScreen(OpenScreenS2CPacket packet, CallbackInfo ci) {
+        DetailInfo detailInfo = InfiniteClient.INSTANCE.getFeature(DetailInfo.class);
+        if (detailInfo != null
+                && InfiniteClient.INSTANCE.isSettingEnabled(DetailInfo.class, "InnerChest")
+                && detailInfo.getShouldCancelScanScreen()) {
+            detailInfo.setShouldCancelScanScreen(false);
+            ci.cancel();
+        }
     }
-  }
 
-  @Inject(method = "onInventory", at = @At("HEAD"))
-  private void innerChest$processInventory(InventoryS2CPacket packet, CallbackInfo ci) {
+    @Inject(method = "onInventory", at = @At("HEAD"))
+    private void DetailInfo$processInventory(InventoryS2CPacket packet, CallbackInfo ci) {
 
-    if (InfiniteClient.INSTANCE.isFeatureEnabled(InnerChest.class)) {
-      var items = packet.contents();
-      int syncId = packet.syncId();
-      InnerChest innerChest = InfiniteClient.INSTANCE.getFeature(InnerChest.class);
-      if (innerChest != null) {
-        innerChest.handleChestContents(syncId, items);
-      }
+        if (InfiniteClient.INSTANCE.isSettingEnabled(DetailInfo.class, "InnerChest")) {
+            var items = packet.contents();
+            int syncId = packet.syncId();
+            DetailInfo DetailInfo = InfiniteClient.INSTANCE.getFeature(DetailInfo.class);
+            if (DetailInfo != null) {
+                DetailInfo.handleChestContents(syncId, items);
+            }
+        }
     }
-  }
 }
