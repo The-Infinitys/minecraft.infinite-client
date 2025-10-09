@@ -1,9 +1,11 @@
 package org.theinfinitys.features.rendering
 
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 
 class AntiOverlay : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.UTILS
     override val settings: List<InfiniteSetting<*>> =
         listOf(
             InfiniteSetting.BooleanSetting("NoPumpkinOverlay", "カボチャのオーバーレイを削除します。", true),

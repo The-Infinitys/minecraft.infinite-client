@@ -110,6 +110,9 @@
   "server": {
     "serverinfo": {
       "description": "サーバーのIP、Ping、プレイヤー数などの情報を表示します。"
+    },
+    "detectserver": {
+      "description": "自動でサーバーを識別します"
     }
   }
 }

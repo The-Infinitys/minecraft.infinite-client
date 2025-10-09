@@ -2,9 +2,12 @@ package org.theinfinitys.features.movement
 
 import net.minecraft.client.MinecraftClient
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 
 class AutoWalk : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.UTILS
+
     private val client: MinecraftClient
         get() = MinecraftClient.getInstance()
 

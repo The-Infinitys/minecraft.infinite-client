@@ -3,6 +3,7 @@ package org.theinfinitys.features.movement
 import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 import org.theinfinitys.utils.FakePlayerEntity // 前回の回答で作成したユーティリティクラスを想定
 import java.util.ArrayDeque
@@ -12,6 +13,8 @@ import java.util.ArrayDeque
  * Mixinを使用してPlayerMoveC2SPacketの送信を停止し、蓄積することで瞬間移動を可能にする。
  */
 class Freeze : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.UTILS
+
     // 蓄積された移動パケットを保持するキュー
     val packets = ArrayDeque<PlayerMoveC2SPacket>() // Mixinからアクセスするためvalにしておく
 

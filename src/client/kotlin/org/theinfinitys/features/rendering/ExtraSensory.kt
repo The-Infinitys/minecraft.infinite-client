@@ -5,9 +5,11 @@ import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 
 class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.CHEAT
     override val settings: List<InfiniteSetting<*>> =
         listOf(
             InfiniteSetting.BooleanSetting("Player", "プレイヤーを認識できるようになります", true),

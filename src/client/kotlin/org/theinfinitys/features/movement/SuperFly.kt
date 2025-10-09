@@ -4,12 +4,14 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.util.math.Vec3d
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 import org.theinfinitys.utils.toRadians
 import kotlin.math.cos
 import kotlin.math.sin
 
 class SuperFly : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.CHEAT
     override val settings: List<InfiniteSetting<*>> = listOf()
 
     override fun tick() {

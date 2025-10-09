@@ -3,11 +3,13 @@ package org.theinfinitys.features.server
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ServerInfo
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.InfiniteClient
 import org.theinfinitys.settings.InfiniteSetting
 
-class ServerInfo : ConfigurableFeature(initialEnabled = false) {
+class ServerInfo : ConfigurableFeature(initialEnabled = true) {
     override val settings: List<InfiniteSetting<*>> = emptyList()
+    override val level: FeatureLevel = FeatureLevel.UTILS
 
     override fun tick() {
         val info = getCurrentServerInfo()

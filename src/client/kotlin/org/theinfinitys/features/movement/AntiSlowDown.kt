@@ -1,9 +1,11 @@
 package org.theinfinitys.features.movement
 
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 
 class AntiSlowDown : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.CHEAT
     override val settings: List<InfiniteSetting<*>> =
         listOf(
             InfiniteSetting.BooleanSetting(

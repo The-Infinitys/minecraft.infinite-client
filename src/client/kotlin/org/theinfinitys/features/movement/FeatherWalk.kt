@@ -5,12 +5,15 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 import org.theinfinitys.settings.InfiniteSetting.BlockListSetting
 import org.theinfinitys.settings.InfiniteSetting.BooleanSetting
 
 // FeatherWalk Featureの定義
 class FeatherWalk : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.UTILS
+
     // フィーチャーのロジックで利用する設定
     private val blockList: BlockListSetting =
         BlockListSetting(

@@ -7,6 +7,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 
 enum class XRayMode {
@@ -15,6 +16,7 @@ enum class XRayMode {
 }
 
 class XRay : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.CHEAT
     override val settings: List<InfiniteSetting<*>> =
         listOf(
             InfiniteSetting.EnumSetting(

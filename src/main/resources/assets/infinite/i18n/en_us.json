@@ -113,6 +113,9 @@
   "server": {
     "serverinfo": {
       "description": "Displays information about the current server such as ping, IP, and player count."
+    },
+    "detectserver": {
+      "description": "Automatically Detect Server"
     }
   }
 }

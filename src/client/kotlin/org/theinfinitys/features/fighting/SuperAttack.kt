@@ -1,9 +1,12 @@
 package org.theinfinitys.features.fighting
 
 import org.theinfinitys.ConfigurableFeature
+import org.theinfinitys.FeatureLevel
 import org.theinfinitys.settings.InfiniteSetting
 
 class SuperAttack : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.CHEAT
+
     enum class AttackMethod {
         PACKET,
         MINI_JUMP,

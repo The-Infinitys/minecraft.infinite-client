@@ -6,6 +6,12 @@ import org.lwjgl.glfw.GLFW
 import org.theinfinitys.settings.InfiniteSetting
 import org.theinfinitys.settings.Property
 
+enum class FeatureLevel {
+    UTILS, // ユーリティ。基本どこで使ってても問題ない。
+    EXTEND, // 実際には不可能なので、見られると気づかれる可能性がある
+    CHEAT, // サーバー側で簡単に検知される
+}
+
 abstract class ConfigurableFeature(
     private val initialEnabled: Boolean = false,
 ) {
@@ -13,6 +19,7 @@ abstract class ConfigurableFeature(
     private val disabled: Property<Boolean> = Property(!initialEnabled)
     val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_DONT_CARE)
     open val available = true
+    open val level: FeatureLevel = FeatureLevel.EXTEND
 
     // リスナーの同期に使用する専用のロックオブジェクト
     private val listenerLock = Any()
@@ -62,10 +69,6 @@ abstract class ConfigurableFeature(
     // --- リスナー登録用API ---
     fun addEnabledChangeListener(listener: (oldValue: Boolean, newValue: Boolean) -> Unit) {
         enabled.addListener(listener)
-    }
-
-    fun removeEnabledChangeListener(listener: (oldValue: Boolean, newValue: Boolean) -> Unit) {
-        enabled.removeListener(listener)
     }
 
     private fun startResolver() {

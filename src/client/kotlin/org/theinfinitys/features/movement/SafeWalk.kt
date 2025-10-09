@@ -7,7 +7,6 @@ import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.settings.InfiniteSetting // 基底クラスからインポート
 
 class SafeWalk : ConfigurableFeature(initialEnabled = false) {
-    // MinecraftClientのインスタンスを短縮名で取得（ConfigurableFeatureで定義されていると仮定）
     private val client: MinecraftClient
         get() = MinecraftClient.getInstance()
 
