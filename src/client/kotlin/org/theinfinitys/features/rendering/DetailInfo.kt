@@ -2,20 +2,16 @@ package org.theinfinitys.features.rendering
 
 import drawBorder
 import net.minecraft.block.Block
-import net.minecraft.block.entity.BlastFurnaceBlockEntity
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.ChestBlockEntity
-import net.minecraft.block.entity.FurnaceBlockEntity
-import net.minecraft.block.entity.HopperBlockEntity
-import net.minecraft.block.entity.LootableContainerBlockEntity
-import net.minecraft.block.entity.SmokerBlockEntity
+import net.minecraft.block.entity.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.predicate.entity.EntityPredicates
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Hand
@@ -24,8 +20,11 @@ import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ColorHelper
+import net.minecraft.util.math.MathHelper
 import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.settings.InfiniteSetting
+import kotlin.math.max
+import kotlin.math.sqrt
 
 // --- データ構造 ---
 data class InventoryData(
@@ -44,12 +43,39 @@ enum class InventoryType {
 // クラス名を DetailInfo に変更
 class DetailInfo : ConfigurableFeature(initialEnabled = false) {
     // BlockInfo, EntityInfoの設定を追加
+    private fun findCrosshairTarget(
+        camera: Entity,
+        blockInteractionRange: Double,
+        entityInteractionRange: Double,
+    ): HitResult {
+        var d = max(blockInteractionRange, entityInteractionRange)
+        var e = MathHelper.square(d)
+        val vec3d = camera.getCameraPosVec(1f)
+        val hitResult = camera.raycast(d, 1f, false)
+        val f = hitResult.getPos().squaredDistanceTo(vec3d)
+        if (hitResult.type != HitResult.Type.MISS) {
+            e = f
+            d = sqrt(f)
+        }
+
+        val vec3d2 = camera.getRotationVec(1f)
+        val vec3d3 = vec3d.add(vec3d2.x * d, vec3d2.y * d, vec3d2.z * d)
+        val box = camera.boundingBox.stretch(vec3d2.multiply(d)).expand(1.0, 1.0, 1.0)
+        val entityHitResult =
+            ProjectileUtil.raycast(camera, vec3d, vec3d3, box, EntityPredicates.CAN_HIT, e)
+        return if (entityHitResult != null && entityHitResult.getPos()
+                .squaredDistanceTo(vec3d) < f
+        ) entityHitResult
+        else hitResult
+    }
+
     override val settings: List<InfiniteSetting<*>> =
         listOf(
             InfiniteSetting.BooleanSetting("BlockInfo", "ブロック情報を表示します。", true),
             InfiniteSetting.BooleanSetting("InnerChest", "チェストの中身も取得します。", true),
             InfiniteSetting.BooleanSetting("EntityInfo", "エンティティ情報を表示します。", true),
             InfiniteSetting.IntSetting("PaddingTop", "上からの余白", 0, 0, 100),
+            InfiniteSetting.FloatSetting("Reach", "情報を表示する再長距離", 20f, 10f, 100f),
             InfiniteSetting.IntSetting("Width", "ウィジェットの幅を設定します。", 50, 25, 100),
         )
 
@@ -82,24 +108,22 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
 
     override fun tick() {
         targetDetail = null
-        isTargetInReach = false // 毎ティックリセット
+        isTargetInReach = true // 毎ティックリセット
 
         val client = MinecraftClient.getInstance() ?: return
         val world = client.world ?: return
         val clientCommonNetworkHandler = client.networkHandler ?: return
-        val hitResult = client.crosshairTarget ?: return
-        val player = client.player ?: return
-
-        // 目の位置からの距離を計算
-        val hitDistance = hitResult.pos.distanceTo(player.eyePos)
-        // クライアント側の標準的なリーチ距離を設定 (クリエイティブ: 6.0, サバイバル: 4.5)
-        // 厳密には属性に依存しますが、ここでは一般的な値を採用
-        val reachDistance = if (player.abilities.creativeMode) 6.0 else 4.5
-
-        if (hitDistance <= reachDistance) {
-            isTargetInReach = true
+        var hitResult = client.crosshairTarget ?: return
+        if (hitResult.type == HitResult.Type.MISS) {
+            val entity: Entity? = client.cameraEntity
+            if (entity != null) {
+                if (client.world != null && client.player != null) {
+                    val reach = getSetting("Reach")?.value as? Double ?: 20.0
+                    hitResult = findCrosshairTarget(entity, reach, reach)
+                    isTargetInReach = false
+                }
+            }
         }
-
         when (hitResult.type) {
             HitResult.Type.ENTITY -> {
                 if (getSetting("EntityInfo")?.value == true) {
@@ -124,8 +148,7 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                     if (blockEntity is LootableContainerBlockEntity ||
                         blockEntity is FurnaceBlockEntity ||
                         blockEntity is SmokerBlockEntity ||
-                        blockEntity is BlastFurnaceBlockEntity ||
-                        blockEntity is HopperBlockEntity
+                        blockEntity is BlastFurnaceBlockEntity
                     ) {
                         if (scanTimer <= 0) {
                             if (getSetting("InnerChest")?.value == true) {
@@ -171,10 +194,10 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                     is HopperBlockEntity -> InventoryType.HOPPER
                     is ChestBlockEntity -> {
                         val line = 9
-                        if (itemStacks.size > 7 * line) {
-                            itemStacks = itemStacks.dropLast(itemStacks.size - line * 6)
-                        }else{
-                            itemStacks = itemStacks.dropLast(itemStacks.size - line * 3)
+                        itemStacks = if (itemStacks.size > 7 * line) {
+                            itemStacks.dropLast(itemStacks.size - line * 6)
+                        } else {
+                            itemStacks.dropLast(itemStacks.size - line * 3)
                         }
                         InventoryType.CHEST
                     }
@@ -534,24 +557,17 @@ object DetailInfoRenderer {
             val infoPos = detail.pos
             val posText = "Pos: x=${infoPos?.x}, y=${infoPos?.y}, z=${infoPos?.z}"
             context.drawText(font, Text.literal(posText), iconX, contentY, 0xFFFFFFFF.toInt(), true)
-            contentY += font.fontHeight + 2
+            font.fontHeight + 2
         } else {
-            contentY += font.fontHeight + 2
+            font.fontHeight + 2
         }
 
         // 5. 枠線と下部パディング
-        requiredHeight += BORDER_WIDTH + padding // 下部の境界線とパディング
+        requiredHeight += font.fontHeight + 2 + BORDER_WIDTH + padding // 下部の境界線とパディング
 
         return requiredHeight
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // エンティティ詳細描画ロジック (高さ計算とコンテンツ描画の両方を担う)
-    // ---------------------------------------------------------------------------------------------
-
-    /**
-     * エンティティコンテンツを描画し、描画に必要な**総高さ**を返します。
-     */
     private fun drawEntityContent(
         context: DrawContext,
         client: MinecraftClient,
@@ -599,7 +615,7 @@ object DetailInfoRenderer {
         // 3. Pos情報の行 (エンティティなので常に表示)
         requiredHeight += font.fontHeight + 2 // PosTextの高さ + 少しのパディング
 
-        var contentY = startY + requiredHeight - (font.fontHeight + 2) // PosTextのY座標
+        val contentY = startY + requiredHeight - (font.fontHeight + 2) // PosTextのY座標
 
         if (drawOnly) {
             val infoPos = detail.entity.blockPos
