@@ -170,11 +170,11 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                     is FurnaceBlockEntity, is SmokerBlockEntity, is BlastFurnaceBlockEntity -> InventoryType.FURNACE
                     is HopperBlockEntity -> InventoryType.HOPPER
                     is ChestBlockEntity -> {
-                        // チェストの場合、アイテムリストが大型チェストのサイズ(54)やそれ以上で送られてくる可能性があるため、標準の27スロットに絞る (大型チェストの場合は最大54)
-                        // ここでは、LootableContainerBlockEntityだがChestBlockEntityとして、27スロットを想定する
-                        if (itemStacks.size > 54) {
-                            // 念の為、過剰なスロットをカット
-                            itemStacks = itemStacks.take(54)
+                        val line = 9
+                        if (itemStacks.size > 7 * line) {
+                            itemStacks = itemStacks.dropLast(itemStacks.size - line * 6)
+                        }else{
+                            itemStacks = itemStacks.dropLast(itemStacks.size - line * 3)
                         }
                         InventoryType.CHEST
                     }
