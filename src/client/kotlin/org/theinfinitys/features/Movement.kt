@@ -8,6 +8,7 @@ import org.theinfinitys.features.movement.FeatherWalk
 import org.theinfinitys.features.movement.FreeCamera
 import org.theinfinitys.features.movement.Freeze
 import org.theinfinitys.features.movement.SafeWalk
+import org.theinfinitys.features.movement.SuperFly
 import org.theinfinitys.features.movement.SuperSprint
 import org.theinfinitys.features.movement.WaterHover
 import org.theinfinitys.utils.Translation
@@ -58,5 +59,10 @@ val movement =
             "FreeCamera",
             FreeCamera(),
             Translation.t("movement.FreeCamera.description"),
+        ),
+        feature(
+            "SuperFly",
+            SuperFly(),
+            Translation.t("movement.SuperFly.description"),
         ),
     )

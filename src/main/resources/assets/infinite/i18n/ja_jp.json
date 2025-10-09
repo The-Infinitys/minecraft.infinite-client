@@ -23,6 +23,9 @@
     }
   },
   "movement": {
+    "superfly": {
+      "description": "どこでも自由に飛べるように"
+    },
     "supersprint": {
       "description": "通常よりも速くスプリントできるようになります。"
     },

@@ -12,6 +12,7 @@ import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
 import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.settings.InfiniteSetting
+import org.theinfinitys.utils.toRadians
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -87,10 +88,6 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
 // =================================================================================================
 
 object RadarRenderer {
-    private fun toRadians(direction: Float) = direction / 180f * MathHelper.PI
-
-    // ... (getRainbowColor, getBaseDotColor, getAlphaBasedOnHeight の実装は変更なし)
-
     private fun getRainbowColor(): Int {
         val rainbowDuration = 6000L
         val colors =

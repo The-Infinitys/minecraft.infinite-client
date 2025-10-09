@@ -23,6 +23,9 @@
     }
   },
   "movement": {
+    "superfly": {
+      "description": "Fly anywhere"
+    },
     "supersprint": {
       "description": "Boosts sprint speed beyond normal limits."
     },
