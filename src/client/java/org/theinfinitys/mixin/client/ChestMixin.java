@@ -18,37 +18,38 @@ import org.theinfinitys.features.rendering.DetailInfo;
 // 元のコードの記述に従い、抽象クラスとして定義します。
 @Mixin(ChestBlockEntity.class)
 public abstract class ChestMixin {
-    @Unique
-    private static boolean shouldCancel() {
-        // 設定チェックのロジックを統合
-        DetailInfo detailInfo = InfiniteClient.INSTANCE.getFeature(DetailInfo.class);
-        return detailInfo != null
-                && InfiniteClient.INSTANCE.isSettingEnabled(DetailInfo.class, "InnerChest")
-                && detailInfo.getShouldCancelScanScreen();
-    }
+  @Unique
+  private static boolean shouldCancel() {
+    // 設定チェックのロジックを統合
+    DetailInfo detailInfo = InfiniteClient.INSTANCE.getFeature(DetailInfo.class);
+    return detailInfo != null
+        && InfiniteClient.INSTANCE.isSettingEnabled(DetailInfo.class, "InnerChest")
+        && detailInfo.getShouldCancelScanScreen();
+  }
 
-    @Unique
-    private static Boolean cancelFlag = false;
+  @Unique private static Boolean cancelFlag = false;
 
-    // アニメーションの停止 (getAnimationProgress)
-    @Inject(method = "getAnimationProgress", at = @At("RETURN"), cancellable = true)
-    private void infiniteClient$forceZeroChestAnimation(float tickProgress, CallbackInfoReturnable<Float> cir) {
-        if (shouldCancel()) {
-            cancelFlag = true;
-        }
-        if (cancelFlag) {
-            if (cir.getReturnValue() == 1.0f) {
-                cancelFlag = false;
-            }
-            cir.setReturnValue(0.0F);
-        }
+  // アニメーションの停止 (getAnimationProgress)
+  @Inject(method = "getAnimationProgress", at = @At("RETURN"), cancellable = true)
+  private void infiniteClient$forceZeroChestAnimation(
+      float tickProgress, CallbackInfoReturnable<Float> cir) {
+    if (shouldCancel()) {
+      cancelFlag = true;
     }
+    if (cancelFlag) {
+      if (cir.getReturnValue() == 1.0f) {
+        cancelFlag = false;
+      }
+      cir.setReturnValue(0.0F);
+    }
+  }
 
-    // サウンドの停止 (playSound - static)
-    @Inject(method = "playSound", at = @At("HEAD"), cancellable = true)
-    private static void infiniteClient$cancelChestSound(World world, BlockPos pos, BlockState state, SoundEvent soundEvent, CallbackInfo ci) {
-        if (cancelFlag) {
-            ci.cancel();
-        }
+  // サウンドの停止 (playSound - static)
+  @Inject(method = "playSound", at = @At("HEAD"), cancellable = true)
+  private static void infiniteClient$cancelChestSound(
+      World world, BlockPos pos, BlockState state, SoundEvent soundEvent, CallbackInfo ci) {
+    if (cancelFlag) {
+      ci.cancel();
     }
+  }
 }
