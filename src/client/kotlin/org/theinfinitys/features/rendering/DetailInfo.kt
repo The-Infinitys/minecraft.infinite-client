@@ -3,6 +3,7 @@ package org.theinfinitys.features.rendering
 import drawBorder
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
+import net.minecraft.block.entity.BarrelBlockEntity
 import net.minecraft.block.entity.BlastFurnaceBlockEntity
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.ChestBlockEntity
@@ -206,7 +207,7 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                 when (entity) {
                     is FurnaceBlockEntity, is SmokerBlockEntity, is BlastFurnaceBlockEntity -> InventoryType.FURNACE
                     is HopperBlockEntity -> InventoryType.HOPPER
-                    is ChestBlockEntity, is ShulkerBoxBlockEntity -> InventoryType.CHEST
+                    is ChestBlockEntity, is ShulkerBoxBlockEntity, is BarrelBlockEntity -> InventoryType.CHEST
                     else -> InventoryType.GENERIC
                 }
 

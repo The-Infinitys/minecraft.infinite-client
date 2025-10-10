@@ -1,5 +1,6 @@
 package org.theinfinitys.mixin.client;
 
+import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.InventoryS2CPacket; // ⭐ 追加
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket;

@@ -12,8 +12,8 @@
     "client.NoAttackMixin",
     "client.SuperAttackMixin",
     "client.rendering.AIModeHudMixin",
-    "client.rendering.DetailInfoRenderingMixin",
     "client.rendering.CameraMixin",
+    "client.rendering.DetailInfoRenderingMixin",
     "client.rendering.GameRendererMixin",
     "client.rendering.InGameHudMixin",
     "client.rendering.RadarRendererMixin",
@@ -26,5 +26,8 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "client.BarrelMixin",
+    "client.ChestMixin",
+    "client.ShulkerBoxMixin"
   ]
 }
