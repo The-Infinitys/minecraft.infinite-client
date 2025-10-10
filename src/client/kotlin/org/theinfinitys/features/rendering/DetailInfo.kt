@@ -107,9 +107,7 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
     fun getFurnaceData(pos: BlockPos): FurnaceData = furnaceProgressData[pos] ?: FurnaceData()
 
     // 醸造台データの取得（新規）
-    fun getBrewingData(pos: BlockPos): BrewingData {
-        return brewingProgressData[pos] ?: BrewingData()
-    }
+    fun getBrewingData(pos: BlockPos): BrewingData = brewingProgressData[pos] ?: BrewingData()
 
     private fun findCrosshairTarget(
         camera: Entity,
