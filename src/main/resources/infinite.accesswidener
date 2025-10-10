@@ -20,3 +20,5 @@ accessible field net/minecraft/block/entity/AbstractFurnaceBlockEntity cookingTo
 # --- 新規追加: HopperBlockEntity のフィールド ---
 # transferCooldown
 accessible field net/minecraft/block/entity/HopperBlockEntity transferCooldown I
+accessible field net/minecraft/block/entity/BrewingStandBlockEntity propertyDelegate Lnet/minecraft/screen/PropertyDelegate;
+accessible field net/minecraft/block/entity/AbstractFurnaceBlockEntity propertyDelegate Lnet/minecraft/screen/PropertyDelegate;
