@@ -58,7 +58,6 @@ public abstract class ClientPlayNetworkHandlerMixin {
           var blockState = world.getBlockState(targetDetail.getPos());
           if (blockState != null)
             if (blockState.getBlock() == Blocks.BREWING_STAND) {
-              // 醸造台のデータ処理
               detailInfo.handleBrewingProgress(
                   syncId, Objects.requireNonNull(pos), propertyId, value);
             } else if (blockState.getBlock() == Blocks.FURNACE

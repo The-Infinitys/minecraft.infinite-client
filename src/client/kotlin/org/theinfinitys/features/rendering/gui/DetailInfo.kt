@@ -11,6 +11,7 @@ import net.minecraft.block.entity.BlastFurnaceBlockEntity
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BrewingStandBlockEntity
 import net.minecraft.block.entity.ChestBlockEntity
+import net.minecraft.block.entity.EnderChestBlockEntity
 import net.minecraft.block.entity.FurnaceBlockEntity
 import net.minecraft.block.entity.HopperBlockEntity
 import net.minecraft.block.entity.LootableContainerBlockEntity
@@ -212,7 +213,8 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                         blockEntity is FurnaceBlockEntity ||
                         blockEntity is SmokerBlockEntity ||
                         blockEntity is BlastFurnaceBlockEntity ||
-                        blockEntity is BrewingStandBlockEntity // 追加
+                        blockEntity is BrewingStandBlockEntity ||
+                        blockEntity is EnderChestBlockEntity
                     ) {
                         if (scanTimer <= 0) {
                             if (getSetting("InnerChest")?.value == true) {
