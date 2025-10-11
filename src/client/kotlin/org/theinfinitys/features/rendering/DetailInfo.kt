@@ -290,28 +290,37 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
 
     fun getChestContents(pos: BlockPos): InventoryData? = scannedInventoryData[pos]
 
-    private fun getDataDirectory(): Path {
+    private fun getDataDirectory(pos: BlockPos? = null): Path {
         val gameDir = FabricLoader.getInstance().gameDir
         val dataDir = gameDir.resolve("infinite").resolve("data")
 
         val client = MinecraftClient.getInstance()
         val isSinglePlayer = client.isIntegratedServerRunning
 
-        val serverName =
-            if (isSinglePlayer) {
-                client.server
-                    ?.getSavePath(WorldSavePath.ROOT)
-                    ?.parent
-                    ?.fileName
-                    ?.toString() ?: "single_player_world"
-            } else {
-                client.currentServerEntry?.address ?: "multi_player_server"
-            }
+        val serverName = if (isSinglePlayer) {
+            client.server
+                ?.getSavePath(WorldSavePath.ROOT)
+                ?.parent
+                ?.fileName
+                ?.toString() ?: "single_player_world"
+        } else {
+            client.currentServerEntry?.address?.replace(":", "_") ?: "multi_player_server"
+        }
+
+        val dataName = "inventories"
+
+        // ディメンション情報を取得
+        val dimension = if (pos != null && client.world != null) {
+            val dimensionKey = client.world!!.registryKey.value // ディメンションのIdentifierを取得
+            dimensionKey.toString().replace(":", "_") // 例: minecraft:overworld -> minecraft_overworld
+        } else {
+            "unknown_dimension" // posがnullまたはワールドが取得できない場合のフォールバック
+        }
 
         return if (isSinglePlayer) {
-            dataDir.resolve("single_player").resolve(serverName)
+            dataDir.resolve("single_player").resolve(serverName).resolve(dimension).resolve(dataName)
         } else {
-            dataDir.resolve("multi_player").resolve(serverName)
+            dataDir.resolve("multi_player").resolve(serverName).resolve(dimension).resolve(dataName)
         }
     }
 
