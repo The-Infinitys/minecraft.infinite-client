@@ -1,13 +1,13 @@
 package org.theinfinitys.features
 
 import org.theinfinitys.feature
-import org.theinfinitys.features.rendering.AntiOverlay
-import org.theinfinitys.features.rendering.CameraConfig
-import org.theinfinitys.features.rendering.DetailInfo
-import org.theinfinitys.features.rendering.ExtraSensory
-import org.theinfinitys.features.rendering.Radar
-import org.theinfinitys.features.rendering.SuperSight
-import org.theinfinitys.features.rendering.XRay
+import org.theinfinitys.features.rendering.camera.AntiOverlay
+import org.theinfinitys.features.rendering.camera.CameraConfig
+import org.theinfinitys.features.rendering.camera.ExtraSensory
+import org.theinfinitys.features.rendering.camera.SuperSight
+import org.theinfinitys.features.rendering.gui.DetailInfo
+import org.theinfinitys.features.rendering.gui.Radar
+import org.theinfinitys.features.rendering.xray.XRay
 import org.theinfinitys.utils.Translation
 
 val rendering =

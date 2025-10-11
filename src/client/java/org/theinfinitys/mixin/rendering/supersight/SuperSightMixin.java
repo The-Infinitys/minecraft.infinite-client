@@ -9,7 +9,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.rendering.SuperSight;
+import org.theinfinitys.features.rendering.camera.SuperSight;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class SuperSightMixin extends AbstractClientPlayerEntity {

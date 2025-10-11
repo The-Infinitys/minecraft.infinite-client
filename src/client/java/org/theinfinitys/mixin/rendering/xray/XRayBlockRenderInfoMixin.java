@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.rendering.XRay;
+import org.theinfinitys.features.rendering.xray.XRay;
 
 @Pseudo
 @Mixin(value = BlockRenderInfo.class, remap = false)

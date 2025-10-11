@@ -6,7 +6,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.fighting.Reach;
+import org.theinfinitys.features.fighting.reach.Reach;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class ReachMixin extends AbstractClientPlayerEntity {

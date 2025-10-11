@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.rendering.DetailInfo;
+import org.theinfinitys.features.rendering.gui.DetailInfo;
 
 @Mixin(BarrelBlockEntity.class)
 public abstract class BarrelMixin {

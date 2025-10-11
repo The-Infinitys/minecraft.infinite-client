@@ -12,7 +12,7 @@ import net.minecraft.world.BlockRenderView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.rendering.XRay;
+import org.theinfinitys.features.rendering.xray.XRay;
 
 @Mixin(FluidRenderer.class)
 public class XRayFluidRendererMixin {

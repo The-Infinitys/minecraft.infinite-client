@@ -1,16 +1,16 @@
 package org.theinfinitys.features
 
 import org.theinfinitys.feature
-import org.theinfinitys.features.movement.AutoMine
-import org.theinfinitys.features.movement.AutoWalk
-import org.theinfinitys.features.movement.FastBreak
-import org.theinfinitys.features.movement.FeatherWalk
 import org.theinfinitys.features.movement.FreeCamera
-import org.theinfinitys.features.movement.Freeze
-import org.theinfinitys.features.movement.SafeWalk
-import org.theinfinitys.features.movement.SuperFly
-import org.theinfinitys.features.movement.SuperSprint
-import org.theinfinitys.features.movement.WaterHover
+import org.theinfinitys.features.movement.braek.FastBreak
+import org.theinfinitys.features.movement.feather.FeatherWalk
+import org.theinfinitys.features.movement.fly.SuperFly
+import org.theinfinitys.features.movement.freeze.Freeze
+import org.theinfinitys.features.movement.mine.AutoMine
+import org.theinfinitys.features.movement.sprint.SuperSprint
+import org.theinfinitys.features.movement.walk.AutoWalk
+import org.theinfinitys.features.movement.walk.SafeWalk
+import org.theinfinitys.features.movement.water.WaterHover
 import org.theinfinitys.utils.Translation
 
 val movement =

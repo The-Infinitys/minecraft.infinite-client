@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.theinfinitys.InfiniteClient; // Featureを取得するために必要と仮定
-import org.theinfinitys.features.rendering.Radar;
-import org.theinfinitys.features.rendering.RadarRenderer;
+import org.theinfinitys.features.rendering.gui.Radar;
+import org.theinfinitys.features.rendering.gui.RadarRenderer;
 
 @Mixin(InGameHud.class)
 public abstract class RadarRendererMixin {

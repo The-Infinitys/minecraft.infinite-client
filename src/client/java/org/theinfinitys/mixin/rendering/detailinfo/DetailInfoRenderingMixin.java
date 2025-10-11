@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.theinfinitys.InfiniteClient; // Featureを取得するために必要と仮定
-import org.theinfinitys.features.rendering.DetailInfo;
-import org.theinfinitys.features.rendering.DetailInfoRenderer;
+import org.theinfinitys.features.rendering.gui.DetailInfo;
+import org.theinfinitys.features.rendering.gui.DetailInfoRenderer;
 
 @Mixin(InGameHud.class)
 public abstract class DetailInfoRenderingMixin {

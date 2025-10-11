@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.rendering.DetailInfo;
+import org.theinfinitys.features.rendering.gui.DetailInfo;
 
 // ターゲットクラスの直接のスーパークラス（LootableContainerBlockEntity）を継承させるか、継承を外す
 // 元のコードの記述に従い、抽象クラスとして定義します。

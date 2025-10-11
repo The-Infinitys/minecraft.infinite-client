@@ -1,8 +1,8 @@
 package org.theinfinitys.features
 
 import org.theinfinitys.feature
-import org.theinfinitys.features.automatic.AIMode
-import org.theinfinitys.features.automatic.WoodCutter
+import org.theinfinitys.features.automatic.aimode.AIMode
+import org.theinfinitys.features.automatic.woodcutter.WoodCutter
 import org.theinfinitys.utils.Translation
 
 val automatic =

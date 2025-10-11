@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.movement.FastBreak;
+import org.theinfinitys.features.movement.braek.FastBreak;
 
 @Mixin(ClientPlayerInteractionManager.class)
 public abstract class FastBreakMixin {

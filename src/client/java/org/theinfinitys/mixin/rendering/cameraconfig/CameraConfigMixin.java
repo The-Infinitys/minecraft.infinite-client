@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.rendering.AntiOverlay;
-import org.theinfinitys.features.rendering.CameraConfig;
+import org.theinfinitys.features.rendering.camera.AntiOverlay;
+import org.theinfinitys.features.rendering.camera.CameraConfig;
 
 @Mixin(Camera.class)
 public abstract class CameraConfigMixin {

@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.automatic.AIMode;
+import org.theinfinitys.features.automatic.aimode.AIMode;
 
 @Mixin(InGameHud.class)
 public class AIModeHudMixin {

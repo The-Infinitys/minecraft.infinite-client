@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.fighting.SuperAttack;
-import org.theinfinitys.features.fighting.SuperAttack.AttackMethod;
+import org.theinfinitys.features.fighting.superattack.SuperAttack;
+import org.theinfinitys.features.fighting.superattack.SuperAttack.AttackMethod;
 import org.theinfinitys.settings.InfiniteSetting;
 
 @Mixin(ClientPlayerInteractionManager.class)

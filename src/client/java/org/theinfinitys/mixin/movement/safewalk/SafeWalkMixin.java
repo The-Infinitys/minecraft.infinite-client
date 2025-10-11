@@ -8,7 +8,7 @@ import net.minecraft.entity.MovementType;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.theinfinitys.InfiniteClient;
-import org.theinfinitys.features.movement.SafeWalk;
+import org.theinfinitys.features.movement.walk.SafeWalk;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class SafeWalkMixin extends AbstractClientPlayerEntity {
