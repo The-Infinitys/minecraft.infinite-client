@@ -10,7 +10,6 @@
     "fighting.superattack.SuperAttackMixin",
     "movement.fastbreak.ClientPlayerInteractionManagerAccessor",
     "movement.fastbreak.FastBreakMixin",
-    "movement.freecamera.FreeCameraMixin",
     "movement.freeze.FreezeNetworkHandlerMixin",
     "movement.safewalk.SafeWalkMixin",
     "movement.supersprint.SuperSprintMixin",

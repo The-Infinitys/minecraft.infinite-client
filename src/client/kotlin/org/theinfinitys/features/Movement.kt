@@ -1,7 +1,6 @@
 package org.theinfinitys.features
 
 import org.theinfinitys.feature
-import org.theinfinitys.features.movement.FreeCamera
 import org.theinfinitys.features.movement.braek.FastBreak
 import org.theinfinitys.features.movement.feather.FeatherWalk
 import org.theinfinitys.features.movement.fly.SuperFly
@@ -54,11 +53,6 @@ val movement =
             "WaterHover",
             WaterHover(),
             Translation.t("movement.WaterHover.description"),
-        ),
-        feature(
-            "FreeCamera",
-            FreeCamera(),
-            Translation.t("movement.FreeCamera.description"),
         ),
         feature(
             "SuperFly",
