@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "org.theinfinitys.mixin",
+  "package": "org.infinite.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "injectors": {

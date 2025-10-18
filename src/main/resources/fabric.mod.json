@@ -17,13 +17,13 @@
 	"entrypoints": {
 		"client": [
 			{
-				"value": "org.theinfinitys.InfiniteClient",
+				"value": "org.infinite.InfiniteClient",
 				"adapter": "kotlin"
 			}
 		],
 		"fabric-datagen": [
 			{
-				"value": "org.theinfinitys.InfiniteDataGenerator",
+				"value": "org.infinite.InfiniteDataGenerator",
 				"adapter": "kotlin"
 			}
 		]

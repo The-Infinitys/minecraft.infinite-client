@@ -1,0 +1,19 @@
+package org.infinite.features.fighting.reach
+
+import org.infinite.ConfigurableFeature
+import org.infinite.FeatureLevel
+import org.infinite.settings.FeatureSetting
+
+class Reach : ConfigurableFeature(initialEnabled = false) {
+    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val settings: List<FeatureSetting<*>> =
+        listOf(
+            FeatureSetting.FloatSetting(
+                "ReachDistance",
+                "ブロックおよびエンティティとの対話距離を拡張します。",
+                4.5f,
+                3.0f,
+                7.0f,
+            ),
+        )
+}
