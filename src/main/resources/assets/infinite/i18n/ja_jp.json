@@ -1,0 +1,124 @@
+{
+  "fighting": {
+    "killaura": {
+      "description": "近くのエンティティを自動で攻撃します。"
+    },
+    "reach": {
+      "description": "通常よりも遠くの対象に攻撃を届かせます。"
+    },
+    "noattack": {
+      "description": "村人やペットなど保護されたエンティティへの攻撃を防ぎます。"
+    },
+    "playermanager": {
+      "description": "味方や敵プレイヤーを管理します。"
+    },
+    "superattack": {
+      "description": "自動的にクリティカル攻撃を行います。"
+    },
+    "counterattack": {
+      "description": "攻撃を受けた際に自動で反撃します。"
+    },
+    "impactattack": {
+      "description": "対象に素早く連続攻撃を行います。"
+    },
+    "lockon": {
+      "description": "ターゲットをロックし、エイムを維持します。"
+    }
+  },
+  "movement": {
+    "superfly": {
+      "description": "どこでも自由に飛べるように"
+    },
+    "supersprint": {
+      "description": "通常よりも速くスプリントできるようになります。"
+    },
+    "safewalk": {
+      "description": "ブロックの端から落下しないようにします。"
+    },
+    "freeze": {
+      "description": "プレイヤーの動きを完全に停止し、サーバーへのデータ送信を防ぎます。"
+    },
+    "autowalk": {
+      "description": "前方への自動歩行を有効にします。"
+    },
+    "automine": {
+      "description": "前方のブロックを自動で採掘します。"
+    },
+    "fastbreak": {
+      "description": "ブロックの破壊速度を上昇させます。"
+    },
+    "featherwalk": {
+      "description": "落下ダメージを軽減し、スムーズに段差を登ります。"
+    },
+    "waterhover": {
+      "description": "水面の上を歩くまたは浮かぶことができます。"
+    },
+    "freecamera": {
+      "description": "プレイヤーを動かさずにカメラだけを自由に操作できます。"
+    }
+  },
+  "rendering": {
+    "antioverlay": {
+      "description": "霧やカボチャの視界制限など、不要な視覚エフェクトを除去します。"
+    },
+    "supersight": {
+      "description": "光とコントラストを強調し、視界をより鮮明にします。"
+    },
+    "xray": {
+      "description": "ブロックを透視し、鉱石や洞窟、隠れた構造物を見つけられるようにします。"
+    },
+    "cameraconfig": {
+      "description": "カメラの距離、クリッピング、ダメージ時の揺れ防止を設定します。"
+    },
+    "freecamera": {
+      "description": "カメラをプレイヤーから分離し、自由に移動できるようにします。"
+    },
+    "radar": {
+      "description": "周囲のエンティティやプレイヤーをレーダーに表示します。"
+    },
+    "detailinfo": {
+      "description": "詳細な情報を表示します。"
+    }
+  },
+  "visual": {
+    "xray": {
+      "description": "ブロックを透視して鉱石や構造物を見つけられるようにします。"
+    },
+    "fullbright": {
+      "description": "明るさを最大にし、暗い場所でも視界を確保します。"
+    },
+    "radar": {
+      "description": "近くのエンティティをレーダー上に表示します。"
+    },
+    "antioverlay": {
+      "description": "霧やカボチャの視界制限などのオーバーレイを削除します。"
+    }
+  },
+  "utility": {
+    "autototem": {
+      "description": "体力が低下すると自動的にトーテムを装備します。"
+    },
+    "freecamera": {
+      "description": "プレイヤーを動かさずにカメラだけを動かします。"
+    },
+    "serverinfo": {
+      "description": "現在のサーバー情報や統計を表示します。"
+    }
+  },
+  "automatic": {
+    "aimode": {
+      "description": "MinecraftのAIにすべての操作を任せます。"
+    },
+    "woodcutter": {
+      "description": "自動で木を切り集めます。"
+    }
+  },
+  "server": {
+    "serverinfo": {
+      "description": "サーバーのIP、Ping、プレイヤー数などの情報を表示します。"
+    },
+    "detectserver": {
+      "description": "自動でサーバーを識別します"
+    }
+  }
+}

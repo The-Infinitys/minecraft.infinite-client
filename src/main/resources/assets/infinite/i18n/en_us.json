@@ -1,0 +1,127 @@
+{
+  "fighting": {
+    "killaura": {
+      "description": "Automatically attacks nearby entities."
+    },
+    "reach": {
+      "description": "Extends attack reach to interact with distant entities."
+    },
+    "noattack": {
+      "description": "Prevents attacking protected entities like villagers or pets."
+    },
+    "playermanager": {
+      "description": "Manages friendly and hostile players."
+    },
+    "superattack": {
+      "description": "Automatically performs critical attacks."
+    },
+    "counterattack": {
+      "description": "Automatically counter-attacks when hit."
+    },
+    "impactattack": {
+      "description": "Performs rapid consecutive attacks on entities."
+    },
+    "lockon": {
+      "description": "Locks onto a target and maintains aim."
+    }
+  },
+  "movement": {
+    "superfly": {
+      "description": "Fly anywhere"
+    },
+    "supersprint": {
+      "description": "Boosts sprint speed beyond normal limits."
+    },
+    "safewalk": {
+      "description": "Prevents falling off block edges while walking."
+    },
+    "freeze": {
+      "description": "Stops all player movement and prevents data from being sent to the server while active."
+    },
+    "autowalk": {
+      "description": "Automatically walks forward when toggled."
+    },
+    "automine": {
+      "description": "Automatically mines blocks in front of the player using the best available tool."
+    },
+    "fastbreak": {
+      "description": "Increases block breaking speed beyond normal game limits."
+    },
+    "featherwalk": {
+      "description": "Reduces fall damage and lets the player step smoothly over blocks."
+    },
+    "waterhover": {
+      "description": "Lets the player hover or walk across the surface of water."
+    },
+    "freecamera": {
+      "description": "Lets the camera move freely without moving the player's actual body."
+    }
+  },
+  "rendering": {
+    "antioverlay": {
+      "description": "Removes unnecessary visual overlays such as fog, pumpkin blur, or darkness."
+    },
+    "supersight": {
+      "description": "Enhances visibility by improving lighting and contrast in the environment."
+    },
+    "xray": {
+      "description": "Allows you to see through blocks to locate ores, caves, and hidden structures."
+    },
+    "cameraconfig": {
+      "description": "Configures camera distance, clipping, and anti-hurt tilt."
+    },
+    "freecamera": {
+      "description": "Detaches the camera from the player, allowing free movement."
+    },
+    "extrasensory": {
+      "description": "Give you Extra Sensory"
+    },
+    "radar": {
+      "description": "Displays nearby entities and players on a radar overlay."
+    },
+    "detailinfo": {
+      "description": "displays detailed informations"
+    }
+  },
+  "visual": {
+    "xray": {
+      "description": "Highlights ores and hidden structures through blocks."
+    },
+    "fullbright": {
+      "description": "Maximizes game brightness for better visibility."
+    },
+    "radar": {
+      "description": "Displays nearby entities on a radar overlay."
+    },
+    "antioverlay": {
+      "description": "Removes visual overlays such as fog or pumpkin blur."
+    }
+  },
+  "utility": {
+    "autototem": {
+      "description": "Automatically equips a totem when health is low."
+    },
+    "freecamera": {
+      "description": "Lets you move the camera freely without moving your player."
+    },
+    "serverinfo": {
+      "description": "Displays current server information and stats."
+    }
+  },
+  "automatic": {
+    "aimode": {
+      "description": "Lets Minecraft AI handle all player actions automatically."
+    },
+    "woodcutter": {
+      "description": "Automatically collects and cuts wood from trees."
+    }
+  },
+  "server": {
+    "serverinfo": {
+      "description": "Displays information about the current server such as ping, IP, and player count."
+    },
+    "detectserver": {
+      "description": "Automatically Detect Server"
+    }
+  }
+}

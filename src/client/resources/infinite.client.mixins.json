@@ -1,0 +1,45 @@
+{
+  "required": true,
+  "package": "org.theinfinitys.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "features.automatic.aimode.AIModeHudMixin",
+    "features.fighting.gunner.GunnerHudMixin",
+    "features.fighting.gunner.GunnerNetworkMixin",
+    "features.fighting.killaura.KillAuraMixin",
+    "features.fighting.noattack.NoAttackMixin",
+    "features.fighting.reach.ReachMixin",
+    "features.fighting.superattack.SuperAttackMixin",
+    "features.movement.fastbreak.ClientPlayerInteractionManagerAccessor",
+    "features.movement.fastbreak.FastBreakMixin",
+    "features.movement.freeze.FreezeNetworkHandlerMixin",
+    "features.movement.safewalk.SafeWalkMixin",
+    "features.movement.supersprint.SuperSprintMixin",
+    "features.rendering.antioverlay.InGameHudMixin",
+    "features.rendering.antioverlay.NoFogMixin",
+    "features.rendering.cameraconfig.CameraConfigMixin",
+    "features.rendering.detailinfo.BarrelMixin",
+    "features.rendering.detailinfo.ChestMixin",
+    "features.rendering.detailinfo.ClientPlayNetworkHandlerMixin",
+    "features.rendering.freecamera.ClientPlayerEntityMixin",
+    "features.rendering.hypertag.EntityRendererMixin",
+    "features.rendering.hypertag.LivingEntityRendererMixin",
+    "features.rendering.portalgui.PortalGuiMixin",
+    "features.rendering.supersight.GameRendererMixin",
+    "features.rendering.supersight.SuperSightMixin",
+    "features.rendering.xray.XRayBlockModelRendererMixin",
+    "features.rendering.xray.XRayBlockRenderInfoMixin",
+    "features.rendering.xray.XRayFluidRendererMixin",
+    "features.rendering.xray.XRayGammaMixin",
+    "infinite.graphics.InGameHudMixin",
+    "infinite.graphics.WorldRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "features.rendering.detailinfo.ShulkerBoxMixin",
+    "features.rendering.freecamera.AbstractBlockStateMixin",
+    "features.rendering.freecamera.ZeroHitBox"
+  ]
+}
