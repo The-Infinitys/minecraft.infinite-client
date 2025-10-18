@@ -40,12 +40,11 @@ class FeatureSettingsScreen(
         var currentY = 50
         val widgetWidth = width - 40
         val defaultWidgetHeight = 20
+        val sliderWidgetHeight = 35 // Increased height for sliders
         val blockListFieldHeight = height / 2
         val padding = 5
 
-        // (ウィジェットの生成ロジックは変更なし)
         feature.instance.settings.forEach { setting ->
-            // ... (ウィジェット生成ロジックは省略) ...
             when (setting) {
                 is FeatureSetting.BooleanSetting -> {
                     settingWidgets.add(InfiniteSettingToggle(20, currentY, widgetWidth, defaultWidgetHeight, setting))
@@ -53,13 +52,13 @@ class FeatureSettingsScreen(
                 }
 
                 is FeatureSetting.IntSetting -> {
-                    settingWidgets.add(InfiniteSlider(20, currentY, widgetWidth, defaultWidgetHeight, setting))
-                    currentY += defaultWidgetHeight + padding
+                    settingWidgets.add(InfiniteSlider(20, currentY, widgetWidth, sliderWidgetHeight, setting))
+                    currentY += sliderWidgetHeight + padding
                 }
 
                 is FeatureSetting.FloatSetting -> {
-                    settingWidgets.add(InfiniteSlider(20, currentY, widgetWidth, defaultWidgetHeight, setting))
-                    currentY += defaultWidgetHeight + padding
+                    settingWidgets.add(InfiniteSlider(20, currentY, widgetWidth, sliderWidgetHeight, setting))
+                    currentY += sliderWidgetHeight + padding
                 }
 
                 is FeatureSetting.StringSetting -> {
@@ -170,9 +169,6 @@ class FeatureSettingsScreen(
             },
         )
     }
-
-    // --- マウスイベント (Screen.java のシグネチャに合わせる) ---
-    // ScreenクラスがAbstractParentElementの古いメソッドをオーバーライドして保持しているため、この形式を維持。
 
     override fun mouseClicked(
         click: Click,

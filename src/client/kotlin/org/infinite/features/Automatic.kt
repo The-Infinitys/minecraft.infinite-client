@@ -7,12 +7,12 @@ import org.infinite.features.automatic.woodcutter.WoodCutter
 val automatic =
     listOf(
         feature(
-            "feature.automatic.aimode.name",
+            "AutoAim",
             AIMode(),
             "feature.automatic.aimode.description",
         ),
         feature(
-            "feature.automatic.woodcutter.name",
+            "AutoWoodCutter",
             WoodCutter(),
             "feature.automatic.woodcutter.description",
         ),

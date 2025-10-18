@@ -40,27 +40,40 @@ class InfiniteSlider<T : Number>(
         mouseY: Int,
         delta: Float,
     ) {
+        val textX = x + 5 // Padding from left edge
+        var currentY = y + 2 // Start drawing text from top with small padding
+
         context.drawTextWithShadow(
             textRenderer,
-            message,
-            x + 5,
-            y + (height - 8) / 2,
+            Text.literal(setting.name),
+            textX,
+            currentY,
             0xFFFFFFFF.toInt(),
         )
+        currentY += textRenderer.fontHeight + 2 // Move Y down for description
 
-        // Draw slider background
-        context.fill(x + 5, y + height - 5, x + width - 5, y + height - 3, 0xFF404040.toInt())
+        if (setting.description != null && setting.description!!.isNotBlank()) {
+            context.drawTextWithShadow(
+                textRenderer,
+                Text.literal(setting.description!!),
+                textX,
+                currentY,
+                0xFFA0A0A0.toInt(), // Gray color for description
+            )
+            currentY += textRenderer.fontHeight + 2 // Move Y down after description
+        }
+
+        // Draw slider background at the bottom of the widget
+        val sliderBackgroundY = y + height - 5
+        context.fill(x + 5, sliderBackgroundY, x + width - 5, sliderBackgroundY + 2, 0xFF404040.toInt())
 
         // Draw slider knob
         val progress = getProgress()
-        // スライダーの有効範囲: 幅 - (左パディング5 + 右パディング5 + ノブ幅4) = width - 14
         val knobPositionRange = width - 10 - knobWidth
-
-        // ノブの中央ではなく、ノブの左端が来る位置を計算
         val knobX = x + 5 + (knobPositionRange) * progress
+        val knobY = y + height - 7 // Knob is 6px tall, so its top is 7px from bottom
 
-        // 描画
-        context.fill(knobX.toInt(), y + height - 7, knobX.toInt() + knobWidth, y + height - 1, 0xFF00FF00.toInt())
+        context.fill(knobX.toInt(), knobY, knobX.toInt() + knobWidth, knobY + 6, 0xFF00FF00.toInt())
     }
 
     private fun getProgress(): Float =

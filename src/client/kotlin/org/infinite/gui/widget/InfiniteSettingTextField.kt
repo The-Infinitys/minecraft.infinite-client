@@ -64,13 +64,43 @@ class InfiniteSettingTextField(
         mouseY: Int,
         delta: Float,
     ) {
-        context.drawTextWithShadow(
-            textRenderer,
-            Text.literal(setting.name),
-            x + 5,
-            y + (height - 8) / 2,
-            0xFFFFFFFF.toInt(),
-        )
+        val textX = x + 5 // Padding from left edge
+        val totalTextHeight: Int
+        val nameY: Int
+        val descriptionY: Int?
+
+        if (setting.description != null && setting.description!!.isNotBlank()) {
+            totalTextHeight = textRenderer.fontHeight * 2 + 2 // Name + padding + Description
+            nameY = y + (height - totalTextHeight) / 2
+            descriptionY = nameY + textRenderer.fontHeight + 2
+
+            context.drawTextWithShadow(
+                textRenderer,
+                Text.literal(setting.name),
+                textX,
+                nameY,
+                0xFFFFFFFF.toInt(),
+            )
+            context.drawTextWithShadow(
+                textRenderer,
+                Text.literal(setting.description!!),
+                textX,
+                descriptionY,
+                0xFFA0A0A0.toInt(), // Gray color for description
+            )
+        } else {
+            totalTextHeight = textRenderer.fontHeight // Only name
+            nameY = y + (height - totalTextHeight) / 2
+            descriptionY = null
+
+            context.drawTextWithShadow(
+                textRenderer,
+                Text.literal(setting.name),
+                textX,
+                nameY,
+                0xFFFFFFFF.toInt(),
+            )
+        }
 
         textField.x = x + 5 + textRenderer.getWidth(setting.name) + 5
         textField.y = y

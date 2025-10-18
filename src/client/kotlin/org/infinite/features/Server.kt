@@ -7,9 +7,9 @@ import org.infinite.features.server.ServerInfo
 val server =
     listOf(
         feature(
-            "feature.server.serverinfo.name",
+            "ServerInfo",
             ServerInfo(),
             "feature.server.serverinfo.description",
         ),
-        feature("feature.server.detectserver.name", DetectServer(), "feature.server.detectserver.description"),
+        feature("DetectServer", DetectServer(), "feature.server.detectserver.description"),
     )

@@ -17,6 +17,7 @@ class InfiniteSelectionList<E : Enum<E>>(
 ) : ClickableWidget(x, y, width, height, Text.literal(setting.name)) {
     private val textRenderer = MinecraftClient.getInstance().textRenderer
     private lateinit var cycleButton: InfiniteButton
+    private val buttonWidth = 50 // Fixed width like ToggleButton
 
     private fun cycleOption() {
         val currentIndex = setting.options.indexOf(setting.value)
@@ -32,28 +33,57 @@ class InfiniteSelectionList<E : Enum<E>>(
         delta: Float,
     ) {
         if (!::cycleButton.isInitialized) {
-            // ここで初期化を実行する。
-            val labelAndPaddingWidth = 5 + textRenderer.getWidth(setting.name) + 5
             cycleButton =
                 InfiniteButton(
-                    x + labelAndPaddingWidth, // Position after label
-                    y,
-                    width - labelAndPaddingWidth, // Remaining width
+                    x + width - buttonWidth, // Right-aligned
+                    y, // Vertically centered within the widget's height
+                    buttonWidth,
                     height,
                     Text.literal(setting.value.name),
                 ) {
                     cycleOption()
                 }
         }
-        context.drawTextWithShadow(
-            textRenderer,
-            Text.literal(setting.name),
-            x + 5,
-            y + (height - 8) / 2,
-            0xFFFFFFFF.toInt(),
-        )
 
-        cycleButton.x = x + 5 + textRenderer.getWidth(setting.name) + 5
+        val textX = x + 5 // Padding from left edge
+        val totalTextHeight: Int
+        val nameY: Int
+        val descriptionY: Int?
+
+        if (setting.description != null && setting.description!!.isNotBlank()) {
+            totalTextHeight = textRenderer.fontHeight * 2 + 2 // Name + padding + Description
+            nameY = y + (height - totalTextHeight) / 2
+            descriptionY = nameY + textRenderer.fontHeight + 2
+
+            context.drawTextWithShadow(
+                textRenderer,
+                Text.literal(setting.name),
+                textX,
+                nameY,
+                0xFFFFFFFF.toInt(),
+            )
+            context.drawTextWithShadow(
+                textRenderer,
+                Text.literal(setting.description!!),
+                textX,
+                descriptionY,
+                0xFFA0A0A0.toInt(), // Gray color for description
+            )
+        } else {
+            totalTextHeight = textRenderer.fontHeight // Only name
+            nameY = y + (height - totalTextHeight) / 2
+            descriptionY = null
+
+            context.drawTextWithShadow(
+                textRenderer,
+                Text.literal(setting.name),
+                textX,
+                nameY,
+                0xFFFFFFFF.toInt(),
+            )
+        }
+
+        cycleButton.x = x + width - buttonWidth
         cycleButton.y = y
         cycleButton.render(context, mouseX, mouseY, delta)
     }

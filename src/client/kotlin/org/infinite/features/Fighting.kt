@@ -17,62 +17,62 @@ import org.infinite.features.fighting.totem.AutoTotem
 val fighting =
     listOf(
         feature(
-            "feature.fighting.killaura.name",
+            "KillAura",
             KillAura(),
             "feature.fighting.killaura.description",
         ),
         feature(
-            "feature.fighting.reach.name",
+            "Reach",
             Reach(),
             "feature.fighting.reach.description",
         ),
         feature(
-            "feature.fighting.noattack.name",
+            "NoAttack",
             NoAttack(),
             "feature.fighting.noattack.description",
         ),
         feature(
-            "feature.fighting.playermanager.name",
+            "PlayerManager",
             PlayerManager(),
             "feature.fighting.playermanager.description",
         ),
         feature(
-            "feature.fighting.superattack.name",
+            "SuperAttack",
             SuperAttack(),
             "feature.fighting.superattack.description",
         ),
         feature(
-            "feature.fighting.counterattack.name",
+            "CounterAttack",
             CounterAttack(),
             "feature.fighting.counterattack.description",
         ),
         feature(
-            "feature.fighting.impactattack.name",
+            "ImpactAttack",
             ImpactAttack(),
             "feature.fighting.impactattack.description",
         ),
         feature(
-            "feature.fighting.armormanager.name",
+            "ArmorManager",
             ArmorManager(),
             "feature.fighting.armormanager.description",
         ),
         feature(
-            "feature.fighting.gunner.name",
+            "Gunner",
             Gunner(),
             "feature.fighting.gunner.description",
         ),
         feature(
-            "feature.fighting.autototem.name",
+            "AutoTotem",
             AutoTotem(),
             "feature.fighting.autototem.description",
         ),
         feature(
-            "feature.fighting.aimassist.name",
+            "AimAssist",
             AimAssist(),
             "feature.fighting.aimassist.description",
         ),
         feature(
-            "feature.fighting.lockon.name",
+            "LockOn",
             LockOn(),
             "feature.fighting.lockon.description",
         ),

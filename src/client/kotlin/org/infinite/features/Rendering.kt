@@ -15,49 +15,49 @@ import org.infinite.features.rendering.xray.XRay
 val rendering =
     listOf(
         feature(
-            "feature.rendering.antioverlay.name",
+            "AntiOverlay",
             AntiOverlay(),
             "feature.rendering.antioverlay.description",
         ),
         feature(
-            "feature.rendering.supersight.name",
+            "SuperSight",
             SuperSight(),
             "feature.rendering.supersight.description",
         ),
         feature(
-            "feature.rendering.xray.name",
+            "XRay",
             XRay(),
             "feature.rendering.xray.description",
         ),
         feature(
-            "feature.rendering.cameraconfig.name",
+            "CameraConfig",
             CameraConfig(),
             "feature.rendering.cameraconfig.description",
         ),
         feature(
-            "feature.rendering.freecamera.name", // 追加
+            "FreeCamera", // 追加
             FreeCamera(), // 追加
             "feature.rendering.freecamera.description", // 追加
         ),
         feature(
-            "feature.rendering.radar.name",
+            "Radar",
             Radar(),
             "feature.rendering.radar.description",
         ),
         feature(
-            "feature.rendering.extrasensory.name",
+            "ExtraSensory",
             ExtraSensory(),
             "feature.rendering.extrasensory.description",
         ),
         feature(
-            "feature.rendering.detailinfo.name",
+            "DetailInfo",
             DetailInfo(),
             "feature.rendering.detailinfo.description",
         ),
         feature(
-            "feature.rendering.hypertag.name",
+            "HyperTag",
             HyperTag(),
             "feature.rendering.hypertag.description",
         ),
-        feature("feature.rendering.portalgui.name", PortalGui(), "feature.rendering.portalgui.description"),
+        feature("PortalGui", PortalGui(), "feature.rendering.portalgui.description"),
     )

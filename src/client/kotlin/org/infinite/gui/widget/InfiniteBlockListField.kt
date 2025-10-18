@@ -23,8 +23,10 @@ class InfiniteBlockListField(
     private val padding = 5
     private val buttonSize = inputFieldHeight // Add button size is same as input field height
 
-    private val labelHeight = textRenderer.fontHeight
-    private val minHeaderHeight = labelHeight + padding + inputFieldHeight + padding
+    private val baseLabelHeight = textRenderer.fontHeight
+    private val descriptionHeight = textRenderer.fontHeight + 2
+    private val totalLabelHeight = baseLabelHeight + descriptionHeight
+    private val minHeaderHeight = totalLabelHeight + padding + inputFieldHeight + padding
 
     private val headerHeight: Int
     private val scrollableListHeight: Int
@@ -147,7 +149,7 @@ class InfiniteBlockListField(
 
         // TextField の絶対座標を更新
         textField.x = this.x + padding
-        textField.y = this.y + labelHeight + padding
+        textField.y = this.y + totalLabelHeight + padding
 
         // ScrollableContainer の絶対座標を更新
         val newContainerX = this.x + padding
@@ -176,23 +178,31 @@ class InfiniteBlockListField(
         }
         // ScrollableContainerを描画
         val containerX = x + padding
-        val containerY = y + labelHeight + padding * 2 + textField.height
+        val containerY = y + totalLabelHeight + padding * 2 + textField.height
         scrollableContainer.setPosition(containerX, containerY)
         scrollableContainer.render(context, mouseX, mouseY, delta)
 
-        val labelText = Text.literal(setting.name)
         val labelX = x + padding
         context.drawTextWithShadow(
             textRenderer,
-            labelText,
+            Text.literal(setting.name),
             labelX,
             y + padding,
             0xFFFFFFFF.toInt(),
         )
+        if (setting.description.isNotBlank()) {
+            context.drawTextWithShadow(
+                textRenderer,
+                Text.literal(setting.description),
+                labelX,
+                y + padding + baseLabelHeight + 2,
+                0xFFA0A0A0.toInt(),
+            )
+        }
 
         // TextFieldの位置を調整
         val textFieldX = x + padding
-        val textFieldY = y + labelHeight + padding
+        val textFieldY = y + totalLabelHeight + padding
         textField.x = textFieldX
         textField.y = textFieldY
         textField.render(context, mouseX, mouseY, delta)
@@ -270,7 +280,7 @@ class InfiniteBlockListField(
     }
 
     override fun keyPressed(input: KeyInput): Boolean {
-        val keyCode = input?.key
+        val keyCode = input.key
 
         if (keyCode == GLFW.GLFW_KEY_ENTER && textField.isFocused) {
             addIdToList()

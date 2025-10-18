@@ -14,49 +14,49 @@ import org.infinite.features.movement.water.WaterHover
 
 val movement =
     listOf(
-        feature("feature.movement.autotool.name", AutoTool(), "feature.movement.autotool.description"),
+        feature("AutoTool", AutoTool(), "feature.movement.autotool.description"),
         feature(
-            "feature.movement.supersprint.name",
+            "SuperSprint",
             SuperSprint(),
             "feature.movement.supersprint.description",
         ),
         feature(
-            "feature.movement.safewalk.name",
+            "SafeWalk",
             SafeWalk(),
             "feature.movement.safewalk.description",
         ),
         feature(
-            "feature.movement.freeze.name",
+            "Freeze",
             Freeze(),
             "feature.movement.freeze.description",
         ),
         feature(
-            "feature.movement.autowalk.name",
+            "AutoWalk",
             AutoWalk(),
             "feature.movement.autowalk.description",
         ),
         feature(
-            "feature.movement.automine.name",
+            "AutoMine",
             AutoMine(),
             "feature.movement.automine.description",
         ),
         feature(
-            "feature.movement.fastbreak.name",
+            "FastBreak",
             FastBreak(),
             "feature.movement.fastbreak.description",
         ),
         feature(
-            "feature.movement.featherwalk.name",
+            "FeatherWalk",
             FeatherWalk(),
             "feature.movement.featherwalk.description",
         ),
         feature(
-            "feature.movement.waterhover.name",
+            "WaterHover",
             WaterHover(),
             "feature.movement.waterhover.description",
         ),
         feature(
-            "feature.movement.superfly.name",
+            "SuperFly",
             SuperFly(),
             "feature.movement.superfly.description",
         ),
