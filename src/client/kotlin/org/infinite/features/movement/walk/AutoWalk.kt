@@ -14,7 +14,7 @@ class AutoWalk : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> = emptyList()
 
     override fun tick() {
-        val player = client.player ?: return
+        client.player ?: return
         val options = client.options
 
         // 前進キーを強制的に押す

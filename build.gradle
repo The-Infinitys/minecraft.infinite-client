@@ -108,18 +108,29 @@ publishing {
 spotless {
 	// Javaのコードをフォーマットします
 	java {
+		// ソースコードの場所を指定
+		target 'src/**/*.java'
 		// GoogleのJavaフォーマットスタイルを適用
 		googleJavaFormat()
+		// 必要であれば、ライセンスヘッダーなどもここに追加できます
 	}
 	// Kotlinのコードをフォーマットします
 	kotlin {
-		// ktlintを適用
-		target("src/**/*.kt")
-		ktlint("1.5.0")
+		// ソースコードの場所を指定
+		target 'src/**/*.kt'
+		// ktlintを適用 (バージョン指定は推奨される `ktlint()` 関数内で)
+		ktlint("1.3.0") // 最新バージョンを確認して指定してください
+		// ktlintのカスタム設定が必要な場合は、ここに追加できます
 	}
 	// Gradleスクリプト自体をフォーマットします
 	groovyGradle {
 		target '**/build.gradle'
 		greclipse()
+	}
+
+	// Kotlin/Gradleスクリプトをフォーマットする場合
+	kotlinGradle {
+		target '**/*.kts' // *.ktsファイルがある場合
+		ktlint()
 	}
 }
