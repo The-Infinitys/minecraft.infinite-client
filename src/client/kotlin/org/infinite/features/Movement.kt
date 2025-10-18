@@ -11,54 +11,53 @@ import org.infinite.features.movement.tool.AutoTool
 import org.infinite.features.movement.walk.AutoWalk
 import org.infinite.features.movement.walk.SafeWalk
 import org.infinite.features.movement.water.WaterHover
-import org.infinite.utils.Translation
 
 val movement =
     listOf(
-        feature("AutoTool", AutoTool(), Translation.t("movement.autotool.description")),
+        feature("feature.movement.autotool.name", AutoTool(), "feature.movement.autotool.description"),
         feature(
-            "SuperSprint",
+            "feature.movement.supersprint.name",
             SuperSprint(),
-            Translation.t("movement.SuperSprint.description"),
+            "feature.movement.supersprint.description",
         ),
         feature(
-            "SafeWalk",
+            "feature.movement.safewalk.name",
             SafeWalk(),
-            Translation.t("movement.SafeWalk.description"),
+            "feature.movement.safewalk.description",
         ),
         feature(
-            "Freeze",
+            "feature.movement.freeze.name",
             Freeze(),
-            Translation.t("movement.Freeze.description"),
+            "feature.movement.freeze.description",
         ),
         feature(
-            "AutoWalk",
+            "feature.movement.autowalk.name",
             AutoWalk(),
-            Translation.t("movement.AutoWalk.description"),
+            "feature.movement.autowalk.description",
         ),
         feature(
-            "AutoMine",
+            "feature.movement.automine.name",
             AutoMine(),
-            Translation.t("movement.AutoMine.description"),
+            "feature.movement.automine.description",
         ),
         feature(
-            "FastBreak",
+            "feature.movement.fastbreak.name",
             FastBreak(),
-            Translation.t("movement.FastBreak.description"),
+            "feature.movement.fastbreak.description",
         ),
         feature(
-            "FeatherWalk",
+            "feature.movement.featherwalk.name",
             FeatherWalk(),
-            Translation.t("movement.FeatherWalk.description"),
+            "feature.movement.featherwalk.description",
         ),
         feature(
-            "WaterHover",
+            "feature.movement.waterhover.name",
             WaterHover(),
-            Translation.t("movement.WaterHover.description"),
+            "feature.movement.waterhover.description",
         ),
         feature(
-            "SuperFly",
+            "feature.movement.superfly.name",
             SuperFly(),
-            Translation.t("movement.SuperFly.description"),
+            "feature.movement.superfly.description",
         ),
     )

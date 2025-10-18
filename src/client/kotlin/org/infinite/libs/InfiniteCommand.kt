@@ -280,7 +280,7 @@ object InfiniteCommand {
                 val category = featureCategories.firstOrNull { it.name.equals(categoryName, ignoreCase = true) }
                 if (category != null) {
                     CommandSource.suggestMatching(
-                        category.features.map { it.name },
+                        category.features.map { it.nameKey },
                         builder,
                     )
                 }

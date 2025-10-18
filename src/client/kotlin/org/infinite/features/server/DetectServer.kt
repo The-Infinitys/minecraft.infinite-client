@@ -3,6 +3,7 @@ package org.infinite.features.server
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
+import org.infinite.Translation
 import org.infinite.featureCategories
 import org.infinite.settings.FeatureSetting
 
@@ -29,7 +30,7 @@ class DetectServer : ConfigurableFeature(initialEnabled = true) {
                 ) {
                     configurableFeature.disable()
                     InfiniteClient.warn(
-                        "DetectServer: Disabled feature ${feature.name} (Level: ${configurableFeature.level}) because it exceeds the allowed level ($maxAllowedLevel).",
+                        "DetectServer: Disabled feature ${Translation.t(feature.nameKey)} (Level: ${configurableFeature.level}) because it exceeds the allowed level ($maxAllowedLevel).",
                     )
                 }
             }

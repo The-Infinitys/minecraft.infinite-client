@@ -29,7 +29,7 @@ object InfiniteKeyBind {
                 KeyBinding(
                     "key.infinite-client.open_menu",
                     InputUtil.Type.KEYSYM,
-                    GLFW.GLFW_KEY_LEFT_CONTROL,
+                    GLFW.GLFW_KEY_RIGHT_SHIFT,
                     keyBindingCategory,
                 ),
             )
@@ -43,7 +43,7 @@ object InfiniteKeyBind {
                         ToggleKeyBindingHandler(
                             KeyBindingHelper.registerKeyBinding(
                                 KeyBinding(
-                                    "key.infinite-client.toggle.${category.name}.${feature.name}",
+                                    "key.infinite-client.toggle.${category.name}.${feature.nameKey}",
                                     InputUtil.Type.KEYSYM,
                                     configurableFeature.toggleKeyBind.value,
                                     keyBindingCategory,

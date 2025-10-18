@@ -24,7 +24,7 @@ import org.infinite.settings.FeatureSetting
 class FeatureSettingsScreen(
     private val parent: Screen,
     private val feature: Feature,
-) : Screen(Text.literal(feature.name)) {
+) : Screen(Text.translatable(feature.nameKey)) {
     private var savedPageIndex: Int = 0
 
     // 遅延初期化を維持
@@ -239,14 +239,14 @@ class FeatureSettingsScreen(
 
         context.drawCenteredTextWithShadow(
             textRenderer,
-            Text.literal(feature.name),
+            Text.translatable(feature.nameKey),
             width / 2,
             20,
             0xFFFFFFFF.toInt(),
         )
         context.drawCenteredTextWithShadow(
             textRenderer,
-            Text.literal(feature.description),
+            Text.translatable(feature.descriptionKey),
             width / 2,
             35,
             0xFFAAAAAA.toInt(),

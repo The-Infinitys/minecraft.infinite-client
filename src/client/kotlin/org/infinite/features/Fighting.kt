@@ -13,68 +13,67 @@ import org.infinite.features.fighting.playermanager.PlayerManager
 import org.infinite.features.fighting.reach.Reach
 import org.infinite.features.fighting.superattack.SuperAttack
 import org.infinite.features.fighting.totem.AutoTotem
-import org.infinite.utils.Translation
 
 val fighting =
     listOf(
         feature(
-            "KillAura",
+            "feature.fighting.killaura.name",
             KillAura(),
-            Translation.t("fighting.killaura.description"),
+            "feature.fighting.killaura.description",
         ),
         feature(
-            "Reach",
+            "feature.fighting.reach.name",
             Reach(),
-            Translation.t("fighting.reach.description"),
+            "feature.fighting.reach.description",
         ),
         feature(
-            "NoAttack",
+            "feature.fighting.noattack.name",
             NoAttack(),
-            Translation.t("fighting.noattack.description"),
+            "feature.fighting.noattack.description",
         ),
         feature(
-            "PlayerManager",
+            "feature.fighting.playermanager.name",
             PlayerManager(),
-            Translation.t("fighting.playermanager.description"),
+            "feature.fighting.playermanager.description",
         ),
         feature(
-            "SuperAttack",
+            "feature.fighting.superattack.name",
             SuperAttack(),
-            Translation.t("fighting.superattack.description"),
+            "feature.fighting.superattack.description",
         ),
         feature(
-            "CounterAttack",
+            "feature.fighting.counterattack.name",
             CounterAttack(),
-            Translation.t("fighting.counterattack.description"),
+            "feature.fighting.counterattack.description",
         ),
         feature(
-            "ImpactAttack",
+            "feature.fighting.impactattack.name",
             ImpactAttack(),
-            Translation.t("fighting.impactattack.description"),
+            "feature.fighting.impactattack.description",
         ),
         feature(
-            "ArmorManager",
+            "feature.fighting.armormanager.name",
             ArmorManager(),
-            Translation.t("fighting.armormanager.description"),
+            "feature.fighting.armormanager.description",
         ),
         feature(
-            "Gunner",
+            "feature.fighting.gunner.name",
             Gunner(),
-            Translation.t("fighting.gunner.description"),
+            "feature.fighting.gunner.description",
         ),
         feature(
-            "AutoTotem",
+            "feature.fighting.autototem.name",
             AutoTotem(),
-            Translation.t("fighting.autototem.description"),
+            "feature.fighting.autototem.description",
         ),
         feature(
-            "AimAssist",
+            "feature.fighting.aimassist.name",
             AimAssist(),
-            Translation.t("fighting.aimassist.description"),
+            "feature.fighting.aimassist.description",
         ),
         feature(
-            "LockOn",
+            "feature.fighting.lockon.name",
             LockOn(),
-            Translation.t("fighting.lockon.description"),
+            "feature.fighting.lockon.description",
         ),
     )

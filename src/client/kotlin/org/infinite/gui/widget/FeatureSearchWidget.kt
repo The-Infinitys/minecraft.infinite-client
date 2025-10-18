@@ -11,6 +11,7 @@ import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.infinite.Feature
+import org.infinite.Translation
 import org.infinite.featureCategories
 import org.infinite.gui.screen.FeatureSettingsScreen
 import org.lwjgl.glfw.GLFW
@@ -41,13 +42,13 @@ class FeatureSearchWidget(
             } else {
                 allFeatures.filter { feature ->
                     val categoryName = featureCategories.find { it.features.contains(feature) }?.name ?: ""
-                    feature.name.contains(searchText, ignoreCase = true) ||
+                    Translation.t(feature.nameKey).contains(searchText, ignoreCase = true) ||
                         categoryName.contains(
                             searchText,
                             ignoreCase = true,
                         )
                 }
-            }.sortedBy { it.name } // Sort alphabetically for consistent ordering
+            }.sortedBy { Translation.t(it.nameKey) } // Sort alphabetically for consistent ordering
 
         selectedIndex = -1 // Reset selection on filter change
 

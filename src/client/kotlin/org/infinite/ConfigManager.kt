@@ -17,7 +17,7 @@ object ConfigManager {
 
     @Serializable
     data class FeatureConfig(
-        val name: String,
+        val nameKey: String,
         val enabled: Boolean,
         val settings: Map<String, JsonElement>,
     )
@@ -91,7 +91,7 @@ object ConfigManager {
                                             }
                                     )
                                 }
-                            FeatureConfig(feature.name, configurableFeature.isEnabled(), settingMap)
+                            FeatureConfig(feature.nameKey, configurableFeature.isEnabled(), settingMap)
                         } else {
                             null
                         }
@@ -120,7 +120,7 @@ object ConfigManager {
             val appConfig = json.decodeFromString(AppConfig.serializer(), jsonString)
 
             appConfig.features.forEach { featureConfig ->
-                featureCategories.flatMap { it.features }.find { it.name == featureConfig.name }?.let { feature ->
+                featureCategories.flatMap { it.features }.find { it.nameKey == featureConfig.nameKey }?.let { feature ->
                     val configurableFeature = feature.instance as? ConfigurableFeature
                     if (configurableFeature != null) {
                         if (featureConfig.enabled) {

@@ -11,54 +11,53 @@ import org.infinite.features.rendering.sensory.ExtraSensory
 import org.infinite.features.rendering.sight.SuperSight
 import org.infinite.features.rendering.tag.HyperTag
 import org.infinite.features.rendering.xray.XRay
-import org.infinite.utils.Translation
 
 val rendering =
     listOf(
         feature(
-            "AntiOverlay",
+            "feature.rendering.antioverlay.name",
             AntiOverlay(),
-            Translation.t("rendering.antioverlay.description"),
+            "feature.rendering.antioverlay.description",
         ),
         feature(
-            "SuperSight",
+            "feature.rendering.supersight.name",
             SuperSight(),
-            Translation.t("rendering.supersight.description"),
+            "feature.rendering.supersight.description",
         ),
         feature(
-            "XRay",
+            "feature.rendering.xray.name",
             XRay(),
-            Translation.t("rendering.xray.description"),
+            "feature.rendering.xray.description",
         ),
         feature(
-            "CameraConfig",
+            "feature.rendering.cameraconfig.name",
             CameraConfig(),
-            Translation.t("rendering.cameraconfig.description"),
+            "feature.rendering.cameraconfig.description",
         ),
         feature(
-            "FreeCamera", // 追加
+            "feature.rendering.freecamera.name", // 追加
             FreeCamera(), // 追加
-            Translation.t("rendering.freecamera.description"), // 追加
+            "feature.rendering.freecamera.description", // 追加
         ),
         feature(
-            "Radar",
+            "feature.rendering.radar.name",
             Radar(),
-            Translation.t("rendering.radar.description"),
+            "feature.rendering.radar.description",
         ),
         feature(
-            "ExtraSensory",
+            "feature.rendering.extrasensory.name",
             ExtraSensory(),
-            Translation.t("rendering.extrasensory.description"),
+            "feature.rendering.extrasensory.description",
         ),
         feature(
-            "DetailInfo",
+            "feature.rendering.detailinfo.name",
             DetailInfo(),
-            Translation.t("rendering.detailinfo.description"),
+            "feature.rendering.detailinfo.description",
         ),
         feature(
-            "HyperTag",
+            "feature.rendering.hypertag.name",
             HyperTag(),
-            Translation.t("rendering.hypertag.description"),
+            "feature.rendering.hypertag.description",
         ),
-        feature("PortalGui", PortalGui(), Translation.t("rendering.portalgui.description")),
+        feature("feature.rendering.portalgui.name", PortalGui(), "feature.rendering.portalgui.description"),
     )

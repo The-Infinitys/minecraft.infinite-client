@@ -16,7 +16,6 @@ import org.infinite.libs.client.PlayerInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.utils.LogQueue // 新しくインポート
-import org.infinite.utils.Translation
 import org.slf4j.LoggerFactory
 
 object InfiniteClient : ClientModInitializer {
@@ -24,7 +23,6 @@ object InfiniteClient : ClientModInitializer {
     lateinit var playerInterface: PlayerInterface
 
     override fun onInitializeClient() {
-        Translation.load()
         println("[InfiniteClient] Translation system loaded.")
 
         // --- ティックイベントの登録 ---
@@ -187,7 +185,7 @@ object InfiniteClient : ClientModInitializer {
         featureCategories
             .find { it.name.equals(category, ignoreCase = true) }
             ?.features
-            ?.find { it.name.equals(name, ignoreCase = true) }
+            ?.find { it.nameKey.equals(name, ignoreCase = true) }
             ?.instance as? ConfigurableFeature
 
     fun <T : ConfigurableFeature> isFeatureEnabled(featureClass: Class<T>): Boolean {

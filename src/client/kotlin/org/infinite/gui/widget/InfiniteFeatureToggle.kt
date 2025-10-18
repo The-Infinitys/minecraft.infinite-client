@@ -10,6 +10,7 @@ import net.minecraft.util.math.ColorHelper
 import org.infinite.ConfigurableFeature
 import org.infinite.Feature
 import org.infinite.InfiniteClient
+import org.infinite.Translation
 import org.infinite.utils.rendering.drawBorder
 
 class InfiniteFeatureToggle(
@@ -20,7 +21,7 @@ class InfiniteFeatureToggle(
     val feature: Feature,
     private val isSelected: Boolean, // New parameter
     val onSettings: () -> Unit, // Made public
-) : ClickableWidget(x, y, width, height, Text.literal(feature.name)) {
+) : ClickableWidget(x, y, width, height, Text.translatable(feature.nameKey)) {
     val toggleButton: InfiniteToggleButton
     private val settingsButton: InfiniteButton
     private val resetButton: InfiniteButton // New reset button
@@ -72,7 +73,7 @@ class InfiniteFeatureToggle(
                 configurableFeature.settings.forEach { setting ->
                     setting.reset() // Reset individual settings
                 }
-                InfiniteClient.log("${feature.name} の設定をリセットしました。")
+                InfiniteClient.log("${Translation.t(feature.nameKey)} の設定をリセットしました。")
             }
 
         // Add listener to update toggle button when feature.enabled changes
@@ -90,7 +91,7 @@ class InfiniteFeatureToggle(
         // Draw button text
         context.drawTextWithShadow(
             textRenderer,
-            Text.literal(feature.name),
+            Text.translatable(feature.nameKey),
             x + 60,
             y + (height - 8) / 2,
             0xFFFFFFFF.toInt(),

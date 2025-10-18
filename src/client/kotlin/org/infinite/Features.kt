@@ -7,9 +7,9 @@ import org.infinite.features.rendering
 import org.infinite.features.server
 
 data class Feature(
-    val name: String,
+    val nameKey: String,
     val instance: Any,
-    val description: String = "",
+    val descriptionKey: String = "",
 )
 
 data class FeatureCategory(
@@ -18,10 +18,10 @@ data class FeatureCategory(
 )
 
 fun feature(
-    name: String,
+    nameKey: String,
     instance: Any,
-    description: String,
-): Feature = Feature(name, instance, description)
+    descriptionKey: String,
+): Feature = Feature(nameKey, instance, descriptionKey)
 
 val featureCategories =
     listOf(

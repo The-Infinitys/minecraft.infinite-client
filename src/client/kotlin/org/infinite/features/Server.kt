@@ -3,14 +3,13 @@ package org.infinite.features
 import org.infinite.feature
 import org.infinite.features.server.DetectServer
 import org.infinite.features.server.ServerInfo
-import org.infinite.utils.Translation
 
 val server =
     listOf(
         feature(
-            "ServerInfo",
+            "feature.server.serverinfo.name",
             ServerInfo(),
-            Translation.t("server.serverinfo.description"),
+            "feature.server.serverinfo.description",
         ),
-        feature("DetectServer", DetectServer(), Translation.t("server.detectserver.description")),
+        feature("feature.server.detectserver.name", DetectServer(), "feature.server.detectserver.description"),
     )
