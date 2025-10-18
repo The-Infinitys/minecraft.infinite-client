@@ -185,15 +185,15 @@ class InfiniteBlockListField(
         val labelX = x + padding
         context.drawTextWithShadow(
             textRenderer,
-            Text.literal(setting.name),
+            Text.translatable(setting.name),
             labelX,
             y + padding,
             0xFFFFFFFF.toInt(),
         )
-        if (setting.description.isNotBlank()) {
+        if (setting.descriptionKey.isNotBlank()) {
             context.drawTextWithShadow(
                 textRenderer,
-                Text.literal(setting.description),
+                Text.translatable(setting.descriptionKey),
                 labelX,
                 y + padding + baseLabelHeight + 2,
                 0xFFA0A0A0.toInt(),

@@ -135,12 +135,12 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
-            FeatureSetting.BooleanSetting("BlockInfo", "ブロック情報を表示します。", true),
-            FeatureSetting.BooleanSetting("InnerChest", "チェストの中身も取得します。", true),
-            FeatureSetting.BooleanSetting("EntityInfo", "エンティティ情報を表示します。", true),
-            FeatureSetting.IntSetting("PaddingTop", "上からの余白", 0, 0, 100),
-            FeatureSetting.FloatSetting("Reach", "情報を表示する再長距離", 20f, 10f, 100f),
-            FeatureSetting.IntSetting("Width", "ウィジェットの幅を設定します。", 50, 25, 100),
+            FeatureSetting.BooleanSetting("BlockInfo", "feature.rendering.detailinfo.blockinfo.description", true),
+            FeatureSetting.BooleanSetting("InnerChest", "feature.rendering.detailinfo.innerchest.description", true),
+            FeatureSetting.BooleanSetting("EntityInfo", "feature.rendering.detailinfo.entityinfo.description", true),
+            FeatureSetting.IntSetting("PaddingTop", "feature.rendering.detailinfo.paddingtop.description", 0, 0, 100),
+            FeatureSetting.FloatSetting("Reach", "feature.rendering.detailinfo.reach.description", 20f, 10f, 100f),
+            FeatureSetting.IntSetting("Width", "feature.rendering.detailinfo.width.description", 50, 25, 100),
         )
 
     var shouldCancelScanScreen: Boolean = false

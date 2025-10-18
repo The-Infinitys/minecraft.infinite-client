@@ -16,7 +16,7 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.BooleanSetting(
                 "HyperBoost",
-                "Allows us to get more high power dash",
+                "feature.movement.superfly.hyperboost.description",
                 false,
             ),
         )

@@ -15,9 +15,9 @@ import org.infinite.settings.FeatureSetting
 
 class HyperTag : ConfigurableFeature(initialEnabled = false) {
     override val level = FeatureLevel.UTILS
-    private val mobs = FeatureSetting.BooleanSetting("Mobs", "Show Mob Info", true)
-    private val players = FeatureSetting.BooleanSetting("Players", "Show Player Info", true)
-    private val distance = FeatureSetting.IntSetting("Distance", "Display Distance (0 to Unlimited)", 64, 0, 256)
+    private val mobs = FeatureSetting.BooleanSetting("Mobs", "feature.rendering.hypertag.mobs.description", true)
+    private val players = FeatureSetting.BooleanSetting("Players", "feature.rendering.hypertag.players.description", true)
+    private val distance = FeatureSetting.IntSetting("Distance", "feature.rendering.hypertag.distance.description", 64, 0, 256)
     override val settings: List<FeatureSetting<*>> =
         listOf(
             mobs,

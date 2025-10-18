@@ -38,25 +38,25 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
     private val fireMode: FeatureSetting.EnumSetting<FireMode> =
         FeatureSetting.EnumSetting(
             "FireMode",
-            "The firing mode for shooting.",
+            "feature.fighting.gunner.firemode.description",
             FireMode.FULL_AUTO,
             FireMode.entries,
         )
     private val fastReload: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "FastReload",
-            "If enabled, reloading become fast",
+            "feature.fighting.gunner.fastreload.description",
             false,
         )
     private val changeMode: FeatureSetting.EnumSetting<ChangeMode> =
         FeatureSetting.EnumSetting(
             "ChangeMode",
-            "How to toggle reload and shot",
+            "feature.fighting.gunner.changemode.description",
             ChangeMode.Fixed,
             ChangeMode.entries,
         )
     private val additionalInterval: FeatureSetting.IntSetting =
-        FeatureSetting.IntSetting("AdditionalInterval", "Additional interval for full-auto", 3, 0, 10)
+        FeatureSetting.IntSetting("AdditionalInterval", "feature.fighting.gunner.additionalinterval.description", 3, 0, 10)
     override val settings: List<FeatureSetting<*>> = listOf(fireMode, fastReload, changeMode, additionalInterval)
     var state: GunnerState = GunnerState.IDLE
     var mode: GunnerMode = GunnerMode.RELOAD

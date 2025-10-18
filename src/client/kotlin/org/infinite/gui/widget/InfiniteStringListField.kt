@@ -48,21 +48,21 @@ class InfiniteStringListField(
         val nameY: Int
         val descriptionY: Int?
 
-        if (setting.description != null && setting.description!!.isNotBlank()) {
+        if (setting.descriptionKey != null && setting.descriptionKey!!.isNotBlank()) {
             totalTextHeight = textRenderer.fontHeight * 2 + 2 // Name + padding + Description
             nameY = y + (height - totalTextHeight) / 2
             descriptionY = nameY + textRenderer.fontHeight + 2
 
             context.drawTextWithShadow(
                 textRenderer,
-                Text.literal(setting.name),
+                Text.translatable(setting.name),
                 textX,
                 nameY,
                 0xFFFFFFFF.toInt(),
             )
             context.drawTextWithShadow(
                 textRenderer,
-                Text.literal(setting.description!!),
+                Text.translatable(setting.descriptionKey!!),
                 textX,
                 descriptionY,
                 0xFFA0A0A0.toInt(), // Gray color for description
@@ -74,7 +74,7 @@ class InfiniteStringListField(
 
             context.drawTextWithShadow(
                 textRenderer,
-                Text.literal(setting.name),
+                Text.translatable(setting.name),
                 textX,
                 nameY,
                 0xFFFFFFFF.toInt(),

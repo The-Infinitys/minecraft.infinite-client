@@ -27,11 +27,11 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> =
         listOf(
             // RadiusとHeightは探知距離
-            FeatureSetting.IntSetting("Radius", "探知半径を設定します。", 32, 5, 256),
-            FeatureSetting.IntSetting("Height", "探知する高さを設定します。", 8, 1, 32),
+            FeatureSetting.IntSetting("Radius", "feature.rendering.radar.radius.description", 32, 5, 256),
+            FeatureSetting.IntSetting("Height", "feature.rendering.radar.height.description", 8, 1, 32),
             // MarginとSizeをパーセント単位（画面の短い辺に対する）として扱う
-            FeatureSetting.IntSetting("Margin", "レーダーUIのマージン(% of screen short side)。", 4, 0, 40),
-            FeatureSetting.IntSetting("Size", "レーダーUIの大きさ(% of screen short side)。", 40, 5, 100),
+            FeatureSetting.IntSetting("Margin", "feature.rendering.radar.margin.description", 4, 0, 40),
+            FeatureSetting.IntSetting("Size", "feature.rendering.radar.size.description", 40, 5, 100),
         )
 
     fun findTargetMobs(): List<LivingEntity> {

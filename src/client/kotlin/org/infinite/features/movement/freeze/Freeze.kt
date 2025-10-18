@@ -31,7 +31,7 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
     private val durationSetting =
         FeatureSetting.FloatSetting(
             "Duration",
-            "フリーズが自動的に無効になるまでの最長持続時間（秒）。0で無制限。",
+            "feature.movement.freeze.duration.description",
             0.0f,
             0.0f,
             600.0f,
@@ -40,7 +40,7 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
     private val packetLimitSetting =
         FeatureSetting.IntSetting(
             "Packet Limit",
-            "フリーズが自動的に再起動するまでに蓄積されるパケットの最大数。0で無制限。",
+            "feature.movement.freeze.packetlimit.description",
             0,
             0,
             500,

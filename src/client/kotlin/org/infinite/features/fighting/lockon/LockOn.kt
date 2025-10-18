@@ -27,7 +27,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     private val range: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Range",
-            "Lock-on range.",
+            "feature.fighting.lockon.range.description",
             7f,
             3.0f,
             25.0f,
@@ -35,19 +35,19 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     private val players: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Players",
-            "Target players.",
+            "feature.fighting.lockon.players.description",
             true,
         )
     private val mobs: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Mobs",
-            "Target mobs.",
+            "feature.fighting.lockon.mobs.description",
             true,
         )
     private val fov: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "FOV",
-            "Field of View to limit targeting (degrees).",
+            "feature.fighting.lockon.fov.description",
             90.0f,
             10.0f,
             180.0f,
@@ -55,7 +55,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Speed",
-            "The Rotation Speed",
+            "feature.fighting.lockon.speed.description",
             1.0f,
             0.5f,
             10f,
@@ -63,7 +63,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     private val method: FeatureSetting.EnumSetting<AimCalculateMethod> =
         FeatureSetting.EnumSetting(
             "Method",
-            "Rotation Method",
+            "feature.fighting.lockon.method.description",
             AimCalculateMethod.Linear,
             AimCalculateMethod.entries,
         )

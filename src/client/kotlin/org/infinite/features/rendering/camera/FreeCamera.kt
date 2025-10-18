@@ -17,7 +17,7 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Speed",
-            "カメラの移動速度を設定します。",
+            "feature.rendering.freecamera.speed.description",
             1.0f,
             0.1f,
             5.0f,

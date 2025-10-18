@@ -7,10 +7,10 @@ import org.infinite.settings.FeatureSetting
 class SuperSprint : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> =
         listOf(
-            FeatureSetting.BooleanSetting("OnlyWhenForward", "前方移動時のみスプリントを有効にします。", true),
+            FeatureSetting.BooleanSetting("OnlyWhenForward", "feature.movement.supersprint.onlywhenforward.description", true),
             FeatureSetting.BooleanSetting(
                 "EvenIfHungry",
-                "満腹度が不足している場合でも強制的にスプリントをします。",
+                "feature.movement.supersprint.evenifhungry.description",
                 false,
             ),
         )

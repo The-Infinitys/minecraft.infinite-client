@@ -17,7 +17,7 @@ class WaterHover : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.EnumSetting(
                 "Method",
-                "WaterHoverを実現するメソッドを変更します。",
+                "feature.movement.waterhover.method.description",
                 WaterHoverMethod.Jump,
                 WaterHoverMethod.entries.toList(),
             ),

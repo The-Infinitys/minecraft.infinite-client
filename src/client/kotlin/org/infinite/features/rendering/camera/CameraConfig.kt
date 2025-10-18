@@ -10,13 +10,13 @@ class CameraConfig : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.FloatSetting(
                 "CameraDistance",
-                "カメラとプレイヤーとの距離を設定します。",
+                "feature.rendering.cameraconfig.cameradistance.description",
                 8.0f,
                 -1.0f,
                 15.0f,
             ),
-            FeatureSetting.BooleanSetting("ClipBlock", "カメラが地形を貫通するかを設定します。", true),
-            FeatureSetting.BooleanSetting("AntiHurtTilt", "ダメージを受けた際にカメラが揺れなくなります。", true),
-            FeatureSetting.BooleanSetting("ExtraCamera", "カメラがプレイヤーの向きに依存しなくなります", false),
+            FeatureSetting.BooleanSetting("ClipBlock", "feature.rendering.cameraconfig.clipblock.description", true),
+            FeatureSetting.BooleanSetting("AntiHurtTilt", "feature.rendering.cameraconfig.antihurttilt.description", true),
+            FeatureSetting.BooleanSetting("ExtraCamera", "feature.rendering.cameraconfig.extracamera.description", false),
         )
 }

@@ -6,7 +6,7 @@ import org.infinite.settings.FeatureSetting
 class SuperSight : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> =
         listOf(
-            FeatureSetting.BooleanSetting("FullBright", "ゲーム内の明るさを最大にします。", true),
-            FeatureSetting.BooleanSetting("AntiBlind", "盲目や暗闇のエフェクトを無効にします。", true),
+            FeatureSetting.BooleanSetting("FullBright", "feature.rendering.supersight.fullbright.description", true),
+            FeatureSetting.BooleanSetting("AntiBlind", "feature.rendering.supersight.antiblind.description", true),
         )
 }

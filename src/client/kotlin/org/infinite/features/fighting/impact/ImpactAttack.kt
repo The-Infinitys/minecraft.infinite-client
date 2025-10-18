@@ -22,14 +22,14 @@ class ImpactAttack : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.FloatSetting(
                 "Range",
-                "自動攻撃の最大射程距離を設定します。",
+                "feature.fighting.impactattack.range.description",
                 4.2f,
                 3.0f,
                 7.0f,
             ),
             FeatureSetting.IntSetting(
                 "CPS",
-                "自動攻撃の秒間クリック数を設定します。",
+                "feature.fighting.impactattack.cps.description",
                 10,
                 1,
                 20,

@@ -8,7 +8,7 @@ import org.infinite.settings.FeatureSetting
 
 class AutoTotem : ConfigurableFeature(initialEnabled = false) {
     private val hpSetting: FeatureSetting.IntSetting =
-        FeatureSetting.IntSetting("Hp", "トーテムを持ち始めるHP", 10, 1, 20)
+        FeatureSetting.IntSetting("Hp", "feature.fighting.autototem.hp.description", 10, 1, 20)
     override val settings: List<FeatureSetting<*>> =
         listOf(
             hpSetting,

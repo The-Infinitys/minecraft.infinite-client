@@ -17,9 +17,9 @@ data class FeatureCategory(
     val features: List<Feature>,
 )
 
-fun feature(
+fun <T : ConfigurableFeature> feature(
     name: String,
-    instance: ConfigurableFeature,
+    instance: T,
     descriptionKey: String,
 ): Feature = Feature(name, instance, descriptionKey)
 

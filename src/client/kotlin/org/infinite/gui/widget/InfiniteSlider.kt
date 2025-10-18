@@ -31,7 +31,7 @@ class InfiniteSlider<T : Number>(
                 is FeatureSetting.FloatSetting -> String.format("%.2f", setting.value)
                 else -> throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
             }
-        message = Text.literal("${setting.name}: $formattedValue")
+        message = Text.translatable(setting.name).append(": $formattedValue")
     }
 
     override fun renderWidget(
@@ -45,17 +45,17 @@ class InfiniteSlider<T : Number>(
 
         context.drawTextWithShadow(
             textRenderer,
-            Text.literal(setting.name),
+            Text.translatable(setting.name),
             textX,
             currentY,
             0xFFFFFFFF.toInt(),
         )
         currentY += textRenderer.fontHeight + 2 // Move Y down for description
 
-        if (setting.description != null && setting.description!!.isNotBlank()) {
+        if (setting.descriptionKey != null && setting.descriptionKey!!.isNotBlank()) {
             context.drawTextWithShadow(
                 textRenderer,
-                Text.literal(setting.description!!),
+                Text.translatable(setting.descriptionKey!!),
                 textX,
                 currentY,
                 0xFFA0A0A0.toInt(), // Gray color for description

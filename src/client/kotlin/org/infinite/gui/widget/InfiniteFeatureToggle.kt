@@ -63,7 +63,7 @@ class InfiniteFeatureToggle(
                 y,
                 resetButtonWidth,
                 height,
-                Text.literal("R"), // Placeholder for reset icon/text
+                Text.translatable("infinite.client.gui.reset"), // Placeholder for reset icon/text
             ) {
                 // OnPress action for reset button
                 configurableFeature.reset() // Reset feature's enabled state

@@ -13,10 +13,10 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel = FeatureLevel.CHEAT
     override val settings: List<FeatureSetting<*>> =
         listOf(
-            FeatureSetting.BooleanSetting("PlayerEsp", "Show Player", true),
-            FeatureSetting.BooleanSetting("MobEsp", "Show Mob", true),
-            FeatureSetting.BooleanSetting("ItemEsp", "Show Item", true),
-            FeatureSetting.BooleanSetting("PortalEsp", "Show Portal", true),
+            FeatureSetting.BooleanSetting("PlayerEsp", "feature.rendering.extrasensory.playeresp.description", true),
+            FeatureSetting.BooleanSetting("MobEsp", "feature.rendering.extrasensory.mobesp.description", true),
+            FeatureSetting.BooleanSetting("ItemEsp", "feature.rendering.extrasensory.itemesp.description", true),
+            FeatureSetting.BooleanSetting("PortalEsp", "feature.rendering.extrasensory.portalesp.description", true),
         )
 
     private fun isEnabled(type: String): Boolean = InfiniteClient.isSettingEnabled(ExtraSensory::class.java, type + "Esp")

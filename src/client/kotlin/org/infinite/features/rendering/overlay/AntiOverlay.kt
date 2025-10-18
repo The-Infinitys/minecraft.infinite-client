@@ -8,9 +8,9 @@ class AntiOverlay : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel = FeatureLevel.UTILS
     override val settings: List<FeatureSetting<*>> =
         listOf(
-            FeatureSetting.BooleanSetting("NoPumpkinOverlay", "カボチャのオーバーレイを削除します。", true),
-            FeatureSetting.BooleanSetting("NoDarknessOverlay", "暗闇のオーバーレイ（盲目効果など）を削除します。", true),
-            FeatureSetting.BooleanSetting("NoLiquidOverlay", "水/溶岩中のオーバーレイを削除します。", true),
-            FeatureSetting.BooleanSetting("NoFogOverlay", "フォグ(霧のようなエフェクト)を無効化します。", true),
+            FeatureSetting.BooleanSetting("NoPumpkinOverlay", "feature.rendering.antioverlay.nopumpkinoverlay.description", true),
+            FeatureSetting.BooleanSetting("NoDarknessOverlay", "feature.rendering.antioverlay.nodarknessoverlay.description", true),
+            FeatureSetting.BooleanSetting("NoLiquidOverlay", "feature.rendering.antioverlay.noliquidoverlay.description", true),
+            FeatureSetting.BooleanSetting("NoFogOverlay", "feature.rendering.antioverlay.nofogoverlay.description", true),
         )
 }

@@ -17,7 +17,7 @@ class SuperAttack : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.EnumSetting(
                 "Method",
-                "クリティカル攻撃の方法を選択します。",
+                "feature.fighting.superattack.method.description",
                 AttackMethod.MINI_JUMP,
                 AttackMethod.entries.toList(),
             ),

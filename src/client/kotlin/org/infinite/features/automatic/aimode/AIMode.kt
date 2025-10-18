@@ -19,13 +19,13 @@ class AIMode : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.BooleanSetting(
                 "AllowPlayerInput",
-                "AIモード中でもプレイヤーの入力を許可します。",
+                "feature.automatic.aimode.allowplayerinput.description",
                 false,
             ),
             // 新しい設定: ダメージを受けた際にAIを強制中断する
             FeatureSetting.BooleanSetting(
                 "CancelOnDamaged",
-                "プレイヤーがダメージを受けた際にAIを強制中断します。",
+                "feature.automatic.aimode.cancelondamaged.description",
                 true, // デフォルトをtrueに設定してテストしやすく
             ),
         )

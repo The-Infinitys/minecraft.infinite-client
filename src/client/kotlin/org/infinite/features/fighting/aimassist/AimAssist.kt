@@ -23,7 +23,7 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     private val range: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Range",
-            "Aim assist range.",
+            "feature.fighting.aimassist.range.description",
             7f,
             3.0f,
             25.0f,
@@ -31,19 +31,19 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     private val players: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Players",
-            "Target players.",
+            "feature.fighting.aimassist.players.description",
             true,
         )
     private val mobs: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Mobs",
-            "Target mobs.",
+            "feature.fighting.aimassist.mobs.description",
             true,
         )
     private val fov: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "FOV",
-            "Field of View to limit targeting (degrees).",
+            "feature.fighting.aimassist.fov.description",
             90.0f,
             10.0f,
             180.0f,
@@ -51,7 +51,7 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Speed",
-            "The Rotation Speed",
+            "feature.fighting.aimassist.speed.description",
             1.0f,
             0.5f,
             10f,
@@ -60,7 +60,7 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     private val method: FeatureSetting.EnumSetting<AimCalculateMethod> =
         FeatureSetting.EnumSetting(
             "Method",
-            "Rotation Method",
+            "feature.fighting.aimassist.method.description",
             AimCalculateMethod.Linear,
             AimCalculateMethod.entries,
         )

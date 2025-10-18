@@ -11,12 +11,12 @@ class PlayerManager : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.PlayerListSetting(
                 "Friends",
-                "フレンドとして扱うプレイヤーのリスト。",
+                "feature.fighting.playermanager.friends.description",
                 mutableListOf(),
             ),
             FeatureSetting.PlayerListSetting(
                 "Enemies",
-                "敵として扱うプレイヤーのリスト。",
+                "feature.fighting.playermanager.enemies.description",
                 mutableListOf(),
             ),
         )

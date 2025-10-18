@@ -8,7 +8,7 @@ class NoAttack : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.EntityListSetting(
                 "ProtectedEntities",
-                "攻撃しないエンティティのリスト。",
+                "feature.fighting.noattack.protectedentities.description",
                 mutableListOf("minecraft:villager", "minecraft:wolf", "minecraft:cat"),
             ),
         )

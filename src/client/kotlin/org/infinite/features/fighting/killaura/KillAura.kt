@@ -10,38 +10,38 @@ class KillAura : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.FloatSetting(
                 "Range",
-                "エンティティを攻撃する最大距離を設定します。",
+                "feature.fighting.killaura.range.description",
                 4.2f,
                 3.0f,
                 7.0f,
             ),
             FeatureSetting.BooleanSetting(
                 "Players",
-                "プレイヤーをターゲットにします。",
+                "feature.fighting.killaura.players.description",
                 true,
             ),
             FeatureSetting.BooleanSetting(
                 "Mobs",
-                "モブをターゲットにします。",
+                "feature.fighting.killaura.mobs.description",
                 false,
             ),
             FeatureSetting.IntSetting(
                 "MaxTargets",
-                "同時に攻撃するエンティティの最大数。(0で無制限)",
+                "feature.fighting.killaura.maxtargets.description",
                 1,
                 0,
                 10,
             ),
             FeatureSetting.IntSetting(
                 "AttackFrequency",
-                "攻撃頻度を設定します。(0で自動調整)",
+                "feature.fighting.killaura.attackfrequency.description",
                 0,
                 0,
                 20,
             ),
             FeatureSetting.BooleanSetting(
                 "ChangeAngle",
-                "攻撃時にエンティティの方向を向きます。",
+                "feature.fighting.killaura.changeangle.description",
                 false,
             ),
         )

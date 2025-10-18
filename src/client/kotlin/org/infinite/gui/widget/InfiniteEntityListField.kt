@@ -25,8 +25,8 @@ class InfiniteEntityListField(
 
     private val baseLabelHeight = textRenderer.fontHeight
     private val descriptionHeight =
-        if (setting.description != null &&
-            setting.description!!.isNotBlank()
+        if (setting.descriptionKey != null &&
+            setting.descriptionKey!!.isNotBlank()
         ) {
             textRenderer.fontHeight + 2
         } else {
@@ -187,15 +187,15 @@ class InfiniteEntityListField(
         val labelX = x + padding
         context.drawTextWithShadow(
             textRenderer,
-            Text.literal(setting.name),
+            Text.translatable(setting.name),
             labelX,
             y + padding,
             0xFFFFFFFF.toInt(),
         )
-        if (setting.description != null && setting.description!!.isNotBlank()) {
+        if (setting.descriptionKey != null && setting.descriptionKey!!.isNotBlank()) {
             context.drawTextWithShadow(
                 textRenderer,
-                Text.literal(setting.description!!),
+                Text.translatable(setting.descriptionKey!!),
                 labelX,
                 y + padding + baseLabelHeight + 2,
                 0xFFA0A0A0.toInt(),
