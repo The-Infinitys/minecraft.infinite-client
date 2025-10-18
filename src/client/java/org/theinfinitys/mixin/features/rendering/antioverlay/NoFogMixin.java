@@ -35,6 +35,8 @@ public class NoFogMixin {
     if (InfiniteClient.INSTANCE.isSettingEnabled(AntiOverlay.class, "NoFogOverlay")) {
       renderDistanceStart = Integer.MAX_VALUE;
       renderDistanceEnd = Integer.MAX_VALUE;
+      environmentalStart = Integer.MAX_VALUE;
+      environmentalEnd = Integer.MAX_VALUE;
     }
 
     original.call(

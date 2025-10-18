@@ -17,6 +17,7 @@ class SafeWalk : ConfigurableFeature(initialEnabled = false) {
 
     // --- 内部状態 ---
     private var sneaking = false
+
     override fun enabled() {
         sneaking = false
     }
@@ -27,6 +28,7 @@ class SafeWalk : ConfigurableFeature(initialEnabled = false) {
             setSneaking(false)
         }
     }
+
     fun onPreMotion() {
         if (!isEnabled()) return
         val player = client.player ?: return
