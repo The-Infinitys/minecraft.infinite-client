@@ -30,7 +30,9 @@ class DetectServer : ConfigurableFeature(initialEnabled = true) {
                 ) {
                     configurableFeature.disable()
                     InfiniteClient.warn(
-                        "DetectServer: Disabled feature ${Translation.t(feature.nameKey)} (Level: ${configurableFeature.level}) because it exceeds the allowed level ($maxAllowedLevel).",
+                        "DetectServer: Disabled feature ${Translation.t(
+                            feature.nameKey,
+                        )} (Level: ${configurableFeature.level}) because it exceeds the allowed level ($maxAllowedLevel).",
                     )
                 }
             }
