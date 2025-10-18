@@ -12,6 +12,45 @@ object BlockContentRenderer {
     private const val PADDING = 5
     private const val ICON_SIZE = 18
 
+    /**
+     * 現在のブロックのインベントリデータ（ダブルチェストの場合は結合したもの）を取得します。
+     * チェスト以外の場合はそのままのデータを返します。
+     */
+    private fun getEffectiveInventoryData(
+        client: MinecraftClient,
+        detail: DetailInfo.TargetDetail.BlockDetail,
+        feature: DetailInfo,
+    ): InventoryData? {
+        val detailPos = detail.pos ?: return null
+        val effectiveData = feature.getChestContents(detailPos)
+
+        val blockState = client.world?.getBlockState(detailPos)
+        // ダブルチェストの結合ロジック
+        if (blockState?.block is ChestBlock && effectiveData?.type == InventoryType.CHEST && effectiveData.items.size == 27) {
+            val chestType = blockState.get(ChestBlock.CHEST_TYPE)
+            if (chestType != ChestType.SINGLE) {
+                val facing = blockState.get(ChestBlock.FACING)
+                val otherOffset = if (chestType == ChestType.RIGHT) facing.rotateYClockwise() else facing.rotateYCounterclockwise()
+                val otherPos = detailPos.offset(otherOffset)
+
+                val otherData = feature.getChestContents(otherPos)
+                if (otherData != null && otherData.items.size == 27) {
+                    val leftPos = if (chestType == ChestType.RIGHT) detailPos else otherPos
+                    val combinedItems =
+                        if (detailPos == leftPos) {
+                            effectiveData.items + otherData.items
+                        } else {
+                            otherData.items + effectiveData.items
+                        }
+                    // 結合されたInventoryDataを返す
+                    return InventoryData(effectiveData.type, combinedItems)
+                }
+            }
+        }
+        // チェストでない場合、またはシングルチェスト/結合できなかった場合はそのままのデータを返す
+        return effectiveData
+    }
+
     fun calculateHeight(
         client: MinecraftClient,
         detail: DetailInfo.TargetDetail.BlockDetail,
@@ -19,33 +58,10 @@ object BlockContentRenderer {
         uiWidth: Int,
         isTargetInReach: Boolean,
     ): Int {
-        if (detail.pos == null) return 0
         val font = client.textRenderer
         var requiredHeight = DetailInfoRenderer.BORDER_WIDTH + PADDING + ICON_SIZE + PADDING
 
-        var effectiveData = feature.getChestContents(detail.pos)
-        val blockState = client.world?.getBlockState(detail.pos)
-        if (blockState?.block is ChestBlock && effectiveData?.type == InventoryType.CHEST && effectiveData.items.size == 27) {
-            val chestType = blockState.get(ChestBlock.CHEST_TYPE)
-            if (chestType != ChestType.SINGLE) {
-                val facing = blockState.get(ChestBlock.FACING)
-                val otherOffset = if (chestType == ChestType.RIGHT) facing.rotateYClockwise() else facing.rotateYCounterclockwise()
-                val otherPos = detail.pos?.offset(otherOffset)
-                if (otherPos != null) {
-                    val otherData = feature.getChestContents(otherPos)
-                    if (otherData != null && otherData.items.size == 27) {
-                        val leftPos = if (chestType == ChestType.RIGHT) detail.pos else otherPos
-                        val combinedItems =
-                            if (detail.pos == leftPos) {
-                                effectiveData.items + otherData.items
-                            } else {
-                                otherData.items + effectiveData.items
-                            }
-                        effectiveData = InventoryData(effectiveData.type, combinedItems)
-                    }
-                }
-            }
-        }
+        val effectiveData = getEffectiveInventoryData(client, detail, feature)
 
         if (effectiveData != null && effectiveData.items.isNotEmpty()) {
             requiredHeight += InventoryRenderer.calculateHeight(client, effectiveData, uiWidth)
@@ -70,6 +86,8 @@ object BlockContentRenderer {
         val iconX = startX + DetailInfoRenderer.BORDER_WIDTH + PADDING
         val iconY = startY + DetailInfoRenderer.BORDER_WIDTH + PADDING
         val textX = iconX + ICON_SIZE + PADDING
+
+        // --- 1. ブロックアイコンと基本情報の描画 ---
 
         val blockIconStack = ItemStack(detail.block)
         InventoryRenderer.drawItemWithDurability(
@@ -119,37 +137,20 @@ object BlockContentRenderer {
             )
         }
 
+        // --- 2. インベントリ中身の描画 ---
         var contentY = startY + DetailInfoRenderer.BORDER_WIDTH + PADDING + ICON_SIZE + PADDING
-        var effectiveData = feature.getChestContents(detail.pos)
-        val blockState = client.world?.getBlockState(detail.pos)
-        if (blockState?.block is ChestBlock && effectiveData?.type == InventoryType.CHEST && effectiveData.items.size == 27) {
-            val chestType = blockState.get(ChestBlock.CHEST_TYPE)
-            if (chestType != ChestType.SINGLE) {
-                val facing = blockState.get(ChestBlock.FACING)
-                val otherOffset = if (chestType == ChestType.RIGHT) facing.rotateYClockwise() else facing.rotateYCounterclockwise()
-                val otherPos = detail.pos?.offset(otherOffset)
-                if (otherPos != null) {
-                    val otherData = feature.getChestContents(otherPos)
-                    if (otherData != null && otherData.items.size == 27) {
-                        val leftPos = if (chestType == ChestType.RIGHT) detail.pos else otherPos
-                        val combinedItems =
-                            if (detail.pos == leftPos) {
-                                effectiveData.items + otherData.items
-                            } else {
-                                otherData.items + effectiveData.items
-                            }
-                        effectiveData = InventoryData(effectiveData.type, combinedItems)
-                    }
-                }
-            }
-        }
+
+        // 修正: 汎用的なデータ取得メソッドを使用
+        val effectiveData = getEffectiveInventoryData(client, detail, feature)
 
         if (effectiveData != null && effectiveData.items.isNotEmpty()) {
+            // InventoryRenderer.drawに結合済みデータ（またはそのままのデータ）を渡す
             contentY = InventoryRenderer.draw(graphics2d, client, effectiveData, startX, contentY, uiWidth, isTargetInReach, feature)
         }
 
+        // --- 3. 座標情報の描画 ---
         val infoPos = detail.pos
-        val posText = if (infoPos != null) "Pos: x=${infoPos.x}, y=${infoPos.y}, z=${infoPos.z}" else "Pos: Unknown"
+        val posText = "Pos: x=${infoPos.x}, y=${infoPos.y}, z=${infoPos.z}"
         graphics2d.drawText(posText, iconX, contentY, 0xFFFFFFFF.toInt(), true)
     }
 }

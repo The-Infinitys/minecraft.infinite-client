@@ -42,6 +42,7 @@ import java.nio.file.Path
 import kotlin.math.max
 import kotlin.math.sqrt
 
+// InventoryData, InventoryType, FurnaceData, BrewingDataの定義は変更なし
 data class InventoryData(
     val type: InventoryType,
     val items: List<ItemStack>,
@@ -219,37 +220,38 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                             if (getSetting("InnerChest")?.value == true) {
                                 if (client.currentScreen == null) {
                                     // Set expected screen type based on block entity
-                                    when (blockEntity) {
-                                        is ChestBlockEntity -> {
-                                            val chestType = blockState.get(ChestBlock.CHEST_TYPE)
-                                            expectedScreenType =
-                                                if (chestType == ChestType.SINGLE) {
+                                    expectedScreenType =
+                                        when (blockEntity) {
+                                            is ChestBlockEntity -> {
+                                                val chestType = blockState.get(ChestBlock.CHEST_TYPE)
+                                                if (chestType ==
+                                                    ChestType.SINGLE
+                                                ) {
                                                     ScreenHandlerType.GENERIC_9X3
                                                 } else {
                                                     ScreenHandlerType.GENERIC_9X6
                                                 }
+                                            }
+
+                                            is BarrelBlockEntity -> ScreenHandlerType.GENERIC_9X3
+                                            is ShulkerBoxBlockEntity -> ScreenHandlerType.SHULKER_BOX
+                                            is EnderChestBlockEntity -> ScreenHandlerType.GENERIC_9X3
+                                            is HopperBlockEntity -> ScreenHandlerType.HOPPER
+                                            is FurnaceBlockEntity -> ScreenHandlerType.FURNACE
+                                            is SmokerBlockEntity -> ScreenHandlerType.SMOKER
+                                            is BlastFurnaceBlockEntity -> ScreenHandlerType.BLAST_FURNACE
+                                            is BrewingStandBlockEntity -> ScreenHandlerType.BREWING_STAND
+                                            else -> null // Should not happen with the check above, but for safety
                                         }
 
-                                        is BarrelBlockEntity -> expectedScreenType = ScreenHandlerType.GENERIC_9X3
-                                        is ShulkerBoxBlockEntity -> expectedScreenType = ScreenHandlerType.SHULKER_BOX
-                                        is EnderChestBlockEntity -> expectedScreenType = ScreenHandlerType.GENERIC_9X3
-                                        is HopperBlockEntity -> expectedScreenType = ScreenHandlerType.HOPPER
-                                        is FurnaceBlockEntity -> expectedScreenType = ScreenHandlerType.FURNACE
-                                        is SmokerBlockEntity -> expectedScreenType = ScreenHandlerType.SMOKER
-                                        is BlastFurnaceBlockEntity ->
-                                            expectedScreenType =
-                                                ScreenHandlerType.BLAST_FURNACE
-
-                                        is BrewingStandBlockEntity ->
-                                            expectedScreenType =
-                                                ScreenHandlerType.BREWING_STAND
+                                    if (expectedScreenType != null) {
+                                        clientCommonNetworkHandler.sendPacket(
+                                            PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, blockHitResultCasted, 0),
+                                        )
+                                        scanTargetBlockEntity = blockEntity
+                                        shouldCancelScanScreen = true
+                                        scanTimer = 20
                                     }
-                                    clientCommonNetworkHandler.sendPacket(
-                                        PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, blockHitResultCasted, 0),
-                                    )
-                                    scanTargetBlockEntity = blockEntity
-                                    shouldCancelScanScreen = true
-                                    scanTimer = 20
                                 }
                             }
                         } else {
@@ -268,6 +270,12 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
         }
     }
 
+    /**
+     * 修正点:
+     * - ChestBlockEntity以外でも、scannedInventoryDataにデータを格納し、
+     * - scanTargetBlockEntityをnullにリセットし、
+     * - 画面を閉じるパケットを送信するように共通化しました。
+     */
     fun handleChestContents(
         syncId: Int,
         items: MutableList<ItemStack>,
@@ -275,21 +283,48 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
         if (scanTargetBlockEntity != null) {
             shouldCancelScanScreen = false
             val entity = scanTargetBlockEntity as BlockEntity
-            val line = 9
-            val itemStacks = items.dropLast(line * 4)
-            val inventoryType =
-                when (entity) {
-                    is FurnaceBlockEntity, is SmokerBlockEntity, is BlastFurnaceBlockEntity -> InventoryType.FURNACE
-                    is HopperBlockEntity -> InventoryType.HOPPER
-                    is ChestBlockEntity, is ShulkerBoxBlockEntity, is BarrelBlockEntity -> InventoryType.CHEST
-                    is BrewingStandBlockEntity -> InventoryType.BREWING
-                    else -> InventoryType.GENERIC
-                }
             val dimension = getDimensionKey()
+
+            val inventoryType: InventoryType
+            val containerSize: Int
+
+            when (entity) {
+                is FurnaceBlockEntity, is SmokerBlockEntity, is BlastFurnaceBlockEntity -> {
+                    inventoryType = InventoryType.FURNACE
+                    containerSize = 3 // 燃料、材料、出力
+                }
+
+                is HopperBlockEntity -> {
+                    inventoryType = InventoryType.HOPPER
+                    containerSize = 5
+                }
+
+                is BrewingStandBlockEntity -> {
+                    inventoryType = InventoryType.BREWING
+                    containerSize = 5 // 3ポーション、1材料、1燃料
+                }
+
+                is ChestBlockEntity, is ShulkerBoxBlockEntity, is BarrelBlockEntity, is EnderChestBlockEntity -> {
+                    inventoryType = InventoryType.CHEST
+                    // GENERIC_9X3: 27スロット, GENERIC_9X6: 54スロット, SHULKER_BOX: 27スロット
+                    // items.sizeはコンテナ + プレイヤーインベントリ (36) なので、コンテナサイズは items.size - 36
+                    containerSize = items.size - 36
+                }
+
+                else -> {
+                    inventoryType = InventoryType.GENERIC
+                    containerSize = 0 // 未知のコンテナはスキップ
+                }
+            }
+
+            // プレイヤーインベントリを除いたコンテナの中身のみを取得
+            val containerItems = items.take(containerSize)
+
             if (!scannedInventoryData.containsKey(dimension)) {
                 scannedInventoryData[dimension] = mutableMapOf()
             }
 
+            // チェストの結合処理
             if (entity is ChestBlockEntity) {
                 val world = MinecraftClient.getInstance().world ?: return
                 val blockState = world.getBlockState(entity.pos)
@@ -301,25 +336,38 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                             if (chestType == ChestType.RIGHT) facing.rotateYClockwise() else facing.rotateYCounterclockwise()
                         val otherPos = entity.pos.offset(otherOffset)
                         val otherState = world.getBlockState(otherPos)
+
+                        // ダブルチェストの場合、2つのBlockPosに分割して保存
                         if (otherState.block == Blocks.CHEST && otherState.get(ChestBlock.CHEST_TYPE) != ChestType.SINGLE) {
+                            val singleChestSize = 27
+                            val firstHalf = containerItems.take(singleChestSize)
+                            val secondHalf = containerItems.drop(singleChestSize)
+
                             val leftPos = if (chestType == ChestType.RIGHT) entity.pos else otherPos
                             val rightPos = if (chestType == ChestType.LEFT) entity.pos else otherPos
-                            val firstHalf = itemStacks.take(27)
-                            val secondHalf = itemStacks.drop(27)
+
                             scannedInventoryData[dimension]!![leftPos] = InventoryData(inventoryType, firstHalf)
                             scannedInventoryData[dimension]!![rightPos] = InventoryData(inventoryType, secondHalf)
                         } else {
-                            scannedInventoryData[dimension]!![entity.pos] = InventoryData(inventoryType, itemStacks)
+                            // シングルチェストとして保存
+                            scannedInventoryData[dimension]!![entity.pos] = InventoryData(inventoryType, containerItems)
                         }
                     } else {
-                        scannedInventoryData[dimension]!![entity.pos] = InventoryData(inventoryType, itemStacks)
+                        // シングルチェストとして保存
+                        scannedInventoryData[dimension]!![entity.pos] = InventoryData(inventoryType, containerItems)
                     }
                 } else {
-                    scannedInventoryData[dimension]!![entity.pos] = InventoryData(inventoryType, itemStacks)
+                    // その他のチェストとして保存 (例: Trapped Chest)
+                    scannedInventoryData[dimension]!![entity.pos] = InventoryData(inventoryType, containerItems)
                 }
-                scanTargetBlockEntity = null
-                MinecraftClient.getInstance().networkHandler?.sendPacket(CloseHandledScreenC2SPacket(syncId))
+            } else if (containerSize > 0) {
+                // チェスト以外のコンテナとして保存
+                scannedInventoryData[dimension]!![entity.pos] = InventoryData(inventoryType, containerItems)
             }
+
+            // 全てのコンテナのスキャン終了処理
+            scanTargetBlockEntity = null
+            MinecraftClient.getInstance().networkHandler?.sendPacket(CloseHandledScreenC2SPacket(syncId))
         }
     }
 
@@ -354,13 +402,6 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
         val chunkZ = pos.z shr 4
         return "${chunkX}_$chunkZ"
     }
-
-    @Serializable
-    data class SerializableBlockPos(
-        val x: Int,
-        val y: Int,
-        val z: Int,
-    )
 
     @Serializable
     data class SerializableItemStack(
@@ -437,8 +478,7 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
     }
 
     override fun render2d(graphics2D: Graphics2D) {
-        val client = MinecraftClient.getInstance() ?: return
-        DetailInfoRenderer.render(graphics2D, client, this)
+        DetailInfoRenderer.render(graphics2D, MinecraftClient.getInstance() ?: return, this)
     }
 
     override fun stop() {
