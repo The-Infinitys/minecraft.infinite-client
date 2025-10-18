@@ -2,6 +2,7 @@ package org.infinite.gui.screen
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -9,6 +10,7 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.ColorHelper
 import org.infinite.Feature
 import org.infinite.gui.widget.FeatureSearchWidget
@@ -22,6 +24,10 @@ class UISection(
     private val screen: Screen,
     featureList: List<Feature>? = null,
 ) {
+    companion object {
+        private val ICON_TEXTURE = Identifier.of("infinite", "textures/icon.png") // Fixed Identifier creation
+    }
+
     private var closeButton: InfiniteButton? = null
     val widgets = mutableListOf<ClickableWidget>()
     private var featureSearchWidget: FeatureSearchWidget? = null
@@ -74,6 +80,31 @@ class UISection(
         val backgroundColor = ColorHelper.getArgb(alpha, 0, 0, 0)
         context.drawBorder(x, y, width, height, borderColor)
         context.fill(x, y, x + width, y + height, backgroundColor)
+
+        // Draw the icon in the center of the panel
+        val iconSize = 64
+        val iconX = x + (width - iconSize) / 2
+        val iconY = y + (height - iconSize) / 2
+
+        // Apply the alpha to the icon
+        val iconColor = ColorHelper.getArgb(alpha, 255, 255, 255) // White color with given alpha
+
+        // Using drawTexture overload with color parameter
+        context.drawTexture(
+            RenderPipelines.GUI_TEXTURED,
+            ICON_TEXTURE,
+            iconX,
+            iconY,
+            0f,
+            0f,
+            iconSize,
+            iconSize,
+            0,
+            0,
+            iconSize,
+            iconSize,
+            iconColor,
+        )
 
         val titleText =
             when (id) {
