@@ -1,6 +1,5 @@
 package org.theinfinitys.infinite.graphics
 
-import drawBorder
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
@@ -11,6 +10,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.math.MathHelper
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
+import org.theinfinitys.utils.rendering.drawBorder
 import kotlin.math.roundToInt
 
 /**

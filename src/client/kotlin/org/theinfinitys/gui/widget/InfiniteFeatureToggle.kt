@@ -1,6 +1,5 @@
 package org.theinfinitys.gui.widget
 
-import drawBorder
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
@@ -11,6 +10,7 @@ import net.minecraft.util.math.ColorHelper
 import org.theinfinitys.ConfigurableFeature
 import org.theinfinitys.Feature
 import org.theinfinitys.InfiniteClient
+import org.theinfinitys.utils.rendering.drawBorder
 
 class InfiniteFeatureToggle(
     x: Int,

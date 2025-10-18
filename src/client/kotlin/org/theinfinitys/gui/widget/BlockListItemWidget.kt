@@ -1,6 +1,5 @@
 package org.theinfinitys.gui.widget
 
-import drawBorder
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.Click
@@ -14,6 +13,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
+import org.theinfinitys.utils.rendering.drawBorder
 
 class BlockListItemWidget(
     x: Int,

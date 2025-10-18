@@ -1,6 +1,5 @@
 package org.theinfinitys.gui.screen
 
-import drawBorder
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.Click
@@ -16,6 +15,7 @@ import org.theinfinitys.gui.widget.FeatureSearchWidget
 import org.theinfinitys.gui.widget.InfiniteButton
 import org.theinfinitys.gui.widget.InfiniteFeatureToggle
 import org.theinfinitys.gui.widget.InfiniteScrollableContainer
+import org.theinfinitys.utils.rendering.drawBorder
 
 class UISection(
     val id: String,

@@ -1,3 +1,5 @@
+package org.theinfinitys.utils.rendering
+
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.util.math.ColorHelper
 

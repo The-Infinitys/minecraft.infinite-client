@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
 import org.theinfinitys.infinite.graphics.Graphics2D
+import org.theinfinitys.utils.rendering.ColorUtils
 
 object InventoryRenderer {
     private const val PADDING = 5
