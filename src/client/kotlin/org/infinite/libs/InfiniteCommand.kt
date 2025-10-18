@@ -11,7 +11,6 @@ import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.command.CommandSource
 import net.minecraft.util.Formatting
 import org.infinite.ConfigManager
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient.error
 import org.infinite.InfiniteClient.info
 import org.infinite.InfiniteClient.log
@@ -105,9 +104,7 @@ object InfiniteCommand {
         )
         featureCategories.forEach { category ->
             category.features.forEach { feature ->
-                (feature.instance as? ConfigurableFeature)?.let { configurableFeature ->
-                    configurableFeature.registerCommands(dispatcher)
-                }
+                feature.instance.registerCommands(dispatcher)
             }
         }
     }
@@ -120,19 +117,19 @@ object InfiniteCommand {
         val categoryName =
             try {
                 StringArgumentType.getString(context, "category")
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 null
             }
         val featureName =
             try {
                 StringArgumentType.getString(context, "name")
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 null
             }
         val settingKey =
             try {
                 StringArgumentType.getString(context, "key")
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 null
             }
 
@@ -141,7 +138,7 @@ object InfiniteCommand {
                 // Reset all settings
                 featureCategories.forEach { category ->
                     category.features.forEach { feature ->
-                        (feature.instance as? ConfigurableFeature)?.let { configurableFeature ->
+                        feature.instance.let { configurableFeature ->
                             configurableFeature.reset() // Reset the feature's enabled state
                             configurableFeature.settings.forEach { setting ->
                                 setting.reset()
@@ -160,7 +157,7 @@ object InfiniteCommand {
                     return 0
                 }
                 category.features.forEach { feature ->
-                    (feature.instance as? ConfigurableFeature)?.let { configurableFeature ->
+                    feature.instance.let { configurableFeature ->
                         configurableFeature.reset() // Reset the feature's enabled state
                         configurableFeature.settings.forEach { setting ->
                             setting.reset()
@@ -280,7 +277,7 @@ object InfiniteCommand {
                 val category = featureCategories.firstOrNull { it.name.equals(categoryName, ignoreCase = true) }
                 if (category != null) {
                     CommandSource.suggestMatching(
-                        category.features.map { it.nameKey },
+                        category.features.map { it.name },
                         builder,
                     )
                 }

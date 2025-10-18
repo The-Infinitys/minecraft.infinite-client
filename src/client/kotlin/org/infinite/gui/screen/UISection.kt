@@ -44,7 +44,7 @@ class UISection(
     private fun setupFeatureWidgets(features: List<Feature>) {
         val featureWidgets =
             features.map { feature ->
-                feature.nameKey
+                feature.name
                 InfiniteFeatureToggle(0, 0, 280, 20, feature, false) {
                     MinecraftClient.getInstance().setScreen(FeatureSettingsScreen(screen, feature))
                 }

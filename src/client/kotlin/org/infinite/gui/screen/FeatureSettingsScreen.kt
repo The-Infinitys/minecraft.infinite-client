@@ -7,7 +7,6 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
-import org.infinite.ConfigurableFeature
 import org.infinite.Feature
 import org.infinite.gui.widget.InfiniteBlockListField
 import org.infinite.gui.widget.InfiniteButton
@@ -24,7 +23,7 @@ import org.infinite.settings.FeatureSetting
 class FeatureSettingsScreen(
     private val parent: Screen,
     private val feature: Feature,
-) : Screen(Text.translatable(feature.nameKey)) {
+) : Screen(Text.literal(feature.name)) {
     private var savedPageIndex: Int = 0
 
     // 遅延初期化を維持
@@ -45,7 +44,7 @@ class FeatureSettingsScreen(
         val padding = 5
 
         // (ウィジェットの生成ロジックは変更なし)
-        (feature.instance as? ConfigurableFeature)?.settings?.forEach { setting ->
+        feature.instance.settings.forEach { setting ->
             // ... (ウィジェット生成ロジックは省略) ...
             when (setting) {
                 is FeatureSetting.BooleanSetting -> {
@@ -239,7 +238,7 @@ class FeatureSettingsScreen(
 
         context.drawCenteredTextWithShadow(
             textRenderer,
-            Text.translatable(feature.nameKey),
+            Text.literal(feature.name),
             width / 2,
             20,
             0xFFFFFFFF.toInt(),

@@ -36,22 +36,20 @@ object InfiniteKeyBind {
 
         for (category in featureCategories) {
             for (feature in category.features) {
-                if (feature.instance is ConfigurableFeature) {
-                    val configurableFeature = feature.instance
-                    // 修正 1: plus()を+=に変更して、リストに要素を追加します
-                    toggleKeyBindings +=
-                        ToggleKeyBindingHandler(
-                            KeyBindingHelper.registerKeyBinding(
-                                KeyBinding(
-                                    "key.infinite-client.toggle.${category.name}.${feature.nameKey}",
-                                    InputUtil.Type.KEYSYM,
-                                    configurableFeature.toggleKeyBind.value,
-                                    keyBindingCategory,
-                                ),
+                val configurableFeature = feature.instance
+                // 修正 1: plus()を+=に変更して、リストに要素を追加します
+                toggleKeyBindings +=
+                    ToggleKeyBindingHandler(
+                        KeyBindingHelper.registerKeyBinding(
+                            KeyBinding(
+                                "key.infinite-client.toggle.${category.name}.${feature.name}",
+                                InputUtil.Type.KEYSYM,
+                                configurableFeature.toggleKeyBind.value,
+                                keyBindingCategory,
                             ),
-                            configurableFeature,
-                        )
-                }
+                        ),
+                        configurableFeature,
+                    )
             }
         }
 
@@ -76,7 +74,7 @@ object InfiniteKeyBind {
             // Tick all enabled features
             for (category in featureCategories) {
                 for (feature in category.features) {
-                    if (feature.instance is ConfigurableFeature && feature.instance.isEnabled()) {
+                    if (feature.instance.isEnabled()) {
                         feature.instance.tick()
                     }
                 }

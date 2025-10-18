@@ -65,8 +65,8 @@ object ConfigManager {
             featureCategories
                 .flatMap { category ->
                     category.features.map { feature ->
-                        val configurableFeature = feature.instance as? ConfigurableFeature
-                        if (configurableFeature != null) {
+                        val configurableFeature = feature.instance
+                        run {
                             val settingMap: Map<String, JsonElement> =
                                 configurableFeature.settings.associate { setting ->
                                     (
@@ -84,19 +84,19 @@ object ConfigManager {
                                                 is FeatureSetting.EntityIDSetting -> JsonPrimitive(setting.value)
                                                 is FeatureSetting.BlockListSetting ->
                                                     JsonArray(setting.value.map { JsonPrimitive(it) })
+
                                                 is FeatureSetting.EntityListSetting ->
                                                     JsonArray(setting.value.map { JsonPrimitive(it) })
+
                                                 is FeatureSetting.PlayerListSetting ->
                                                     JsonArray(setting.value.map { JsonPrimitive(it) })
                                             }
                                     )
                                 }
-                            FeatureConfig(feature.nameKey, configurableFeature.isEnabled(), settingMap)
-                        } else {
-                            null
+                            FeatureConfig(feature.name, configurableFeature.isEnabled(), settingMap)
                         }
                     }
-                }.filterNotNull()
+                }
 
         val appConfig = AppConfig(featureConfigs)
         val jsonString = json.encodeToString(AppConfig.serializer(), appConfig)
@@ -120,68 +120,66 @@ object ConfigManager {
             val appConfig = json.decodeFromString(AppConfig.serializer(), jsonString)
 
             appConfig.features.forEach { featureConfig ->
-                featureCategories.flatMap { it.features }.find { it.nameKey == featureConfig.nameKey }?.let { feature ->
-                    val configurableFeature = feature.instance as? ConfigurableFeature
-                    if (configurableFeature != null) {
-                        if (featureConfig.enabled) {
-                            configurableFeature.enable()
-                        } else {
-                            configurableFeature.disable()
-                        }
-                        featureConfig.settings.forEach { (settingName, jsonElement) ->
-                            configurableFeature.settings.find { it.name == settingName }?.let { setting ->
-                                when (setting) {
-                                    is FeatureSetting.BooleanSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement(jsonElement)
+                featureCategories.flatMap { it.features }.find { it.name == featureConfig.nameKey }?.let { feature ->
+                    val configurableFeature = feature.instance
+                    if (featureConfig.enabled) {
+                        configurableFeature.enable()
+                    } else {
+                        configurableFeature.disable()
+                    }
+                    featureConfig.settings.forEach { (settingName, jsonElement) ->
+                        configurableFeature.settings.find { it.name == settingName }?.let { setting ->
+                            when (setting) {
+                                is FeatureSetting.BooleanSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement(jsonElement)
 
-                                    is FeatureSetting.IntSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement(jsonElement)
+                                is FeatureSetting.IntSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement(jsonElement)
 
-                                    is FeatureSetting.FloatSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement(jsonElement)
+                                is FeatureSetting.FloatSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement(jsonElement)
 
-                                    is FeatureSetting.StringSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement(jsonElement)
+                                is FeatureSetting.StringSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement(jsonElement)
 
-                                    is FeatureSetting.StringListSetting ->
-                                        setting.value =
-                                            json
-                                                .decodeFromJsonElement<List<String>>(jsonElement)
-                                                .toMutableList() // **Changed to MutableList**
+                                is FeatureSetting.StringListSetting ->
+                                    setting.value =
+                                        json
+                                            .decodeFromJsonElement<List<String>>(jsonElement)
+                                            .toMutableList() // **Changed to MutableList**
 
-                                    // 🚀 **追加されたBlockIDSettingとEntityIDSettingの処理**
-                                    is FeatureSetting.BlockIDSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement(jsonElement)
+                                // 🚀 **追加されたBlockIDSettingとEntityIDSettingの処理**
+                                is FeatureSetting.BlockIDSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement(jsonElement)
 
-                                    is FeatureSetting.EntityIDSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement(jsonElement)
+                                is FeatureSetting.EntityIDSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement(jsonElement)
 
-                                    // 🚀 **追加されたBlockListSettingの処理**
-                                    is FeatureSetting.BlockListSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
-                                    is FeatureSetting.EntityListSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
-                                    is FeatureSetting.PlayerListSetting ->
-                                        setting.value =
-                                            json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                // 🚀 **追加されたBlockListSettingの処理**
+                                is FeatureSetting.BlockListSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                is FeatureSetting.EntityListSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                is FeatureSetting.PlayerListSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
 
-                                    is FeatureSetting.EnumSetting<*> -> {
-                                        val enumName = json.decodeFromJsonElement<String>(jsonElement)
-                                        val enumClass = setting.options.first().javaClass
-                                        val enumEntry =
-                                            enumClass.enumConstants.firstOrNull { (it as Enum<*>).name == enumName }
-                                        if (enumEntry != null) {
-                                            @Suppress("UNCHECKED_CAST")
-                                            (setting as FeatureSetting.EnumSetting<Enum<*>>).value = enumEntry
-                                        }
+                                is FeatureSetting.EnumSetting<*> -> {
+                                    val enumName = json.decodeFromJsonElement<String>(jsonElement)
+                                    val enumClass = setting.options.first().javaClass
+                                    val enumEntry =
+                                        enumClass.enumConstants.firstOrNull { (it as Enum<*>).name == enumName }
+                                    if (enumEntry != null) {
+                                        @Suppress("UNCHECKED_CAST")
+                                        (setting as FeatureSetting.EnumSetting<Enum<*>>).value = enumEntry
                                     }
                                 }
                             }

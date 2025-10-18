@@ -185,7 +185,7 @@ object InfiniteClient : ClientModInitializer {
         featureCategories
             .find { it.name.equals(category, ignoreCase = true) }
             ?.features
-            ?.find { it.nameKey.equals(name, ignoreCase = true) }
+            ?.find { it.name.equals(name, ignoreCase = true) }
             ?.instance as? ConfigurableFeature
 
     fun <T : ConfigurableFeature> isFeatureEnabled(featureClass: Class<T>): Boolean {
