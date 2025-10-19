@@ -69,7 +69,7 @@ class InfiniteFeatureToggle(
                 configurableFeature.settings.forEach { setting ->
                     setting.reset() // Reset individual settings
                 }
-                InfiniteClient.log("${feature.name} の設定をリセットしました。")
+                InfiniteClient.log(Text.translatable("command.infinite.config.reset.feature", feature.name).string)
             }
 
         // Add listener to update toggle button when feature.enabled changes
