@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.command.CommandSource
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.infinite.ConfigManager
 import org.infinite.InfiniteClient // Add this import
@@ -132,9 +133,9 @@ object InfiniteCommand {
 
     private fun getTheme(context: CommandContext<FabricClientCommandSource>): Int {
         val currentThemeName = InfiniteClient.currentTheme
-        info("現在のテーマ: $currentThemeName")
+        info(Text.translatable("command.infinite.theme.current", currentThemeName).string)
         val availableThemes = InfiniteClient.themes.joinToString(", ") { it.name }
-        info("利用可能なテーマ: $availableThemes")
+        info(Text.translatable("command.infinite.theme.available", availableThemes).string)
         return 1
     }
 
@@ -150,12 +151,12 @@ object InfiniteCommand {
         val themeName = StringArgumentType.getString(context, "name")
         val theme = InfiniteClient.themes.find { it.name.equals(themeName, ignoreCase = true) }
         if (theme == null) {
-            error("テーマ '$themeName' が見つかりません。")
+            error(Text.translatable("command.infinite.theme.notfound", themeName).string)
             return 0
         }
         InfiniteClient.currentTheme = theme.name
         ConfigManager.saveConfig() // Save the updated theme
-        info("テーマを '${theme.name}' に変更しました。")
+        info(Text.translatable("command.infinite.theme.changed", theme.name).string)
         return 1
     }
 
@@ -196,14 +197,14 @@ object InfiniteCommand {
                         }
                     }
                 }
-                info("すべての設定をリセットしました。")
+                info(Text.translatable("command.infinite.config.reset.all").string)
             }
 
             featureName == null -> {
                 // Reset all settings in a category
                 val category = featureCategories.firstOrNull { it.name.equals(categoryName, ignoreCase = true) }
                 if (category == null) {
-                    error("カテゴリが見つかりません: $categoryName")
+                    error(Text.translatable("command.infinite.category.notfound", categoryName).string)
                     return 0
                 }
                 category.features.forEach { feature ->
@@ -214,37 +215,37 @@ object InfiniteCommand {
                         }
                     }
                 }
-                info("カテゴリ '$categoryName' のすべての設定をリセットしました。")
+                info(Text.translatable("command.infinite.config.reset.category", categoryName).string)
             }
 
             settingKey == null -> {
                 // Reset all settings in a feature
                 val feature = searchFeature(categoryName, featureName)
                 if (feature == null) {
-                    error("フィーチャーが見つかりません: $categoryName / $featureName")
+                    error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
                     return 0
                 }
                 feature.reset() // Reset the feature's enabled state
                 feature.settings.forEach { setting ->
                     setting.reset()
                 }
-                info("フィーチャー '$featureName' のすべての設定をリセットしました。")
+                info(Text.translatable("command.infinite.config.reset.feature", featureName).string)
             }
 
             else -> {
                 // Reset a specific setting
                 val feature = searchFeature(categoryName, featureName)
                 if (feature == null) {
-                    error("フィーチャーが見つかりません: $categoryName / $featureName")
+                    error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
                     return 0
                 }
                 val setting = feature.getSetting(settingKey)
                 if (setting == null) {
-                    error("$featureName に設定キー '$settingKey' はありません。")
+                    error(Text.translatable("command.infinite.setting.notfound", featureName, settingKey).string)
                     return 0
                 }
                 setting.reset()
-                info("フィーチャー '$featureName' の設定 '$settingKey' をリセットしました。")
+                info(Text.translatable("command.infinite.config.reset.setting", featureName, settingKey).string)
             }
         }
         return 1
@@ -259,15 +260,12 @@ object InfiniteCommand {
 
     private fun saveConfig(): Int {
         ConfigManager.saveConfig()
-        info("設定を保存しました。")
+        log(Text.translatable("command.infinite.config.save").string)
         return 1
     }
 
     private fun loadConfig(): Int {
-        // 注: ConfigManager.loadConfig() が存在すると仮定します。
-        //     もし存在しない場合は、ConfigManager.loadConfig() を実装してください。
-        // ConfigManager.loadConfig()
-        info("設定をロードしました。")
+        log(Text.translatable("command.infinite.config.load").string)
         return 1
     }
 
@@ -276,20 +274,27 @@ object InfiniteCommand {
         val featureName = StringArgumentType.getString(context, "name")
         val feature = searchFeature(categoryName, featureName)
         if (feature == null) {
-            error("フィーチャーが見つかりません: $categoryName / $featureName")
+            error("${Text.translatable("command.infinite.nofeature")}: $categoryName / $featureName")
             return 0
         }
-
-        // 現在の状態を反転させる
         val enable = !feature.isEnabled()
-        val action = if (enable) "有効化" else "無効化"
+        // 現在の状態を反転させる
+        val action =
+            if (enable) {
+                Text
+                    .translatable(
+                        "command.infinite.action.enabled",
+                    ).string
+            } else {
+                Text.translatable("command.infinite.action.disabled").string
+            }
 
         if (enable) {
             feature.enable()
         } else {
             feature.disable()
         }
-        info("$featureName を $action しました。")
+        info(Text.translatable("command.infinite.feature.toggled", featureName, action).string)
         return 1
     }
 
@@ -363,14 +368,22 @@ object InfiniteCommand {
     ): Int {
         val categoryName = StringArgumentType.getString(context, "category")
         val featureName = StringArgumentType.getString(context, "name")
-        val action = if (enable) "有効化" else "無効化"
+        val action =
+            if (enable) {
+                Text
+                    .translatable(
+                        "command.infinite.action.enabled",
+                    ).string
+            } else {
+                Text.translatable("command.infinite.action.disabled").string
+            }
         val feature = searchFeature(categoryName, featureName)
         if (feature == null) {
-            error("フィーチャーが見つかりません: $categoryName / $featureName")
+            error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
             return 0
         }
         if (feature.isEnabled() == enable) {
-            warn("$featureName は既に${action}されています。")
+            warn(Text.translatable("command.infinite.feature.already", featureName, action).string)
             return 0
         }
         if (enable) {
@@ -378,7 +391,7 @@ object InfiniteCommand {
         } else {
             feature.disable()
         }
-        info("$featureName を $action しました。")
+        info(Text.translatable("command.infinite.feature.toggled", featureName, action).string)
         return 1
     }
 
@@ -389,12 +402,12 @@ object InfiniteCommand {
         val rawValue = StringArgumentType.getString(context, "value")
         val feature = searchFeature(categoryName, featureName)
         if (feature == null) {
-            error("フィーチャーが見つかりません: $categoryName / $featureName")
+            error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
             return 0
         }
         val setting = feature.getSetting(settingKey)
         if (setting == null) {
-            error("$featureName に設定キー '$settingKey' はありません。")
+            error(Text.translatable("command.infinite.setting.notfound", featureName, settingKey).string)
             return 0
         }
         try {
@@ -402,22 +415,28 @@ object InfiniteCommand {
                 when (setting.value) {
                     is Boolean ->
                         rawValue.toBooleanStrictOrNull()
-                            ?: throw IllegalArgumentException("Boolean型ではありません。(trueまたはfalseを使用してください。)")
+                            ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.boolean").string)
 
-                    is Int -> rawValue.toIntOrNull() ?: throw IllegalArgumentException("Int型ではありません。")
-                    is Float -> rawValue.toFloatOrNull() ?: throw IllegalArgumentException("Float型ではありません。")
+                    is Int ->
+                        rawValue.toIntOrNull()
+                            ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.int").string)
+                    is Float ->
+                        rawValue.toFloatOrNull()
+                            ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.float").string)
                     is String -> rawValue
                     is List<*> -> rawValue.split(",").map { it.trim() }.filter { it.isNotBlank() }
-                    else -> throw IllegalStateException("サポートされていない設定型です: ${setting.value::class.simpleName}")
+                    else -> throw IllegalStateException(
+                        Text.translatable("command.infinite.setting.type.unsupported", setting.value::class.simpleName).string,
+                    )
                 }
 
             @Suppress("UNCHECKED_CAST")
             val mutableSetting = setting as FeatureSetting<Any>
             mutableSetting.value = processedValue
-            info("$featureName の設定 '$settingKey' を $processedValue に変更しました。")
+            info(Text.translatable("command.infinite.setting.changed", featureName, settingKey, processedValue).string)
             return 1
         } catch (e: Exception) {
-            error("設定値の解析エラー: ${e.message}")
+            error(Text.translatable("command.infinite.setting.parseerror", e.message).string)
             return 0
         }
     }
@@ -433,13 +452,13 @@ object InfiniteCommand {
 
         val feature = searchFeature(categoryName, featureName)
         if (feature == null) {
-            error("フィーチャーが見つかりません: $categoryName / $featureName")
+            error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
             return 0
         }
 
         val setting = feature.getSetting(settingKey)
         if (setting == null) {
-            error("$featureName に設定キー '$settingKey' はありません。")
+            error(Text.translatable("command.infinite.setting.notfound", featureName, settingKey).string)
             return 0
         }
 
@@ -450,22 +469,22 @@ object InfiniteCommand {
 
             if (isAdd) {
                 if (currentList.contains(value)) {
-                    warn("'$value' は既に '$settingKey' に追加されています。")
+                    warn(Text.translatable("command.infinite.setting.list.alreadyadded", value, settingKey).string)
                     return 0
                 }
                 currentList.add(value)
-                info("'$value' を '$settingKey' に追加しました。")
+                info(Text.translatable("command.infinite.setting.list.added", value, settingKey).string)
             } else {
                 if (!currentList.contains(value)) {
-                    warn("'$value' は '$settingKey' に存在しません。")
+                    warn(Text.translatable("command.infinite.setting.list.notexist", value, settingKey).string)
                     return 0
                 }
                 currentList.remove(value)
-                info("'$value' を '$settingKey' から削除しました。")
+                info(Text.translatable("command.infinite.setting.list.removed", value, settingKey).string)
             }
             return 1
         } else {
-            error("設定 '$settingKey' はリスト型ではありません。add/del コマンドはリスト型設定にのみ使用できます。")
+            error(Text.translatable("command.infinite.setting.list.notlist", settingKey).string)
             return 0
         }
     }
@@ -475,20 +494,26 @@ object InfiniteCommand {
         val featureName = StringArgumentType.getString(context, "name")
         val feature = searchFeature(categoryName, featureName)
         if (feature == null) {
-            error("フィーチャーが見つかりません: $categoryName / $featureName")
+            error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
             return 0
         }
-        val status = if (feature.isEnabled()) "${Formatting.GREEN}有効" else "${Formatting.RED}無効"
-        info("フィーチャー $featureName の状態: $status")
+        val status =
+            if (feature.isEnabled()) {
+                "${Formatting.GREEN}" + Text.translatable("command.infinite.action.enabled").string
+            } else {
+                "${Formatting.RED}" +
+                    Text.translatable("command.infinite.action.disabled").string
+            }
+        info(Text.translatable("command.infinite.feature.status", featureName, status).string)
         val settingCount = feature.settings.size
         if (settingCount > 0) {
-            log("--- 設定一覧 ($settingCount 件) ---")
+            log(Text.translatable("command.infinite.setting.list.header", settingCount).string)
             feature.settings.forEach { setting ->
                 val valueStr = setting.value.toString()
                 val typeStr = setting.value::class.simpleName
                 log(" - ${setting.name}: $valueStr ($typeStr)")
             }
-            log("--------------------")
+            log(Text.translatable("command.infinite.setting.list.footer").string)
         }
         return 1
     }
