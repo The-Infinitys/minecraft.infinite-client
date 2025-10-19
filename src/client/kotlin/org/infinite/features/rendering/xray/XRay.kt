@@ -9,6 +9,8 @@ import net.minecraft.util.math.Direction
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
 import org.infinite.settings.FeatureSetting
+import org.infinite.settings.Property
+import org.lwjgl.glfw.GLFW
 
 enum class XRayMode {
     Normal,
@@ -16,6 +18,8 @@ enum class XRayMode {
 }
 
 class XRay : ConfigurableFeature(initialEnabled = false) {
+    override val toggleKeyBind: Property<Int>
+        get() = Property(GLFW.GLFW_KEY_X)
     override val level: FeatureLevel = FeatureLevel.CHEAT
     override val settings: List<FeatureSetting<*>> =
         listOf(

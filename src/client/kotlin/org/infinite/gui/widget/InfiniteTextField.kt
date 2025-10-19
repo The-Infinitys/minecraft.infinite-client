@@ -11,6 +11,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
+import org.infinite.utils.rendering.drawBorder
 import org.lwjgl.glfw.GLFW
 import kotlin.math.max
 import kotlin.math.min
@@ -31,6 +32,7 @@ class InfiniteTextField(
     private var suggestionScrollY: Double = 0.0
     private val maxVisibleSuggestions = 5
     private val suggestionItemHeight = textRenderer.fontHeight + 2
+
     // ------------------------------------------
 
     enum class InputType {
@@ -58,13 +60,7 @@ class InfiniteTextField(
             }
             return false
         }
-
-        val result = super.charTyped(input)
-        // 数値/フロートの検証ロジック（簡略化）
-//        if (result && (inputType == InputType.NUMERIC || inputType == InputType.FLOAT)) {
-        // 有効性の詳細なチェックは keyPressed に依存
-//        }
-        return result
+        return super.charTyped(input)
     }
 
     private fun updateSuggestions() {
@@ -173,7 +169,8 @@ class InfiniteTextField(
 
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
     }
-    // ------------------------------------
+
+    override fun drawsBackground(): Boolean = false
 
     // --- 描画ロジック：スクロールとクリッピング ---
     override fun renderWidget(
@@ -182,8 +179,9 @@ class InfiniteTextField(
         mouseY: Int,
         deltaTicks: Float,
     ) {
+        context.fill(x, y, x + width, y + height, InfiniteClient.theme().colors.backgroundColor)
+        context.drawBorder(x, y, width, height, InfiniteClient.theme().colors.primaryColor)
         super.renderWidget(context, mouseX, mouseY, deltaTicks)
-
         if (isFocused && suggestions.isNotEmpty() && (inputType == InputType.BLOCK_ID || inputType == InputType.ENTITY_ID)) {
             val suggestionX = x
             val suggestionY = y + height + 2
@@ -222,7 +220,7 @@ class InfiniteTextField(
                     if (isSelected) {
                         InfiniteClient
                             .theme()
-                            .colors.primaryColor
+                            .colors.secondaryColor
                     } else {
                         InfiniteClient.theme().colors.backgroundColor
                     }
@@ -230,7 +228,7 @@ class InfiniteTextField(
                     if (isSelected) {
                         InfiniteClient
                             .theme()
-                            .colors.primaryColor
+                            .colors.secondaryColor
                     } else {
                         InfiniteClient
                             .theme()

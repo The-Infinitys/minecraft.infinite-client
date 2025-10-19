@@ -64,6 +64,7 @@
   "feature.fighting.lockon.fov.description": "Field of View to limit targeting (degrees).",
   "feature.fighting.lockon.speed.description": "The Rotation Speed",
   "feature.fighting.lockon.method.description": "Rotation Method",
+  "feature.movement.antihunger.description": "Reduce Hunger",
   "feature.fighting.noattack.protectedentities.description": "List of entities not to attack.",
   "feature.fighting.playermanager.friends.description": "List of players to treat as friends.",
   "feature.fighting.playermanager.enemies.description": "List of players to treat as enemies.",

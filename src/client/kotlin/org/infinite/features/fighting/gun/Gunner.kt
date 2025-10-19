@@ -13,6 +13,8 @@ import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.inventory.InventoryManager
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
+import org.infinite.settings.Property
+import org.lwjgl.glfw.GLFW
 
 enum class FireMode {
     SEMI_AUTO,
@@ -35,6 +37,7 @@ enum class ChangeMode {
 }
 
 class Gunner : ConfigurableFeature(initialEnabled = false) {
+    override val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_KEY_G)
     private val fireMode: FeatureSetting.EnumSetting<FireMode> =
         FeatureSetting.EnumSetting(
             "FireMode",
@@ -56,7 +59,13 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
             ChangeMode.entries,
         )
     private val additionalInterval: FeatureSetting.IntSetting =
-        FeatureSetting.IntSetting("AdditionalInterval", "feature.fighting.gunner.additionalinterval.description", 3, 0, 10)
+        FeatureSetting.IntSetting(
+            "AdditionalInterval",
+            "feature.fighting.gunner.additionalinterval.description",
+            3,
+            0,
+            10,
+        )
     override val settings: List<FeatureSetting<*>> = listOf(fireMode, fastReload, changeMode, additionalInterval)
     var state: GunnerState = GunnerState.IDLE
     var mode: GunnerMode = GunnerMode.RELOAD

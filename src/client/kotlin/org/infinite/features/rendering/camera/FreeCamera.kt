@@ -8,11 +8,14 @@ import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.freeze.Freeze
 import org.infinite.settings.FeatureSetting
+import org.infinite.settings.Property
+import org.lwjgl.glfw.GLFW
 import kotlin.math.cos
 import kotlin.math.sin
 
 class FreeCamera : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel = FeatureLevel.EXTEND
+    override val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_KEY_U)
     override val depends: List<Class<out ConfigurableFeature>> = listOf(Freeze::class.java)
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(

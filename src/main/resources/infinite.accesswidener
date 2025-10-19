@@ -25,3 +25,6 @@ accessible field net/minecraft/block/entity/AbstractFurnaceBlockEntity propertyD
 
 # --- 新規追加: ExtraSensoryの機能 ---
 accessible field net/minecraft/client/render/block/entity/BlockEntityRenderManager cameraPos Lnet/minecraft/util/math/Vec3d;
+
+# --- Anti Hunger ---
+accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGround Z

@@ -21,7 +21,10 @@
     "features.rendering.detailinfo.BarrelMixin",
     "features.rendering.detailinfo.ChestMixin",
     "features.rendering.detailinfo.ClientPlayNetworkHandlerMixin",
+    "features.rendering.detailinfo.ShulkerBoxMixin",
+    "features.rendering.freecamera.AbstractBlockStateMixin",
     "features.rendering.freecamera.ClientPlayerEntityMixin",
+    "features.rendering.freecamera.ZeroHitBox",
     "features.rendering.hypertag.EntityRendererMixin",
     "features.rendering.hypertag.LivingEntityRendererMixin",
     "features.rendering.portalgui.PortalGuiMixin",
@@ -32,12 +35,12 @@
     "features.rendering.xray.XRayFluidRendererMixin",
     "features.rendering.xray.XRayGammaMixin",
     "infinite.graphics.InGameHudMixin",
-    "infinite.graphics.WorldRendererMixin",
-    "features.rendering.detailinfo.ShulkerBoxMixin",
-    "features.rendering.freecamera.AbstractBlockStateMixin",
-    "features.rendering.freecamera.ZeroHitBox"
+    "infinite.graphics.WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixins": [
+    "features.movement.antihunger.ClientPlayNetworkHandlerMixin"
+  ]
 }

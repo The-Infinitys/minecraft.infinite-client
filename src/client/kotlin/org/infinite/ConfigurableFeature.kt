@@ -19,7 +19,7 @@ abstract class ConfigurableFeature(
 ) {
     internal var enabled: Property<Boolean> = Property(initialEnabled)
     private val disabled: Property<Boolean> = Property(!initialEnabled)
-    val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_DONT_CARE)
+    open val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_DONT_CARE)
     open val available = true
     open val level: FeatureLevel = FeatureLevel.EXTEND
 
