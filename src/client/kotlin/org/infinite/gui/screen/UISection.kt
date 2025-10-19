@@ -10,9 +10,9 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.ColorHelper
 import org.infinite.Feature
+import org.infinite.InfiniteClient
 import org.infinite.gui.widget.FeatureSearchWidget
 import org.infinite.gui.widget.InfiniteButton
 import org.infinite.gui.widget.InfiniteFeatureToggle
@@ -24,10 +24,6 @@ class UISection(
     private val screen: Screen,
     featureList: List<Feature>? = null,
 ) {
-    companion object {
-        private val ICON_TEXTURE = Identifier.of("infinite", "textures/icon.png") // Fixed Identifier creation
-    }
-
     private var closeButton: InfiniteButton? = null
     val widgets = mutableListOf<ClickableWidget>()
     private var featureSearchWidget: FeatureSearchWidget? = null
@@ -77,70 +73,51 @@ class UISection(
         alpha: Int,
         renderContent: Boolean,
     ) {
-        val backgroundColor =
-            ColorHelper.getArgb(
-                alpha,
-                ColorHelper.getRed(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-                ColorHelper.getGreen(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-                ColorHelper.getBlue(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-            )
-        context.drawBorder(x, y, width, height, borderColor)
-        context.fill(x, y, x + width, y + height, backgroundColor)
-
         // Draw the icon in the center of the panel
-        val iconSize = 64
+        val iconSize = 256
         val iconX = x + (width - iconSize) / 2
         val iconY = y + (height - iconSize) / 2
-
-        // Apply the alpha to the icon
         val iconColor =
             ColorHelper.getArgb(
-                alpha,
-                ColorHelper.getRed(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-                ColorHelper.getGreen(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-                ColorHelper.getBlue(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-            ) // Use theme foreground color with given alpha
-
-        // Using drawTexture overload with color parameter
+                128,
+                ColorHelper.getRed(borderColor),
+                ColorHelper.getGreen(borderColor),
+                ColorHelper.getBlue(borderColor),
+            )
         context.drawTexture(
             RenderPipelines.GUI_TEXTURED,
-            ICON_TEXTURE,
+            InfiniteClient.theme().icon,
             iconX,
             iconY,
             0f,
             0f,
             iconSize,
             iconSize,
-            0,
-            0,
             iconSize,
             iconSize,
             iconColor,
         )
+        val backgroundColor =
+            ColorHelper.getArgb(
+                alpha,
+                ColorHelper.getRed(
+                    InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getGreen(
+                    InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getBlue(
+                    InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+            )
+        context.drawBorder(x, y, width, height, borderColor)
+        context.fill(x, y, x + width, y + height, backgroundColor)
 
         val titleText =
             when (id) {
@@ -268,24 +245,24 @@ class UISection(
 
         val color =
             if (isSelected) {
-                org.infinite.InfiniteClient
+                InfiniteClient
                     .theme()
                     .colors.foregroundColor
             } else {
                 ColorHelper.getArgb(
                     255,
                     ColorHelper.getRed(
-                        org.infinite.InfiniteClient
+                        InfiniteClient
                             .theme()
                             .colors.foregroundColor,
                     ) / 2,
                     ColorHelper.getGreen(
-                        org.infinite.InfiniteClient
+                        InfiniteClient
                             .theme()
                             .colors.foregroundColor,
                     ) / 2,
                     ColorHelper.getBlue(
-                        org.infinite.InfiniteClient
+                        InfiniteClient
                             .theme()
                             .colors.foregroundColor,
                     ) / 2,

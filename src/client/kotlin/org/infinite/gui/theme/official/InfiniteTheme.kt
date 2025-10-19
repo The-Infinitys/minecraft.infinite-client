@@ -1,11 +1,12 @@
 package org.infinite.gui.theme.official
 
+import net.minecraft.util.Identifier
 import org.infinite.gui.theme.Theme
 import org.infinite.gui.theme.ThemeColors
 import org.infinite.utils.rendering.getRainbowColor
 import java.awt.Color as AwtColor
 
-class InfiniteTheme : Theme("infinite", InfiniteColor())
+class InfiniteTheme : Theme("infinite", InfiniteColor(), Identifier.of("infinite", "icon.png"))
 
 class InfiniteColor : ThemeColors() {
     override val backgroundColor: Int

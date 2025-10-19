@@ -1,8 +1,11 @@
 package org.infinite.gui.theme
 
+import net.minecraft.util.Identifier
+
 open class Theme(
     val name: String,
     val colors: ThemeColors,
+    val icon: Identifier,
 )
 
 open class ThemeColors {
