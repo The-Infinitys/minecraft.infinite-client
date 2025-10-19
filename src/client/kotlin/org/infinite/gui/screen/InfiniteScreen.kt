@@ -6,13 +6,13 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
+import org.infinite.InfiniteClient
 import org.infinite.featureCategories
 import org.lwjgl.glfw.GLFW
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
-import java.awt.Color as AwtColor
 
 class InfiniteScreen(
     title: Text,
@@ -142,18 +142,7 @@ class InfiniteScreen(
         for (info in renderedSections) {
             val normalizedZ = ((info.z3d - minZ) / (maxZ - minZ)).coerceIn(0f, 1f)
             val alpha = (80 - 60 * normalizedZ).toInt()
-            val baseHue = (info.index.toFloat() / sections.size) % 1.0f
-            val baseColor = AwtColor.HSBtoRGB(baseHue, 0.8f, 0.9f)
-            val r = (baseColor shr 16) and 0xFF
-            val g = (baseColor shr 8) and 0xFF
-            val b = baseColor and 0xFF
-            val hsb = AwtColor.RGBtoHSB(r, g, b, null)
-            val distanceFactor = 1 - normalizedZ
-            hsb[1] *= distanceFactor
-            hsb[2] *= distanceFactor
-            val newRGB = AwtColor.HSBtoRGB(hsb[0], hsb[1], hsb[2])
-            val borderAlpha = (255 * distanceFactor).toInt()
-            val newBorderColor = (borderAlpha shl 24) or (newRGB and 0x00FFFFFF)
+            val newBorderColor = InfiniteClient.theme().colors.panelColor(info.index, sections.size, normalizedZ)
 
             // 中央に来ていないパネルはタイトルのみ描画
             val renderContent = info.z3d < minZ + 1f // Z値が最も手前にあるパネルのみコンテンツを描画

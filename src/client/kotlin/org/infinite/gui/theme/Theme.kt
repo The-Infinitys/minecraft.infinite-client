@@ -9,6 +9,12 @@ open class ThemeColors {
     // デフォルトで黒（0xFF000000）
     open val backgroundColor: Int = 0xFF000000.toInt()
 
+    open fun panelColor(
+        index: Int,
+        length: Int,
+        normalizedZ: Float,
+    ): Int = 0xFFFFFFFF.toInt()
+
     // デフォルトで白（0xFFFFFFFF） - 背景の黒と対になる色
     open val foregroundColor: Int = 0xFFFFFFFF.toInt()
 
