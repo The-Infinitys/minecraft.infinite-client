@@ -96,14 +96,13 @@ object InventoryRenderer {
                 val leftX = centerX - totalWidth / 2
 
                 val inputY = drawingY
-                val inputX = leftX
-                graphics2d.drawBorder(inputX, inputY, SLOT_SIZE, SLOT_SIZE, featureColor)
+                graphics2d.drawBorder(leftX, inputY, SLOT_SIZE, SLOT_SIZE, featureColor)
                 val inputItem = inventoryData.items.getOrElse(0) { ItemStack.EMPTY }
-                drawItemWithDurability(graphics2d, inputItem, inputX, inputY, SLOT_SIZE, featureColor)
+                drawItemWithDurability(graphics2d, inputItem, leftX, inputY, SLOT_SIZE)
                 if (inputItem.count > 1) {
                     graphics2d.drawText(
                         inputItem.count.toString(),
-                        inputX + SLOT_SIZE - font.getWidth(inputItem.count.toString()) - 2,
+                        leftX + SLOT_SIZE - font.getWidth(inputItem.count.toString()) - 2,
                         inputY + SLOT_SIZE - font.fontHeight,
                         org.infinite.InfiniteClient
                             .theme()
@@ -113,14 +112,13 @@ object InventoryRenderer {
                 }
 
                 val fuelY = inputY + SLOT_SIZE + spaceBetween
-                val fuelX = leftX
-                graphics2d.drawBorder(fuelX, fuelY, SLOT_SIZE, SLOT_SIZE, featureColor)
+                graphics2d.drawBorder(leftX, fuelY, SLOT_SIZE, SLOT_SIZE, featureColor)
                 val fuelItem = inventoryData.items.getOrElse(1) { ItemStack.EMPTY }
-                drawItemWithDurability(graphics2d, fuelItem, fuelX, fuelY, SLOT_SIZE, featureColor)
+                drawItemWithDurability(graphics2d, fuelItem, leftX, fuelY, SLOT_SIZE)
                 if (fuelItem.count > 1) {
                     graphics2d.drawText(
                         fuelItem.count.toString(),
-                        fuelX + SLOT_SIZE - font.getWidth(fuelItem.count.toString()) - 2,
+                        leftX + SLOT_SIZE - font.getWidth(fuelItem.count.toString()) - 2,
                         fuelY + SLOT_SIZE - font.fontHeight,
                         org.infinite.InfiniteClient
                             .theme()
@@ -133,7 +131,7 @@ object InventoryRenderer {
                 val outputY = inputY + (SLOT_SIZE + spaceBetween) / 2
                 graphics2d.drawBorder(outputX, outputY, SLOT_SIZE, SLOT_SIZE, featureColor)
                 val outputItem = inventoryData.items.getOrElse(2) { ItemStack.EMPTY }
-                drawItemWithDurability(graphics2d, outputItem, outputX, outputY, SLOT_SIZE, featureColor)
+                drawItemWithDurability(graphics2d, outputItem, outputX, outputY, SLOT_SIZE)
                 if (outputItem.count > 1) {
                     graphics2d.drawText(
                         outputItem.count.toString(),
@@ -156,13 +154,12 @@ object InventoryRenderer {
                 val fuelPercent = if (litTotalTime > 0) litTimeRemaining.toFloat() / litTotalTime.toFloat() else 0f
                 val progress = if (cookingTotalTime > 0) cookingTimeSpent.toFloat() / cookingTotalTime.toFloat() else 0f
 
-                val arrowX = inputX + SLOT_SIZE + 5
+                val arrowX = leftX + SLOT_SIZE + 5
                 val arrowY = inputY + SLOT_SIZE / 2 - 2
-                val arrowWidth = barLength
                 graphics2d.fill(
                     arrowX,
                     arrowY,
-                    arrowWidth,
+                    barLength,
                     4,
                     ColorHelper.getArgb(
                         128,
@@ -183,7 +180,7 @@ object InventoryRenderer {
                         ),
                     ),
                 )
-                val fillWidth = (arrowWidth * progress).toInt()
+                val fillWidth = (barLength * progress).toInt()
                 graphics2d.fill(
                     arrowX,
                     arrowY,
@@ -194,13 +191,12 @@ object InventoryRenderer {
                         .colors.primaryColor,
                 )
 
-                val flameX = fuelX + SLOT_SIZE + 5
+                val flameX = leftX + SLOT_SIZE + 5
                 val flameY = fuelY + SLOT_SIZE / 2 - 2
-                val flameWidth = barLength
                 graphics2d.fill(
                     flameX,
                     flameY,
-                    flameWidth,
+                    barLength,
                     4,
                     ColorHelper.getArgb(
                         128,
@@ -221,7 +217,7 @@ object InventoryRenderer {
                         ),
                     ),
                 )
-                val fillFlame = (flameWidth * fuelPercent).toInt()
+                val fillFlame = (barLength * fuelPercent).toInt()
                 graphics2d.fill(
                     flameX,
                     flameY,
@@ -290,7 +286,7 @@ object InventoryRenderer {
                 val ingredientX = centerX - SLOT_SIZE / 2
                 graphics2d.drawBorder(ingredientX, itemY, SLOT_SIZE, SLOT_SIZE, featureColor)
                 val ingredientItem = inventoryData.items.getOrElse(3) { ItemStack.EMPTY }
-                drawItemWithDurability(graphics2d, ingredientItem, ingredientX, itemY, SLOT_SIZE, featureColor)
+                drawItemWithDurability(graphics2d, ingredientItem, ingredientX, itemY, SLOT_SIZE)
                 if (ingredientItem.count > 1) {
                     graphics2d.drawText(
                         ingredientItem.count.toString(),
@@ -308,7 +304,7 @@ object InventoryRenderer {
                 val blazeX = startX + DetailInfoRenderer.BORDER_WIDTH + PADDING + 30
                 graphics2d.drawBorder(blazeX, row2Y, SLOT_SIZE, SLOT_SIZE, featureColor)
                 val blazeItem = inventoryData.items.getOrElse(4) { ItemStack.EMPTY }
-                drawItemWithDurability(graphics2d, blazeItem, blazeX, row2Y, SLOT_SIZE, featureColor)
+                drawItemWithDurability(graphics2d, blazeItem, blazeX, row2Y, SLOT_SIZE)
                 if (blazeItem.count > 1) {
                     graphics2d.drawText(
                         blazeItem.count.toString(),
@@ -327,7 +323,7 @@ object InventoryRenderer {
                     val potionX = potionStartX + i * (SLOT_SIZE + ITEM_PADDING)
                     graphics2d.drawBorder(potionX, row2Y, SLOT_SIZE, SLOT_SIZE, featureColor)
                     val potionItem = inventoryData.items.getOrElse(i) { ItemStack.EMPTY }
-                    drawItemWithDurability(graphics2d, potionItem, potionX, row2Y, SLOT_SIZE, featureColor)
+                    drawItemWithDurability(graphics2d, potionItem, potionX, row2Y, SLOT_SIZE)
                     if (potionItem.count > 1) {
                         graphics2d.drawText(
                             potionItem.count.toString(),
@@ -496,7 +492,7 @@ object InventoryRenderer {
                         val itemStack = inventoryData.items[index]
                         val itemX = rowStartX + col * (SLOT_SIZE + ITEM_PADDING)
                         graphics2d.drawBorder(itemX, itemDrawingY, SLOT_SIZE, SLOT_SIZE, featureColor)
-                        drawItemWithDurability(graphics2d, itemStack, itemX, itemDrawingY, SLOT_SIZE, featureColor)
+                        drawItemWithDurability(graphics2d, itemStack, itemX, itemDrawingY, SLOT_SIZE)
                         val itemCount = itemStack.count
                         if (itemCount > 1) {
                             graphics2d.drawText(
@@ -524,7 +520,6 @@ object InventoryRenderer {
         x: Int,
         y: Int,
         slotSize: Int,
-        featureColor: Int,
     ) {
         graphics2d.drawItem(itemStack, x, y)
         if (itemStack.isDamageable && itemStack.damage > 0) {

@@ -7,7 +7,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.math.ColorHelper
 import org.infinite.libs.graphics.Graphics2D
-import org.infinite.utils.rendering.ColorUtils
 
 object BlockContentRenderer {
     private const val PADDING = 5
@@ -97,7 +96,6 @@ object BlockContentRenderer {
             iconX,
             iconY,
             ICON_SIZE,
-            ColorUtils.getFeatureColor(isTargetInReach),
         )
 
         val correctTool = ToolChecker.getCorrectTool(detail.block)
@@ -171,7 +169,6 @@ object BlockContentRenderer {
                 toolIconX,
                 iconY,
                 ICON_SIZE,
-                ColorUtils.getFeatureColor(isTargetInReach),
             )
         }
 
