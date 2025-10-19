@@ -60,12 +60,12 @@ object InfiniteClient : ClientModInitializer {
 
         // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
+            ConfigManager.saveConfig()
             for (category in featureCategories) {
                 for (features in category.features) {
                     features.instance.stop()
                 }
             }
-            ConfigManager.saveConfig()
         }
 
         // --- Commands ---

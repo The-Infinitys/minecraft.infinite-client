@@ -32,14 +32,12 @@
     "features.rendering.xray.XRayFluidRendererMixin",
     "features.rendering.xray.XRayGammaMixin",
     "infinite.graphics.InGameHudMixin",
-    "infinite.graphics.WorldRendererMixin"
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  },
-  "mixins": [
+    "infinite.graphics.WorldRendererMixin",
     "features.rendering.detailinfo.ShulkerBoxMixin",
     "features.rendering.freecamera.AbstractBlockStateMixin",
     "features.rendering.freecamera.ZeroHitBox"
-  ]
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

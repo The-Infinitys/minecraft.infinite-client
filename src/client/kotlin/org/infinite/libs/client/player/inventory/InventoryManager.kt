@@ -10,13 +10,13 @@ class InventoryManager(
     private val client: MinecraftClient,
 ) {
     private val interactionManager
-        get() = client.interactionManager ?: throw IllegalStateException("InteractionManager is not available")
+        get() = client.interactionManager // null許容に変更
     private val player
-        get() = client.player ?: throw IllegalStateException("Player is not available")
+        get() = client.player // null許容に変更、例外を投げない
     private val inv
-        get() = player.inventory ?: throw IllegalStateException("Player inventory is not available")
-    private val isCreative
-        get() = player.isCreative
+        get() = player?.inventory // null許容に変更
+    private val isCreative: Boolean
+        get() = player?.isCreative ?: false // nullの場合falseを返す
 
     sealed interface InventoryIndex
 
@@ -48,10 +48,11 @@ class InventoryManager(
         MAIN_HAND,
     }
 
-    fun get(index: InventoryIndex): ItemStack =
-        when (index) {
+    fun get(index: InventoryIndex): ItemStack {
+        val playerInv = inv ?: return ItemStack.EMPTY // nullチェック
+        return when (index) {
             is Armor ->
-                inv.getStack(
+                playerInv.getStack(
                     when (index) {
                         Armor.HEAD -> 39
                         Armor.CHEST -> 38
@@ -60,22 +61,25 @@ class InventoryManager(
                     },
                 ) ?: ItemStack.EMPTY
 
-            is Hotbar -> inv.getStack(index.index) ?: ItemStack.EMPTY
-            is Backpack -> inv.getStack(9 + index.index) ?: ItemStack.EMPTY
+            is Hotbar -> playerInv.getStack(index.index) ?: ItemStack.EMPTY
+            is Backpack -> playerInv.getStack(9 + index.index) ?: ItemStack.EMPTY
             is Other ->
                 when (index) {
-                    Other.OFF_HAND -> inv.getStack(40) ?: ItemStack.EMPTY
-                    Other.MAIN_HAND -> inv.getStack(inv.selectedSlot) ?: ItemStack.EMPTY
+                    Other.OFF_HAND -> playerInv.getStack(40) ?: ItemStack.EMPTY
+                    Other.MAIN_HAND -> playerInv.getStack(playerInv.selectedSlot) ?: ItemStack.EMPTY
                 }
         }
+    }
 
     fun set(
         index: InventoryIndex,
         stack: ItemStack,
     ): Boolean {
+        val currentPlayer = player ?: return false // nullチェック
+        val playerInv = inv ?: return false
         val internal = indexToSlot(index) ?: return false
         if (isCreative) {
-            inv.setStack(internal, stack)
+            playerInv.setStack(internal, stack)
             val packet = CreativeInventoryActionC2SPacket(toNetworkSlot(internal), stack)
             client.networkHandler?.sendPacket(packet)
             return true
@@ -83,27 +87,19 @@ class InventoryManager(
             try {
                 // サバイバルモードでの set は複雑なため、アイテムを探してスワップするロジックを使用
                 if (stack.isEmpty) {
-                    // 空にする場合はドロップ（THROUGH）操作をシミュレート
-                    interactionManager.clickSlot(0, toNetworkSlot(internal), 1, SlotActionType.THROW, player)
+                    // 空にする場合はドロップ（THROW）操作をシミュレート
+                    interactionManager?.clickSlot(0, toNetworkSlot(internal), 1, SlotActionType.THROW, currentPlayer)
                     return true
                 }
 
                 val sourceInternal = findSlotWithItem(stack.item) ?: return false
                 if (sourceInternal == internal) return true
 
-                // set操作は、基本的に元のアイテムをどこかの空きスロットに移動させながら、
-                // 指定されたアイテムを配置するスワップの組み合わせで実現される
-                // ここでは簡略化のため、元のアイテムを空きスロットに移動させ、
-                // 次に sourceInternal から targetNet へ移動させる3クリックswapを使用
                 val targetNet = toNetworkSlot(internal)
-
-                // ターゲットスロットが空でない場合、元のアイテムを空きスロットに退避させる必要があるが、
-                // それを自動で行う信頼性の高いAPIがないため、元の set ロジックを維持
-
                 val sourceNet = toNetworkSlot(sourceInternal)
-                interactionManager.clickSlot(0, sourceNet, 0, SlotActionType.PICKUP, player)
-                interactionManager.clickSlot(0, targetNet, 0, SlotActionType.PICKUP, player)
-                interactionManager.clickSlot(0, sourceNet, 0, SlotActionType.PICKUP, player)
+                interactionManager?.clickSlot(0, sourceNet, 0, SlotActionType.PICKUP, currentPlayer)
+                interactionManager?.clickSlot(0, targetNet, 0, SlotActionType.PICKUP, currentPlayer)
+                interactionManager?.clickSlot(0, sourceNet, 0, SlotActionType.PICKUP, currentPlayer)
                 return true
             } catch (_: Exception) {
                 return false
@@ -112,9 +108,10 @@ class InventoryManager(
     }
 
     fun count(item: Item): Int {
+        val playerInv = inv ?: return 0 // nullチェック
         var total = 0
-        for (i in 0 until inv.size()) {
-            val stack = inv.getStack(i)
+        for (i in 0 until playerInv.size()) {
+            val stack = playerInv.getStack(i)
             if (stack.item == item) {
                 total += stack.count
             }
@@ -123,12 +120,13 @@ class InventoryManager(
     }
 
     fun sort() {
+        val playerInv = inv ?: return
         if (isCreative) {
             val stacks = mutableListOf<ItemStack>()
             // バックパックのスロット番号は 9 から 35 (27スロット)
             for (i in 9..35) {
-                stacks.add(inv.getStack(i).copy())
-                inv.setStack(i, ItemStack.EMPTY)
+                stacks.add(playerInv.getStack(i).copy())
+                playerInv.setStack(i, ItemStack.EMPTY)
             }
             stacks.sortBy { Item.getRawId(it.item) } // アイテムIDでソート
 
@@ -136,7 +134,7 @@ class InventoryManager(
             for (i in 0..26) {
                 val internalSlot = 9 + i
                 val stack = stacks.getOrElse(i) { ItemStack.EMPTY }
-                inv.setStack(internalSlot, stack)
+                playerInv.setStack(internalSlot, stack)
                 val packet = CreativeInventoryActionC2SPacket(toNetworkSlot(internalSlot), stack)
                 client.networkHandler?.sendPacket(packet)
             }
@@ -148,8 +146,8 @@ class InventoryManager(
                 for (j in i + 1..26) {
                     val idxI = 9 + minIdx
                     val idxJ = 9 + j
-                    val idI = Item.getRawId(inv.getStack(idxI).item)
-                    val idJ = Item.getRawId(inv.getStack(idxJ).item)
+                    val idI = Item.getRawId(playerInv.getStack(idxI).item)
+                    val idJ = Item.getRawId(playerInv.getStack(idxJ).item)
                     if (idJ < idI) minIdx = j
                 }
                 if (minIdx != i) {
@@ -161,21 +159,22 @@ class InventoryManager(
     }
 
     fun findFirst(item: Item): InventoryIndex? {
+        val playerInv = inv ?: return null // nullチェック
         // ホットバー (0-8)
         for (i in 0 until 9) {
-            if (inv.getStack(i).item == item) {
+            if (playerInv.getStack(i).item == item) {
                 return Hotbar(i)
             }
         }
         // バックパック (9-35, Backpack index 0-26)
         for (i in 0 until 27) {
-            if (inv.getStack(9 + i).item == item) {
+            if (playerInv.getStack(9 + i).item == item) {
                 return Backpack(i)
             }
         }
         // 防具 (36-39)
         for (i in 36 until 40) {
-            if (inv.getStack(i).item == item) {
+            if (playerInv.getStack(i).item == item) {
                 return when (i) {
                     36 -> Armor.FEET
                     37 -> Armor.LEGS
@@ -186,7 +185,7 @@ class InventoryManager(
             }
         }
         // オフハンド (40)
-        if (inv.getStack(40).item == item) {
+        if (playerInv.getStack(40).item == item) {
             return Other.OFF_HAND
         }
         return null
@@ -200,6 +199,7 @@ class InventoryManager(
         indexA: InventoryIndex,
         indexB: InventoryIndex,
     ): Boolean {
+        val currentPlayer = player ?: return false // nullチェック
         val slotA = indexToSlot(indexA) ?: return false
         val slotB = indexToSlot(indexB) ?: return false
         if (isCreative) {
@@ -211,15 +211,15 @@ class InventoryManager(
             try {
                 val netA = toNetworkSlot(slotA)
                 val netB = toNetworkSlot(slotB)
-                val currentScreenId = player.currentScreenHandler.syncId
+                val currentScreenId = currentPlayer.currentScreenHandler.syncId
 
                 // 3クリック スワップシーケンス
-                interactionManager.clickSlot(currentScreenId, netA, 0, SlotActionType.PICKUP, player)
-                interactionManager.clickSlot(currentScreenId, netB, 0, SlotActionType.PICKUP, player)
-                interactionManager.clickSlot(currentScreenId, netA, 0, SlotActionType.PICKUP, player)
+                interactionManager?.clickSlot(currentScreenId, netA, 0, SlotActionType.PICKUP, currentPlayer)
+                interactionManager?.clickSlot(currentScreenId, netB, 0, SlotActionType.PICKUP, currentPlayer)
+                interactionManager?.clickSlot(currentScreenId, netA, 0, SlotActionType.PICKUP, currentPlayer)
 
                 // 【修正ロジック】: 3クリック後もカーソルにアイテムが残っている場合、空きスロットに戻す
-                if (!player.currentScreenHandler.cursorStack.isEmpty) {
+                if (!currentPlayer.currentScreenHandler.cursorStack.isEmpty) {
                     val emptyBackpackSlot = findFirstEmptyBackpackSlot()
 
                     if (emptyBackpackSlot != null) {
@@ -227,11 +227,11 @@ class InventoryManager(
                         val emptyNetSlot = toNetworkSlot(indexToSlot(emptyBackpackSlot)!!)
 
                         // 4クリック目: カーソルのアイテムを空きスロットに配置して操作を完了させる
-                        interactionManager.clickSlot(currentScreenId, emptyNetSlot, 0, SlotActionType.PICKUP, player)
+                        interactionManager?.clickSlot(currentScreenId, emptyNetSlot, 0, SlotActionType.PICKUP, currentPlayer)
                     } else {
                         // 空きスロットがない場合:
                         // 現状ではドロップするしかありません。-999 (画面外)をクリックしてドロップします。
-                        interactionManager.clickSlot(currentScreenId, -999, 0, SlotActionType.PICKUP, player)
+                        interactionManager?.clickSlot(currentScreenId, -999, 0, SlotActionType.PICKUP, currentPlayer)
                     }
                 }
 
@@ -243,6 +243,7 @@ class InventoryManager(
     }
 
     fun drop(index: InventoryIndex) {
+        val currentPlayer = player ?: return // nullチェック
         val internal = indexToSlot(index) ?: return
         val stack = get(index)
         if (!stack.isEmpty) {
@@ -250,15 +251,16 @@ class InventoryManager(
                 set(index, ItemStack.EMPTY)
             } else {
                 // slot 1 はスタック全体のドロップ
-                interactionManager.clickSlot(0, toNetworkSlot(internal), 1, SlotActionType.THROW, player)
+                interactionManager?.clickSlot(0, toNetworkSlot(internal), 1, SlotActionType.THROW, currentPlayer)
             }
         }
     }
 
     fun findFirstEmptyBackpackSlot(): Backpack? {
+        val playerInv = inv ?: return null // nullチェック
         // バックパックの内部スロット 9 から 35
         for (i in 0 until 27) {
-            if (inv.getStack(9 + i).isEmpty) {
+            if (playerInv.getStack(9 + i).isEmpty) {
                 return Backpack(i)
             }
         }
@@ -285,7 +287,7 @@ class InventoryManager(
             is Other ->
                 when (index) {
                     Other.OFF_HAND -> 40
-                    Other.MAIN_HAND -> inv.selectedSlot
+                    Other.MAIN_HAND -> inv?.selectedSlot // nullチェックを追加
                 }
         }
 
@@ -309,8 +311,9 @@ class InventoryManager(
      * 指定されたアイテムを持つ最初の内部スロットインデックス (0-40) を検索します。
      */
     private fun findSlotWithItem(item: Item): Int? {
-        for (i in 0 until inv.size()) {
-            if (inv.getStack(i).item == item) {
+        val playerInv = inv ?: return null // nullチェック
+        for (i in 0 until playerInv.size()) {
+            if (playerInv.getStack(i).item == item) {
                 return i
             }
         }

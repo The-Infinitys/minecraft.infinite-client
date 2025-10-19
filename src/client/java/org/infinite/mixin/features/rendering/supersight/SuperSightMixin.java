@@ -23,7 +23,7 @@ public abstract class SuperSightMixin extends AbstractClientPlayerEntity {
 
     // NightVision
     if (effect == StatusEffects.NIGHT_VISION
-        && InfiniteClient.INSTANCE.isSettingEnabled(SuperSight.class, "FullBright")) return true;
+        && InfiniteClient.INSTANCE.isSettingEnabled(SuperSight.class, "NightVision")) return true;
 
     // AntiBlind (BLINDNESS, DARKNESS)
     if (InfiniteClient.INSTANCE.isSettingEnabled(SuperSight.class, "AntiBlind")) {
