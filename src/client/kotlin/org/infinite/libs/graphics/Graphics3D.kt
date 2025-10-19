@@ -2,13 +2,16 @@ package org.infinite.libs.graphics
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.option.Perspective
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.render.VertexConsumerProvider
+import net.minecraft.client.render.VertexConsumerProvider.Immediate
 import net.minecraft.client.util.ObjectAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import org.infinite.libs.client.player.fighting.aim.CameraRoll
 import org.infinite.libs.graphics.render.RenderResources
 import org.infinite.libs.graphics.render.RenderUtils
 import org.joml.Matrix4f
@@ -117,7 +120,6 @@ class Graphics3D(
     ) {
         val layer = RenderResources.renderLayer(isOverDraw)
         val buffer = immediate.getBuffer(layer)
-        // RenderUtilsの修正された関数を呼び出し (draw()は含まれない)
         RenderUtils.renderLine(matrixStack, start, end, color, buffer)
     }
 
@@ -167,6 +169,32 @@ class Graphics3D(
         val y = (1.0 - ndcY) * 0.5 * scaledHeight // Y軸を反転
 
         return Graphics2D.DisplayPos(x, y)
+    }
+
+    private fun tracerOrigin(partialTicks: Float): Vec3d? {
+        val yaw: Double = client.player?.getYaw(partialTicks)?.toDouble() ?: return null
+        val pitch: Double = client.player?.getPitch(partialTicks)?.toDouble() ?: return null
+        var start: Vec3d =
+            CameraRoll(yaw, pitch).vec().multiply(5.0)
+        if (client.options
+                .perspective == Perspective.THIRD_PERSON_FRONT
+        ) {
+            start = start.negate()
+        }
+
+        return start
+    }
+
+    fun renderTracer(
+        end: Vec3d,
+        color: Int,
+        isOverDraw: Boolean,
+    ) {
+        val layer = RenderResources.renderLayer(isOverDraw)
+        val buffer = immediate.getBuffer(layer)
+        val start = tracerOrigin(tickProgress) ?: return
+        val offset: Vec3d = RenderUtils.cameraPos().negate()
+        RenderUtils.renderLine(matrixStack, start, end.add(offset), color, buffer)
     }
 
     fun render() {

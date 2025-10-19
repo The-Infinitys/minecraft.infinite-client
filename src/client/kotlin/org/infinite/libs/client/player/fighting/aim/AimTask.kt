@@ -6,6 +6,9 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 sealed class AimTarget {
@@ -45,10 +48,6 @@ class CameraRoll(
     var yaw: Double,
     var pitch: Double,
 ) {
-    // ------------------------------------
-    // 要素同士の足し算と引き算
-    // ------------------------------------
-
     /**
      * CameraRoll同士の足し算 (要素ごと)
      * operator fun plus(other: CameraRoll): CameraRoll
@@ -112,6 +111,23 @@ class CameraRoll(
         // maxSpeedで制限するためにスケーリング係数を計算し、適用
         val scale = maxSpeed / magnitude
         return this * scale // 'times' operator (this.times(scale)) を使用
+    }
+
+    fun vec(): Vec3d {
+        // 1. 角度をラジアンに変換 (度数で格納されていると仮定)
+        // 既にラジアンで格納されている場合は、この行をコメントアウトしてください。
+        val yawRad = this.yaw * PI / 180.0
+        val pitchRad = this.pitch * PI / 180.0
+
+        // 2. 角度から方向ベクトルを計算
+        // Y軸が上方向、X-Z平面が水平面、+Xが初期前方と仮定した一般的な計算式
+        val cosPitch = cos(pitchRad)
+        val x = cos(yawRad) * cosPitch
+        val y = sin(pitchRad) // Y軸は上下の回転(Pitch)のみに依存
+        val z = sin(yawRad) * cosPitch
+
+        // 結果は自動的に正規化されます (sin^2 + cos^2 = 1 のため)
+        return Vec3d(x, y, z)
     }
 }
 

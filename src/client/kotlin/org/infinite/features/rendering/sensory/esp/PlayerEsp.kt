@@ -14,7 +14,7 @@ object PlayerEsp {
     private val BOX_COLOR =
         org.infinite.InfiniteClient
             .theme()
-            .colors.infoColor
+            .colors.aquaAccentColor
     private const val EXPAND = 0.05
 
     private fun otherPlayers(): List<PlayerEntity> {
@@ -61,23 +61,22 @@ object PlayerEsp {
         graphics3d.renderLinedColorBoxes(renderBoxes, true)
 
         // 2. 自分とプレイヤーを結ぶ直線を描画
-        val selfEyePos = self.getCameraPosVec(tickProgress)
+        val selfPos = client.player?.getLerpedPos(graphics3d.tickCounter.getTickProgress(true)) ?: return
         for (player in players) {
             val playerPos = playerPos(player, tickProgress)
             // プレイヤーの足元ではなく、目の高さ（中間点）を使用
             val playerLineTarget = playerPos.add(0.0, player.height / 2.0, 0.0)
 
             // 距離を計算 (X, Y, Zの距離)
-            val dx = selfEyePos.x - playerLineTarget.x
-            val dy = selfEyePos.y - playerLineTarget.y
-            val dz = selfEyePos.z - playerLineTarget.z
+            val dx = selfPos.x - playerLineTarget.x
+            val dy = selfPos.y - playerLineTarget.y
+            val dz = selfPos.z - playerLineTarget.z
             val distance = sqrt(dx * dx + dy * dy + dz * dz)
 
             // 距離に基づいて色を決定
             val lineColor = RenderUtils.distColor(distance)
-
             // Graphics3D のメソッドを利用して直線を描画
-            graphics3d.renderLine(selfEyePos, playerLineTarget, lineColor, true)
+            graphics3d.renderLine(playerLineTarget, selfPos, lineColor, true)
         }
     }
 

@@ -7,6 +7,7 @@ import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.freeze.Freeze
+import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
 import org.lwjgl.glfw.GLFW
@@ -35,6 +36,12 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
 
     override fun disabled() {
         InfiniteClient.getFeature(Freeze::class.java)?.forceCancel()
+    }
+
+    private var originalPos = Vec3d.ZERO
+
+    override fun enabled() {
+        originalPos = client.player?.eyePos
     }
 
     override fun tick() {
@@ -85,5 +92,11 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
                 deltaY * currentSpeed,
                 velocityZ * currentSpeed,
             )
+    }
+
+    override fun render3d(graphics3D: Graphics3D) {
+        val lineColor = InfiniteClient.theme().colors.infoColor
+        val currentPos = client.player?.getLerpedPos(graphics3D.tickCounter.getTickProgress(true)) ?: return
+        graphics3D.renderLine(originalPos, currentPos, lineColor, true)
     }
 }
