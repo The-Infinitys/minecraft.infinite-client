@@ -8,6 +8,7 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
+import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 import org.lwjgl.glfw.GLFW
 
@@ -25,8 +26,7 @@ class InfiniteEntityListField(
 
     private val baseLabelHeight = textRenderer.fontHeight
     private val descriptionHeight =
-        if (setting.descriptionKey != null &&
-            setting.descriptionKey!!.isNotBlank()
+        if (setting.descriptionKey.isNotBlank()
         ) {
             textRenderer.fontHeight + 2
         } else {
@@ -190,15 +190,19 @@ class InfiniteEntityListField(
             Text.translatable(setting.name),
             labelX,
             y + padding,
-            0xFFFFFFFF.toInt(),
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
         )
-        if (setting.descriptionKey != null && setting.descriptionKey!!.isNotBlank()) {
+        if (setting.descriptionKey.isNotBlank()) {
             context.drawTextWithShadow(
                 textRenderer,
-                Text.translatable(setting.descriptionKey!!),
+                Text.translatable(setting.descriptionKey),
                 labelX,
                 y + padding + baseLabelHeight + 2,
-                0xFFA0A0A0.toInt(),
+                InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
             )
         }
 
@@ -218,14 +222,24 @@ class InfiniteEntityListField(
             textFieldY,
             addButtonX + buttonSize,
             textFieldY + buttonSize,
-            if (isAddButtonHovered) 0xFF44AA44.toInt() else 0xFF228822.toInt(),
+            if (isAddButtonHovered) {
+                InfiniteClient
+                    .theme()
+                    .colors.primaryColor
+            } else {
+                InfiniteClient
+                    .theme()
+                    .colors.greenAccentColor
+            },
         )
         context.drawText(
             textRenderer,
             "+",
             addButtonX + buttonSize / 2 - 3,
             textFieldY + buttonSize / 2 - 4,
-            0xFFFFFFFF.toInt(),
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
             false,
         )
     }

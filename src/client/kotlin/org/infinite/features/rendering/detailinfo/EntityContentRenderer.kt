@@ -59,13 +59,38 @@ object EntityContentRenderer {
         val textX = startX + DetailInfoRenderer.BORDER_WIDTH + PADDING
         val entityName = detail.entity.type.name.string
         val entityId = Registries.ENTITY_TYPE.getId(detail.entity.type).toString()
-        graphics2d.drawText(entityName, textX, currentY, 0xFFFFFFFF.toInt(), true)
+        graphics2d.drawText(
+            entityName,
+            textX,
+            currentY,
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.foregroundColor,
+            true,
+        )
         val nameWidth = font.getWidth(entityName)
         graphics2d.drawText(
             "($entityId)",
             textX + nameWidth + 5,
             currentY,
-            ColorHelper.getArgb(192, 255, 255, 255),
+            ColorHelper.getArgb(
+                192,
+                ColorHelper.getRed(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+                ColorHelper.getGreen(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+                ColorHelper.getBlue(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+            ),
             true,
         )
         currentY += font.fontHeight + PADDING
@@ -75,25 +100,57 @@ object EntityContentRenderer {
             currentY += DetailInfoRenderer.BAR_HEIGHT + DetailInfoRenderer.BAR_PADDING
 
             // Equipment
-            graphics2d.drawText("Equipment:", textX, currentY, 0xFFFFFFFF.toInt(), true)
+            graphics2d.drawText(
+                "Equipment:",
+                textX,
+                currentY,
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
+                true,
+            )
             currentY += font.fontHeight + PADDING
             currentY = drawEquipment(graphics2d, font, entity, textX + PADDING, currentY)
 
             // Status Effects
-            graphics2d.drawText("Status Effects:", textX, currentY, 0xFFFFFFFF.toInt(), true)
+            graphics2d.drawText(
+                "Status Effects:",
+                textX,
+                currentY,
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
+                true,
+            )
             currentY += font.fontHeight + PADDING
             currentY = drawEffects(graphics2d, font, entity.statusEffects, textX + PADDING, currentY)
 
             // Armor
             val armor = entity.armor
-            graphics2d.drawText("Armor: $armor", textX, currentY, 0xFFFFFFFF.toInt(), true)
+            graphics2d.drawText(
+                "Armor: $armor",
+                textX,
+                currentY,
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
+                true,
+            )
             currentY += font.fontHeight + PADDING
         }
 
         // Position
         val infoPos = detail.entity.blockPos
         val posText = "Pos: x=${infoPos.x}, y=${infoPos.y}, z=${infoPos.z}"
-        graphics2d.drawText(posText, textX, currentY, 0xFFFFFFFF.toInt(), true)
+        graphics2d.drawText(
+            posText,
+            textX,
+            currentY,
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.foregroundColor,
+            true,
+        )
     }
 
     private fun getEquipmentCount(entity: LivingEntity): Int {
@@ -128,7 +185,9 @@ object EntityContentRenderer {
                 "Main Hand: ${entity.mainHandStack.name.string}",
                 x,
                 currentY,
-                0xFFFFFFFF.toInt(),
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
                 true,
             )
             currentY += font.fontHeight
@@ -138,7 +197,9 @@ object EntityContentRenderer {
                 "Off Hand: ${entity.offHandStack.name.string}",
                 x,
                 currentY,
-                0xFFFFFFFF.toInt(),
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
                 true,
             )
             currentY += font.fontHeight
@@ -159,7 +220,9 @@ object EntityContentRenderer {
                         "${it.name.lowercase().replaceFirstChar { it.uppercase() }}: ${stack.name.string}",
                         x,
                         currentY,
-                        0xFFFFFFFF.toInt(),
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.foregroundColor,
                         true,
                     )
                     currentY += font.fontHeight
@@ -185,7 +248,9 @@ object EntityContentRenderer {
                 "$effectName $amplifier (${duration}s)",
                 x,
                 currentY,
-                0xFFFFFFFF.toInt(),
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
                 true,
             )
             currentY += font.fontHeight

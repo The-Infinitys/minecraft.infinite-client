@@ -124,21 +124,21 @@ object InfiniteClient : ClientModInitializer {
 
     private fun createPrefixedMessage(
         prefixType: String,
-        textColor: Formatting,
+        textColor: Int,
     ): MutableText =
         Text
             .literal("[")
             .formatted(Formatting.BOLD)
             .append(rainbowText("Infinite Client").formatted(Formatting.BOLD))
-            .append(Text.literal(prefixType).formatted(Formatting.RESET).formatted(textColor))
+            .append(Text.literal(prefixType).styled { style -> style.withColor(textColor) })
             .append(Text.literal("]: ").formatted(Formatting.RESET))
 
     // log 関数: メッセージをキューに格納するよう修正
     fun log(text: String) {
         LOGGER.info("[Infinite Client]: $text")
         val message =
-            createPrefixedMessage("", Formatting.RESET)
-                .append(Text.literal(text).formatted(Formatting.RESET))
+            createPrefixedMessage("", theme().colors.foregroundColor)
+                .append(Text.literal(text).styled { style -> style.withColor(theme().colors.foregroundColor) })
         LogQueue.enqueueMessage(message) // キューに追加
         // MinecraftClient.getInstance().player?.sendMessage(message, false) は削除
     }
@@ -147,8 +147,8 @@ object InfiniteClient : ClientModInitializer {
     fun info(text: String) {
         LOGGER.info("[Infinite Client - Info]: $text")
         val message =
-            createPrefixedMessage(" - Info ", Formatting.AQUA)
-                .append(Text.literal(text).formatted(Formatting.AQUA))
+            createPrefixedMessage(" - Info ", theme().colors.infoColor)
+                .append(Text.literal(text).styled { style -> style.withColor(theme().colors.infoColor) })
         LogQueue.enqueueMessage(message) // キューに追加
         // MinecraftClient.getInstance().player?.sendMessage(message, false) は削除
     }
@@ -157,8 +157,8 @@ object InfiniteClient : ClientModInitializer {
     fun warn(text: String) {
         LOGGER.warn("[Infinite Client - Warn]: $text")
         val message =
-            createPrefixedMessage(" - Warn ", Formatting.YELLOW)
-                .append(Text.literal(text).formatted(Formatting.YELLOW))
+            createPrefixedMessage(" - Warn ", theme().colors.warnColor)
+                .append(Text.literal(text).styled { style -> style.withColor(theme().colors.warnColor) })
         LogQueue.enqueueMessage(message) // キューに追加
         // MinecraftClient.getInstance().player?.sendMessage(message, false) は削除
     }
@@ -167,8 +167,8 @@ object InfiniteClient : ClientModInitializer {
     fun error(text: String) {
         LOGGER.error("[Infinite Client - Error]: $text")
         val message =
-            createPrefixedMessage(" - Error", Formatting.RED)
-                .append(Text.literal(text).formatted(Formatting.RED))
+            createPrefixedMessage(" - Error", theme().colors.errorColor)
+                .append(Text.literal(text).styled { style -> style.withColor(theme().colors.errorColor) })
         LogQueue.enqueueMessage(message) // キューに追加
         // MinecraftClient.getInstance().player?.sendMessage(message, false) は削除
     }

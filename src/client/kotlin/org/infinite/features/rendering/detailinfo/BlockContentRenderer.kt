@@ -104,13 +104,38 @@ object BlockContentRenderer {
         val blockId = Registries.BLOCK.getId(detail.block).toString()
         val infoName = detail.block.name.string
 
-        graphics2d.drawText(infoName, textX, iconY + 1, 0xFFFFFFFF.toInt(), true)
+        graphics2d.drawText(
+            infoName,
+            textX,
+            iconY + 1,
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.foregroundColor,
+            true,
+        )
         val nameWidth = font.getWidth(infoName)
         graphics2d.drawText(
             "($blockId)",
             textX + nameWidth + 5,
             iconY + 1,
-            ColorHelper.getArgb(192, 255, 255, 255),
+            ColorHelper.getArgb(
+                192,
+                ColorHelper.getRed(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+                ColorHelper.getGreen(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+                ColorHelper.getBlue(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+            ),
             true,
         )
         val correctToolId = correctTool.getId()
@@ -122,11 +147,23 @@ object BlockContentRenderer {
                 ICON_SIZE,
                 ICON_SIZE,
                 when (correctTool.checkPlayerToolStatus()) {
-                    0 -> 0x8800FF00
-                    1 -> 0x88FFFF00
-                    2 -> 0x88FF0000
-                    else -> 0x88FFFFFF
-                }.toInt(),
+                    0 ->
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.greenAccentColor
+                    1 ->
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.warnColor
+                    2 ->
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.errorColor
+                    else ->
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.foregroundColor
+                },
             )
             InventoryRenderer.drawItemWithDurability(
                 graphics2d,
@@ -152,6 +189,14 @@ object BlockContentRenderer {
         // --- 3. 座標情報の描画 ---
         val infoPos = detail.pos
         val posText = "Pos: x=${infoPos.x}, y=${infoPos.y}, z=${infoPos.z}"
-        graphics2d.drawText(posText, iconX, contentY, 0xFFFFFFFF.toInt(), true)
+        graphics2d.drawText(
+            posText,
+            iconX,
+            contentY,
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.foregroundColor,
+            true,
+        )
     }
 }

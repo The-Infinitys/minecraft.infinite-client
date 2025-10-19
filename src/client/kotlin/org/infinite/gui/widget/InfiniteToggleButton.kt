@@ -4,7 +4,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.input.AbstractInput
 import net.minecraft.text.Text
-import net.minecraft.util.math.ColorHelper
+import org.infinite.InfiniteClient
 import kotlin.math.sin
 
 class InfiniteToggleButton(
@@ -42,43 +42,39 @@ class InfiniteToggleButton(
         delta: Float,
     ) {
         // レインボーアニメーションのロジック
-        val rainbowDuration = 6000L
-        val colors =
-            intArrayOf(
-                0xFFFF0000.toInt(),
-                0xFFFFFF00.toInt(),
-                0xFF00FF00.toInt(),
-                0xFF00FFFF.toInt(),
-                0xFF0000FF.toInt(),
-                0xFFFF00FF.toInt(),
-                0xFFFF0000.toInt(),
-            )
-
-        val currentTime = System.currentTimeMillis()
-        val elapsedTime = currentTime % rainbowDuration
-        val progress = elapsedTime.toFloat() / rainbowDuration.toFloat()
-
-        val numSegments = colors.size - 1
-        val segmentLength = 1.0f / numSegments
-        val currentSegmentIndex = (progress / segmentLength).toInt().coerceAtMost(numSegments - 1)
-        val segmentProgress = (progress % segmentLength) / segmentLength
-
-        val startColor = colors[currentSegmentIndex]
-        val endColor = colors[currentSegmentIndex + 1]
-
         val interpolatedColor =
-            ColorHelper.getArgb(
-                255,
-                (ColorHelper.getRed(startColor) * (1 - segmentProgress) + ColorHelper.getRed(endColor) * segmentProgress).toInt(),
-                (ColorHelper.getGreen(startColor) * (1 - segmentProgress) + ColorHelper.getGreen(endColor) * segmentProgress).toInt(),
-                (ColorHelper.getBlue(startColor) * (1 - segmentProgress) + ColorHelper.getBlue(endColor) * segmentProgress).toInt(),
-            )
+            InfiniteClient
+                .theme()
+                .colors.primaryColor
 
         val backgroundColor =
             when {
-                !isEnabled -> ColorHelper.getArgb(255, 64, 64, 64) // 無効時の背景色
-                state -> if (isHovered) 0xFF40A040.toInt() else 0xFF00FF00.toInt() // ON state
-                else -> if (isHovered) 0xFF606060.toInt() else 0xFF808080.toInt() // OFF state
+                !isEnabled ->
+                    InfiniteClient
+                        .theme()
+                        .colors.backgroundColor
+
+                state ->
+                    if (isHovered) {
+                        InfiniteClient
+                            .theme()
+                            .colors.greenAccentColor
+                    } else {
+                        InfiniteClient
+                            .theme()
+                            .colors.primaryColor // ON state
+                    }
+
+                else ->
+                    if (isHovered) {
+                        InfiniteClient
+                            .theme()
+                            .colors.secondaryColor
+                    } else {
+                        InfiniteClient
+                            .theme()
+                            .colors.backgroundColor // OFF state
+                    }
             }
 
         // ノブのサイズを基準にバーの幅を決定
@@ -98,6 +94,7 @@ class InfiniteToggleButton(
 
         var currentKnobX = endKnobX.toFloat()
         if (animationStartTime != -1L) {
+            val currentTime = System.currentTimeMillis()
             val animProgress = (currentTime - animationStartTime).toFloat() / animationDuration.toFloat()
             if (animProgress < 1.0f) {
                 // スムーズなアニメーションのためにsin関数を使用
@@ -111,11 +108,27 @@ class InfiniteToggleButton(
         val knobY = y + 2
 
         // ノブの縁 (有効時のみレインボーアニメーション)
-        val knobBorderColor = if (isEnabled) interpolatedColor else 0xFF404040.toInt()
+        val knobBorderColor =
+            if (isEnabled) {
+                interpolatedColor
+            } else {
+                InfiniteClient
+                    .theme()
+                    .colors.backgroundColor
+            }
         context.fill(currentKnobX.toInt(), knobY, currentKnobX.toInt() + knobSize, knobY + knobSize, knobBorderColor)
 
         // ノブの内側
-        val knobInnerColor = if (isHovered) 0xFFA0A0A0.toInt() else 0xFFFFFFFF.toInt()
+        val knobInnerColor =
+            if (isHovered) {
+                InfiniteClient
+                    .theme()
+                    .colors.primaryColor
+            } else {
+                InfiniteClient
+                    .theme()
+                    .colors.foregroundColor
+            }
         context.fill(
             currentKnobX.toInt() + knobBorder,
             knobY + knobBorder,

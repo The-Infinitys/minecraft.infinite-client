@@ -11,7 +11,10 @@ import kotlin.math.sqrt
 
 object PlayerEsp {
     // 枠の色は水色 (0xFF00FFFF) に固定
-    private const val BOX_COLOR = 0xFF00FFFF.toInt()
+    private val BOX_COLOR =
+        org.infinite.InfiniteClient
+            .theme()
+            .colors.infoColor
     private const val EXPAND = 0.05
 
     private fun otherPlayers(): List<PlayerEntity> {

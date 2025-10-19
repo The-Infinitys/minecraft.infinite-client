@@ -11,7 +11,25 @@ object DetailInfoRenderer {
     internal const val BORDER_WIDTH = 2
     const val BAR_HEIGHT = 4
     const val BAR_PADDING = 5
-    private val INNER_COLOR = ColorHelper.getArgb(192, 0, 0, 0)
+    private val INNER_COLOR =
+        ColorHelper.getArgb(
+            192,
+            ColorHelper.getRed(
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.backgroundColor,
+            ),
+            ColorHelper.getGreen(
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.backgroundColor,
+            ),
+            ColorHelper.getBlue(
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.backgroundColor,
+            ),
+        )
 
     fun render(
         graphics2d: Graphics2D,
@@ -95,7 +113,25 @@ object DetailInfoRenderer {
         val font = MinecraftClient.getInstance().textRenderer
 
         val fillWidth = (barWidth * progress).toInt()
-        val barBackgroundColor = ColorHelper.getArgb(128, 50, 50, 50)
+        val barBackgroundColor =
+            ColorHelper.getArgb(
+                128,
+                ColorHelper.getRed(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getGreen(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getBlue(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+            )
         graphics2d.fill(barStartX, barY, barWidth, BAR_HEIGHT, barBackgroundColor)
 
         if (fillWidth > 0) {
@@ -110,7 +146,9 @@ object DetailInfoRenderer {
             infoText.string,
             barStartX,
             barY - font.fontHeight - 2,
-            0xFFFFFFFF.toInt(),
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.foregroundColor,
             true,
         )
     }

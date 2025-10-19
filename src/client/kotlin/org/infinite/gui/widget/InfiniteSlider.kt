@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
 import net.minecraft.util.math.MathHelper
+import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 
 class InfiniteSlider<T : Number>(
@@ -48,24 +49,36 @@ class InfiniteSlider<T : Number>(
             Text.translatable(setting.name),
             textX,
             currentY,
-            0xFFFFFFFF.toInt(),
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
         )
         currentY += textRenderer.fontHeight + 2 // Move Y down for description
 
-        if (setting.descriptionKey != null && setting.descriptionKey!!.isNotBlank()) {
+        if (setting.descriptionKey.isNotBlank()) {
             context.drawTextWithShadow(
                 textRenderer,
-                Text.translatable(setting.descriptionKey!!),
+                Text.translatable(setting.descriptionKey),
                 textX,
                 currentY,
-                0xFFA0A0A0.toInt(), // Gray color for description
+                InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
             )
-            currentY += textRenderer.fontHeight + 2 // Move Y down after description
+            textRenderer.fontHeight + 2 // Move Y down after description
         }
 
         // Draw slider background at the bottom of the widget
         val sliderBackgroundY = y + height - 5
-        context.fill(x + 5, sliderBackgroundY, x + width - 5, sliderBackgroundY + 2, 0xFF404040.toInt())
+        context.fill(
+            x + 5,
+            sliderBackgroundY,
+            x + width - 5,
+            sliderBackgroundY + 2,
+            InfiniteClient
+                .theme()
+                .colors.backgroundColor,
+        )
 
         // Draw slider knob
         val progress = getProgress()
@@ -73,7 +86,15 @@ class InfiniteSlider<T : Number>(
         val knobX = x + 5 + (knobPositionRange) * progress
         val knobY = y + height - 7 // Knob is 6px tall, so its top is 7px from bottom
 
-        context.fill(knobX.toInt(), knobY, knobX.toInt() + knobWidth, knobY + 6, 0xFF00FF00.toInt())
+        context.fill(
+            knobX.toInt(),
+            knobY,
+            knobX.toInt() + knobWidth,
+            knobY + 6,
+            InfiniteClient
+                .theme()
+                .colors.primaryColor,
+        )
     }
 
     private fun getProgress(): Float =

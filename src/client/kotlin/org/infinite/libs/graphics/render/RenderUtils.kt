@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector3f
@@ -101,9 +102,18 @@ object RenderUtils {
         val clampDist = MathHelper.clamp(distance, 0.0, MAX_COLOR_DISTANCE)
         val f = (clampDist / MAX_COLOR_DISTANCE).toFloat()
 
-        val r = MathHelper.lerp(f, 1.0f, 0.0f)
-        val g = MathHelper.lerp(f, 0.0f, 1.0f)
-        val b = MathHelper.lerp(f, 0.0f, 1.0f)
+        val startColor =
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.errorColor // Red for close
+        val endColor =
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.greenAccentColor // Green for far
+
+        val r = MathHelper.lerp(f, ColorHelper.getRed(startColor).toFloat() / 255f, ColorHelper.getRed(endColor).toFloat() / 255f)
+        val g = MathHelper.lerp(f, ColorHelper.getGreen(startColor).toFloat() / 255f, ColorHelper.getGreen(endColor).toFloat() / 255f)
+        val b = MathHelper.lerp(f, ColorHelper.getBlue(startColor).toFloat() / 255f, ColorHelper.getBlue(endColor).toFloat() / 255f)
 
         return (
             0xFF000000.toInt() or

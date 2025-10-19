@@ -44,7 +44,7 @@ class InfiniteSettingToggle(
         val nameY: Int
         val descriptionY: Int?
 
-        if (setting.descriptionKey != null && setting.descriptionKey!!.isNotBlank()) {
+        if (setting.descriptionKey.isNotBlank()) {
             totalTextHeight = textRenderer.fontHeight * 2 + 2 // Name + padding + Description
             nameY = y + (height - totalTextHeight) / 2
             descriptionY = nameY + textRenderer.fontHeight + 2
@@ -54,26 +54,31 @@ class InfiniteSettingToggle(
                 Text.translatable(setting.name),
                 textX,
                 nameY,
-                0xFFFFFFFF.toInt(),
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
             )
             context.drawTextWithShadow(
                 textRenderer,
-                Text.translatable(setting.descriptionKey!!),
+                Text.translatable(setting.descriptionKey),
                 textX,
                 descriptionY,
-                0xFFA0A0A0.toInt(), // Gray color for description
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
             )
         } else {
             totalTextHeight = textRenderer.fontHeight // Only name
             nameY = y + (height - totalTextHeight) / 2
-            descriptionY = null
 
             context.drawTextWithShadow(
                 textRenderer,
                 Text.translatable(setting.name),
                 textX,
                 nameY,
-                0xFFFFFFFF.toInt(),
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
             )
         }
 

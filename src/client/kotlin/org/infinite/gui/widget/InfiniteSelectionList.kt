@@ -6,6 +6,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
+import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 
 class InfiniteSelectionList<E : Enum<E>>(
@@ -50,7 +51,7 @@ class InfiniteSelectionList<E : Enum<E>>(
         val nameY: Int
         val descriptionY: Int?
 
-        if (setting.descriptionKey != null && setting.descriptionKey!!.isNotBlank()) {
+        if (setting.descriptionKey.isNotBlank()) {
             totalTextHeight = textRenderer.fontHeight * 2 + 2 // Name + padding + Description
             nameY = y + (height - totalTextHeight) / 2
             descriptionY = nameY + textRenderer.fontHeight + 2
@@ -60,26 +61,31 @@ class InfiniteSelectionList<E : Enum<E>>(
                 Text.translatable(setting.name),
                 textX,
                 nameY,
-                0xFFFFFFFF.toInt(),
+                InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
             )
             context.drawTextWithShadow(
                 textRenderer,
-                Text.translatable(setting.descriptionKey!!),
+                Text.translatable(setting.descriptionKey),
                 textX,
                 descriptionY,
-                0xFFA0A0A0.toInt(), // Gray color for description
+                InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
             )
         } else {
             totalTextHeight = textRenderer.fontHeight // Only name
             nameY = y + (height - totalTextHeight) / 2
-            descriptionY = null
 
             context.drawTextWithShadow(
                 textRenderer,
                 Text.translatable(setting.name),
                 textX,
                 nameY,
-                0xFFFFFFFF.toInt(),
+                InfiniteClient
+                    .theme()
+                    .colors.foregroundColor,
             )
         }
 

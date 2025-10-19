@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.screen.narration.NarrationPart
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
+import org.infinite.InfiniteClient
 
 class PlayerListItemWidget(
     x: Int,
@@ -28,7 +29,15 @@ class PlayerListItemWidget(
     ) {
         val textX = x + padding
         val textY = y + this.height / 2 - 4
-        context.drawTextWithShadow(textRenderer, Text.literal(playerName), textX, textY, 0xFFAAAAAA.toInt())
+        context.drawTextWithShadow(
+            textRenderer,
+            Text.literal(playerName),
+            textX,
+            textY,
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
+        )
 
         val removeButtonX = x + width - padding - removeButtonWidth
         val removeButtonY = y
@@ -38,7 +47,16 @@ class PlayerListItemWidget(
                 mouseY >= removeButtonY &&
                 mouseY < removeButtonY + this.height
 
-        val removeColor = if (isRemoveButtonHovered) 0xFFAA4444.toInt() else 0xFF882222.toInt()
+        val baseColor =
+            InfiniteClient
+                .theme()
+                .colors.errorColor
+        val hoverColor =
+            InfiniteClient
+                .theme()
+                .colors.errorColor
+
+        val removeColor = if (isRemoveButtonHovered) hoverColor else baseColor
 
         context.fill(
             removeButtonX,
@@ -52,7 +70,9 @@ class PlayerListItemWidget(
             "x",
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
-            0xFFFFFFFF.toInt(),
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
             false,
         )
     }

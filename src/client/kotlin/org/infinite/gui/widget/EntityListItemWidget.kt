@@ -12,6 +12,7 @@ import net.minecraft.item.SpawnEggItem
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import org.infinite.InfiniteClient
 
 class EntityListItemWidget(
     x: Int,
@@ -47,16 +48,17 @@ class EntityListItemWidget(
         mouseY: Int,
         delta: Float,
     ) {
-        val itemX = x + padding
-        val iconX = itemX + 2
-        val iconY = y + (this.height - iconSize) / 2
-
-        val itemStack = getItemStackFromId(entityId)
-        context.drawItem(itemStack, iconX, iconY)
-
-        val textX = iconX + iconTotalWidth
+        val textX = iconTotalWidth
         val textY = y + this.height / 2 - 4
-        context.drawTextWithShadow(textRenderer, Text.literal(entityId), textX, textY, 0xFFAAAAAA.toInt())
+        context.drawTextWithShadow(
+            textRenderer,
+            Text.literal(entityId),
+            textX,
+            textY,
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
+        )
 
         val removeButtonX = x + width - padding - removeButtonWidth
         val removeButtonY = y
@@ -66,7 +68,15 @@ class EntityListItemWidget(
                 mouseY >= removeButtonY &&
                 mouseY < removeButtonY + this.height
 
-        val removeColor = if (isRemoveButtonHovered) 0xFFAA4444.toInt() else 0xFF882222.toInt()
+        val baseColor =
+            InfiniteClient
+                .theme()
+                .colors.errorColor
+        val hoverColor =
+            InfiniteClient
+                .theme()
+                .colors.errorColor
+        val removeColor = if (isRemoveButtonHovered) hoverColor else baseColor
 
         context.fill(
             removeButtonX,
@@ -80,7 +90,9 @@ class EntityListItemWidget(
             "x",
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
-            0xFFFFFFFF.toInt(),
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
             false,
         )
     }

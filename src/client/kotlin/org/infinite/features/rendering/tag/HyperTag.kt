@@ -16,8 +16,10 @@ import org.infinite.settings.FeatureSetting
 class HyperTag : ConfigurableFeature(initialEnabled = false) {
     override val level = FeatureLevel.UTILS
     private val mobs = FeatureSetting.BooleanSetting("Mobs", "feature.rendering.hypertag.mobs.description", true)
-    private val players = FeatureSetting.BooleanSetting("Players", "feature.rendering.hypertag.players.description", true)
-    private val distance = FeatureSetting.IntSetting("Distance", "feature.rendering.hypertag.distance.description", 64, 0, 256)
+    private val players =
+        FeatureSetting.BooleanSetting("Players", "feature.rendering.hypertag.players.description", true)
+    private val distance =
+        FeatureSetting.IntSetting("Distance", "feature.rendering.hypertag.distance.description", 64, 0, 256)
     override val settings: List<FeatureSetting<*>> =
         listOf(
             mobs,
@@ -82,17 +84,67 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         alpha: Float = 1.0f,
     ) {
         val clampedProgress = progress.coerceIn(0.0f, 1.0f)
-        val barBackgroundColor = ColorHelper.getArgb((128 * alpha).toInt(), 50, 50, 50)
-        // 背景色を塗りつぶし
+        val barBackgroundColor =
+            ColorHelper.getArgb(
+                (128 * alpha).toInt(),
+                ColorHelper.getRed(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getGreen(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getBlue(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+            ) // 背景色を塗りつぶし
         graphics2d.fill(x, y, width, height, barBackgroundColor)
 
         val fillWidth = (width * clampedProgress).toInt()
         if (fillWidth > 0) {
-            // グラデーションの代わりに、体力進捗に応じて色を変える (緑 -> 黄 -> 赤)
-            val progressColor = clampedProgress // 0.0 (低い) から 1.0 (高い)
-            val r = (255 * (1 - progressColor)).toInt().coerceIn(0, 255) // progressが低いとRが増加
-            val g = (255 * progressColor).toInt().coerceIn(0, 255) // progressが高いとGが増加
-            val healthColor = ColorHelper.getArgb((255 * alpha).toInt(), r, g, 0)
+            // グラデーションの代わりに、体力進捗に応じて色を変える (赤 -> 黄 -> 緑)
+            val healthColor =
+                ColorHelper.getArgb(
+                    (255 * alpha).toInt(),
+                    (
+                        ColorHelper.getRed(
+                            org.infinite.InfiniteClient
+                                .theme()
+                                .colors.errorColor,
+                        ) * (1 - clampedProgress) + ColorHelper.getRed(
+                            org.infinite.InfiniteClient
+                                .theme()
+                                .colors.greenAccentColor,
+                        ) * clampedProgress
+                    ).toInt(),
+                    (
+                        ColorHelper.getGreen(
+                            org.infinite.InfiniteClient
+                                .theme()
+                                .colors.errorColor,
+                        ) * (1 - clampedProgress) + ColorHelper.getGreen(
+                            org.infinite.InfiniteClient
+                                .theme()
+                                .colors.greenAccentColor,
+                        ) * clampedProgress
+                    ).toInt(),
+                    (
+                        ColorHelper.getBlue(
+                            org.infinite.InfiniteClient
+                                .theme()
+                                .colors.errorColor,
+                        ) * (1 - clampedProgress) + ColorHelper.getBlue(
+                            org.infinite.InfiniteClient
+                                .theme()
+                                .colors.greenAccentColor,
+                        ) * clampedProgress
+                    ).toInt(),
+                )
 
             // 🚀 最適化: 単一の描画コールでバーの進捗部分を塗りつぶし
             graphics2d.fill(x, y, fillWidth, height, healthColor)
@@ -143,12 +195,42 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
             val healthPer = entity.health / entity.maxHealth
             val tagColor =
                 when (entity) {
-                    is PlayerEntity -> 0xFF00FFFF
-                    is HostileEntity -> 0xFFFF0000 // 敵対モブ: 赤色
-                    is PassiveEntity -> 0xFF00FF00 // 友好モブ: 緑色
-                    else -> 0xFFFFFFFF
-                }.toInt()
-            val bgColor = 0x88000000.toInt()
+                    is PlayerEntity ->
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.infoColor
+                    is HostileEntity ->
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.errorColor // 敵対モブ: 赤色
+                    is PassiveEntity ->
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.greenAccentColor // 友好モブ: 緑色
+                    else ->
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.foregroundColor
+                }
+            val bgColor =
+                ColorHelper.getArgb(
+                    136,
+                    ColorHelper.getRed(
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.backgroundColor,
+                    ),
+                    ColorHelper.getGreen(
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.backgroundColor,
+                    ),
+                    ColorHelper.getBlue(
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.backgroundColor,
+                    ),
+                )
 
             // render background
             graphics2D.fill(startX, startY, width, height, bgColor)

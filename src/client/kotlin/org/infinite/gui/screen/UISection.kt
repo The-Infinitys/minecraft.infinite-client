@@ -77,7 +77,25 @@ class UISection(
         alpha: Int,
         renderContent: Boolean,
     ) {
-        val backgroundColor = ColorHelper.getArgb(alpha, 0, 0, 0)
+        val backgroundColor =
+            ColorHelper.getArgb(
+                alpha,
+                ColorHelper.getRed(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getGreen(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getBlue(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+            )
         context.drawBorder(x, y, width, height, borderColor)
         context.fill(x, y, x + width, y + height, backgroundColor)
 
@@ -87,7 +105,25 @@ class UISection(
         val iconY = y + (height - iconSize) / 2
 
         // Apply the alpha to the icon
-        val iconColor = ColorHelper.getArgb(alpha, 255, 255, 255) // White color with given alpha
+        val iconColor =
+            ColorHelper.getArgb(
+                alpha,
+                ColorHelper.getRed(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+                ColorHelper.getGreen(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+                ColorHelper.getBlue(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
+                ),
+            ) // Use theme foreground color with given alpha
 
         // Using drawTexture overload with color parameter
         context.drawTexture(
@@ -230,7 +266,31 @@ class UISection(
         val textX = x + (width - textWidth) / 2
         val textY = y + 20
 
-        val color = if (isSelected) 0xFFFFFFFF.toInt() else 0xFF888888.toInt()
+        val color =
+            if (isSelected) {
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.foregroundColor
+            } else {
+                ColorHelper.getArgb(
+                    255,
+                    ColorHelper.getRed(
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.foregroundColor,
+                    ) / 2,
+                    ColorHelper.getGreen(
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.foregroundColor,
+                    ) / 2,
+                    ColorHelper.getBlue(
+                        org.infinite.InfiniteClient
+                            .theme()
+                            .colors.foregroundColor,
+                    ) / 2,
+                )
+            }
         context.drawTextWithShadow(textRenderer, title, textX, textY, color)
     }
 

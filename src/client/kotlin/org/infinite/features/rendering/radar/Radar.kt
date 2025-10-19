@@ -10,7 +10,6 @@ import net.minecraft.util.math.MathHelper
 import org.infinite.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
-import org.infinite.utils.rendering.getRainbowColor
 import org.infinite.utils.toRadians
 import kotlin.collections.iterator
 import kotlin.math.abs
@@ -103,10 +102,22 @@ object RadarRenderer {
      */
     fun getBaseDotColor(entity: LivingEntity): Int =
         when (entity) {
-            is PlayerEntity -> 0x00FFFF // プレイヤー: 水色 (ARGBのAなし)
-            is HostileEntity -> 0xFF0000 // 敵対モブ: 赤色
-            is PassiveEntity -> 0x00FF00 // 友好モブ: 緑色
-            else -> 0xFFFF00 // それ以外（中立モブなど）: 黄色
+            is PlayerEntity ->
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.infoColor // プレイヤー: 水色 (ARGBのAなし)
+            is HostileEntity ->
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.errorColor // 敵対モブ: 赤色
+            is PassiveEntity ->
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.greenAccentColor // 友好モブ: 緑色
+            else ->
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.warnColor // それ以外（中立モブなど）: 黄色
         }
 
     /**
@@ -164,8 +175,29 @@ object RadarRenderer {
         val startX = centerX - halfSizePx
         val startY = centerY - halfSizePx
 
-        val rainbowColor = getRainbowColor()
-        val innerColor = ColorHelper.getArgb(128, 0, 0, 0) // レーダー内部の背景色
+        val rainbowColor =
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.primaryColor
+        val innerColor =
+            ColorHelper.getArgb(
+                128,
+                ColorHelper.getRed(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getGreen(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+                ColorHelper.getBlue(
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
+                ),
+            ) // レーダー内部の背景色
 
         // レーダー内部の背景を塗りつぶし (Graphics2D.fill を使用: x, y, width, height)
         graphics2d.fill(startX, startY, sizePx, sizePx, innerColor)
@@ -196,9 +228,13 @@ object RadarRenderer {
                 textX - textWidth / 2, // x
                 textY - font.fontHeight / 2, // y
                 if (char == "N") {
-                    0xFFFF0000.toInt()
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.errorColor
                 } else {
-                    0xFFFFFFFF.toInt()
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.foregroundColor
                 },
                 true, // shadow
             )

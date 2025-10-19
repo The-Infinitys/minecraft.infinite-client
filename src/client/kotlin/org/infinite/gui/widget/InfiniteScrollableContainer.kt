@@ -8,8 +8,8 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
-import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
+import org.infinite.InfiniteClient
 import org.lwjgl.glfw.GLFW
 import kotlin.math.max
 
@@ -103,35 +103,18 @@ class InfiniteScrollableContainer(
             val scrollbarY = y + (scrollY / maxScrollY * (height - scrollbarHeight)).toInt()
             val scrollbarX = x + width - scrollbarWidth
 
-            context.fill(scrollbarX, y, scrollbarX + scrollbarWidth, y + height, 0x80000000.toInt())
+            context.fill(
+                scrollbarX,
+                y,
+                scrollbarX + scrollbarWidth,
+                y + height,
+                InfiniteClient.theme().colors.backgroundColor,
+            )
 
-            val animationDuration = 6000L
-            val colors =
-                intArrayOf(
-                    0xFFFF0000.toInt(),
-                    0xFFFFFF00.toInt(),
-                    0xFF00FF00.toInt(),
-                    0xFF00FFFF.toInt(),
-                    0xFF0000FF.toInt(),
-                    0xFFFF00FF.toInt(),
-                    0xFFFF0000.toInt(),
-                )
-            val currentTime = System.currentTimeMillis()
-            val elapsedTime = currentTime % animationDuration
-            val progress = elapsedTime.toFloat() / animationDuration.toFloat()
-            val numSegments = colors.size - 1
-            val segmentLength = 1.0f / numSegments
-            val currentSegmentIndex = (progress / segmentLength).toInt().coerceAtMost(numSegments - 1)
-            val segmentProgress = (progress % segmentLength) / segmentLength
-            val startColor = colors[currentSegmentIndex]
-            val endColor = colors[currentSegmentIndex + 1]
             val interpolatedColor =
-                ColorHelper.getArgb(
-                    255,
-                    (ColorHelper.getRed(startColor) * (1 - segmentProgress) + ColorHelper.getRed(endColor) * segmentProgress).toInt(),
-                    (ColorHelper.getGreen(startColor) * (1 - segmentProgress) + ColorHelper.getGreen(endColor) * segmentProgress).toInt(),
-                    (ColorHelper.getBlue(startColor) * (1 - segmentProgress) + ColorHelper.getBlue(endColor) * segmentProgress).toInt(),
-                )
+                InfiniteClient
+                    .theme()
+                    .colors.primaryColor
 
             context.fill(
                 scrollbarX,

@@ -9,7 +9,7 @@ class InfiniteTheme : Theme("infinite", InfiniteColor())
 
 class InfiniteColor : ThemeColors() {
     override val backgroundColor: Int
-        get() = 0x88FFFFFF.toInt()
+        get() = 0xFF000000.toInt()
     override val primaryColor: Int
         get() = getRainbowColor()
 

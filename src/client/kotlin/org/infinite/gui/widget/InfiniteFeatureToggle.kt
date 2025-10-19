@@ -6,7 +6,6 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
-import net.minecraft.util.math.ColorHelper
 import org.infinite.Feature
 import org.infinite.InfiniteClient
 import org.infinite.utils.rendering.drawBorder
@@ -91,7 +90,9 @@ class InfiniteFeatureToggle(
             Text.literal(feature.name),
             x + 60,
             y + (height - 8) / 2,
-            0xFFFFFFFF.toInt(),
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
         )
 
         toggleButton.x = x + width - toggleButton.width
@@ -107,37 +108,10 @@ class InfiniteFeatureToggle(
         resetButton.render(context, mouseX, mouseY, delta) // Render reset button
 
         if (isSelected) {
-            val animationDuration = 6000L // 6 seconds for full cycle
-            val colors =
-                intArrayOf(
-                    0xFFFF0000.toInt(), // #f00
-                    0xFFFFFF00.toInt(), // #ff0
-                    0xFF00FF00.toInt(), // #0f0
-                    0xFF00FFFF.toInt(), // #0ff
-                    0xFF0000FF.toInt(), // #00f
-                    0xFFFF00FF.toInt(), // #f0f
-                    0xFFFF0000.toInt(), // #f00 (for smooth loop)
-                )
-
-            val currentTime = System.currentTimeMillis()
-            val elapsedTime = currentTime % animationDuration
-            val progress = elapsedTime.toFloat() / animationDuration.toFloat()
-
-            val numSegments = colors.size - 1
-            val segmentLength = 1.0f / numSegments
-            val currentSegmentIndex = (progress / segmentLength).toInt().coerceAtMost(numSegments - 1)
-            val segmentProgress = (progress % segmentLength) / segmentLength
-
-            val startColor = colors[currentSegmentIndex]
-            val endColor = colors[currentSegmentIndex + 1]
-
             val interpolatedColor =
-                ColorHelper.getArgb(
-                    255, // Alpha
-                    (ColorHelper.getRed(startColor) * (1 - segmentProgress) + ColorHelper.getRed(endColor) * segmentProgress).toInt(),
-                    (ColorHelper.getGreen(startColor) * (1 - segmentProgress) + ColorHelper.getGreen(endColor) * segmentProgress).toInt(),
-                    (ColorHelper.getBlue(startColor) * (1 - segmentProgress) + ColorHelper.getBlue(endColor) * segmentProgress).toInt(),
-                )
+                InfiniteClient
+                    .theme()
+                    .colors.primaryColor
             context.drawBorder(x, y, width, height, interpolatedColor)
         }
     }

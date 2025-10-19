@@ -10,6 +10,7 @@ import net.minecraft.client.input.KeyInput
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.math.MathHelper
+import org.infinite.InfiniteClient
 import org.lwjgl.glfw.GLFW
 import kotlin.math.max
 import kotlin.math.min
@@ -198,7 +199,7 @@ class InfiniteTextField(
                 suggestionY,
                 suggestionX + suggestionWidth,
                 suggestionY + displayHeight,
-                0xCC000000.toInt(),
+                InfiniteClient.theme().colors.backgroundColor,
             )
 
             // クリップ (Scissor) を設定して、枠外の描画を防ぐ
@@ -217,8 +218,24 @@ class InfiniteTextField(
                 val currentY = suggestionY + relativeY
 
                 val isSelected = i == suggestionIndex
-                val backgroundColor = if (isSelected) 0xFF5555FF.toInt() else 0x00000000
-                val textColor = if (isSelected) 0xFFFFFFFF.toInt() else 0xFFAAAAAA.toInt()
+                val backgroundColor =
+                    if (isSelected) {
+                        InfiniteClient
+                            .theme()
+                            .colors.primaryColor
+                    } else {
+                        InfiniteClient.theme().colors.backgroundColor
+                    }
+                val textColor =
+                    if (isSelected) {
+                        InfiniteClient
+                            .theme()
+                            .colors.primaryColor
+                    } else {
+                        InfiniteClient
+                            .theme()
+                            .colors.foregroundColor
+                    }
 
                 // 選択されている候補の背景をハイライト
                 if (isSelected) {
@@ -255,7 +272,9 @@ class InfiniteTextField(
                     suggestionY,
                     scrollbarX + scrollbarWidth,
                     suggestionY + displayHeight,
-                    0x44FFFFFF,
+                    InfiniteClient
+                        .theme()
+                        .colors.backgroundColor,
                 )
                 // スクロールつまみ (サム)
                 context.fill(
@@ -263,7 +282,9 @@ class InfiniteTextField(
                     scrollbarY.toInt(),
                     scrollbarX + scrollbarWidth,
                     (scrollbarY + scrollbarHeight).toInt(),
-                    0xAAFFFFFF.toInt(),
+                    InfiniteClient
+                        .theme()
+                        .colors.foregroundColor,
                 )
             }
         }

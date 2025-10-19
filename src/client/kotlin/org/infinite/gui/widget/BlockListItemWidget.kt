@@ -12,7 +12,7 @@ import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import net.minecraft.util.math.MathHelper
+import org.infinite.InfiniteClient
 import org.infinite.utils.rendering.drawBorder
 
 class BlockListItemWidget(
@@ -60,13 +60,17 @@ class BlockListItemWidget(
         mouseY: Int,
         delta: Float,
     ) {
-        // ... (描画ロジックは変更なし: 以前の修正が有効なため) ...
-        val alpha = MathHelper.clamp(this.alpha, 0.0f, 1.0f)
-        val fullColor = 0xFFFFFF or (MathHelper.floor(alpha * 255.0f) shl 24)
-
         // 1. アイテム全体の背景 (ホバー時のみ)
         if (this.isHovered) {
-            context.fill(this.x, this.y, this.x + this.width, this.y + this.height, 0x30FFFFFF)
+            context.fill(
+                this.x,
+                this.y,
+                this.x + this.width,
+                this.y + this.height,
+                InfiniteClient
+                    .theme()
+                    .colors.primaryColor,
+            )
         }
 
         val itemX = x + padding
@@ -80,17 +84,45 @@ class BlockListItemWidget(
         // 3. テキストの描画
         val textX = iconX + iconTotalWidth
         val textY = y + this.height / 2 - 4
-        context.drawTextWithShadow(textRenderer, Text.literal(blockId), textX, textY, fullColor)
+        context.drawTextWithShadow(
+            textRenderer,
+            Text.literal(blockId),
+            textX,
+            textY,
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
+        )
 
         // 4. 削除ボタンの描画
         val isRemoveButtonHovered = isMouseOverRemoveButton(mouseX.toDouble(), mouseY.toDouble())
 
-        val baseColor = 0xFF882222.toInt()
-        val hoverColor = 0xFFAA4444.toInt()
+        val baseColor =
+            InfiniteClient
+                .theme()
+                .colors.errorColor
+        val hoverColor =
+            InfiniteClient
+                .theme()
+                .colors.errorColor
         val removeColor = if (isRemoveButtonHovered) hoverColor else baseColor
 
-        context.fill(removeButtonX, removeButtonY, removeButtonX + removeButtonWidth, removeButtonY + removeButtonHeight, removeColor)
-        context.drawBorder(removeButtonX, removeButtonY, removeButtonWidth, removeButtonHeight, 0xFF000000.toInt())
+        context.fill(
+            removeButtonX,
+            removeButtonY,
+            removeButtonX + removeButtonWidth,
+            removeButtonY + removeButtonHeight,
+            removeColor,
+        )
+        context.drawBorder(
+            removeButtonX,
+            removeButtonY,
+            removeButtonWidth,
+            removeButtonHeight,
+            InfiniteClient
+                .theme()
+                .colors.backgroundColor,
+        )
 
         // 削除テキスト 'x' の描画
         context.drawText(
@@ -98,7 +130,9 @@ class BlockListItemWidget(
             "x",
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
-            0xFFFFFFFF.toInt(),
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor,
             false,
         )
     }
