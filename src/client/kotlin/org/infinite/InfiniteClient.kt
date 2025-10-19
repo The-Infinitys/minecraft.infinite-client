@@ -11,7 +11,10 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.ColorHelper
 import org.infinite.gui.theme.Theme
+import org.infinite.gui.theme.official.HackerTheme
 import org.infinite.gui.theme.official.InfiniteTheme
+import org.infinite.gui.theme.official.MinecraftTheme
+import org.infinite.gui.theme.official.PastelTheme
 import org.infinite.gui.theme.official.SmeClanTheme
 import org.infinite.libs.InfiniteCommand
 import org.infinite.libs.InfiniteKeyBind
@@ -24,18 +27,13 @@ import org.slf4j.LoggerFactory
 object InfiniteClient : ClientModInitializer {
     private val LOGGER = LoggerFactory.getLogger("InfiniteClient")
     lateinit var playerInterface: PlayerInterface
-    val themes: List<Theme> =
-        listOf(
-            InfiniteTheme(),
-            SmeClanTheme(),
-        )
+    var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"
 
     fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: InfiniteTheme()
 
     override fun onInitializeClient() {
         println("[InfiniteClient] Translation system loaded.")
-
         // --- ティックイベントの登録 ---
         LogQueue.registerTickEvent()
 
@@ -49,6 +47,14 @@ object InfiniteClient : ClientModInitializer {
 
         // --- Event: when player joins a world ---
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
+            themes =
+                listOf(
+                    InfiniteTheme(),
+                    SmeClanTheme(),
+                    HackerTheme(),
+                    PastelTheme(),
+                    MinecraftTheme(),
+                )
             ConfigManager.loadConfig()
 
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")

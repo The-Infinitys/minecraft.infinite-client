@@ -3,11 +3,12 @@ package org.infinite.gui.theme.official
 import net.minecraft.util.Identifier
 import org.infinite.gui.theme.Theme
 import org.infinite.gui.theme.ThemeColors
+import org.infinite.gui.theme.ThemeIcon
 import java.awt.Color as AwtColor
 
 // --- The Clan Theme Definition ---
 
-class SmeClanTheme : Theme("sme_clan", SmeClanColor(), Identifier.of("infinite", "icon/sme_clan.png"))
+class SmeClanTheme : Theme("sme_clan", SmeClanColor(), ThemeIcon(Identifier.of("infinite", "icon/sme_clan.png")))
 
 // --- The Clan Color Scheme ---
 
