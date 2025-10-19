@@ -11,6 +11,7 @@ import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.command.CommandSource
 import net.minecraft.util.Formatting
 import org.infinite.ConfigManager
+import org.infinite.InfiniteClient // Add this import
 import org.infinite.InfiniteClient.error
 import org.infinite.InfiniteClient.info
 import org.infinite.InfiniteClient.log
@@ -100,6 +101,26 @@ object InfiniteCommand {
                                 ),
                         ),
                     ),
+                )
+                // 4. /infinite theme [name]
+                .then(
+                    ClientCommandManager
+                        .literal("theme")
+                        .executes { context -> getTheme(context) } // /infinite theme
+                        .then(
+                            ClientCommandManager
+                                .literal("list") // /infinite theme list
+                                .executes { context -> getTheme(context) },
+                        ).then(
+                            ClientCommandManager
+                                .literal("set") // /infinite theme set {name}
+                                .then(
+                                    ClientCommandManager
+                                        .argument("name", StringArgumentType.word())
+                                        .suggests(getThemeSuggestions())
+                                        .executes { context -> setTheme(context) },
+                                ),
+                        ),
                 ),
         )
         featureCategories.forEach { category ->
@@ -109,8 +130,37 @@ object InfiniteCommand {
         }
     }
 
+    private fun getTheme(context: CommandContext<FabricClientCommandSource>): Int {
+        val currentThemeName = InfiniteClient.currentTheme
+        info("現在のテーマ: $currentThemeName")
+        val availableThemes = InfiniteClient.themes.joinToString(", ") { it.name }
+        info("利用可能なテーマ: $availableThemes")
+        return 1
+    }
+
+    private fun getThemeSuggestions(): SuggestionProvider<FabricClientCommandSource> =
+        SuggestionProvider { _, builder ->
+            CommandSource.suggestMatching(
+                InfiniteClient.themes.map { it.name },
+                builder,
+            )
+        }
+
+    private fun setTheme(context: CommandContext<FabricClientCommandSource>): Int {
+        val themeName = StringArgumentType.getString(context, "name")
+        val theme = InfiniteClient.themes.find { it.name.equals(themeName, ignoreCase = true) }
+        if (theme == null) {
+            error("テーマ '$themeName' が見つかりません。")
+            return 0
+        }
+        InfiniteClient.currentTheme = theme.name
+        ConfigManager.saveConfig() // Save the updated theme
+        info("テーマを '${theme.name}' に変更しました。")
+        return 1
+    }
+
     /*
-     * 新しいコマンドの実装
+     * 既存の引数定義関数 (変更なし)
      */
 
     private fun resetConfig(context: CommandContext<*>): Int {

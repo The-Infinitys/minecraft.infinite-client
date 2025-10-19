@@ -25,6 +25,7 @@ object ConfigManager {
     @Serializable
     data class AppConfig(
         val features: List<FeatureConfig>,
+        val currentTheme: String = "infinite", // Add currentTheme to AppConfig
     )
 
     // Function to get config directory based on server type
@@ -98,7 +99,7 @@ object ConfigManager {
                     }
                 }
 
-        val appConfig = AppConfig(featureConfigs)
+        val appConfig = AppConfig(featureConfigs, InfiniteClient.currentTheme) // Pass currentTheme here
         val jsonString = json.encodeToString(AppConfig.serializer(), appConfig)
         configFile.writeText(jsonString)
         InfiniteClient.log("Configuration saved to ${configFile.absolutePath}")
@@ -118,6 +119,8 @@ object ConfigManager {
         try {
             val jsonString = configFile.readText()
             val appConfig = json.decodeFromString(AppConfig.serializer(), jsonString)
+
+            InfiniteClient.currentTheme = appConfig.currentTheme // Load currentTheme
 
             appConfig.features.forEach { featureConfig ->
                 featureCategories.flatMap { it.features }.find { it.name == featureConfig.nameKey }?.let { feature ->
