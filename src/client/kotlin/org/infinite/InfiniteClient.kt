@@ -10,6 +10,8 @@ import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.ColorHelper
+import org.infinite.gui.theme.Theme
+import org.infinite.gui.theme.official.InfiniteTheme
 import org.infinite.libs.InfiniteCommand
 import org.infinite.libs.InfiniteKeyBind
 import org.infinite.libs.client.PlayerInterface
@@ -21,6 +23,13 @@ import org.slf4j.LoggerFactory
 object InfiniteClient : ClientModInitializer {
     private val LOGGER = LoggerFactory.getLogger("InfiniteClient")
     lateinit var playerInterface: PlayerInterface
+    val themes: List<Theme> =
+        listOf(
+            InfiniteTheme(),
+        )
+    var currentTheme: String = "infinite"
+
+    fun theme(name: String = currentTheme): Theme = themes.find { it.name == currentTheme } ?: InfiniteTheme()
 
     override fun onInitializeClient() {
         println("[InfiniteClient] Translation system loaded.")
@@ -32,7 +41,7 @@ object InfiniteClient : ClientModInitializer {
 
         for (category in featureCategories) {
             for (features in category.features) {
-                (features.instance as? ConfigurableFeature)?.start()
+                features.instance.start()
             }
         }
 
@@ -51,7 +60,7 @@ object InfiniteClient : ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             for (category in featureCategories) {
                 for (features in category.features) {
-                    (features.instance as? ConfigurableFeature)?.stop()
+                    features.instance.stop()
                 }
             }
             ConfigManager.saveConfig()
@@ -186,7 +195,7 @@ object InfiniteClient : ClientModInitializer {
             .find { it.name.equals(category, ignoreCase = true) }
             ?.features
             ?.find { it.name.equals(name, ignoreCase = true) }
-            ?.instance as? ConfigurableFeature
+            ?.instance
 
     fun <T : ConfigurableFeature> isFeatureEnabled(featureClass: Class<T>): Boolean {
         val feature = getFeature(featureClass)
@@ -232,7 +241,7 @@ object InfiniteClient : ClientModInitializer {
         val graphics2D = Graphics2D(context, tickCounter)
         for (category in featureCategories) {
             for (features in category.features) {
-                val feature = (features.instance as? ConfigurableFeature) ?: continue
+                val feature = features.instance
                 if (feature.isEnabled()) {
                     feature.render2d(graphics2D)
                 }
@@ -267,7 +276,7 @@ object InfiniteClient : ClientModInitializer {
             )
         for (category in featureCategories) {
             for (features in category.features) {
-                val feature = (features.instance as? ConfigurableFeature) ?: continue
+                val feature = features.instance
                 if (feature.isEnabled()) {
                     feature.render3d(graphics3D)
                 }
