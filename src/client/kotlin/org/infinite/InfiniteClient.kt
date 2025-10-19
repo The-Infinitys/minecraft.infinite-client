@@ -12,6 +12,7 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.math.ColorHelper
 import org.infinite.gui.theme.Theme
 import org.infinite.gui.theme.official.InfiniteTheme
+import org.infinite.gui.theme.official.SmeClanTheme
 import org.infinite.libs.InfiniteCommand
 import org.infinite.libs.InfiniteKeyBind
 import org.infinite.libs.client.PlayerInterface
@@ -26,10 +27,11 @@ object InfiniteClient : ClientModInitializer {
     val themes: List<Theme> =
         listOf(
             InfiniteTheme(),
+            SmeClanTheme(),
         )
     var currentTheme: String = "infinite"
 
-    fun theme(name: String = currentTheme): Theme = themes.find { it.name == currentTheme } ?: InfiniteTheme()
+    fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: InfiniteTheme()
 
     override fun onInitializeClient() {
         println("[InfiniteClient] Translation system loaded.")

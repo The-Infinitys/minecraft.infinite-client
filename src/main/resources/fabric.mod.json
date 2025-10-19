@@ -11,7 +11,7 @@
 		"homepage": "https://the-infinitys.f5.si/minecraft/",
 		"sources": "https://github.com/The-Infinitys/minecraft.infinite-client"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/infinite/icon.png",
 	"environment": "client",
 	"entrypoints": {
