@@ -48,6 +48,8 @@ class CameraRoll(
     var yaw: Double,
     var pitch: Double,
 ) {
+    private fun directionNormalize(value: Double): Double = (value + 180) % 360 - 180
+
     /**
      * CameraRoll同士の足し算 (要素ごと)
      * operator fun plus(other: CameraRoll): CameraRoll
@@ -129,6 +131,8 @@ class CameraRoll(
         // 結果は自動的に正規化されます (sin^2 + cos^2 = 1 のため)
         return Vec3d(x, y, z)
     }
+
+    fun diffNormalize(): CameraRoll = CameraRoll(directionNormalize(yaw), directionNormalize(pitch))
 }
 
 enum class AimTaskConditionReturn {
@@ -291,12 +295,6 @@ open class AimTask(
                 }
 
                 AimCalculateMethod.EaseInOut -> {
-                    // EaseInとEaseOutの計算には、修正されたcalcExecRotationを再帰的に呼び出すのではなく、
-                    // scaledSensitivityを明示的に使った新しいロジックが必要だが、
-                    // 現状の設計では、EaseIn/EaseOut内で再びcalcExecRotationを呼び出しているため、
-                    // 呼び出し元のscaledSensitivityが再計算されないように注意が必要。
-                    // しかし、EaseIn/EaseOutはrollDiffとcalcMethodのみを引数にとるため、
-                    // そのままのロジックを維持し、scaledSensitivityへの依存は最初の呼び出しに限定されるものとする。
                     val easeIn = calcExecRotation(rollDiff, AimCalculateMethod.EaseIn)
                     val easeOut = calcExecRotation(rollDiff, AimCalculateMethod.EaseOut)
                     val easeInMagnitude = easeIn.magnitude()
@@ -308,7 +306,7 @@ open class AimTask(
                     }
                 }
             }
-        return result
+        return result.diffNormalize()
     }
 
     /**
@@ -339,10 +337,8 @@ open class AimTask(
     ): CameraRoll {
         val t = calcLookAt(targetPos)
         val c = CameraRoll(player.yaw.toDouble(), player.pitch.toDouble())
-        return CameraRoll(directionNormalize(t.yaw - c.yaw), directionNormalize((t.pitch - c.pitch)))
+        return (t - c).diffNormalize()
     }
-
-    private fun directionNormalize(value: Double): Double = (value + 180) % 360 - 180
 
     /**
      * 進行度に基づき、開始角度から目標角度へプレイヤーの視線を補間・設定します。
