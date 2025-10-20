@@ -71,7 +71,7 @@ class InfiniteButton(
             MinecraftClient.getInstance().textRenderer, // Use MinecraftClient's textRenderer
             message,
             x + width / 2,
-            y + (height - 8) / 2, // Center text vertically, 8 is approx text height
+            y + (height - MinecraftClient.getInstance().textRenderer.fontHeight) / 2, // Center text vertically, 8 is approx text height
             textColor,
         )
     }

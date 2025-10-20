@@ -18,7 +18,11 @@ class InfiniteSelectionList<E : Enum<E>>(
 ) : ClickableWidget(x, y, width, height, Text.literal(setting.name)) {
     private val textRenderer = MinecraftClient.getInstance().textRenderer
     private lateinit var cycleButton: InfiniteButton
-    private val buttonWidth = 50 // Fixed width like ToggleButton
+    private val buttonWidth =
+        (
+            setting.options.maxOfOrNull { textRenderer.getWidth(it.name) + 8 }
+                ?: 0
+        ).coerceAtLeast(50)
 
     private fun cycleOption() {
         val currentIndex = setting.options.indexOf(setting.value)

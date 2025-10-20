@@ -40,6 +40,7 @@
   "feature.automatic.aimode.allowplayerinput.description": "AIモードでもプレイヤー入力を許可します。",
   "feature.automatic.aimode.cancelondamaged.description": "プレイヤーがダメージを受けたときにAIを強制的に停止させます。",
   "feature.fighting.aimassist.range.description": "エイムアシストの範囲。",
+  "feature.movement.superfly.method.description": "SuperFlyの制御方法",
   "feature.fighting.aimassist.players.description": "プレイヤーをターゲットにする。",
   "feature.fighting.aimassist.mobs.description": "モブをターゲットにする。",
   "feature.fighting.aimassist.fov.description": "ターゲットを制限する視野角（度）。",
@@ -64,6 +65,7 @@
   "feature.fighting.lockon.fov.description": "ターゲットを制限する視野角（度）。",
   "feature.fighting.lockon.speed.description": "回転速度",
   "feature.fighting.lockon.method.description": "回転方法",
+  "feature.movement.antihunger.description": "満腹度の減少を抑えます。",
   "feature.fighting.noattack.protectedentities.description": "攻撃しないエンティティのリスト。",
   "feature.fighting.playermanager.friends.description": "フレンドとして扱うプレイヤーのリスト。",
   "feature.fighting.playermanager.enemies.description": "敵として扱うプレイヤーのリスト。",
@@ -141,6 +143,5 @@
   "command.infinite.setting.list.notlist": "設定「%s」はリスト型ではありません。add/delコマンドはリスト型設定にのみ使用できます。",
   "command.infinite.feature.status": "機能%sのステータス: %s",
   "command.infinite.setting.list.header": "--- 設定リスト（%s項目） ---",
-  "command.infinite.setting.list.footer": "--------------------",
-  "feature.movement.antihunger.description": "満腹度の減少を抑えます。"
+  "command.infinite.setting.list.footer": "--------------------"
 }

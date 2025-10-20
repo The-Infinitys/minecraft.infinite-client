@@ -40,6 +40,7 @@
   "feature.automatic.aimode.allowplayerinput.description": "Allows player input even in AI mode.",
   "feature.automatic.aimode.cancelondamaged.description": "Forces AI to stop when the player takes damage.",
   "feature.fighting.aimassist.range.description": "Aim assist range.",
+  "feature.movement.superfly.method.description": "SuperFly's Method",
   "feature.fighting.aimassist.players.description": "Target players.",
   "feature.fighting.aimassist.mobs.description": "Target mobs.",
   "feature.fighting.aimassist.fov.description": "Field of View to limit targeting (degrees).",

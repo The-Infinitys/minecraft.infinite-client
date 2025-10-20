@@ -124,9 +124,9 @@ class CameraRoll(
         // 2. 角度から方向ベクトルを計算
         // Y軸が上方向、X-Z平面が水平面、+Xが初期前方と仮定した一般的な計算式
         val cosPitch = cos(pitchRad)
-        val x = cos(yawRad) * cosPitch
-        val y = sin(pitchRad) // Y軸は上下の回転(Pitch)のみに依存
-        val z = sin(yawRad) * cosPitch
+        val x = -sin(yawRad) * cosPitch
+        val y = -sin(pitchRad) // Y軸は上下の回転(Pitch)のみに依存
+        val z = cos(yawRad) * cosPitch
 
         // 結果は自動的に正規化されます (sin^2 + cos^2 = 1 のため)
         return Vec3d(x, y, z)
