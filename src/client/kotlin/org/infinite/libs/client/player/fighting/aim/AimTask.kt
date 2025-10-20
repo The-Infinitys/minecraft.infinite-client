@@ -6,7 +6,9 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import org.infinite.InfiniteClient
 import kotlin.math.PI
+import kotlin.math.absoluteValue
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -48,8 +50,6 @@ class CameraRoll(
     var yaw: Double,
     var pitch: Double,
 ) {
-    private fun directionNormalize(value: Double): Double = (value + 180) % 360 - 180
-
     /**
      * CameraRoll同士の足し算 (要素ごと)
      * operator fun plus(other: CameraRoll): CameraRoll
@@ -132,7 +132,7 @@ class CameraRoll(
         return Vec3d(x, y, z)
     }
 
-    fun diffNormalize(): CameraRoll = CameraRoll(directionNormalize(yaw), directionNormalize(pitch))
+    fun diffNormalize(): CameraRoll = CameraRoll(MathHelper.wrapDegrees(yaw), MathHelper.wrapDegrees(pitch))
 }
 
 enum class AimTaskConditionReturn {
@@ -250,7 +250,9 @@ open class AimTask(
 
             AimTaskConditionReturn.Exec -> {
                 val rollDiff = calculateRotation(player, targetPos)
+                InfiniteClient.log("${rollDiff.yaw.toInt()}, ${rollDiff.pitch.toInt()}")
                 rollVelocity = calcExecRotation(rollDiff, calcMethod)
+                InfiniteClient.log("${rollVelocity.yaw.toInt()}, ${rollVelocity.pitch.toInt()}")
                 rollAim(player, rollVelocity)
                 return AimProcessResult.Progress
             }
@@ -336,6 +338,9 @@ open class AimTask(
         targetPos: Vec3d,
     ): CameraRoll {
         val t = calcLookAt(targetPos)
+        if (t.yaw.absoluteValue > 180) {
+            InfiniteClient.error("What?: $t")
+        }
         val c = CameraRoll(player.yaw.toDouble(), player.pitch.toDouble())
         return (t - c).diffNormalize()
     }
