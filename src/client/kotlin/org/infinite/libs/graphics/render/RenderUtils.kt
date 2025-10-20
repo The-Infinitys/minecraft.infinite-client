@@ -10,10 +10,77 @@ import net.minecraft.util.math.Vec3d
 import org.joml.Vector3f
 
 object RenderUtils {
-    data class LinedColorBox(
+    data class ColorBox(
         val color: Int,
         val box: Box,
     )
+
+    fun renderSolidBox(
+        matrix: MatrixStack,
+        box: Box,
+        color: Int,
+        buffer: VertexConsumer,
+    ) {
+        val entry = matrix.peek()
+        val x1 = box.minX.toFloat()
+        val y1 = box.minY.toFloat()
+        val z1 = box.minZ.toFloat()
+        val x2 = box.maxX.toFloat()
+        val y2 = box.maxY.toFloat()
+        val z2 = box.maxZ.toFloat()
+
+        // Y- face (Bottom) - 法線: (0, -1, 0)
+        buffer.quad(entry, 0f, -1f, 0f, color, x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2)
+
+        // Y+ face (Top) - 法線: (0, 1, 0)
+        buffer.quad(entry, 0f, 1f, 0f, color, x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1)
+
+        // Z- face (North) - 法線: (0, 0, -1)
+        buffer.quad(entry, 0f, 0f, -1f, color, x1, y1, z1, x1, y2, z1, x2, y2, z1, x2, y1, z1)
+
+        // X+ face (East) - 法線: (1, 0, 0)
+        buffer.quad(entry, 1f, 0f, 0f, color, x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2)
+
+        // Z+ face (South) - 法線: (0, 0, 1)
+        buffer.quad(entry, 0f, 0f, 1f, color, x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2)
+
+        // X- face (West) - 法線: (-1, 0, 0)
+        buffer.quad(entry, -1f, 0f, 0f, color, x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1)
+    }
+
+// --------------------------------------------------------------------------------------------------
+
+    // ヘルパー関数 (RenderUtilsオブジェクト内に定義すると便利)
+    fun VertexConsumer.quad(
+        entry: MatrixStack.Entry,
+        nx: Float,
+        ny: Float,
+        nz: Float, // 法線
+        color: Int,
+        // 4つの頂点の座標 (x, y, z)
+        x1: Float,
+        y1: Float,
+        z1: Float,
+        x2: Float,
+        y2: Float,
+        z2: Float,
+        x3: Float,
+        y3: Float,
+        z3: Float,
+        x4: Float,
+        y4: Float,
+        z4: Float,
+    ) {
+        // 頂点情報
+        // 三角形 1 (V1, V2, V3)
+        vertex(entry, x1, y1, z1).color(color).normal(entry, nx, ny, nz)
+        vertex(entry, x2, y2, z2).color(color).normal(entry, nx, ny, nz)
+        vertex(entry, x3, y3, z3).color(color).normal(entry, nx, ny, nz)
+        // 三角形 2 (V3, V4, V1)
+        vertex(entry, x3, y3, z3).color(color).normal(entry, nx, ny, nz)
+        vertex(entry, x4, y4, z4).color(color).normal(entry, nx, ny, nz)
+        vertex(entry, x1, y1, z1).color(color).normal(entry, nx, ny, nz)
+    }
 
     /**
      * 単一のBoxのアウトラインをVertexConsumerに書き込みます。
@@ -25,7 +92,6 @@ object RenderUtils {
         color: Int,
         buffer: VertexConsumer,
     ) {
-        // ... (renderLinedBox の内容は変更なし) ...
         val entry: MatrixStack.Entry = matrix.peek()
         val x1 = box.minX.toFloat()
         val y1 = box.minY.toFloat()
@@ -33,9 +99,6 @@ object RenderUtils {
         val x2 = box.maxX.toFloat()
         val y2 = box.maxY.toFloat()
         val z2 = box.maxZ.toFloat()
-        // color() メソッドは ARGB (Int) を受け取るため、そのまま使用します。
-
-        // bottom lines
         buffer.vertex(entry, x1, y1, z1).color(color).normal(entry, 1f, 0f, 0f) //  を追加
         buffer.vertex(entry, x2, y1, z1).color(color).normal(entry, 1f, 0f, 0f)
         buffer.vertex(entry, x1, y1, z1).color(color).normal(entry, 0f, 0f, 1f)
@@ -66,19 +129,15 @@ object RenderUtils {
         buffer.vertex(entry, x2, y2, z2).color(color).normal(entry, 0f, 1f, 0f)
     }
 
-    /**
-     * 複数の Box のアウトラインを描画します。バッファのフラッシュはしません。
-     *
-     * @param buffer 描画先の VertexConsumer (Graphics3Dから取得する)
-     */
-    fun renderLinedBoxes(
+    fun renderSolidColorBoxes(
         matrix: MatrixStack,
-        boxes: List<Box>,
-        color: Int,
-        buffer: VertexConsumer, // Graphics3Dから渡される
+        boxes: List<ColorBox>,
+        buffer: VertexConsumer,
     ) {
         val camPos = cameraPos().negate()
-        boxes.forEach { renderLinedBox(matrix, it.offset(camPos), color, buffer) }
+        boxes.forEach {
+            renderSolidBox(matrix, it.box.offset(camPos), it.color, buffer)
+        }
     }
 
     /**
@@ -88,7 +147,7 @@ object RenderUtils {
      */
     fun renderLinedColorBoxes(
         matrix: MatrixStack,
-        boxes: List<LinedColorBox>,
+        boxes: List<ColorBox>,
         buffer: VertexConsumer, // Graphics3Dから渡される
     ) {
         val camPos = cameraPos().negate()
@@ -111,9 +170,24 @@ object RenderUtils {
                 .theme()
                 .colors.greenAccentColor // Green for far
 
-        val r = MathHelper.lerp(f, ColorHelper.getRed(startColor).toFloat() / 255f, ColorHelper.getRed(endColor).toFloat() / 255f)
-        val g = MathHelper.lerp(f, ColorHelper.getGreen(startColor).toFloat() / 255f, ColorHelper.getGreen(endColor).toFloat() / 255f)
-        val b = MathHelper.lerp(f, ColorHelper.getBlue(startColor).toFloat() / 255f, ColorHelper.getBlue(endColor).toFloat() / 255f)
+        val r =
+            MathHelper.lerp(
+                f,
+                ColorHelper.getRed(startColor).toFloat() / 255f,
+                ColorHelper.getRed(endColor).toFloat() / 255f,
+            )
+        val g =
+            MathHelper.lerp(
+                f,
+                ColorHelper.getGreen(startColor).toFloat() / 255f,
+                ColorHelper.getGreen(endColor).toFloat() / 255f,
+            )
+        val b =
+            MathHelper.lerp(
+                f,
+                ColorHelper.getBlue(startColor).toFloat() / 255f,
+                ColorHelper.getBlue(endColor).toFloat() / 255f,
+            )
 
         return (
             0xFF000000.toInt() or
@@ -141,11 +215,9 @@ object RenderUtils {
         // 始点と終点の座標
         val start3f = Vector3f(s.x.toFloat(), s.y.toFloat(), s.z.toFloat())
         val end3f = Vector3f(e.x.toFloat(), e.y.toFloat(), e.z.toFloat())
-
         // 🚨 修正: 正しい法線ベクトルを計算
         // 法線は線分の方向
         val normal = Vector3f(end3f).sub(start3f).normalize()
-
         // 頂点情報と法線の書き込み
         buffer.vertex(entry, start3f).color(color).normal(entry, normal.x, normal.y, normal.z)
         buffer.vertex(entry, end3f).color(color).normal(entry, normal.x, normal.y, normal.z)

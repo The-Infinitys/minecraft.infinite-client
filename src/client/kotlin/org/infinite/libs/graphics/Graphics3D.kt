@@ -6,7 +6,6 @@ import net.minecraft.client.option.Perspective
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.VertexConsumerProvider.Immediate
 import net.minecraft.client.util.ObjectAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
@@ -75,35 +74,34 @@ class Graphics3D(
         color: Int,
         isOverDraw: Boolean = false,
     ) {
-        val layer = RenderResources.renderLayer(isOverDraw)
+        val layer = RenderResources.renderLinedLayer(isOverDraw)
         val buffer = immediate.getBuffer(layer)
 
         RenderUtils.renderLinedBox(matrixStack, box, color, buffer)
     }
 
     /**
-     * 複数の Box を同じ色で線描画します。
-     */
-    fun renderLinedBoxes(
-        boxes: List<Box>,
-        color: Int,
-        isOverDraw: Boolean = false,
-    ) {
-        val layer = RenderResources.renderLayer(isOverDraw)
-        val buffer = immediate.getBuffer(layer)
-        RenderUtils.renderLinedBoxes(matrixStack, boxes, color, buffer)
-    }
-
-    /**
      * 複数の Box をそれぞれ異なる色で線描画します。
      */
     fun renderLinedColorBoxes(
-        boxes: List<RenderUtils.LinedColorBox>,
+        boxes: List<RenderUtils.ColorBox>,
         isOverDraw: Boolean = false,
     ) {
-        val layer = RenderResources.renderLayer(isOverDraw)
+        val layer = RenderResources.renderLinedLayer(isOverDraw)
         val buffer = immediate.getBuffer(layer)
         RenderUtils.renderLinedColorBoxes(matrixStack, boxes, buffer)
+    }
+
+    /**
+     * 複数の Box をそれぞれ異なる色で塗りつぶし描画します。
+     */
+    fun renderSolidColorBoxes(
+        boxes: List<RenderUtils.ColorBox>, // 仮定: 塗りつぶし用の色付きBoxは RenderUtils.ColorBox 型とします。
+        isOverDraw: Boolean = false,
+    ) {
+        val layer = RenderResources.renderSolidLayer(isOverDraw)
+        val buffer = immediate.getBuffer(layer)
+        RenderUtils.renderSolidColorBoxes(matrixStack, boxes, buffer)
     }
 
     /**
@@ -115,7 +113,7 @@ class Graphics3D(
         color: Int,
         isOverDraw: Boolean = false,
     ) {
-        val layer = RenderResources.renderLayer(isOverDraw)
+        val layer = RenderResources.renderLinedLayer(isOverDraw)
         val buffer = immediate.getBuffer(layer)
         RenderUtils.renderLine(matrixStack, start, end, color, buffer)
     }
@@ -187,7 +185,7 @@ class Graphics3D(
         color: Int,
         isOverDraw: Boolean,
     ) {
-        val layer = RenderResources.renderLayer(isOverDraw)
+        val layer = RenderResources.renderLinedLayer(isOverDraw)
         val buffer = immediate.getBuffer(layer)
         val start = tracerOrigin(tickProgress) ?: return
         val offset: Vec3d = RenderUtils.cameraPos().negate()

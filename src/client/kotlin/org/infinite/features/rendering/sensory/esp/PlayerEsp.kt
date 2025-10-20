@@ -52,7 +52,7 @@ object PlayerEsp {
         // 1. プレイヤーの枠線 (水色) を描画
         val renderBoxes =
             players.map { player ->
-                RenderUtils.LinedColorBox(
+                RenderUtils.ColorBox(
                     BOX_COLOR,
                     playerBox(player, tickProgress).expand(EXPAND),
                 )

@@ -43,7 +43,7 @@ object MobEsp {
         val mobs = livingEntities()
         val renderBoxes =
             mobs.map {
-                RenderUtils.LinedColorBox(
+                RenderUtils.ColorBox(
                     mobColor(it),
                     mobBox(it, tickProgress)
                         .expand(expand), // Boxを拡張

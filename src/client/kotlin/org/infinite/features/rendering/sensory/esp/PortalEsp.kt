@@ -15,9 +15,9 @@ object PortalEsp {
     private val portalPositions = mutableMapOf<BlockPos, Int>()
 
     // ARGB形式で色を定義
-    private const val NETHER_PORTAL_COLOR = 0xFFFF0000.toInt() // 赤
-    private const val END_PORTAL_FRAME_COLOR = 0xFF00FF00.toInt() // 緑
-    private const val END_PORTAL_COLOR = 0xFF0000FF.toInt() // 青
+    private const val NETHER_PORTAL_COLOR = 0x88FF0000.toInt() // 赤
+    private const val END_PORTAL_FRAME_COLOR = 0x8800FF00.toInt() // 緑
+    private const val END_PORTAL_COLOR = 0x880000FF.toInt() // 青
 
     // ティックベースのスキャン状態を管理
     private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)
@@ -160,7 +160,7 @@ object PortalEsp {
         // Mapのエントリをイテレート
         val boxes =
             portalPositions.map { (pos, color) ->
-                RenderUtils.LinedColorBox(
+                RenderUtils.ColorBox(
                     color, // ポータル情報から色を使用
                     Box(
                         pos.x.toDouble(),
@@ -172,6 +172,6 @@ object PortalEsp {
                     ),
                 )
             }
-        graphics3D.renderLinedColorBoxes(boxes, true)
+        graphics3D.renderSolidColorBoxes(boxes, true)
     }
 }

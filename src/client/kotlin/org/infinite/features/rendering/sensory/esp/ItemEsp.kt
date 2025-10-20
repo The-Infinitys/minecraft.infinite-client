@@ -35,7 +35,7 @@ object ItemEsp {
         val items = itemEntities()
         val renderBoxes =
             items.map {
-                RenderUtils.LinedColorBox(
+                RenderUtils.ColorBox(
                     rarityColor(it),
                     itemBox(it, tickProgress)
                         .offset(0.0, expand, 0.0)
