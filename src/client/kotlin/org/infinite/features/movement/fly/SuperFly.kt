@@ -64,7 +64,7 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
             }
 
             FlyMethod.Rocket -> {
-                if (client.options.jumpKey.isPressed) {
+                if (client.options.forwardKey.isPressed) {
                     controlRocket(client)
                 }
             }
