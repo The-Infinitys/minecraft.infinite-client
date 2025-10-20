@@ -16,7 +16,11 @@ object ContainerEsp {
     private val containerPositions = mutableMapOf<BlockPos, Int>()
 
     // ARGB形式でコンテナの色を定義
-    private val TRAP_CHEST_COLOR = InfiniteClient.theme().colors.orangeAccentColor
+    private val TRAP_CHEST_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.orangeAccentColor
+            .transparent(256)
     private val CHEST_COLOR = InfiniteClient.theme().colors.yellowAccentColor
     private val ENDER_CHEST_COLOR = InfiniteClient.theme().colors.magentaAccentColor
     private val FURNACE_COLOR = InfiniteClient.theme().colors.secondaryColor

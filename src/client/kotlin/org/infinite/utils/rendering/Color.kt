@@ -31,3 +31,17 @@ fun getRainbowColor(): Int {
         (ColorHelper.getBlue(startColor) * (1 - segmentProgress) + ColorHelper.getBlue(endColor) * segmentProgress).toInt(),
     )
 }
+
+fun Int.transparent(alpha: Int): Int =
+    ColorHelper.getArgb(
+        alpha,
+        ColorHelper.getRed(
+            this,
+        ),
+        ColorHelper.getGreen(
+            this,
+        ),
+        ColorHelper.getBlue(
+            this,
+        ),
+    )

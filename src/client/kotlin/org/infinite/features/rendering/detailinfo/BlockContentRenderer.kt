@@ -5,8 +5,9 @@ import net.minecraft.block.enums.ChestType
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
-import net.minecraft.util.math.ColorHelper
+import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics2D
+import org.infinite.utils.rendering.transparent
 
 object BlockContentRenderer {
     private const val PADDING = 5
@@ -30,7 +31,8 @@ object BlockContentRenderer {
             val chestType = blockState.get(ChestBlock.CHEST_TYPE)
             if (chestType != ChestType.SINGLE) {
                 val facing = blockState.get(ChestBlock.FACING)
-                val otherOffset = if (chestType == ChestType.RIGHT) facing.rotateYClockwise() else facing.rotateYCounterclockwise()
+                val otherOffset =
+                    if (chestType == ChestType.RIGHT) facing.rotateYClockwise() else facing.rotateYCounterclockwise()
                 val otherPos = detailPos.offset(otherOffset)
 
                 val otherData = feature.getChestContents(otherPos)
@@ -106,7 +108,7 @@ object BlockContentRenderer {
             infoName,
             textX,
             iconY + 1,
-            org.infinite.InfiniteClient
+            InfiniteClient
                 .theme()
                 .colors.foregroundColor,
             true,
@@ -116,24 +118,10 @@ object BlockContentRenderer {
             "($blockId)",
             textX + nameWidth + 5,
             iconY + 1,
-            ColorHelper.getArgb(
-                192,
-                ColorHelper.getRed(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-                ColorHelper.getGreen(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-                ColorHelper.getBlue(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-            ),
+            InfiniteClient
+                .theme()
+                .colors.foregroundColor
+                .transparent(127),
             true,
         )
         val correctToolId = correctTool.getId()
@@ -146,19 +134,22 @@ object BlockContentRenderer {
                 ICON_SIZE,
                 when (correctTool.checkPlayerToolStatus()) {
                     0 ->
-                        org.infinite.InfiniteClient
+                        InfiniteClient
                             .theme()
                             .colors.greenAccentColor
+
                     1 ->
-                        org.infinite.InfiniteClient
+                        InfiniteClient
                             .theme()
                             .colors.warnColor
+
                     2 ->
-                        org.infinite.InfiniteClient
+                        InfiniteClient
                             .theme()
                             .colors.errorColor
+
                     else ->
-                        org.infinite.InfiniteClient
+                        InfiniteClient
                             .theme()
                             .colors.foregroundColor
                 },
@@ -180,7 +171,17 @@ object BlockContentRenderer {
 
         if (effectiveData != null && effectiveData.items.isNotEmpty()) {
             // InventoryRenderer.drawに結合済みデータ（またはそのままのデータ）を渡す
-            contentY = InventoryRenderer.draw(graphics2d, client, effectiveData, startX, contentY, uiWidth, isTargetInReach, feature)
+            contentY =
+                InventoryRenderer.draw(
+                    graphics2d,
+                    client,
+                    effectiveData,
+                    startX,
+                    contentY,
+                    uiWidth,
+                    isTargetInReach,
+                    feature,
+                )
         }
 
         // --- 3. 座標情報の描画 ---
@@ -190,7 +191,7 @@ object BlockContentRenderer {
             posText,
             iconX,
             contentY,
-            org.infinite.InfiniteClient
+            InfiniteClient
                 .theme()
                 .colors.foregroundColor,
             true,
