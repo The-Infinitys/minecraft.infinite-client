@@ -17,13 +17,16 @@ import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
+import org.infinite.settings.Property
 import org.infinite.utils.rendering.getRainbowColor
+import org.lwjgl.glfw.GLFW
 import kotlin.math.acos
 
 // Graphics3D.kt で使用するため、ここで定義するか、適切なパッケージからインポート
 class LockOn : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel = FeatureLevel.CHEAT
-
+    override val toggleKeyBind: Property<Int>
+        get() = Property(GLFW.GLFW_KEY_K)
     private val range: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Range",
