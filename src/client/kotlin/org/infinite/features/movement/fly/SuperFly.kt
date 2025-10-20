@@ -64,9 +64,8 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
             }
 
             FlyMethod.Rocket -> {
-                if (client.options.forwardKey.isPressed) {
-                    controlRocket(client)
-                }
+                // ロケットモードでは、急停止や全方向への移動を可能にするため、キーのチェックをcontrolRocket内部で行います。
+                controlRocket(client)
             }
 
             FlyMethod.CreativeFlight -> {
@@ -139,12 +138,76 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
         player.velocity = velocity.add(hyperBoostVelocity)
     }
 
+    /**
+     * Rocketモードの操作を制御します。
+     * - 前/後キー: 視線方向に沿って移動
+     * - 左/右キー: 水平にストレイフ移動
+     * - ジャンプキー: 真上へ移動 (ワールドY+)
+     * - スニークキー (Shift): 即座に停止 (急停止)
+     */
     private fun controlRocket(client: MinecraftClient) {
         val player = client.player ?: return
-        val yaw = player.yaw.toDouble()
-        val pitch = player.pitch.toDouble()
-        val velocity = CameraRoll(yaw, pitch).vec().multiply(3.0)
-        player.velocity = velocity
+        val options = client.options ?: return
+        // power.valueに応じて速度を設定します。2.0を乗算してデフォルトの速度を調整します。
+        val movementMultiplier = power.value * 2.0
+
+        // SHIFTキー (Sneak Key) が押されている場合、速度をゼロにして即座に停止します。
+        if (options.sneakKey.isPressed) {
+            player.velocity = Vec3d.ZERO
+            return
+        }
+
+        val yaw = toRadians(player.yaw)
+
+        var moveVector = Vec3d.ZERO
+        var moving = false
+
+        // 前後移動 (W/S) - 視線方向
+        if (options.forwardKey.isPressed || options.backKey.isPressed) {
+            // CameraRollを使用して、ピッチ（上下方向）も考慮した視線方向のベクトルを取得
+            val forwardDirection = CameraRoll(player.yaw.toDouble(), player.pitch.toDouble()).vec()
+            if (options.forwardKey.isPressed) {
+                moveVector = moveVector.add(forwardDirection)
+            }
+            if (options.backKey.isPressed) {
+                moveVector = moveVector.subtract(forwardDirection)
+            }
+            moving = true
+        }
+
+        // 左右移動 (A/D) - 水平方向のストレイフ
+        if (options.leftKey.isPressed || options.rightKey.isPressed) {
+            // 水平方向の左右移動ベクトルを計算 (視線方向のYawに90度回転)
+            // rightX = cos(yaw), rightZ = sin(yaw)
+            val strafeX = cos(yaw).toDouble()
+            val strafeZ = sin(yaw).toDouble()
+            val strafeVec = Vec3d(strafeX, 0.0, strafeZ)
+
+            if (options.rightKey.isPressed) {
+                moveVector = moveVector.subtract(strafeVec)
+            }
+            if (options.leftKey.isPressed) {
+                moveVector = moveVector.add(strafeVec)
+            }
+            moving = true
+        }
+
+        // 上移動 (Jump Key) - 真上 (ワールドY軸)
+        if (options.jumpKey.isPressed) {
+            moveVector = moveVector.add(Vec3d(0.0, 1.0, 0.0))
+            moving = true
+        }
+
+        // 移動キーが押されている場合のみ速度を更新
+        if (moving) {
+            // 速度ベクトルを正規化し、設定されたパワーを適用
+            // 正規化することで、斜めや複数キー同時押しの場合でも一定の速度を保ちます
+            val finalVelocity = moveVector.normalize().multiply(movementMultiplier)
+            player.velocity = finalVelocity
+        } else {
+            // 移動キーが何も押されていない場合 (スニークキーは上記で処理済み)、
+            // 新しい速度を設定しないことで、ゲームの物理演算（重力、空気抵抗）に速度の減衰を任せます。
+        }
     }
 
     private fun controlCreativeFlight(client: MinecraftClient) {
