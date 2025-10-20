@@ -6,7 +6,9 @@ import org.infinite.InfiniteClient
 import org.infinite.features.rendering.sensory.esp.ItemEsp
 import org.infinite.features.rendering.sensory.esp.MobEsp
 import org.infinite.features.rendering.sensory.esp.PlayerEsp
+import org.infinite.features.rendering.sensory.esp.PortalEsp
 import org.infinite.libs.graphics.Graphics3D
+import org.infinite.libs.world.WorldManager
 import org.infinite.settings.FeatureSetting
 
 class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
@@ -31,5 +33,17 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
         if (isEnabled("Item")) {
             ItemEsp.render(graphics3D)
         }
+        if (isEnabled("Portal")) {
+            PortalEsp.render(graphics3D)
+        }
+    }
+
+    override fun handleChunk(worldChunk: WorldManager.Chunk) {
+        PortalEsp.handleChunk(worldChunk)
+    }
+
+    override fun disabled() {
+        super.disabled()
+        PortalEsp.clear()
     }
 }

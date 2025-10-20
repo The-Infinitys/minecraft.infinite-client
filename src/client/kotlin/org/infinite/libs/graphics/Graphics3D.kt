@@ -91,8 +91,6 @@ class Graphics3D(
     ) {
         val layer = RenderResources.renderLayer(isOverDraw)
         val buffer = immediate.getBuffer(layer)
-
-        // RenderUtilsの修正された関数を呼び出し (draw()は含まれない)
         RenderUtils.renderLinedBoxes(matrixStack, boxes, color, buffer)
     }
 
@@ -105,7 +103,6 @@ class Graphics3D(
     ) {
         val layer = RenderResources.renderLayer(isOverDraw)
         val buffer = immediate.getBuffer(layer)
-
         RenderUtils.renderLinedColorBoxes(matrixStack, boxes, buffer)
     }
 

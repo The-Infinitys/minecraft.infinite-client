@@ -7,17 +7,17 @@ import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
 class WorldManager {
     sealed class Chunk {
         class Data(
-            x: Int,
-            z: Int,
-            data: ChunkData,
+            val x: Int,
+            val z: Int,
+            val data: ChunkData,
         ) : Chunk()
 
         class BlockUpdate(
-            packet: BlockUpdateS2CPacket,
+            val packet: BlockUpdateS2CPacket,
         ) : Chunk()
 
         class DeltaUpdate(
-            packet: ChunkDeltaUpdateS2CPacket,
+            val packet: ChunkDeltaUpdateS2CPacket,
         ) : Chunk()
     }
 
