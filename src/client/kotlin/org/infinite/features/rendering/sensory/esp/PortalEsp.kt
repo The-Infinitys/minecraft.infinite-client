@@ -5,6 +5,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.chunk.ChunkSection
+import net.minecraft.world.dimension.DimensionType
 import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
@@ -16,6 +17,7 @@ object PortalEsp {
 
     // ARGB形式で色を定義
     private const val NETHER_PORTAL_COLOR = 0x88FF0000.toInt() // 赤
+    private const val END_GATEWAY_COLOR = 0x88FFFF00.toInt() // 青
     private const val END_PORTAL_FRAME_COLOR = 0x8800FF00.toInt() // 緑
     private const val END_PORTAL_COLOR = 0x880000FF.toInt() // 青
 
@@ -29,6 +31,7 @@ object PortalEsp {
             "minecraft:nether_portal" -> NETHER_PORTAL_COLOR
             "minecraft:end_portal_frame" -> END_PORTAL_FRAME_COLOR
             "minecraft:end_portal" -> END_PORTAL_COLOR
+            "minecraft:end_gateway" -> END_GATEWAY_COLOR
             else -> null
         }
 
@@ -71,6 +74,8 @@ object PortalEsp {
         }
     }
 
+    private var currentDimension: DimensionType? = null
+
     /**
      * 毎ティック呼ばれる。プレイヤーを中心に、チャンクを順番に走査する (インクリメンタルスキャン)。
      */
@@ -110,6 +115,12 @@ object PortalEsp {
     ) {
         val client = MinecraftClient.getInstance()
         val world = client.world ?: return
+        if (world.dimension != currentDimension) {
+            currentDimension = world.dimension
+            clear()
+            currentScanIndex = 0
+            return
+        }
         // チャンクがロードされているかを確認し、取得
         val chunk: net.minecraft.world.chunk.Chunk? = world.getChunk(chunkX, chunkZ)
 
@@ -118,7 +129,7 @@ object PortalEsp {
             for (chunkY in 0 until chunk.sectionArray.size) {
                 val section = chunk.sectionArray[chunkY]
                 if (section != null && !section.isEmpty) {
-                    scanChunkSection(chunkX, chunkY, chunkZ, section)
+                    scanChunkSection(chunkX, chunkY, chunkZ, section, chunk.bottomY)
                 }
             }
         }
@@ -132,17 +143,19 @@ object PortalEsp {
         chunkY: Int,
         chunkZ: Int,
         section: ChunkSection,
+        minY: Int,
     ) {
+        val chunkLength = 16
         // セクション内のローカル座標 (0-15) を走査
-        for (y in 0 until 16) {
-            for (z in 0 until 16) {
-                for (x in 0 until 16) {
+        for (y in 0 until chunkLength) {
+            for (z in 0 until chunkLength) {
+                for (x in 0 until chunkLength) {
                     val blockState = section.getBlockState(x, y, z)
                     val blockId = Registries.BLOCK.getId(blockState.block).toString()
                     getColorForBlock(blockId)?.let { color ->
-                        val blockX = (chunkX * 16) + x
-                        val blockY = (chunkY * 16 - 64) + y
-                        val blockZ = (chunkZ * 16) + z
+                        val blockX = (chunkX * chunkLength) + x
+                        val blockY = (chunkY * chunkLength + minY) + y
+                        val blockZ = (chunkZ * chunkLength) + z
                         val pos = BlockPos(blockX, blockY, blockZ)
                         portalPositions[pos] = color
                     }
@@ -173,5 +186,6 @@ object PortalEsp {
                 )
             }
         graphics3D.renderSolidColorBoxes(boxes, true)
+        graphics3D.renderLinedColorBoxes(boxes, true)
     }
 }
