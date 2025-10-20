@@ -36,7 +36,8 @@
     "features.rendering.xray.XRayFluidRendererMixin",
     "features.rendering.xray.XRayGammaMixin",
     "infinite.graphics.InGameHudMixin",
-    "infinite.graphics.WorldRendererMixin"
+    "infinite.graphics.WorldRendererMixin",
+    "infinite.world.ClientPlayNetworkHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
