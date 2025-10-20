@@ -41,6 +41,6 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "features.movement.antihunger.ClientPlayNetworkHandlerMixin"
+    "features.movement.antihunger.ClientCommonNetworkHandlerMixin"
   ]
 }
