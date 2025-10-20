@@ -91,7 +91,7 @@ object BlockContentRenderer {
 
         // --- 1. ブロックアイコンと基本情報の描画 ---
 
-        val blockIconStack = ItemStack(detail.block)
+        val blockIconStack = ItemStack(detail.block.asItem())
         InventoryRenderer.drawItemWithDurability(
             graphics2d,
             blockIconStack,

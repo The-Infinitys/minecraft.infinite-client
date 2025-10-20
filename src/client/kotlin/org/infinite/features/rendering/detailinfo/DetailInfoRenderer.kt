@@ -11,11 +11,12 @@ object DetailInfoRenderer {
     internal const val BORDER_WIDTH = 2
     const val BAR_HEIGHT = 4
     const val BAR_PADDING = 5
-    private val INNER_COLOR =
-        org.infinite.InfiniteClient
-            .theme()
-            .colors.backgroundColor
-            .transparent(192)
+    private val INNER_COLOR
+        get() =
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.backgroundColor
+                .transparent(192)
 
     fun render(
         graphics2d: Graphics2D,
@@ -39,6 +40,7 @@ object DetailInfoRenderer {
                 is DetailInfo.TargetDetail.BlockDetail -> {
                     BlockContentRenderer.calculateHeight(client, detail, detailInfoFeature, uiWidth, isTargetInReach)
                 }
+
                 is DetailInfo.TargetDetail.EntityDetail -> {
                     EntityContentRenderer.calculateHeight(client, detail, uiWidth)
                 }
@@ -50,13 +52,23 @@ object DetailInfoRenderer {
 
         when (detail) {
             is DetailInfo.TargetDetail.BlockDetail -> {
-                BlockContentRenderer.draw(graphics2d, client, detail, detailInfoFeature, startX, startY, uiWidth, isTargetInReach)
+                BlockContentRenderer.draw(
+                    graphics2d,
+                    client,
+                    detail,
+                    detailInfoFeature,
+                    startX,
+                    startY,
+                    uiWidth,
+                    isTargetInReach,
+                )
                 if (interactionManager.isBreakingBlock) {
                     val progress = interactionManager.currentBreakingProgress.coerceIn(0.0f, 1.0f)
                     val infoText = TimeFormatter.getBreakingTimeText(progress, client)
                     drawBar(graphics2d, startX, endX, endY, progress, infoText)
                 }
             }
+
             is DetailInfo.TargetDetail.EntityDetail -> {
                 EntityContentRenderer.draw(graphics2d, client, detail, startX, startY, uiWidth)
                 val entity = detail.entity
@@ -81,7 +93,13 @@ object DetailInfoRenderer {
         graphics2d.fill(startX, startY, endX - startX, BORDER_WIDTH, featureColor)
         graphics2d.fill(startX, endY - BORDER_WIDTH, endX - startX, BORDER_WIDTH, featureColor)
         graphics2d.fill(startX, startY + BORDER_WIDTH, BORDER_WIDTH, endY - startY - 2 * BORDER_WIDTH, featureColor)
-        graphics2d.fill(endX - BORDER_WIDTH, startY + BORDER_WIDTH, BORDER_WIDTH, endY - startY - 2 * BORDER_WIDTH, featureColor)
+        graphics2d.fill(
+            endX - BORDER_WIDTH,
+            startY + BORDER_WIDTH,
+            BORDER_WIDTH,
+            endY - startY - 2 * BORDER_WIDTH,
+            featureColor,
+        )
     }
 
     private fun drawBar(
