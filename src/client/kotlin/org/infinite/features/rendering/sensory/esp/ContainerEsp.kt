@@ -17,51 +17,60 @@ object ContainerEsp {
     private val containerPositions = mutableMapOf<BlockPos, Int>()
 
     // ARGB形式でコンテナの色を定義
-    private val TRAP_CHEST_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.orangeAccentColor
-            .transparent(128)
-    private val CHEST_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.yellowAccentColor
-            .transparent(128)
-    private val ENDER_CHEST_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.magentaAccentColor
-            .transparent(128)
-    private val FURNACE_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.secondaryColor
-            .transparent(128)
-    private val HOPPER_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.greenAccentColor
-            .transparent(128)
-    private val BARREL_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.yellowAccentColor
-            .transparent(128)
-    private val SHULKER_BOX_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.aquaAccentColor
-            .transparent(128)
-    private val DISPENSER_DROPPER_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.redAccentColor
-            .transparent(128)
-    private val BREWING_STAND_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.blueAccentColor
-            .transparent(128)
+    private val TRAP_CHEST_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.orangeAccentColor
+                .transparent(128)
+    private val CHEST_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.yellowAccentColor
+                .transparent(128)
+    private val ENDER_CHEST_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.magentaAccentColor
+                .transparent(128)
+    private val FURNACE_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.secondaryColor
+                .transparent(128)
+    private val HOPPER_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.greenAccentColor
+                .transparent(128)
+    private val BARREL_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.yellowAccentColor
+                .transparent(128)
+    private val SHULKER_BOX_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.aquaAccentColor
+                .transparent(128)
+    private val DISPENSER_DROPPER_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.redAccentColor
+                .transparent(128)
+    private val BREWING_STAND_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.blueAccentColor
+                .transparent(128)
 
     // ティックベースのスキャン状態を管理 (PortalEspと同様)
     private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)

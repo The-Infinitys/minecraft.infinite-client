@@ -17,26 +17,30 @@ object PortalEsp {
     private val portalPositions = mutableMapOf<BlockPos, Int>()
 
     // ARGB形式で色を定義
-    private val NETHER_PORTAL_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.redAccentColor
-            .transparent(64)
-    private val END_GATEWAY_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.yellowAccentColor
-            .transparent(64)
-    private val END_PORTAL_FRAME_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.greenAccentColor
-            .transparent(64)
-    private val END_PORTAL_COLOR =
-        InfiniteClient
-            .theme()
-            .colors.blueAccentColor
-            .transparent(64)
+    private val NETHER_PORTAL_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.redAccentColor
+                .transparent(64)
+    private val END_GATEWAY_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.yellowAccentColor
+                .transparent(64)
+    private val END_PORTAL_FRAME_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.greenAccentColor
+                .transparent(64)
+    private val END_PORTAL_COLOR
+        get() =
+            InfiniteClient
+                .theme()
+                .colors.blueAccentColor
+                .transparent(64)
 
     // ティックベースのスキャン状態を管理
     private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)
