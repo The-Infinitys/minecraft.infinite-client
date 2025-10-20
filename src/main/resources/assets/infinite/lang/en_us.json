@@ -35,6 +35,7 @@
   "feature.rendering.detailinfo.description": "Displays detailed information about the targeted block or entity.",
   "feature.rendering.hypertag.description": "Displays health bars and names above entities.",
   "feature.rendering.portalgui.description": "Displays a GUI when in a portal.",
+  "feature.rendering.search.blocksearch.description": "Highlights specified blocks in the world.",
   "feature.server.serverinfo.description": "Displays detailed information about the current server.",
   "feature.server.detectserver.description": "Adjusts feature levels based on server detection.",
   "feature.automatic.aimode.allowplayerinput.description": "Allows player input even in AI mode.",

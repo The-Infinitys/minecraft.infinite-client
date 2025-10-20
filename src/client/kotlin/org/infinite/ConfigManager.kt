@@ -5,7 +5,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.put
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.WorldSavePath
@@ -91,6 +93,15 @@ object ConfigManager {
 
                                                 is FeatureSetting.PlayerListSetting ->
                                                     JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                is FeatureSetting.BlockColorListSetting ->
+                                                    JsonArray(
+                                                        setting.value.map { (blockId, color) ->
+                                                            buildJsonObject {
+                                                                put("blockId", blockId)
+                                                                put("color", color)
+                                                            }
+                                                        },
+                                                    )
                                             }
                                     )
                                 }
@@ -174,6 +185,12 @@ object ConfigManager {
                                 is FeatureSetting.PlayerListSetting ->
                                     setting.value =
                                         json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                is FeatureSetting.BlockColorListSetting ->
+                                    setting.value =
+                                        json
+                                            .decodeFromJsonElement<List<Map<String, JsonPrimitive>>>(jsonElement)
+                                            .associate { it["blockId"]!!.content to it["color"]!!.content.toInt() }
+                                            .toMutableMap()
 
                                 is FeatureSetting.EnumSetting<*> -> {
                                     val enumName = json.decodeFromJsonElement<String>(jsonElement)

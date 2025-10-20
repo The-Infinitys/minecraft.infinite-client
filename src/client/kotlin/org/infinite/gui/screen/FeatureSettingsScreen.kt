@@ -8,6 +8,7 @@ import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.infinite.Feature
+import org.infinite.gui.widget.InfiniteBlockColorListField
 import org.infinite.gui.widget.InfiniteBlockListField
 import org.infinite.gui.widget.InfiniteButton
 import org.infinite.gui.widget.InfiniteEntityListField
@@ -131,6 +132,19 @@ class FeatureSettingsScreen(
                 is FeatureSetting.PlayerListSetting -> {
                     settingWidgets.add(
                         InfinitePlayerListField(
+                            20,
+                            currentY,
+                            widgetWidth,
+                            blockListFieldHeight,
+                            setting,
+                        ),
+                    )
+                    currentY += blockListFieldHeight + padding
+                }
+
+                is FeatureSetting.BlockColorListSetting -> {
+                    settingWidgets.add(
+                        InfiniteBlockColorListField(
                             20,
                             currentY,
                             widgetWidth,

@@ -80,4 +80,10 @@ sealed class FeatureSetting<T>(
         descriptionKey: String,
         defaultValue: MutableList<String>,
     ) : FeatureSetting<MutableList<String>>(name, descriptionKey, defaultValue, defaultValue)
+
+    class BlockColorListSetting(
+        name: String,
+        descriptionKey: String,
+        defaultValue: MutableMap<String, Int>,
+    ) : FeatureSetting<MutableMap<String, Int>>(name, descriptionKey, defaultValue, defaultValue)
 }

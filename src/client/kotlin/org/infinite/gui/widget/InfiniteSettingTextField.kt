@@ -27,7 +27,7 @@ class InfiniteSettingTextField(
                 is FeatureSetting.StringSetting -> InfiniteTextField.InputType.ANY_TEXT
                 is FeatureSetting.BlockIDSetting -> InfiniteTextField.InputType.BLOCK_ID
                 is FeatureSetting.EntityIDSetting -> InfiniteTextField.InputType.ENTITY_ID
-                else -> InfiniteTextField.InputType.ANY_TEXT // Default for other types
+                else -> InfiniteTextField.InputType.ANY_TEXT // Handle BlockColorListSetting and other unhandled types
             }
 
         textField =
@@ -54,6 +54,7 @@ class InfiniteSettingTextField(
                 is FeatureSetting.BlockListSetting -> {}
                 is FeatureSetting.EntityListSetting -> {}
                 is FeatureSetting.PlayerListSetting -> {}
+                else -> {} // Handle BlockColorListSetting and other unhandled types
             }
         }
     }

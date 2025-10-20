@@ -42,6 +42,7 @@ class InfiniteTextField(
         BLOCK_ID,
         ENTITY_ID,
         PLAYER_NAME,
+        HEX_COLOR,
     }
 
     init {
@@ -57,6 +58,11 @@ class InfiniteTextField(
                 val result = super.charTyped(input)
                 updateSuggestions()
                 return result
+            }
+            return false
+        } else if (inputType == InputType.HEX_COLOR) {
+            if (chr.isDigit() || (chr.lowercaseChar() >= 'a' && chr.lowercaseChar() <= 'f')) {
+                return super.charTyped(input)
             }
             return false
         }
