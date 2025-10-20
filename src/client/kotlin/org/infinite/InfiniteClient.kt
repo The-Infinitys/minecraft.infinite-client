@@ -2,6 +2,7 @@ package org.infinite
 
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.DrawContext
@@ -75,8 +76,7 @@ object InfiniteClient : ClientModInitializer {
                 }
             }
         }
-
-        // --- Commands ---
+        ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }
         ClientCommandRegistrationCallback.EVENT.register(InfiniteCommand::registerCommands)
         playerInterface = PlayerInterface()
         worldManager = WorldManager()
@@ -280,5 +280,17 @@ object InfiniteClient : ClientModInitializer {
             }
         }
         graphics3D.render()
+    }
+
+    fun handleWorldSystem() {
+        val worldChunk = worldManager.queue.removeFirstOrNull() ?: return
+        for (category in featureCategories) {
+            for (features in category.features) {
+                val feature = features.instance
+                if (feature.isEnabled()) {
+                    feature.handleChunk(worldChunk)
+                }
+            }
+        }
     }
 }

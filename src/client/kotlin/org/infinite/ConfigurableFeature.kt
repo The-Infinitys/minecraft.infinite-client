@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
+import org.infinite.libs.world.WorldManager
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
 import org.lwjgl.glfw.GLFW
@@ -159,4 +160,6 @@ abstract class ConfigurableFeature(
 
     open fun render3d(graphics3D: Graphics3D) {
     }
+
+    open fun handleChunk(worldChunk: WorldManager.Chunk) {}
 }
