@@ -3,6 +3,7 @@ package org.infinite.features.rendering.sensory
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
+import org.infinite.features.rendering.sensory.esp.ContainerEsp
 import org.infinite.features.rendering.sensory.esp.ItemEsp
 import org.infinite.features.rendering.sensory.esp.MobEsp
 import org.infinite.features.rendering.sensory.esp.PlayerEsp
@@ -19,6 +20,11 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
             FeatureSetting.BooleanSetting("MobEsp", "feature.rendering.extrasensory.mobesp.description", true),
             FeatureSetting.BooleanSetting("ItemEsp", "feature.rendering.extrasensory.itemesp.description", true),
             FeatureSetting.BooleanSetting("PortalEsp", "feature.rendering.extrasensory.portalesp.description", true),
+            FeatureSetting.BooleanSetting(
+                "ContainerEsp",
+                "feature.rendering.extrasensory.containeresp.description",
+                true,
+            ),
         )
 
     private fun isEnabled(type: String): Boolean = InfiniteClient.isSettingEnabled(ExtraSensory::class.java, type + "Esp")
@@ -36,18 +42,24 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
         if (isEnabled("Item")) {
             ItemEsp.render(graphics3D)
         }
+        if (isEnabled("Container")) {
+            ContainerEsp.render(graphics3D)
+        }
     }
 
     override fun handleChunk(worldChunk: WorldManager.Chunk) {
         PortalEsp.handleChunk(worldChunk)
+        ContainerEsp.handleChunk(worldChunk)
     }
 
     override fun disabled() {
         super.disabled()
         PortalEsp.clear()
+        ContainerEsp.clear()
     }
 
     override fun tick() {
         PortalEsp.tick()
+        ContainerEsp.tick()
     }
 }

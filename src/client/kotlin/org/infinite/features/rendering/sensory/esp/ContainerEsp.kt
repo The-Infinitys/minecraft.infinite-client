@@ -10,31 +10,45 @@ import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
 
-object PortalEsp {
-    // データ構造をListからMap<BlockPos, Int>に変更し、高速な追加/削除/ルックアップを可能にする
-    private val portalPositions = mutableMapOf<BlockPos, Int>()
+object ContainerEsp {
+    // データ構造: ブロック位置とその色 (ARGB)
+    private val containerPositions = mutableMapOf<BlockPos, Int>()
 
-    // ARGB形式で色を定義
-    private const val NETHER_PORTAL_COLOR = 0x88FF0000.toInt() // 赤
-    private const val END_GATEWAY_COLOR = 0x88FFFF00.toInt() // 青
-    private const val END_PORTAL_FRAME_COLOR = 0x8800FF00.toInt() // 緑
-    private const val END_PORTAL_COLOR = 0x880000FF.toInt() // 青
+    // ARGB形式でコンテナの色を定義
+    private const val TRAP_CHEST_COLOR = 0x88FFFF00.toInt()
+    private const val CHEST_COLOR = 0x8800FF00.toInt()
+    private const val ENDER_CHEST_COLOR = 0x88FF00FF.toInt()
+    private const val FURNACE_COLOR = 0x88FFFF00.toInt()
+    private const val HOPPER_COLOR = 0x88FF8800.toInt() // オレンジ: ホッパー
+    private const val BARREL_COLOR = 0x8800FFFF.toInt() // シアン: 樽
+    private const val SHULKER_BOX_COLOR = 0x880000FF.toInt() // 青: シュルカーボックス
+    private const val DISPENSER_DROPPER_COLOR = 0x88FF0000.toInt() // 赤: ディスペンサー/ドロッパー
+    private const val BREWING_STAND_COLOR = 0x88AAAAAA.toInt() // グレー: 醸造台
 
-    // ティックベースのスキャン状態を管理
+    // ティックベースのスキャン状態を管理 (PortalEspと同様)
     private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)
     private val TOTAL_CHUNKS = (2 * SCAN_RADIUS_CHUNKS + 1).let { it * it }
-    private var currentScanIndex = 0 // 現在走査中のチャンクのインデックス (0からTOTAL_CHUNKS-1)
+    private var currentScanIndex = 0 // 現在走査中のチャンクのインデックス
 
+    /**
+     * ブロックIDに基づいて対応する色を返す。
+     * シュルカーボックスは全色をサポートするため、IDのプレフィックスでチェックする。
+     */
     private fun getColorForBlock(blockId: String): Int? =
-        when (blockId) {
-            "minecraft:nether_portal" -> NETHER_PORTAL_COLOR
-            "minecraft:end_portal_frame" -> END_PORTAL_FRAME_COLOR
-            "minecraft:end_portal" -> END_PORTAL_COLOR
-            "minecraft:end_gateway" -> END_GATEWAY_COLOR
+        when {
+            blockId.endsWith("trapped_chest") -> TRAP_CHEST_COLOR
+            blockId.endsWith("chest") -> CHEST_COLOR
+            blockId.endsWith("ender_chest") -> ENDER_CHEST_COLOR
+            blockId.endsWith("furnace") || blockId.endsWith("blast_furnace") || blockId.endsWith("smoker") -> FURNACE_COLOR
+            blockId.endsWith("hopper") -> HOPPER_COLOR
+            blockId.endsWith("barrel") -> BARREL_COLOR
+            blockId.contains("shulker_box") -> SHULKER_BOX_COLOR // 全ての色のシュルカーボックスを検出
+            blockId.endsWith("dispenser") || blockId.endsWith("dropper") -> DISPENSER_DROPPER_COLOR
+            blockId.endsWith("brewing_stand") -> BREWING_STAND_COLOR
             else -> null
         }
 
-    // パケットによる即時更新ロジック (Mapを使用するように修正)
+    // パケットによる即時更新ロジック
     fun handleChunk(chunk: WorldManager.Chunk) {
         when (chunk) {
             is WorldManager.Chunk.Data -> {
@@ -44,17 +58,16 @@ object PortalEsp {
 
             is WorldManager.Chunk.BlockUpdate -> {
                 val pos = chunk.packet.pos
-                // world.getBlockState(pos)はメインスレッドで安全に呼び出せる
                 val blockState = MinecraftClient.getInstance().world?.getBlockState(pos)
                 val blockId = blockState?.block?.let { Registries.BLOCK.getId(it).toString() }
                 val color = blockId?.let { getColorForBlock(it) }
 
                 if (color != null) {
-                    // ポータルまたはフレームであれば Mapに追加/更新
-                    portalPositions[pos] = color
+                    // コンテナであれば Mapに追加/更新
+                    containerPositions[pos] = color
                 } else {
                     // 対象外のブロックであれば Mapから削除
-                    portalPositions.remove(pos)
+                    containerPositions.remove(pos)
                 }
             }
 
@@ -64,9 +77,9 @@ object PortalEsp {
                     val color = getColorForBlock(blockId)
 
                     if (color != null) {
-                        portalPositions[pos] = color
+                        containerPositions[pos] = color
                     } else {
-                        portalPositions.remove(pos)
+                        containerPositions.remove(pos)
                     }
                 }
             }
@@ -87,7 +100,6 @@ object PortalEsp {
         val centerChunkZ = player.chunkPos.z
 
         // 走査すべきチャンクの相対座標をインデックスから計算
-        // (X, Z)オフセットは [-SCAN_RADIUS_CHUNKS, SCAN_RADIUS_CHUNKS] の範囲になる
         val relativeX = (currentScanIndex % (2 * SCAN_RADIUS_CHUNKS + 1)) - SCAN_RADIUS_CHUNKS
         val relativeZ = (currentScanIndex / (2 * SCAN_RADIUS_CHUNKS + 1)) - SCAN_RADIUS_CHUNKS
 
@@ -103,7 +115,7 @@ object PortalEsp {
     }
 
     /**
-     * 指定されたチャンク内のポータルを走査し、結果を Map に追加/更新する。
+     * 指定されたチャンク内のコンテナを走査し、結果を Map に追加/更新する。
      */
     private fun scanChunk(
         chunkX: Int,
@@ -153,7 +165,7 @@ object PortalEsp {
                         val blockY = (chunkY * chunkLength + minY) + y
                         val blockZ = (chunkZ * chunkLength) + z
                         val pos = BlockPos(blockX, blockY, blockZ)
-                        portalPositions[pos] = color
+                        containerPositions[pos] = color
                     }
                 }
             }
@@ -161,26 +173,29 @@ object PortalEsp {
     }
 
     fun clear() {
-        portalPositions.clear()
+        containerPositions.clear()
         currentScanIndex = 0 // スキャンインデックスもリセット
     }
 
     fun render(graphics3D: Graphics3D) {
         // Mapのエントリをイテレート
         val boxes =
-            portalPositions.map { (pos, color) ->
+            containerPositions.map { (pos, color) ->
                 RenderUtils.ColorBox(
-                    color, // ポータル情報から色を使用
+                    color, // コンテナ情報から色を使用
                     Box(
                         pos.x.toDouble(),
                         pos.y.toDouble(),
                         pos.z.toDouble(),
+                        // コンテナの中には1ブロック未満のサイズのものがあるが、
+                        // 汎用性を高めるため、ここではPortalEspと同様に1x1x1のBoxを描画する。
                         pos.x + 1.0,
                         pos.y + 1.0,
                         pos.z + 1.0,
                     ),
                 )
             }
+        // 実線と枠線の両方を描画
         graphics3D.renderSolidColorBoxes(boxes, true)
         graphics3D.renderLinedColorBoxes(boxes, true)
     }

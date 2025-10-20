@@ -145,5 +145,6 @@
   "command.infinite.setting.list.header": "--- Settings List (%s items) ---",
   "command.infinite.setting.list.footer": "--------------------",
   "feature.movement.antifall.description": "Prevent falling damage.",
-  "feature.movement.superfly.power.description": "Flying power."
+  "feature.movement.superfly.power.description": "Flying power.",
+  "feature.rendering.extrasensory.containeresp.description": "Show Containers"
 }
