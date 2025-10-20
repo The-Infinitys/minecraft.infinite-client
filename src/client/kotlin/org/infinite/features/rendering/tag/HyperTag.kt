@@ -12,6 +12,7 @@ import org.infinite.FeatureLevel
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
+import org.infinite.utils.rendering.transparent
 
 class HyperTag : ConfigurableFeature(initialEnabled = false) {
     override val level = FeatureLevel.UTILS
@@ -109,8 +110,7 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         if (fillWidth > 0) {
             // グラデーションの代わりに、体力進捗に応じて色を変える (赤 -> 黄 -> 緑)
             val healthColor =
-                ColorHelper.getArgb(
-                    (255 * alpha).toInt(),
+                (
                     (
                         ColorHelper.getRed(
                             org.infinite.InfiniteClient
@@ -121,18 +121,21 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
                                 .theme()
                                 .colors.greenAccentColor,
                         ) * clampedProgress
-                    ).toInt(),
+                    ).toInt() shl 16
+                ) or
                     (
-                        ColorHelper.getGreen(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.errorColor,
-                        ) * (1 - clampedProgress) + ColorHelper.getGreen(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.greenAccentColor,
-                        ) * clampedProgress
-                    ).toInt(),
+                        (
+                            ColorHelper.getGreen(
+                                org.infinite.InfiniteClient
+                                    .theme()
+                                    .colors.errorColor,
+                            ) * (1 - clampedProgress) + ColorHelper.getGreen(
+                                org.infinite.InfiniteClient
+                                    .theme()
+                                    .colors.greenAccentColor,
+                            ) * clampedProgress
+                        ).toInt() shl 8
+                    ) or
                     (
                         ColorHelper.getBlue(
                             org.infinite.InfiniteClient
@@ -143,8 +146,8 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
                                 .theme()
                                 .colors.greenAccentColor,
                         ) * clampedProgress
-                    ).toInt(),
-                )
+                    ).toInt()
+                        .transparent((255 * alpha).toInt())
 
             // 🚀 最適化: 単一の描画コールでバーの進捗部分を塗りつぶし
             graphics2d.fill(x, y, fillWidth, height, healthColor)
@@ -213,24 +216,10 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
                             .colors.foregroundColor
                 }
             val bgColor =
-                ColorHelper.getArgb(
-                    136,
-                    ColorHelper.getRed(
-                        org.infinite.InfiniteClient
-                            .theme()
-                            .colors.backgroundColor,
-                    ),
-                    ColorHelper.getGreen(
-                        org.infinite.InfiniteClient
-                            .theme()
-                            .colors.backgroundColor,
-                    ),
-                    ColorHelper.getBlue(
-                        org.infinite.InfiniteClient
-                            .theme()
-                            .colors.backgroundColor,
-                    ),
-                )
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.backgroundColor
+                    .transparent(136)
 
             // render background
             graphics2D.fill(startX, startY, width, height, bgColor)

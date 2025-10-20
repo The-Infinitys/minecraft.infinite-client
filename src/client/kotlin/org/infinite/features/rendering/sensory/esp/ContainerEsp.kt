@@ -10,6 +10,7 @@ import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
+import org.infinite.utils.rendering.transparent
 
 object ContainerEsp {
     // データ構造: ブロック位置とその色 (ARGB)
@@ -20,15 +21,47 @@ object ContainerEsp {
         InfiniteClient
             .theme()
             .colors.orangeAccentColor
-            .transparent(256)
-    private val CHEST_COLOR = InfiniteClient.theme().colors.yellowAccentColor
-    private val ENDER_CHEST_COLOR = InfiniteClient.theme().colors.magentaAccentColor
-    private val FURNACE_COLOR = InfiniteClient.theme().colors.secondaryColor
-    private val HOPPER_COLOR = InfiniteClient.theme().colors.greenAccentColor
-    private val BARREL_COLOR = InfiniteClient.theme().colors.yellowAccentColor
-    private val SHULKER_BOX_COLOR = InfiniteClient.theme().colors.aquaAccentColor
-    private val DISPENSER_DROPPER_COLOR = InfiniteClient.theme().colors.redAccentColor
-    private val BREWING_STAND_COLOR = InfiniteClient.theme().colors.blueAccentColor
+            .transparent(128)
+    private val CHEST_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.yellowAccentColor
+            .transparent(128)
+    private val ENDER_CHEST_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.magentaAccentColor
+            .transparent(128)
+    private val FURNACE_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.secondaryColor
+            .transparent(128)
+    private val HOPPER_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.greenAccentColor
+            .transparent(128)
+    private val BARREL_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.yellowAccentColor
+            .transparent(128)
+    private val SHULKER_BOX_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.aquaAccentColor
+            .transparent(128)
+    private val DISPENSER_DROPPER_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.redAccentColor
+            .transparent(128)
+    private val BREWING_STAND_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.blueAccentColor
+            .transparent(128)
 
     // ティックベースのスキャン状態を管理 (PortalEspと同様)
     private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)

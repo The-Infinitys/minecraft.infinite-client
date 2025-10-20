@@ -5,8 +5,8 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.registry.Registries
-import net.minecraft.util.math.ColorHelper
 import org.infinite.libs.graphics.Graphics2D
+import org.infinite.utils.rendering.transparent
 
 object EntityContentRenderer {
     private const val PADDING = 5
@@ -73,24 +73,10 @@ object EntityContentRenderer {
             "($entityId)",
             textX + nameWidth + 5,
             currentY,
-            ColorHelper.getArgb(
-                192,
-                ColorHelper.getRed(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-                ColorHelper.getGreen(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-                ColorHelper.getBlue(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
-                ),
-            ),
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.foregroundColor
+                .transparent(192),
             true,
         )
         currentY += font.fontHeight + PADDING

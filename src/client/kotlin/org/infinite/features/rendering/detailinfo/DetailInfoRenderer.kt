@@ -3,33 +3,19 @@ package org.infinite.features.rendering.detailinfo
 import net.minecraft.client.MinecraftClient
 import net.minecraft.entity.LivingEntity
 import net.minecraft.text.Text
-import net.minecraft.util.math.ColorHelper
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.ColorUtils
+import org.infinite.utils.rendering.transparent
 
 object DetailInfoRenderer {
     internal const val BORDER_WIDTH = 2
     const val BAR_HEIGHT = 4
     const val BAR_PADDING = 5
     private val INNER_COLOR =
-        ColorHelper.getArgb(
-            192,
-            ColorHelper.getRed(
-                org.infinite.InfiniteClient
-                    .theme()
-                    .colors.backgroundColor,
-            ),
-            ColorHelper.getGreen(
-                org.infinite.InfiniteClient
-                    .theme()
-                    .colors.backgroundColor,
-            ),
-            ColorHelper.getBlue(
-                org.infinite.InfiniteClient
-                    .theme()
-                    .colors.backgroundColor,
-            ),
-        )
+        org.infinite.InfiniteClient
+            .theme()
+            .colors.backgroundColor
+            .transparent(192)
 
     fun render(
         graphics2d: Graphics2D,
@@ -114,24 +100,10 @@ object DetailInfoRenderer {
 
         val fillWidth = (barWidth * progress).toInt()
         val barBackgroundColor =
-            ColorHelper.getArgb(
-                128,
-                ColorHelper.getRed(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-                ColorHelper.getGreen(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-                ColorHelper.getBlue(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-            )
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.backgroundColor
+                .transparent(128)
         graphics2d.fill(barStartX, barY, barWidth, BAR_HEIGHT, barBackgroundColor)
 
         if (fillWidth > 0) {

@@ -3,9 +3,9 @@ package org.infinite.features.rendering.detailinfo
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
-import net.minecraft.util.math.ColorHelper
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.ColorUtils
+import org.infinite.utils.rendering.transparent
 
 object InventoryRenderer {
     private const val PADDING = 5
@@ -32,23 +32,30 @@ object InventoryRenderer {
                 requiredHeight += (rowsNeeded * SLOT_SIZE + 10) + barSpace
                 requiredHeight += 4 * (font.fontHeight + 2)
             }
+
             InventoryType.BREWING -> {
                 rowsNeeded = 2
                 requiredHeight += rowsNeeded * SLOT_SIZE + barSpace
                 requiredHeight += 2 * (font.fontHeight + 2)
                 requiredHeight += 2 * (BAR_HEIGHT + 2)
             }
+
             InventoryType.HOPPER -> {
                 rowsNeeded = 1
                 requiredHeight += rowsNeeded * SLOT_SIZE
             }
+
             InventoryType.CHEST -> {
                 rowsNeeded = if (inventoryData.items.size > 27) 6 else 3
                 requiredHeight += rowsNeeded * SLOT_SIZE + (rowsNeeded - 1) * 2
             }
+
             InventoryType.GENERIC -> {
                 val slotSizeWithPadding = SLOT_SIZE + 2
-                val maxItemsPerRow = ((uiWidth - 2 * DetailInfoRenderer.BORDER_WIDTH - 2 * PADDING) / slotSizeWithPadding).coerceAtLeast(1)
+                val maxItemsPerRow =
+                    ((uiWidth - 2 * DetailInfoRenderer.BORDER_WIDTH - 2 * PADDING) / slotSizeWithPadding).coerceAtLeast(
+                        1,
+                    )
                 rowsNeeded = (inventoryData.items.size + maxItemsPerRow - 1) / maxItemsPerRow
                 requiredHeight += rowsNeeded * SLOT_SIZE + (rowsNeeded - 1) * 2
             }
@@ -161,24 +168,10 @@ object InventoryRenderer {
                     arrowY,
                     barLength,
                     4,
-                    ColorHelper.getArgb(
-                        128,
-                        ColorHelper.getRed(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                        ColorHelper.getGreen(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                        ColorHelper.getBlue(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                    ),
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor
+                        .transparent(128),
                 )
                 val fillWidth = (barLength * progress).toInt()
                 graphics2d.fill(
@@ -198,24 +191,10 @@ object InventoryRenderer {
                     flameY,
                     barLength,
                     4,
-                    ColorHelper.getArgb(
-                        128,
-                        ColorHelper.getRed(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                        ColorHelper.getGreen(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                        ColorHelper.getBlue(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                    ),
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor
+                        .transparent(128),
                 )
                 val fillFlame = (barLength * fuelPercent).toInt()
                 graphics2d.fill(
@@ -281,6 +260,7 @@ object InventoryRenderer {
 
                 return drawingY + PADDING
             }
+
             InventoryType.BREWING -> {
                 val itemY = drawingY
                 val ingredientX = centerX - SLOT_SIZE / 2
@@ -350,25 +330,11 @@ object InventoryRenderer {
                     arrowX,
                     arrowY,
                     10,
-                    arrowHeight,
-                    ColorHelper.getArgb(
-                        128,
-                        ColorHelper.getRed(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                        ColorHelper.getGreen(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                        ColorHelper.getBlue(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                    ),
+                    10,
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor
+                        .transparent(128),
                 )
                 val fillHeight = (arrowHeight * progress).toInt()
                 graphics2d.fill(
@@ -390,24 +356,10 @@ object InventoryRenderer {
                     fuelBarY,
                     fuelBarWidth,
                     4,
-                    ColorHelper.getArgb(
-                        128,
-                        ColorHelper.getRed(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                        ColorHelper.getGreen(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                        ColorHelper.getBlue(
-                            org.infinite.InfiniteClient
-                                .theme()
-                                .colors.backgroundColor,
-                        ),
-                    ),
+                    org.infinite.InfiniteClient
+                        .theme()
+                        .colors.backgroundColor
+                        .transparent(128),
                 )
                 val fuelFillWidth = (fuelBarWidth * fuelProgress).toInt()
                 graphics2d.fill(
@@ -446,6 +398,7 @@ object InventoryRenderer {
 
                 return drawingY + PADDING
             }
+
             else -> {
                 val maxItemsPerRow: Int
                 val fixedRows: Int?
@@ -455,14 +408,17 @@ object InventoryRenderer {
                         maxItemsPerRow = 5
                         fixedRows = 1
                     }
+
                     InventoryType.CHEST -> {
                         maxItemsPerRow = 9
                         fixedRows = if (inventoryData.items.size > 27) 6 else 3
                     }
+
                     InventoryType.GENERIC -> {
                         maxItemsPerRow = (innerContentWidth / (SLOT_SIZE + ITEM_PADDING)).coerceAtLeast(1)
                         fixedRows = null
                     }
+
                     else -> return drawingY + PADDING
                 }
 
@@ -482,7 +438,8 @@ object InventoryRenderer {
                     val startItemIndex = row * maxItemsPerRow
                     val itemsInCurrentRow = (totalItems - startItemIndex).coerceAtMost(maxItemsPerRow)
                     val totalRowWidth = itemsInCurrentRow * SLOT_SIZE + (itemsInCurrentRow - 1) * ITEM_PADDING
-                    val rowStartX = startX + DetailInfoRenderer.BORDER_WIDTH + PADDING + (innerContentWidth - totalRowWidth) / 2
+                    val rowStartX =
+                        startX + DetailInfoRenderer.BORDER_WIDTH + PADDING + (innerContentWidth - totalRowWidth) / 2
                     val itemDrawingY = itemsStartY + row * (SLOT_SIZE + ITEM_PADDING)
 
                     for (col in 0 until itemsInCurrentRow) {
@@ -535,24 +492,10 @@ object InventoryRenderer {
                 barY,
                 slotSize - barWidth,
                 barHeight,
-                ColorHelper.getArgb(
-                    128,
-                    ColorHelper.getRed(
-                        org.infinite.InfiniteClient
-                            .theme()
-                            .colors.backgroundColor,
-                    ),
-                    ColorHelper.getGreen(
-                        org.infinite.InfiniteClient
-                            .theme()
-                            .colors.backgroundColor,
-                    ),
-                    ColorHelper.getBlue(
-                        org.infinite.InfiniteClient
-                            .theme()
-                            .colors.backgroundColor,
-                    ),
-                ),
+                org.infinite.InfiniteClient
+                    .theme()
+                    .colors.backgroundColor
+                    .transparent(128),
             )
         }
     }

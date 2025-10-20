@@ -18,6 +18,7 @@ import org.infinite.gui.widget.InfiniteButton
 import org.infinite.gui.widget.InfiniteFeatureToggle
 import org.infinite.gui.widget.InfiniteScrollableContainer
 import org.infinite.utils.rendering.drawBorder
+import org.infinite.utils.rendering.transparent
 
 class UISection(
     val id: String,
@@ -81,12 +82,7 @@ class UISection(
             val iconX = x + (width - iconWidth) / 2
             val iconY = y + (height - iconHeight) / 2
             val iconColor =
-                ColorHelper.getArgb(
-                    128,
-                    ColorHelper.getRed(borderColor),
-                    ColorHelper.getGreen(borderColor),
-                    ColorHelper.getBlue(borderColor),
-                )
+                borderColor.transparent(128)
             context.drawTexture(
                 RenderPipelines.GUI_TEXTURED,
                 icon.identifier,
@@ -104,24 +100,10 @@ class UISection(
             )
         }
         val backgroundColor =
-            ColorHelper.getArgb(
-                alpha,
-                ColorHelper.getRed(
-                    InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-                ColorHelper.getGreen(
-                    InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-                ColorHelper.getBlue(
-                    InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-            )
+            InfiniteClient
+                .theme()
+                .colors.backgroundColor
+                .transparent(alpha)
         context.drawBorder(x, y, width, height, borderColor)
         context.fill(x, y, x + width, y + height, backgroundColor)
 

@@ -10,6 +10,7 @@ import net.minecraft.util.math.MathHelper
 import org.infinite.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
+import org.infinite.utils.rendering.transparent
 import org.infinite.utils.toRadians
 import kotlin.collections.iterator
 import kotlin.math.abs
@@ -180,25 +181,10 @@ object RadarRenderer {
                 .theme()
                 .colors.primaryColor
         val innerColor =
-            ColorHelper.getArgb(
-                128,
-                ColorHelper.getRed(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-                ColorHelper.getGreen(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-                ColorHelper.getBlue(
-                    org.infinite.InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
-                ),
-            ) // レーダー内部の背景色
-
+            org.infinite.InfiniteClient
+                .theme()
+                .colors.backgroundColor
+                .transparent(128)
         // レーダー内部の背景を塗りつぶし (Graphics2D.fill を使用: x, y, width, height)
         graphics2d.fill(startX, startY, sizePx, sizePx, innerColor)
         graphics2d.drawBorder(startX, startY, sizePx, sizePx, rainbowColor)
@@ -278,13 +264,7 @@ object RadarRenderer {
 
             val baseColor = (getBaseDotColor(mob))
             val alpha = getAlphaBasedOnHeight(mob, player.y, featureHeight)
-            val finalDotColor =
-                ColorHelper.getArgb(
-                    alpha,
-                    ColorHelper.getRed(baseColor),
-                    ColorHelper.getGreen(baseColor),
-                    ColorHelper.getBlue(baseColor),
-                )
+            val finalDotColor = baseColor.transparent(alpha)
 
             // ドットを描画 (Graphics2D.fill を使用)
             graphics2d.fill(

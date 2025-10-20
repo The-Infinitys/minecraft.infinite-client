@@ -10,16 +10,33 @@ import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
+import org.infinite.utils.rendering.transparent
 
 object PortalEsp {
     // データ構造をListからMap<BlockPos, Int>に変更し、高速な追加/削除/ルックアップを可能にする
     private val portalPositions = mutableMapOf<BlockPos, Int>()
 
     // ARGB形式で色を定義
-    private val NETHER_PORTAL_COLOR = InfiniteClient.theme().colors.redAccentColor // 赤
-    private val END_GATEWAY_COLOR = InfiniteClient.theme().colors.yellowAccentColor // 青
-    private val END_PORTAL_FRAME_COLOR = InfiniteClient.theme().colors.greenAccentColor // 緑
-    private val END_PORTAL_COLOR = InfiniteClient.theme().colors.blueAccentColor // 青
+    private val NETHER_PORTAL_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.redAccentColor
+            .transparent(64)
+    private val END_GATEWAY_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.yellowAccentColor
+            .transparent(64)
+    private val END_PORTAL_FRAME_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.greenAccentColor
+            .transparent(64)
+    private val END_PORTAL_COLOR =
+        InfiniteClient
+            .theme()
+            .colors.blueAccentColor
+            .transparent(64)
 
     // ティックベースのスキャン状態を管理
     private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)
