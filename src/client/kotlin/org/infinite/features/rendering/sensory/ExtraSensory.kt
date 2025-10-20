@@ -24,6 +24,9 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
     private fun isEnabled(type: String): Boolean = InfiniteClient.isSettingEnabled(ExtraSensory::class.java, type + "Esp")
 
     override fun render3d(graphics3D: Graphics3D) {
+        if (isEnabled("Portal")) {
+            PortalEsp.render(graphics3D)
+        }
         if (isEnabled("Player")) {
             PlayerEsp.render(graphics3D)
         }
@@ -32,9 +35,6 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
         }
         if (isEnabled("Item")) {
             ItemEsp.render(graphics3D)
-        }
-        if (isEnabled("Portal")) {
-            PortalEsp.render(graphics3D)
         }
     }
 
@@ -45,5 +45,9 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
     override fun disabled() {
         super.disabled()
         PortalEsp.clear()
+    }
+
+    override fun tick() {
+        PortalEsp.tick()
     }
 }

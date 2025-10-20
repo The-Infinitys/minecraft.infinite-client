@@ -4,64 +4,54 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.world.chunk.Chunk
+import net.minecraft.world.chunk.ChunkSection
+import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
 
 object PortalEsp {
-    private val portalPositions = mutableListOf<BlockPos>()
+    // データ構造をListからMap<BlockPos, Int>に変更し、高速な追加/削除/ルックアップを可能にする
+    private val portalPositions = mutableMapOf<BlockPos, Int>()
 
+    // ARGB形式で色を定義
+    private const val NETHER_PORTAL_COLOR = 0xFFFF0000.toInt() // 赤
+    private const val END_PORTAL_FRAME_COLOR = 0xFF00FF00.toInt() // 緑
+    private const val END_PORTAL_COLOR = 0xFF0000FF.toInt() // 青
+
+    // ティックベースのスキャン状態を管理
+    private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)
+    private val TOTAL_CHUNKS = (2 * SCAN_RADIUS_CHUNKS + 1).let { it * it }
+    private var currentScanIndex = 0 // 現在走査中のチャンクのインデックス (0からTOTAL_CHUNKS-1)
+
+    private fun getColorForBlock(blockId: String): Int? =
+        when (blockId) {
+            "minecraft:nether_portal" -> NETHER_PORTAL_COLOR
+            "minecraft:end_portal_frame" -> END_PORTAL_FRAME_COLOR
+            "minecraft:end_portal" -> END_PORTAL_COLOR
+            else -> null
+        }
+
+    // パケットによる即時更新ロジック (Mapを使用するように修正)
     fun handleChunk(chunk: WorldManager.Chunk) {
         when (chunk) {
             is WorldManager.Chunk.Data -> {
-                val client = MinecraftClient.getInstance()
-                val world = client.world
-                if (world != null) {
-                    val chunkX = chunk.x
-                    val chunkZ = chunk.z
-                    val loadedChunk: Chunk? = world.getChunk(chunkX, chunkZ)
-
-                    if (loadedChunk != null) {
-                        for (section in loadedChunk.sectionArray) {
-                            if (section != null && !section.isEmpty) {
-                                for (y in 0 until 16) {
-                                    for (z in 0 until 16) {
-                                        for (x in 0 until 16) {
-                                            val blockState = section.getBlockState(x, y, z)
-                                            val block = blockState.block
-                                            val blockId = Registries.BLOCK.getId(block).toString()
-
-                                            if (blockId == "minecraft:nether_portal" || blockId == "minecraft:end_portal") {
-                                                val x = (chunkX * 16) + x
-                                                val z = (chunkZ * 16) + z
-                                                val blockPos =
-                                                    BlockPos(
-                                                        x,
-                                                        y,
-                                                        z,
-                                                    )
-                                                portalPositions.add(blockPos)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                // チャンクロードパケットが来た場合、そのチャンクを即座にスキャン
+                scanChunk(chunk.x, chunk.z)
             }
 
             is WorldManager.Chunk.BlockUpdate -> {
                 val pos = chunk.packet.pos
+                // world.getBlockState(pos)はメインスレッドで安全に呼び出せる
                 val blockState = MinecraftClient.getInstance().world?.getBlockState(pos)
                 val blockId = blockState?.block?.let { Registries.BLOCK.getId(it).toString() }
+                val color = blockId?.let { getColorForBlock(it) }
 
-                if (blockId == "minecraft:nether_portal" || blockId == "minecraft:end_portal") {
-                    if (!portalPositions.contains(pos)) {
-                        portalPositions.add(pos)
-                    }
+                if (color != null) {
+                    // ポータルまたはフレームであれば Mapに追加/更新
+                    portalPositions[pos] = color
                 } else {
+                    // 対象外のブロックであれば Mapから削除
                     portalPositions.remove(pos)
                 }
             }
@@ -69,10 +59,10 @@ object PortalEsp {
             is WorldManager.Chunk.DeltaUpdate -> {
                 chunk.packet.visitUpdates { pos, state ->
                     val blockId = Registries.BLOCK.getId(state.block).toString()
-                    if (blockId == "minecraft:nether_portal" || blockId == "minecraft:end_portal") {
-                        if (!portalPositions.contains(pos)) {
-                            portalPositions.add(pos)
-                        }
+                    val color = getColorForBlock(blockId)
+
+                    if (color != null) {
+                        portalPositions[pos] = color
                     } else {
                         portalPositions.remove(pos)
                     }
@@ -81,16 +71,97 @@ object PortalEsp {
         }
     }
 
+    /**
+     * 毎ティック呼ばれる。プレイヤーを中心に、チャンクを順番に走査する (インクリメンタルスキャン)。
+     */
+    fun tick() {
+        if (currentScanIndex == 0) {
+            portalPositions.forEach { InfiniteClient.log("Portal: ${it.key.toCenterPos()}") }
+        }
+        val client = MinecraftClient.getInstance()
+        val player = client.player ?: return
+
+        // プレイヤーの現在地を中心とするチャンク座標
+        val centerChunkX = player.chunkPos.x
+        val centerChunkZ = player.chunkPos.z
+
+        // 走査すべきチャンクの相対座標をインデックスから計算
+        // (X, Z)オフセットは [-SCAN_RADIUS_CHUNKS, SCAN_RADIUS_CHUNKS] の範囲になる
+        val relativeX = (currentScanIndex % (2 * SCAN_RADIUS_CHUNKS + 1)) - SCAN_RADIUS_CHUNKS
+        val relativeZ = (currentScanIndex / (2 * SCAN_RADIUS_CHUNKS + 1)) - SCAN_RADIUS_CHUNKS
+
+        // グローバルチャンク座標
+        val targetChunkX = centerChunkX + relativeX
+        val targetChunkZ = centerChunkZ + relativeZ
+
+        // ターゲットチャンクをスキャン (メインスレッドで実行)
+        scanChunk(targetChunkX, targetChunkZ)
+
+        // 次のティックで次のチャンクを走査するようにインデックスを更新
+        currentScanIndex = (currentScanIndex + 1) % TOTAL_CHUNKS
+    }
+
+    /**
+     * 指定されたチャンク内のポータルを走査し、結果を Map に追加/更新する。
+     */
+    private fun scanChunk(
+        chunkX: Int,
+        chunkZ: Int,
+    ) {
+        val client = MinecraftClient.getInstance()
+        val world = client.world ?: return
+        // チャンクがロードされているかを確認し、取得
+        val chunk: net.minecraft.world.chunk.Chunk? = world.getChunk(chunkX, chunkZ)
+
+        if (chunk != null) {
+            // チャンク内のすべてのセクションを走査
+            for (chunkY in 0 until chunk.sectionArray.size) {
+                val section = chunk.sectionArray[chunkY]
+                if (section != null && !section.isEmpty) {
+                    scanChunkSection(chunkX, chunkY, chunkZ, section)
+                }
+            }
+        }
+    }
+
+    /**
+     * チャンクセクション内のブロックを走査し、Mapを更新するヘルパー関数
+     */
+    private fun scanChunkSection(
+        chunkX: Int,
+        chunkY: Int,
+        chunkZ: Int,
+        section: ChunkSection,
+    ) {
+        // セクション内のローカル座標 (0-15) を走査
+        for (y in 0 until 16) {
+            for (z in 0 until 16) {
+                for (x in 0 until 16) {
+                    val blockState = section.getBlockState(x, y, z)
+                    val blockId = Registries.BLOCK.getId(blockState.block).toString()
+                    getColorForBlock(blockId)?.let { color ->
+                        val blockX = (chunkX * 16) + x
+                        val blockY = (chunkY * 16 - 64) + y
+                        val blockZ = (chunkZ * 16) + z
+                        val pos = BlockPos(blockX, blockY, blockZ)
+                        portalPositions[pos] = color
+                    }
+                }
+            }
+        }
+    }
+
     fun clear() {
         portalPositions.clear()
+        currentScanIndex = 0 // スキャンインデックスもリセット
     }
 
     fun render(graphics3D: Graphics3D) {
-        val portalColor = 0xFF00FF00.toInt() // Green color for portals (ARGB)
+        // Mapのエントリをイテレート
         val boxes =
-            portalPositions.map { pos ->
+            portalPositions.map { (pos, color) ->
                 RenderUtils.LinedColorBox(
-                    portalColor,
+                    color, // ポータル情報から色を使用
                     Box(
                         pos.x.toDouble(),
                         pos.y.toDouble(),
