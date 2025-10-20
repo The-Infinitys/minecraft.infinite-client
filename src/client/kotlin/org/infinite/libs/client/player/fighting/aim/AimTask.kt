@@ -6,9 +6,7 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import org.infinite.InfiniteClient
 import kotlin.math.PI
-import kotlin.math.absoluteValue
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -250,9 +248,7 @@ open class AimTask(
 
             AimTaskConditionReturn.Exec -> {
                 val rollDiff = calculateRotation(player, targetPos)
-                InfiniteClient.log("${rollDiff.yaw.toInt()}, ${rollDiff.pitch.toInt()}")
                 rollVelocity = calcExecRotation(rollDiff, calcMethod)
-                InfiniteClient.log("${rollVelocity.yaw.toInt()}, ${rollVelocity.pitch.toInt()}")
                 rollAim(player, rollVelocity)
                 return AimProcessResult.Progress
             }
@@ -338,9 +334,6 @@ open class AimTask(
         targetPos: Vec3d,
     ): CameraRoll {
         val t = calcLookAt(targetPos)
-        if (t.yaw.absoluteValue > 180) {
-            InfiniteClient.error("What?: $t")
-        }
         val c = CameraRoll(player.yaw.toDouble(), player.pitch.toDouble())
         return (t - c).diffNormalize()
     }
