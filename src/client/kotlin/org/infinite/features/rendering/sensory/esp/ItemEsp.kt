@@ -54,18 +54,22 @@ object ItemEsp {
                 org.infinite.InfiniteClient
                     .theme()
                     .colors.foregroundColor
+
             Rarity.UNCOMMON ->
                 org.infinite.InfiniteClient
                     .theme()
-                    .colors.warnColor
+                    .colors.yellowAccentColor
+
             Rarity.RARE ->
                 org.infinite.InfiniteClient
                     .theme()
-                    .colors.infoColor
+                    .colors.aquaAccentColor
+
             Rarity.EPIC ->
                 org.infinite.InfiniteClient
                     .theme()
-                    .colors.primaryColor
+                    .colors.magentaAccentColor
+
             else ->
                 org.infinite.InfiniteClient
                     .theme()

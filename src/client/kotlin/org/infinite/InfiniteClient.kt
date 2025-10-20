@@ -12,6 +12,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.ColorHelper
 import org.infinite.gui.theme.Theme
+import org.infinite.gui.theme.official.CyberTheme
 import org.infinite.gui.theme.official.HackerTheme
 import org.infinite.gui.theme.official.InfiniteTheme
 import org.infinite.gui.theme.official.MinecraftTheme
@@ -57,6 +58,7 @@ object InfiniteClient : ClientModInitializer {
                     HackerTheme(),
                     PastelTheme(),
                     MinecraftTheme(),
+                    CyberTheme(),
                 )
             ConfigManager.loadConfig()
 

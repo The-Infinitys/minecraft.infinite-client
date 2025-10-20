@@ -11,8 +11,6 @@ class InfiniteTheme : Theme("infinite", InfiniteColor(), ThemeIcon(Identifier.of
 
 class InfiniteColor : ThemeColors() {
     // 🎨 新しいカラーパレット
-
-    // 背景色: 濃い青
     override val backgroundColor: Int = 0xFF000000.toInt()
 
     // 前景色: 白
@@ -20,27 +18,6 @@ class InfiniteColor : ThemeColors() {
 
     override val primaryColor: Int
         get() = getRainbowColor()
-
-    // Secondary Color: 純粋なマゼンタ
-    override val secondaryColor: Int = 0xFFFF00FF.toInt()
-
-    // アクセントカラーの定義
-    // Red: 明るい赤 (エラー色にも使用)
-    override val redAccentColor: Int = 0xFFFF0000.toInt()
-
-    // Yellow: 純粋な黄色
-    override val yellowAccentColor: Int = 0xFFFFFF00.toInt()
-
-    // Green: 純粋なシアン
-    override val greenAccentColor: Int = 0xFF00FFFF.toInt()
-
-    // Aqua/Info: 濃い青紫 (情報色にも使用)
-    override val aquaAccentColor: Int = 0xFF0000FF.toInt()
-
-    // ステータス/汎用カラー
-    override val errorColor: Int = redAccentColor // エラー
-    override val warnColor: Int = 0xFFFF8800.toInt() // 警告: 明るいオレンジ
-    override val infoColor: Int = aquaAccentColor // 情報
 
     // panelColorのロジックは変更せずそのまま残します
     override fun panelColor(

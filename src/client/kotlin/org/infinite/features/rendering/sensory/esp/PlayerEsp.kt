@@ -42,7 +42,6 @@ object PlayerEsp {
         graphics3d: Graphics3D, // Graphics3D を引数として受け取る
     ) {
         val client = MinecraftClient.getInstance()
-        val self = client.player ?: return
 
         // Graphics3D から tickProgress を取得
         val tickProgress = graphics3d.tickProgress

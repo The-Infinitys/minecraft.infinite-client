@@ -62,7 +62,7 @@ object MobEsp {
             is HostileEntity ->
                 org.infinite.InfiniteClient
                     .theme()
-                    .colors.errorColor // 敵対モブ -> 赤
+                    .colors.redAccentColor // 敵対モブ -> 赤
             is PassiveEntity ->
                 org.infinite.InfiniteClient
                     .theme()
@@ -71,7 +71,7 @@ object MobEsp {
             else ->
                 org.infinite.InfiniteClient
                     .theme()
-                    .colors.warnColor
+                    .colors.yellowAccentColor
         }
 
     /**

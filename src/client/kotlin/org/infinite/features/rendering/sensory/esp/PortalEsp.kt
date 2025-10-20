@@ -6,6 +6,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.chunk.ChunkSection
 import net.minecraft.world.dimension.DimensionType
+import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
@@ -15,10 +16,10 @@ object PortalEsp {
     private val portalPositions = mutableMapOf<BlockPos, Int>()
 
     // ARGB形式で色を定義
-    private const val NETHER_PORTAL_COLOR = 0x88FF0000.toInt() // 赤
-    private const val END_GATEWAY_COLOR = 0x88FFFF00.toInt() // 青
-    private const val END_PORTAL_FRAME_COLOR = 0x8800FF00.toInt() // 緑
-    private const val END_PORTAL_COLOR = 0x880000FF.toInt() // 青
+    private val NETHER_PORTAL_COLOR = InfiniteClient.theme().colors.redAccentColor // 赤
+    private val END_GATEWAY_COLOR = InfiniteClient.theme().colors.yellowAccentColor // 青
+    private val END_PORTAL_FRAME_COLOR = InfiniteClient.theme().colors.greenAccentColor // 緑
+    private val END_PORTAL_COLOR = InfiniteClient.theme().colors.blueAccentColor // 青
 
     // ティックベースのスキャン状態を管理
     private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)

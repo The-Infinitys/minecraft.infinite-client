@@ -6,6 +6,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.chunk.ChunkSection
 import net.minecraft.world.dimension.DimensionType
+import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
@@ -15,15 +16,15 @@ object ContainerEsp {
     private val containerPositions = mutableMapOf<BlockPos, Int>()
 
     // ARGB形式でコンテナの色を定義
-    private const val TRAP_CHEST_COLOR = 0x88FFFF00.toInt()
-    private const val CHEST_COLOR = 0x8800FF00.toInt()
-    private const val ENDER_CHEST_COLOR = 0x88FF00FF.toInt()
-    private const val FURNACE_COLOR = 0x88FFFF00.toInt()
-    private const val HOPPER_COLOR = 0x88FF8800.toInt() // オレンジ: ホッパー
-    private const val BARREL_COLOR = 0x8800FFFF.toInt() // シアン: 樽
-    private const val SHULKER_BOX_COLOR = 0x880000FF.toInt() // 青: シュルカーボックス
-    private const val DISPENSER_DROPPER_COLOR = 0x88FF0000.toInt() // 赤: ディスペンサー/ドロッパー
-    private const val BREWING_STAND_COLOR = 0x88AAAAAA.toInt() // グレー: 醸造台
+    private val TRAP_CHEST_COLOR = InfiniteClient.theme().colors.orangeAccentColor
+    private val CHEST_COLOR = InfiniteClient.theme().colors.yellowAccentColor
+    private val ENDER_CHEST_COLOR = InfiniteClient.theme().colors.magentaAccentColor
+    private val FURNACE_COLOR = InfiniteClient.theme().colors.secondaryColor
+    private val HOPPER_COLOR = InfiniteClient.theme().colors.greenAccentColor
+    private val BARREL_COLOR = InfiniteClient.theme().colors.yellowAccentColor
+    private val SHULKER_BOX_COLOR = InfiniteClient.theme().colors.aquaAccentColor
+    private val DISPENSER_DROPPER_COLOR = InfiniteClient.theme().colors.redAccentColor
+    private val BREWING_STAND_COLOR = InfiniteClient.theme().colors.blueAccentColor
 
     // ティックベースのスキャン状態を管理 (PortalEspと同様)
     private const val SCAN_RADIUS_CHUNKS = 8 // プレイヤーを中心とする8チャンクの半径 (合計17x17チャンク)

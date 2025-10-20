@@ -54,16 +54,24 @@ open class ThemeColors {
     open val foregroundColor: Int = 0xFFFFFFFF.toInt()
 
     // Primary Color: アプリケーションの主要な色
-    open val primaryColor: Int = 0xFF6200EE.toInt()
+    open val primaryColor: Int = 0xFFAAAAAA.toInt()
 
     // Secondary Color: アプリケーションの副次的な色、Floating Action Buttonなどに使われる
-    open val secondaryColor: Int = 0xFF03DAC6.toInt()
+    open val secondaryColor: Int = 0xFF444444.toInt()
 
     // アクセントカラーの定義
-    open val redAccentColor: Int = 0xFFB00020.toInt()
-    open val yellowAccentColor: Int = 0xFFFFC107.toInt()
-    open val greenAccentColor: Int = 0xFF4CAF50.toInt()
-    open val aquaAccentColor: Int = 0xFF00BCD4.toInt()
+    open val redAccentColor: Int = 0xFFFF0000.toInt()
+    open val orangeAccentColor: Int = 0xFFFF8800.toInt()
+    open val yellowAccentColor: Int = 0xFFFFFF00.toInt()
+    open val limeAccentColor: Int = 0xFF88FF00.toInt()
+    open val greenAccentColor: Int = 0xFF00FF00.toInt()
+    open val emeraldAccentColor: Int = 0xFF00FF88.toInt()
+    open val aquaAccentColor: Int = 0xFF00FFFF.toInt()
+    open val oceanAccentColor: Int = 0xFF0088FF.toInt()
+    open val blueAccentColor: Int = 0xFF0000FF.toInt()
+    open val violetAccentColor: Int = 0xFF8800FF.toInt()
+    open val magentaAccentColor: Int = 0xFFFF00FF.toInt()
+    open val purpleAccentColor: Int = 0xFFFF0088.toInt()
 
     // その他の一般的なカラープロパティを追加
     open val errorColor: Int = redAccentColor // エラーメッセージなどに使う色
