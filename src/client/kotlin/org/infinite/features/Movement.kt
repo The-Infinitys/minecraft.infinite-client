@@ -2,6 +2,7 @@ package org.infinite.features
 
 import org.infinite.feature
 import org.infinite.features.movement.braek.FastBreak
+import org.infinite.features.movement.fall.AntiFall
 import org.infinite.features.movement.feather.FeatherWalk
 import org.infinite.features.movement.fly.SuperFly
 import org.infinite.features.movement.freeze.Freeze
@@ -15,8 +16,21 @@ import org.infinite.features.movement.water.WaterHover
 
 val movement =
     listOf(
-        feature("AntiHunger", AntiHunger(), "feature.movement.antihunger.description"),
-        feature("AutoTool", AutoTool(), "feature.movement.autotool.description"),
+        feature(
+            "AntiHunger",
+            AntiHunger(),
+            "feature.movement.antihunger.description",
+        ),
+        feature(
+            "AntiFall",
+            AntiFall(),
+            "feature.movement.antifall.description",
+        ),
+        feature(
+            "AutoTool",
+            AutoTool(),
+            "feature.movement.autotool.description",
+        ),
         feature(
             "SuperSprint",
             SuperSprint(),

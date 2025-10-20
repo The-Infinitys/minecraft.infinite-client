@@ -10,6 +10,7 @@
     "features.fighting.noattack.NoAttackMixin",
     "features.fighting.reach.ReachMixin",
     "features.fighting.superattack.SuperAttackMixin",
+    "features.movement.antifall.ClientCommonNetworkHandlerMixin",
     "features.movement.fastbreak.ClientPlayerInteractionManagerAccessor",
     "features.movement.fastbreak.FastBreakMixin",
     "features.movement.freeze.FreezeNetworkHandlerMixin",

@@ -143,5 +143,7 @@
   "command.infinite.setting.list.notlist": "Setting '%s' is not a list type. add/del commands can only be used for list type settings.",
   "command.infinite.feature.status": "Feature %s status: %s",
   "command.infinite.setting.list.header": "--- Settings List (%s items) ---",
-  "command.infinite.setting.list.footer": "--------------------"
+  "command.infinite.setting.list.footer": "--------------------",
+  "feature.movement.antifall.description": "Prevent falling damage.",
+  "feature.movement.superfly.power.description": "Flying power."
 }

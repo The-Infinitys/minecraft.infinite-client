@@ -26,9 +26,12 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
             FlyMethod.Acceleration,
             FlyMethod.entries,
         )
+    private val power: FeatureSetting.FloatSetting =
+        FeatureSetting.FloatSetting("Power", "feature.movement.superfly.power.description", 1.0f, 0.5f, 5.0f)
     override val settings: List<FeatureSetting<*>> =
         listOf(
             method,
+            power,
         )
 
     override fun tick() {
@@ -93,11 +96,12 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
         val player = client.player ?: return
         val yaw = toRadians(player.yaw)
         val velocity = player.velocity
+        val movementPower = 0.05 + power.value / 100.0
         val forwardVelocity =
             Vec3d(
-                -sin(yaw) * 0.05,
+                -sin(yaw) * movementPower,
                 0.0,
-                cos(yaw) * 0.05,
+                cos(yaw) * movementPower,
             )
         if (client.options.forwardKey.isPressed) {
             player.velocity = velocity.add(forwardVelocity)
@@ -110,11 +114,13 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
     private fun controlAccelerationHeight(client: MinecraftClient) {
         val player = client.player ?: return
         val velocity = player.velocity
+        val movementPower = 0.06 + power.value / 100
+        val gravity = 0.02
         if (client.options.jumpKey.isPressed) {
-            player.setVelocity(velocity.x, velocity.y + 0.08, velocity.z)
+            player.setVelocity(velocity.x, velocity.y + movementPower + gravity, velocity.z)
         }
         if (client.options.sneakKey.isPressed) {
-            player.setVelocity(velocity.x, velocity.y - 0.04, velocity.z)
+            player.setVelocity(velocity.x, velocity.y - movementPower + gravity, velocity.z)
         }
     }
 
@@ -122,13 +128,13 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
         val player = client.player ?: return
         val yaw = toRadians(player.yaw)
         val velocity = player.velocity
-
+        val movementPower = 0.3 + power.value / 100.0
         // HyperBoost: Significantly increase forward speed and add slight upward boost
         val hyperBoostVelocity =
             Vec3d(
-                -sin(yaw) * 0.3, // Increased speed (0.05 -> 0.3)
+                -sin(yaw) * movementPower, // Increased speed (0.05 -> 0.3)
                 0.1, // Slight upward boost
-                cos(yaw) * 0.3, // Increased speed (0.05 -> 0.3)
+                cos(yaw) * movementPower, // Increased speed (0.05 -> 0.3)
             )
         player.velocity = velocity.add(hyperBoostVelocity)
     }
@@ -145,7 +151,7 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
         val player = client.player ?: return
         if (!player.isGliding) return
         val options = client.options ?: return
-        val baseSpeed = 1.0 // 基本速度
+        val baseSpeed = power.value
         val boostMultiplier = if (player.isSprinting) 2.0 else 1.0 // スプリント（Ctrl）で速度ブースト
         val gravity = 0.02
         var deltaX = 0.0

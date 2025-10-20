@@ -143,5 +143,7 @@
   "command.infinite.setting.list.notlist": "設定「%s」はリスト型ではありません。add/delコマンドはリスト型設定にのみ使用できます。",
   "command.infinite.feature.status": "機能%sのステータス: %s",
   "command.infinite.setting.list.header": "--- 設定リスト（%s項目） ---",
-  "command.infinite.setting.list.footer": "--------------------"
+  "command.infinite.setting.list.footer": "--------------------",
+  "feature.movement.antifall.description": "落下ダメージを無効化します。",
+  "feature.movement.superfly.power.description": "飛行時の速度を設定します。"
 }

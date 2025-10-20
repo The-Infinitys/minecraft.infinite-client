@@ -1,5 +1,6 @@
 package org.infinite.features.fighting.armor
 
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
@@ -126,19 +127,20 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         val chestSlotIndex = InventoryManager.Armor.CHEST
         val currentChestStack = invManager.get(chestSlotIndex)
         val isCurrentElytra = currentChestStack.item == Items.ELYTRA
+        val options = MinecraftClient.getInstance().options ?: return
+        // ★追加: Zキーによる手動解除のチェック
+        val isReleaseElytraPressed = options.sneakKey.isPressed && options.sprintKey.isPressed
+        val shouldManualUnequip = isReleaseElytraPressed && isElytraEquippedByHack
 
-        // Handle elytra unequip logic
+        // Handle elytra unequip logic (自動解除 または 手動解除)
         if (isElytraEquippedByHack) {
-            // 状態が不正な場合は即座にリセット
             if (!isCurrentElytra) {
                 resetElytraState()
                 return
             }
-
-            val shouldUnequip = player.isOnGround || player.health <= minHealth.value || player.isTouchingWater
-            if (shouldUnequip) {
+            val shouldAutoUnequip = player.isOnGround || player.health <= minHealth.value || player.isTouchingWater
+            if (shouldAutoUnequip || shouldManualUnequip) {
                 var swapped = false
-
                 // 優先: 以前のアイテムがまだpreviousSlotにあるか確認してからスワップ
                 if (previousSlot != null && !previousChestplate.isEmpty) {
                     val itemInPreviousSlot = invManager.get(previousSlot!!)
@@ -146,8 +148,6 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
                         swapped = invManager.swap(chestSlotIndex, previousSlot!!)
                     }
                 }
-
-                // Fallback: Find the previous chestplate or an empty slot
                 if (!swapped) {
                     val originalChestSlot = invManager.findFirst(previousChestplate.item)
                     if (originalChestSlot != null) {
@@ -157,7 +157,6 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
                         if (emptySlot != null) {
                             swapped = invManager.swap(chestSlotIndex, emptySlot)
                         } else {
-                            // Last resort: Drop the elytra
                             invManager.drop(chestSlotIndex)
                             swapped = true
                         }
@@ -287,8 +286,11 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         val armorPoints = ARMOR_VALUES[item] ?: 0
         val toughness = ARMOR_TOUGHNESS_VALUES[item] ?: 0
         val protection = enchantLevel(stack, Enchantments.PROTECTION)
+        val fireProtection = enchantLevel(stack, Enchantments.FIRE_PROTECTION)
+        val blastProtection = enchantLevel(stack, Enchantments.BLAST_PROTECTION)
+        val projectileProtection = enchantLevel(stack, Enchantments.PROJECTILE_PROTECTION)
         // 評価式: 防御ポイント * 5 + 強靭さ * 2 + Protectionレベル * 3
-        return armorPoints * 5 + toughness * 2 + protection * 3
+        return armorPoints * 5 + (toughness + fireProtection + blastProtection + projectileProtection) * 2 + protection * 3
     }
 
     private fun findBestElytraSlot(invManager: InventoryManager): InventoryManager.InventoryIndex? {
