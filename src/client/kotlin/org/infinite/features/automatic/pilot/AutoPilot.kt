@@ -24,10 +24,9 @@ import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.rendering.getRainbowColor
-import kotlin.math.abs
 import kotlin.math.sqrt
 
-// ターゲットの X, Z 座標を保持するデータクラス (変更なし)
+// ターゲットの X, Z 座標を保持するデータクラス
 class Location(
     val x: Int,
     val z: Int,
@@ -46,43 +45,31 @@ class Location(
     }
 }
 
-// 自動操縦の状態を定義する列挙型 (Landing をより詳細に定義)
+// 自動操縦の状態を定義する列挙型
 enum class PilotState {
     Idle, // 待機中
-    Takeoff, // 離陸中 (火薬ブースト)
-    SuperFlying, // SuperFlyモードで飛行中 (現時点では使用しないが維持)
-    FallFlying, // 加速のために下降中 (PullDown)
-    RiseFlying, // 減速/高度維持のために上昇中 (PullUp)
-    Approaching, // ターゲットへの接近中
-    Landing, // 着陸中 (最終降下)
+    SuperFlying, // SuperFlyモードで飛行中
+    FallFlying, // 速度を落とすために下降中
+    RiseFlying, // 速度を上げるために上昇中
+    Landing, // 着陸中
 }
 
 // AutoPilot メイン機能クラス
 class AutoPilot : ConfigurableFeature(initialEnabled = false) {
-    val minSpeed =
-        FeatureSetting.DoubleSetting(
-            "MinSpeed",
-            "feature.automatic.autopilot.minspeed.description",
-            10.0,
-            5.0,
-            50.0,
-        ) // RiseFlyingからFallFlyingへの切り替え速度
-    val targetSpeed =
-        FeatureSetting.DoubleSetting(
-            "TargetSpeed",
-            "feature.automatic.autopilot.targetspeed.description",
-            32.0,
-            10.0,
-            60.0,
-        ) // FallFlyingからRiseFlyingへの切り替え速度
-    private val landingDistance =
-        FeatureSetting.DoubleSetting(
-            "LandingDistance",
-            "feature.automatic.autopilot.landingdistance.description",
-            150.0,
-            50.0,
-            500.0,
-        ) // 着陸プロセスを開始する距離
+    private val elytraThreshold =
+        FeatureSetting.IntSetting(
+            "ElytraThreshold",
+            "feature.automatic.autopilot.elytrathreshold.description",
+            10,
+            1,
+            50,
+        )
+    private val swapElytra =
+        FeatureSetting.BooleanSetting(
+            "SwapElytra",
+            "feature.automatic.autopilot.swapelytra.description",
+            true,
+        )
     private val standardHeight =
         FeatureSetting.IntSetting(
             "StandardHeight",
@@ -90,11 +77,11 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             256,
             128,
             1024,
-        ) // 基準高度 (未使用だが設定として維持)
+        )
 
     // 機能設定リスト
     override val settings: List<FeatureSetting<*>> =
-        listOf(minSpeed, targetSpeed, landingDistance, standardHeight)
+        listOf(elytraThreshold, swapElytra, standardHeight)
 
     // Minecraft クライアント/プレイヤー/ワールドの簡易参照
     private val client: MinecraftClient
@@ -108,22 +95,26 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     private val isSuperFlyEnabled: Boolean
         get() = InfiniteClient.isFeatureEnabled(SuperFly::class.java)
 
-    // 現在の飛行速度 (m/s)。ここでは速度をベクトル長で計算する
+    // 現在の飛行速度 (m/s)
     val flySpeed: Double
-        get() {
-            if (player == null) return 0.0
-            val v = player!!.velocity
-            // 水平方向の速度 (Javaコードの currentVelocityHorizontal に相当)
-            return sqrt(v.x * v.x + v.z * v.z) * 20.0 // Velocity (block/tick) * 20 ticks/sec
-        }
+        get() = InfiniteClient.playerInterface.movement.speed()
 
     // Y方向の速度
     val riseSpeed: Double
-        get() = (player?.velocity?.y ?: 0.0) * 20.0 // 実際には速度の正負のみが重要
+        get() = (player?.velocity?.y ?: 0.0)
     val height: Double
         get() = player?.y ?: 0.0
-    val pitch: Double
-        get() = player?.pitch?.toDouble() ?: 0.0
+
+    // 水平方向の速度 (未使用だが保持)
+    private val moveSpeed: Double
+        get() {
+            if (player == null) {
+                return 0.0
+            }
+            val x = player!!.velocity.x
+            val z = player!!.velocity.z
+            return sqrt(x * x + z * z)
+        }
 
     private var target: Location? = null
     private var state: PilotState = PilotState.Idle
@@ -135,38 +126,24 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
      * 毎ティック実行されるメインロジック。
      */
     override fun tick() {
-        val currentPlayer = player ?: return
         if (target == null) {
             InfiniteClient.error("[AutoPilot] ターゲットを `/infinite feature Automatic AutoPilot target {x} {z}` で設定してください。")
             disable()
             return
         }
+        val currentTarget = target!!
 
-        if (!currentPlayer.isGliding) {
-            // エリトラ飛行中でなければ、ターゲットがある場合は離陸処理を試行
-            if (state != PilotState.Takeoff) {
-                state = PilotState.Takeoff
-            }
-            processTakeoff()
+        if (player?.isGliding != true) {
+            InfiniteClient.error("[AutoPilot] エリトラで飛行を開始してください。")
+            disable()
             return
-        } else if (state == PilotState.Takeoff) {
-            // 離陸処理を完了 (エリトラ飛行開始)
-            state = PilotState.Idle
         }
 
-        val currentTarget = target!!
-        val distance = currentTarget.distance()
-
-        // ターゲットに到達したかの判定と状態遷移
-        if (distance < 20) {
-            InfiniteClient.info("[AutoPilot] ターゲットに到達しました。着陸を開始します。")
-            state = PilotState.Landing
-        } else if (distance < landingDistance.value) {
-            InfiniteClient.info("[AutoPilot] ターゲットに接近中。飛行モードを Approaching に切り替えます。")
-            state = PilotState.Approaching
-        } else if (state == PilotState.Approaching || state == PilotState.Landing) {
-            // 距離が離れて Approaching/Landing から抜ける場合、速度調整に戻る
-            state = PilotState.Idle
+        // ターゲットに到達したかの判定
+        if (currentTarget.distance() < 256) {
+            InfiniteClient.info("[AutoPilot] ターゲットに到達しました。")
+            disable()
+            return
         }
 
         process(currentTarget)
@@ -178,53 +155,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     override fun enabled() {
         state = PilotState.Idle
         aimTaskCallBack = null
-        InfiniteClient.info("[AutoPilot] 有効化: 離陸または飛行中であれば自動操縦を開始します。")
-    }
-
-    /**
-     * 機能が無効になったときに一度だけ実行されます。
-     */
-    override fun disabled() {
-        client.options.useKey.isPressed = false // Firework/Rocketキーをオフにする
-        client.options.jumpKey.isPressed = false // ジャンプ/エリトラ展開キーをオフにする
-        target = null
-        state = PilotState.Idle
-        aimTaskCallBack = null
-        // 既存の AimTask を強制終了 (実装によっては AimInterface.removeTask などが必要だが、ここでは AimTaskConditionReturn.Failure で終了させる)
-    }
-
-    /**
-     * 離陸処理ロジック (Javaコードの takeoff() に相当)
-     */
-    private fun processTakeoff() {
-        val currentPlayer = player ?: return
-        if (state != PilotState.Takeoff) return
-
-        // 離陸処理の簡略化: とりあえずジャンプキーを押してエリトラを開かせる
-        client.options.jumpKey.isPressed = true
-
-        // 離陸後の Firework ブーストを AimTask で管理
-        if (currentPlayer.isGliding) {
-            // エリトラ展開後、ピッチを -90° に向けるAimTaskを開始
-            if (aimTaskCallBack == null) {
-                aimTaskCallBack = AimTaskConditionReturn.Suspend
-                AimInterface.addTask(AutoPilotAimTask(PilotState.Takeoff, target!!))
-                InfiniteClient.log("[AutoPilot] Takeoff: AimTaskを開始 (Pitch -90°)")
-            }
-
-            if (aimTaskCallBack == AimTaskConditionReturn.Success) {
-                // AimTaskが完了（-90°に到達）したら、火薬キーを押し続ける
-                client.options.useKey.isPressed = true
-
-                // 速度が十分になったら次の状態へ (ここでは RiseFlying に直接遷移)
-                if (flySpeed > 10.0) {
-                    client.options.useKey.isPressed = false
-                    aimTaskCallBack = null
-                    state = PilotState.RiseFlying // 最初の速度調整状態へ
-                    InfiniteClient.log("[AutoPilot] Takeoff完了: RiseFlyingへ移行")
-                }
-            }
-        }
     }
 
     /**
@@ -234,88 +164,80 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // SuperFly が有効な場合、状態を優先的に SuperFlying に設定
         if (isSuperFlyEnabled) {
             state = PilotState.SuperFlying
-            // superFly(target) // SuperFly固有のロジックをここに書く
-            return
         }
 
         when (state) {
-            PilotState.Idle -> {
-                // 自動操縦開始時の初期状態決定ロジック
+            PilotState.Idle, PilotState.SuperFlying -> {
+                // 自動操縦開始時または SuperFly 時の初期状態決定ロジック
+                val targetSpeed = 35
+                // 現在の速度に応じて、減速が必要な下降状態か、加速が必要な上昇状態かを決定
                 state =
-                    if (flySpeed > targetSpeed.value) {
+                    if (flySpeed > targetSpeed) {
                         PilotState.FallFlying // 速すぎる -> 下降して減速
                     } else {
                         PilotState.RiseFlying // 遅すぎる -> 上昇して加速
                     }
             }
 
-            PilotState.Approaching -> {
-                // 接近モード: 速度を落とすために常に上昇モードに近い状態を維持
-                handleAimTask(PilotState.RiseFlying, target) // RiseFlyingと同じAimTaskで制御
+            PilotState.Landing -> { // 着陸ロジック
             }
+            // 下降 (FallFlying) 状態の処理
+            PilotState.FallFlying -> {
+                when (aimTaskCallBack) {
+                    null -> {
+                        // AimTask が未開始の場合、新しい AimTask を追加
+                        aimTaskCallBack = AimTaskConditionReturn.Suspend
+                        AimInterface.addTask(AutoPilotAimTask(state, target))
+                    }
 
-            PilotState.Landing -> {
-                handleAimTask(PilotState.Landing, target)
-                // 着陸判定: 高度2ブロック以下になったら強制終了
-                if (player?.isOnGround == true || height < world.seaLevel + 2) {
-                    InfiniteClient.info("[AutoPilot] 着陸完了。")
-                    disable()
+                    AimTaskConditionReturn.Success -> {
+                        // AimTask が目標速度に達して成功した場合、状態を切り替え
+                        aimTaskCallBack = null
+                        state = PilotState.RiseFlying
+                    }
+
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error("[AutoPilot] FallFlying 状態で予期せぬエラー。")
+                        disable()
+                    }
+
+                    else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
                 }
             }
 
-            PilotState.FallFlying -> {
-                // FallFlying -> RiseFlying への切り替え判定は AimTaskConditionで行う
-                handleAimTask(PilotState.FallFlying, target)
-            }
-
+            // 上昇 (RiseFlying) 状態の処理
             PilotState.RiseFlying -> {
-                // RiseFlying -> FallFlying への切り替え判定は AimTaskConditionで行う
-                handleAimTask(PilotState.RiseFlying, target)
-            }
-
-            else -> {}
-        }
-    }
-
-    /**
-     * AimTask の追加と結果の処理を共通化
-     */
-    private fun handleAimTask(
-        aimState: PilotState,
-        target: Location,
-    ) {
-        when (aimTaskCallBack) {
-            null -> {
-                // AimTask が未開始の場合、新しい AimTask を追加
-                aimTaskCallBack = AimTaskConditionReturn.Suspend
-                AimInterface.addTask(AutoPilotAimTask(aimState, target))
-            }
-
-            AimTaskConditionReturn.Success -> {
-                // AimTask が目標条件に達して成功した場合、状態を切り替え
-                aimTaskCallBack = null
-                state =
-                    when (aimState) {
-                        PilotState.FallFlying -> PilotState.RiseFlying // 減速達成 -> 加速へ
-                        PilotState.RiseFlying -> PilotState.FallFlying // 加速達成 -> 減速へ
-                        PilotState.Takeoff -> PilotState.RiseFlying // 離陸完了 -> 加速へ
-                        PilotState.Approaching -> PilotState.FallFlying // 接近維持 -> 減速へ戻す
-                        else -> PilotState.Idle // その他の成功は Idle に戻す
+                when (aimTaskCallBack) {
+                    null -> {
+                        // AimTask が未開始の場合、新しい AimTask を追加
+                        aimTaskCallBack = AimTaskConditionReturn.Suspend
+                        AimInterface.addTask(AutoPilotAimTask(state, target))
                     }
-                InfiniteClient.log("[AutoPilot] AimTask Success: $aimState -> $state")
-            }
 
-            AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                InfiniteClient.error("[AutoPilot] $aimState 状態で AimTask が予期せぬ終了。")
-                disable()
-            }
+                    AimTaskConditionReturn.Success -> {
+                        // AimTask が目標速度に達して成功した場合、状態を切り替え
+                        aimTaskCallBack = null
+                        state = PilotState.FallFlying
+                    }
 
-            else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error("[AutoPilot] RiseFlying 状態で予期せぬエラー。")
+                        disable()
+                    }
+
+                    else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
+                }
+            }
         }
     }
 
+    // SuperFly 固有のロジック（現時点では空）
+    private fun superFly(target: Location) {
+    }
+
     /**
-     * コマンド登録ロジック。(変更なし)
+     * コマンド登録ロジック。
+     * /infinite feature Automatic AutoPilot target <x> <z> コマンドを登録。
      */
     override fun registerCommands(builder: LiteralArgumentBuilder<FabricClientCommandSource>) {
         builder.then(
@@ -338,7 +260,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     }
 
     /**
-     * 3D レンダリングロジック。(変更なし)
+     * 3D レンダリングロジック。ターゲット地点に縦の箱を描画します。
      */
     override fun render3d(graphics3D: Graphics3D) {
         if (target != null) {
@@ -354,12 +276,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     }
 }
 
-// ----------------------------------------------------------------------
-// AimTask 関連クラス
-// ----------------------------------------------------------------------
-
 /**
  * 自動操縦のための AimTask 定義。
+ * AimCalculateMethod.EaseInOut と 5.0 の補正速度で、滑らかな視点移動を保証します。
  */
 class AutoPilotAimTask(
     state: PilotState,
@@ -371,8 +290,9 @@ class AutoPilotAimTask(
             location,
         ),
         AutoPilotCondition(state), // 実行条件
-        AimCalculateMethod.EaseInOut,
-        5.0, // 速度調整の滑らかさ
+        AimCalculateMethod.Linear,
+        // Java ModConfig.turningSpeedDefault (3.0) や pullUpSpeed (2.16) に近い値を使用
+        2.0,
     )
 
 /**
@@ -388,83 +308,46 @@ class AutoPilotCondition(
     /**
      * 実行条件をチェックします。
      */
-    override fun check(): AimTaskConditionReturn {
-        if (autoPilot.isDisabled()) {
-            autoPilot.aimTaskCallBack = AimTaskConditionReturn.Failure
-            return AimTaskConditionReturn.Failure
-        }
-
-        return when (state) {
-            PilotState.Takeoff -> handleTakeoff()
-            PilotState.Landing -> handleLanding()
-            PilotState.Approaching -> handleApproaching()
+    override fun check(): AimTaskConditionReturn =
+        when (state) {
+            PilotState.Idle, PilotState.Landing, PilotState.SuperFlying -> AimTaskConditionReturn.Failure // これらの状態では実行しない
             PilotState.RiseFlying -> handleRiseFlying()
             PilotState.FallFlying -> handleFallFlying()
-            else -> AimTaskConditionReturn.Failure
         }
-    }
 
     /**
-     * 離陸 (Takeoff) 中の条件処理。
-     */
-    private fun handleTakeoff(): AimTaskConditionReturn {
-        // AimTask の目標 (Pitch -90°) に到達したら成功
-        val pitchDifference = abs(autoPilot.pitch - (-90.0))
-        autoPilot.aimTaskCallBack =
-            if (pitchDifference < 1.0) {
-                AimTaskConditionReturn.Success // -90°に到達
-            } else {
-                AimTaskConditionReturn.Exec
-            }
-        return autoPilot.aimTaskCallBack!!
-    }
-
-    /**
-     * 上昇 (RiseFlying) 中の条件処理。(加速完了/速度維持モード)
-     * Javaコードの pullUp = true の状態
+     * 上昇 (RiseFlying) 中の条件処理。
      */
     private fun handleRiseFlying(): AimTaskConditionReturn {
-        // 現在速度が目標速度 (TargetSpeed) を超えたら、減速状態へ切り替え
+        val minSpeedThreshold = 1.0
+
         autoPilot.aimTaskCallBack =
-            if (autoPilot.flySpeed >= autoPilot.targetSpeed.value) {
-                AimTaskConditionReturn.Success // 速度が速すぎる -> FallFlyingへ
+            if (autoPilot.isDisabled()) {
+                AimTaskConditionReturn.Failure
+            } else if (autoPilot.flySpeed > minSpeedThreshold) {
+                AimTaskConditionReturn.Exec
             } else {
-                AimTaskConditionReturn.Exec // まだ加速が必要 -> 実行を継続 (上昇を継続)
+                InfiniteClient.log("${autoPilot.height} - Rise Finished (Speed < $minSpeedThreshold)")
+                AimTaskConditionReturn.Success
             }
         return autoPilot.aimTaskCallBack!!
     }
 
     /**
-     * 下降 (FallFlying) 中の条件処理。(減速/加速モード)
-     * Javaコードの isDescending = true の状態
+     * 下降 (FallFlying) 中の条件処理。
      */
     private fun handleFallFlying(): AimTaskConditionReturn {
-        // 現在速度が最低速度 (MinSpeed) を下回ったら、加速状態へ切り替え
+        val maxSpeedThreshold = 2.2
+
         autoPilot.aimTaskCallBack =
-            if (autoPilot.flySpeed <= autoPilot.minSpeed.value) {
-                AimTaskConditionReturn.Success // 速度が遅すぎる -> RiseFlyingへ
+            if (autoPilot.isDisabled()) {
+                AimTaskConditionReturn.Failure
+            } else if (autoPilot.flySpeed < maxSpeedThreshold) {
+                AimTaskConditionReturn.Exec
             } else {
-                AimTaskConditionReturn.Exec // まだ減速/加速が必要 -> 実行を継続 (下降を継続)
+                InfiniteClient.log("${autoPilot.height} - Fall Finished (Speed >= $maxSpeedThreshold)")
+                AimTaskConditionReturn.Success
             }
-        return autoPilot.aimTaskCallBack!!
-    }
-
-    /**
-     * 接近中 (Approaching) の条件処理。
-     */
-    private fun handleApproaching(): AimTaskConditionReturn {
-        // Approaching時は、速度に関係なく常に目標ピッチを維持し、距離で状態遷移する
-        // 速度調整の成功判定をスキップするため、常にExecを返す
-        autoPilot.aimTaskCallBack = AimTaskConditionReturn.Exec
-        return autoPilot.aimTaskCallBack!!
-    }
-
-    /**
-     * 着陸 (Landing) の条件処理。
-     */
-    private fun handleLanding(): AimTaskConditionReturn {
-        // 着陸は AimTask 完了ではなく、tick() メソッドの高度判定で終了するため、常に実行を継続
-        autoPilot.aimTaskCallBack = AimTaskConditionReturn.Exec
         return autoPilot.aimTaskCallBack!!
     }
 }
@@ -473,23 +356,20 @@ class PilotAimTarget(
     val state: PilotState,
     val target: Location,
 ) : AimTarget.RollTarget(CameraRoll(0.0, 0.0)) {
+    // player の取得をゲッターに変更
     private val player: ClientPlayerEntity
         get() = MinecraftClient.getInstance().player!!
 
     override val roll: CameraRoll
         get() {
-            // ピッチ角を PilotState に応じて決定
-            val pitchAngle =
-                when (state) {
-                    PilotState.Takeoff -> -90.0 // 離陸: 真上
-                    PilotState.Landing -> 45.0 // 着陸: 急降下
-                    PilotState.FallFlying -> 35.0 // 下降: 加速/減速用 (Javaコードと同じ)
-                    PilotState.RiseFlying, PilotState.Approaching -> -20.0 // 上昇/接近: 減速/高度維持用 (Javaコードの PullUpAngle に近い値)
-                    else -> 0.0 // その他の状態
-                }
             return CameraRoll(
                 calculateTargetYaw(),
-                pitchAngle,
+                when (state) {
+                    PilotState.Landing -> 10.0
+                    PilotState.FallFlying -> 40.0
+                    PilotState.RiseFlying -> -45.0
+                    else -> 0.0 // その他の状態
+                },
             )
         }
 
@@ -497,6 +377,7 @@ class PilotAimTarget(
      * ターゲットへの方向を計算し、目標のヨー角 (YAW) を返します。
      */
     private fun calculateTargetYaw(): Double {
+        // player のゲッターを通じて安全にアクセス
         val currentPlayer = player
         val d = target.x - currentPlayer.x
         val f = target.z - currentPlayer.z
