@@ -52,12 +52,7 @@ class FeatureSettingsScreen(
                     currentY += defaultWidgetHeight + padding
                 }
 
-                is FeatureSetting.IntSetting -> {
-                    settingWidgets.add(InfiniteSlider(20, currentY, widgetWidth, sliderWidgetHeight, setting))
-                    currentY += sliderWidgetHeight + padding
-                }
-
-                is FeatureSetting.FloatSetting -> {
+                is FeatureSetting.IntSetting, is FeatureSetting.FloatSetting, is FeatureSetting.DoubleSetting -> {
                     settingWidgets.add(InfiniteSlider(20, currentY, widgetWidth, sliderWidgetHeight, setting))
                     currentY += sliderWidgetHeight + padding
                 }

@@ -78,6 +78,7 @@ object ConfigManager {
                                                 is FeatureSetting.BooleanSetting -> JsonPrimitive(setting.value)
                                                 is FeatureSetting.IntSetting -> JsonPrimitive(setting.value)
                                                 is FeatureSetting.FloatSetting -> JsonPrimitive(setting.value)
+                                                is FeatureSetting.DoubleSetting -> JsonPrimitive(setting.value)
                                                 is FeatureSetting.StringSetting -> JsonPrimitive(setting.value)
                                                 is FeatureSetting.StringListSetting ->
                                                     JsonArray(setting.value.map { JsonPrimitive(it) })
@@ -93,6 +94,7 @@ object ConfigManager {
 
                                                 is FeatureSetting.PlayerListSetting ->
                                                     JsonArray(setting.value.map { JsonPrimitive(it) })
+
                                                 is FeatureSetting.BlockColorListSetting ->
                                                     JsonArray(
                                                         setting.value.map { (blockId, color) ->
@@ -156,6 +158,10 @@ object ConfigManager {
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
 
+                                is FeatureSetting.DoubleSetting ->
+                                    setting.value =
+                                        json.decodeFromJsonElement(jsonElement)
+
                                 is FeatureSetting.StringSetting ->
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
@@ -179,12 +185,15 @@ object ConfigManager {
                                 is FeatureSetting.BlockListSetting ->
                                     setting.value =
                                         json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+
                                 is FeatureSetting.EntityListSetting ->
                                     setting.value =
                                         json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+
                                 is FeatureSetting.PlayerListSetting ->
                                     setting.value =
                                         json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+
                                 is FeatureSetting.BlockColorListSetting ->
                                     setting.value =
                                         json

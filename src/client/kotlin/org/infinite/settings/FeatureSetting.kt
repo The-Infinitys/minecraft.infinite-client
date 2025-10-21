@@ -32,6 +32,14 @@ sealed class FeatureSetting<T>(
         val max: Float,
     ) : FeatureSetting<Float>(name, descriptionKey, defaultValue, defaultValue)
 
+    class DoubleSetting(
+        name: String,
+        descriptionKey: String,
+        defaultValue: Double,
+        val min: Double,
+        val max: Double,
+    ) : FeatureSetting<Double>(name, descriptionKey, defaultValue, defaultValue)
+
     class StringSetting(
         name: String,
         descriptionKey: String,

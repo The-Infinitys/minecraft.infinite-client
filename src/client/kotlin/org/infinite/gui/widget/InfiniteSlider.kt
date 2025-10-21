@@ -30,6 +30,7 @@ class InfiniteSlider<T : Number>(
             when (setting) {
                 is FeatureSetting.IntSetting -> setting.value.toString()
                 is FeatureSetting.FloatSetting -> String.format("%.2f", setting.value)
+                is FeatureSetting.DoubleSetting -> String.format("%.3f", setting.value)
                 else -> throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
             }
         message = Text.translatable(setting.name).append(": $formattedValue")
@@ -109,6 +110,11 @@ class InfiniteSlider<T : Number>(
                 (setting.value - setting.min) / range
             }
 
+            is FeatureSetting.DoubleSetting -> {
+                val range = (setting.max - setting.min).toFloat()
+                (setting.value - setting.min).toFloat() / range
+            }
+
             else -> throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
         }
 
@@ -134,6 +140,11 @@ class InfiniteSlider<T : Number>(
                 // 新しい値を計算
                 val newValue = setting.min + progress * (setting.max - setting.min)
                 (setting as FeatureSetting.FloatSetting).value = newValue
+            }
+
+            is FeatureSetting.DoubleSetting -> {
+                val newValue = setting.min + progress * (setting.max - setting.min)
+                (setting as FeatureSetting.DoubleSetting).value = newValue
             }
 
             else -> throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
