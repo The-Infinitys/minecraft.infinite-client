@@ -87,8 +87,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         )
 
     // 機能設定リスト
-    override val settings: List<FeatureSetting<*>> =
-        listOf(elytraThreshold, swapElytra, standardHeight)
+    override val settings: List<FeatureSetting<*>> = listOf(elytraThreshold, swapElytra, standardHeight)
 
     // Minecraft クライアント/プレイヤー/ワールドの簡易参照
     private val client: MinecraftClient
@@ -120,17 +119,17 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             val z = player!!.velocity.z
             return sqrt(x * x + z * z)
         }
-
+    private var moveSpeedAverage: Double = 1.0
+    private val moveSpeedAverageStackLevel: Int = 524288
     private var target: Location? = null
     private var state: PilotState = PilotState.Idle
 
     // AimTask の結果を受け取るコールバック変数
     var aimTaskCallBack: AimTaskConditionReturn? = null
 
-    /**
-     * 毎ティック実行されるメインロジック。
-     */
     override fun tick() {
+        moveSpeedAverage =
+            (moveSpeed + moveSpeedAverage * (moveSpeedAverageStackLevel - 1)) / moveSpeedAverageStackLevel
         if (target == null) {
             InfiniteClient.error("[AutoPilot] ターゲットを `/infinite feature Automatic AutoPilot target {x} {z}` で設定してください。")
             disable()
@@ -146,7 +145,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         }
 
         // ----------------------------------------------------------------------
-        // 【追加】エリトラの自動交換ロジック
+        // 【変更】エリトラの自動交換ロジック
         // ----------------------------------------------------------------------
         if (swapElytra.value) {
             checkAndSwapElytra()
@@ -173,32 +172,41 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     }
 
     /**
-     * エリトラの耐久値をチェックし、閾値以下であれば交換を試みます。
+     * エリトラの耐久値をチェックし、閾値以下であれば最も耐久値の高いエリトラと交換を試みます。
      */
     private fun checkAndSwapElytra() {
         if (player == null) return
 
-        val currentDurability = elytraDurability()
         val invManager = InfiniteClient.playerInterface.inventory
         val equippedElytraStack = invManager.get(Armor.CHEST)
-        // エリトラを装備していない場合も交換を試みる
         val isElytraEquipped = isElytra(equippedElytraStack)
+        val currentDurability = if (isElytraEquipped) elytraDurability() else 0.0
 
-        if (currentDurability <= elytraThreshold.value || !isElytraEquipped) {
-            // 予備のエリトラをインベントリから探す
-            val nextElytraIndex = findElytraInInventory()
+        // 交換が必要な条件:
+        // 1. エリトラを装備していない (isElytraEquipped == false)
+        // 2. エリトラを装備しているが、耐久値が閾値以下である (currentDurability <= elytraThreshold.value)
+        val needsSwap = !isElytraEquipped || (currentDurability <= elytraThreshold.value)
 
-            if (nextElytraIndex != null) {
+        if (needsSwap) {
+            // 最も耐久値の高い予備のエリトラをインベントリから探す
+            val bestElytra = findBestElytraInInventory()
+
+            if (bestElytra != null) {
                 // 交換ロジック:
                 // 1. チェストスロットと予備のエリトラスロットをスワップする
-                // 2. 破損したエリトラはインベントリの空きスロットに戻される
-                if (invManager.swap(Armor.CHEST, nextElytraIndex)) {
-                    InfiniteClient.info("[AutoPilot] エリトラの耐久値が $currentDurability% になったため、新しいエリトラと交換しました。")
+                if (invManager.swap(Armor.CHEST, bestElytra.index)) {
+                    val swapMessage =
+                        if (isElytraEquipped) {
+                            "[AutoPilot] エリトラの耐久値が ${currentDurability.roundToInt()}% になったため、より耐久値の高い (${bestElytra.durability.roundToInt()}%) エリトラと交換しました。"
+                        } else {
+                            "[AutoPilot] エリトラを装備していなかったため、最も耐久値の高い (${bestElytra.durability.roundToInt()}%) エリトラと交換しました。"
+                        }
+                    InfiniteClient.info(swapMessage)
                 } else {
                     InfiniteClient.error("[AutoPilot] エリトラの交換に失敗しました。")
                 }
             } else if (isElytraEquipped) {
-                InfiniteClient.warn("[AutoPilot] エリトラの耐久値が $currentDurability% ですが、予備のエリトラが見つかりませんでした。")
+                InfiniteClient.warn("[AutoPilot] エリトラの耐久値が ${currentDurability.roundToInt()}% ですが、予備のエリトラが見つかりませんでした。")
             } else {
                 InfiniteClient.warn("[AutoPilot] エリトラを装備していませんが、予備のエリトラが見つかりませんでした。")
             }
@@ -209,6 +217,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
      * 機能が有効になったときに一度だけ実行されます。
      */
     override fun enabled() {
+        moveSpeedAverage = moveSpeed
         state = PilotState.Idle
         aimTaskCallBack = null
     }
@@ -298,19 +307,15 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     override fun registerCommands(builder: LiteralArgumentBuilder<FabricClientCommandSource>) {
         builder.then(
             ClientCommandManager.literal("target").then(
-                ClientCommandManager
-                    .argument("x", IntegerArgumentType.integer())
-                    .then(
-                        ClientCommandManager
-                            .argument("z", IntegerArgumentType.integer())
-                            .executes { context ->
-                                val x = IntegerArgumentType.getInteger(context, "x")
-                                val z = IntegerArgumentType.getInteger(context, "z")
-                                this.target = Location(x, z)
-                                InfiniteClient.info("[AutoPilot] ターゲットを設定: X: $x, Z: $z")
-                                1
-                            },
-                    ),
+                ClientCommandManager.argument("x", IntegerArgumentType.integer()).then(
+                    ClientCommandManager.argument("z", IntegerArgumentType.integer()).executes { context ->
+                        val x = IntegerArgumentType.getInteger(context, "x")
+                        val z = IntegerArgumentType.getInteger(context, "z")
+                        this.target = Location(x, z)
+                        InfiniteClient.info("[AutoPilot] ターゲットを設定: X: $x, Z: $z")
+                        1
+                    },
+                ),
             ),
         )
     }
@@ -330,10 +335,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // A. 距離
         val distance = currentTarget.distance()
 
-        // B. 速度 (水平速度を使用)
-        val speed = moveSpeed * 20 // AutoPilot クラスの flySpeed プロパティを使用 (m/s)
-
-        // C. 到着予想時刻 (Estimated Time of Arrival - ETA)
+        val speed = moveSpeedAverage * 20
         val etaSeconds: Long =
             if (speed > 1.0) { // 速度が1m/s以上の場合のみ計算
                 (distance / speed).roundToInt().toLong()
@@ -354,7 +356,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // E. エリトラ耐久値
         val durability =
             if (swapElytra.value) {
-                "${elytraDurability()}%"
+                "${elytraDurability().roundToInt()}%"
             } else {
                 "Disabled"
             }
@@ -368,14 +370,12 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val bgColor = InfiniteClient.theme().colors.backgroundColor
         val white = InfiniteClient.theme().colors.foregroundColor
         val primaryColor = InfiniteClient.theme().colors.primaryColor
-        // 耐久値が閾値以下の場合は警告色、それ以外は通常色
         val durabilityValue = elytraDurability()
-        val isElytraEquipped =
-            isElytra(InfiniteClient.playerInterface.inventory.get(Armor.CHEST))
+        val isElytraEquipped = isElytra(InfiniteClient.playerInterface.inventory.get(Armor.CHEST))
 
         val durabilityColor =
             if (swapElytra.value && isElytraEquipped && durabilityValue <= elytraThreshold.value) {
-                0xFFFF0000.toInt() // 赤色 (警告)
+                InfiniteClient.theme().colors.warnColor
             } else {
                 white
             }
@@ -389,7 +389,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         infoLines.add("Target: X=${currentTarget.x}, Z=${currentTarget.z}")
         infoLines.add("Distance: ${"%.1f".format(distance / 1000.0)} km (%.0f blocks)".format(distance))
         infoLines.add("Speed: ${"%.1f".format(speed)} m/s")
-        infoLines.add("Elytra: ${"%.2f".format(durability)}") // 耐久値情報を追加
+        infoLines.add("Elytra: $durability") // 耐久値情報を追加
         if (etaSeconds > 0) {
             val minutes = TimeUnit.SECONDS.toMinutes(etaSeconds)
             val seconds = etaSeconds - TimeUnit.MINUTES.toSeconds(minutes)
@@ -559,22 +559,45 @@ class PilotAimTarget(
 private fun isElytra(stack: ItemStack): Boolean = stack.item == Items.ELYTRA
 
 /**
- * インベントリ (ホットバーとバックパック) の中で最初に見つかったエリトラの InventoryIndex を返します。
+ * エリトラのインベントリ情報と耐久値を保持するためのデータクラス。
+ */
+private data class ElytraInfo(
+    val index: InventoryManager.InventoryIndex,
+    val durability: Double,
+)
+
+/**
+ * インベントリ (ホットバーとバックパック) の中で**最も耐久値の高い**エリトラの情報を返します。
  * チェストスロットに装備されているものは無視します。
  */
-private fun findElytraInInventory(): InventoryManager.InventoryIndex? {
+private fun findBestElytraInInventory(): ElytraInfo? {
     val playerInv = MinecraftClient.getInstance().player?.inventory ?: return null
-    // ホットバー (0-8)
+    val invManager = InfiniteClient.playerInterface.inventory
+    var bestElytra: ElytraInfo? = null
+
+    // すべてのインベントリスロット (ホットバーとバックパック) をチェック
+    // ホットバー (0-8) -> InventoryManager.Hotbar(i)
     for (i in 0 until 9) {
-        if (isElytra(playerInv.getStack(i))) {
-            return InventoryManager.Hotbar(i)
+        val stack = playerInv.getStack(i)
+        if (isElytra(stack)) {
+            val durability = invManager.durabilityPercentage(stack) * 100
+            if (bestElytra == null || durability > bestElytra.durability) {
+                bestElytra = ElytraInfo(InventoryManager.Hotbar(i), durability)
+            }
         }
     }
-    // バックパック (9-35, Backpack index 0-26)
+
+    // バックパック (9-35, Backpack index 0-26) -> InventoryManager.Backpack(i)
     for (i in 0 until 27) {
-        if (isElytra(playerInv.getStack(9 + i))) {
-            return InventoryManager.Backpack(i)
+        val slotIndex = 9 + i
+        val stack = playerInv.getStack(slotIndex)
+        if (isElytra(stack)) {
+            val durability = invManager.durabilityPercentage(stack) * 100
+            if (bestElytra == null || durability > bestElytra.durability) {
+                bestElytra = ElytraInfo(InventoryManager.Backpack(i), durability)
+            }
         }
     }
-    return null
+
+    return bestElytra
 }
