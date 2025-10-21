@@ -12,17 +12,29 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 sealed class AimTarget {
-    data class EntityTarget(
-        val entity: Entity,
-    ) : AimTarget()
+    open class EntityTarget(
+        e: Entity,
+    ) : AimTarget() {
+        open val entity = e
+    }
 
-    data class BlockTarget(
-        val block: BlockEntity,
-    ) : AimTarget()
+    open class BlockTarget(
+        b: BlockEntity,
+    ) : AimTarget() {
+        open val block = b
+    }
 
-    data class WaypointTarget(
-        val pos: Vec3d,
-    ) : AimTarget()
+    open class WaypointTarget(
+        p: Vec3d,
+    ) : AimTarget() {
+        open val pos = p
+    }
+
+    open class RollTarget(
+        r: CameraRoll,
+    ) : AimTarget() {
+        open val roll = r
+    }
 }
 
 enum class AimPriority {
@@ -247,7 +259,12 @@ open class AimTask(
             }
 
             AimTaskConditionReturn.Exec -> {
-                val rollDiff = calculateRotation(player, targetPos)
+                val rollDiff =
+                    if (target is AimTarget.RollTarget) {
+                        (target as AimTarget.RollTarget).roll - playerRoll(player)
+                    } else {
+                        calculateRotation(player, targetPos)
+                    }
                 rollVelocity = calcExecRotation(rollDiff, calcMethod)
                 rollAim(player, rollVelocity)
                 return AimProcessResult.Progress
@@ -323,6 +340,10 @@ open class AimTask(
             is AimTarget.WaypointTarget -> {
                 target.pos
             }
+
+            else -> {
+                Vec3d.ZERO
+            }
         }
 
     /**
@@ -334,9 +355,11 @@ open class AimTask(
         targetPos: Vec3d,
     ): CameraRoll {
         val t = calcLookAt(targetPos)
-        val c = CameraRoll(player.yaw.toDouble(), player.pitch.toDouble())
+        val c = playerRoll(player)
         return (t - c).diffNormalize()
     }
+
+    private fun playerRoll(player: ClientPlayerEntity): CameraRoll = CameraRoll(player.yaw.toDouble(), player.pitch.toDouble())
 
     /**
      * 進行度に基づき、開始角度から目標角度へプレイヤーの視線を補間・設定します。

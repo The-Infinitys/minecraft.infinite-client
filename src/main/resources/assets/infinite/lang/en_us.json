@@ -149,5 +149,6 @@
   "feature.movement.superfly.power.description": "Flying power.",
   "feature.rendering.extrasensory.containeresp.description": "Show Containers",
   "feature.automatic.autopilot.description": "Auto Pilot System",
-  "feature.movement.superfly.keepfly.description": "Keep Flying even if force cancelled."
+  "feature.movement.superfly.keepfly.description": "Keep Flying even if force cancelled.",
+  "feature.automatic.autopilot.maxspeed.description": "Max flying speed."
 }
