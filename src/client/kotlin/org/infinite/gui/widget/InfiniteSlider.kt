@@ -45,6 +45,7 @@ class InfiniteSlider<T : Number>(
         val textX = x + 5 // Padding from left edge
         var currentY = y + 2 // Start drawing text from top with small padding
 
+        // --- 設定名 (左上) ---
         context.drawTextWithShadow(
             textRenderer,
             Text.translatable(setting.name),
@@ -54,6 +55,30 @@ class InfiniteSlider<T : Number>(
                 .theme()
                 .colors.foregroundColor,
         )
+
+        // --- 値の描画 (右上) ---
+        val formattedValue =
+            when (setting) {
+                is FeatureSetting.IntSetting -> setting.value.toString()
+                is FeatureSetting.FloatSetting -> String.format("%.2f", setting.value)
+                is FeatureSetting.DoubleSetting -> String.format("%.3f", setting.value)
+                else -> "" // 通常は発生しない
+            }
+        val valueText = Text.literal(formattedValue)
+        val valueTextWidth = textRenderer.getWidth(valueText)
+        val valueTextX = x + width - 5 - valueTextWidth // 右端から5pxパディング
+
+        context.drawTextWithShadow(
+            textRenderer,
+            valueText,
+            valueTextX,
+            currentY, // 設定名と同じY座標
+            InfiniteClient
+                .theme()
+                .colors.primaryColor, // 例としてプライマリカラーを使用
+        )
+        // -----------------------
+
         currentY += textRenderer.fontHeight + 2 // Move Y down for description
 
         if (setting.descriptionKey.isNotBlank()) {
@@ -64,9 +89,9 @@ class InfiniteSlider<T : Number>(
                 currentY,
                 InfiniteClient
                     .theme()
-                    .colors.foregroundColor,
+                    .colors.secondaryColor,
             )
-            textRenderer.fontHeight + 2 // Move Y down after description
+            // textRenderer.fontHeight + 2 // Move Y down after description - この行はコメントアウトまたは削除
         }
 
         // Draw slider background at the bottom of the widget
@@ -78,7 +103,7 @@ class InfiniteSlider<T : Number>(
             sliderBackgroundY + 2,
             InfiniteClient
                 .theme()
-                .colors.backgroundColor,
+                .colors.secondaryColor,
         )
 
         // Draw slider knob

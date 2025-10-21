@@ -227,7 +227,13 @@ class InventoryManager(
                         val emptyNetSlot = toNetworkSlot(indexToSlot(emptyBackpackSlot)!!)
 
                         // 4クリック目: カーソルのアイテムを空きスロットに配置して操作を完了させる
-                        interactionManager?.clickSlot(currentScreenId, emptyNetSlot, 0, SlotActionType.PICKUP, currentPlayer)
+                        interactionManager?.clickSlot(
+                            currentScreenId,
+                            emptyNetSlot,
+                            0,
+                            SlotActionType.PICKUP,
+                            currentPlayer,
+                        )
                     } else {
                         // 空きスロットがない場合:
                         // 現状ではドロップするしかありません。-999 (画面外)をクリックしてドロップします。
@@ -282,6 +288,7 @@ class InventoryManager(
                     Armor.LEGS -> 37
                     Armor.FEET -> 36
                 }
+
             is Hotbar -> index.index
             is Backpack -> 9 + index.index
             is Other ->
@@ -318,5 +325,17 @@ class InventoryManager(
             }
         }
         return null
+    }
+
+    fun durabilityPercentage(stack: ItemStack): Double {
+        if (!stack.isDamageable || stack.isEmpty) {
+            return 100.0
+        }
+        val maxDurability = stack.maxDamage
+        val currentDamage = stack.damage
+        val remainingDurability = maxDurability - currentDamage
+
+        // (残り耐久値 / 最大耐久値) * 100
+        return (remainingDurability / maxDurability.toDouble())
     }
 }
