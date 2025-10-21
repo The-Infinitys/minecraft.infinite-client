@@ -1,6 +1,6 @@
 package org.infinite
 
-import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
@@ -22,6 +22,7 @@ abstract class ConfigurableFeature(
     private val disabled: Property<Boolean> = Property(!initialEnabled)
     open val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_DONT_CARE)
     open val available = true
+    open val preRegisterCommands: List<String> = listOf("enable", "disable", "toggle", "set", "get", "add", "del")
     open val level: FeatureLevel = FeatureLevel.EXTEND
 
     // リスナーの同期に使用する専用のロックオブジェクト
@@ -138,7 +139,7 @@ abstract class ConfigurableFeature(
 
     fun getSetting(name: String): FeatureSetting<*>? = settings.find { it.name == name }
 
-    open fun registerCommands(dispatcher: CommandDispatcher<FabricClientCommandSource>) {}
+    open fun registerCommands(builder: LiteralArgumentBuilder<FabricClientCommandSource>) {}
 
     private fun resolve() {
         for (depend in depends) {

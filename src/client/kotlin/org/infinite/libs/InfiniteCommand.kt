@@ -26,7 +26,7 @@ object InfiniteCommand {
         dispatcher: CommandDispatcher<FabricClientCommandSource>,
         registryAccess: CommandRegistryAccess,
     ) {
-        dispatcher.register(
+        val infiniteCommand =
             ClientCommandManager
                 .literal("infinite")
                 // 1. /infinite version
@@ -51,57 +51,6 @@ object InfiniteCommand {
                             ),
                         ),
                 ).then(
-                    ClientCommandManager.literal("feature").then(
-                        getCategoryArgument().then(
-                            getFeatureNameArgument()
-                                .then(
-                                    ClientCommandManager
-                                        .literal("enable")
-                                        .executes { context -> toggleFeature(context, true) },
-                                ).then(
-                                    ClientCommandManager
-                                        .literal("disable")
-                                        .executes { context -> toggleFeature(context, false) },
-                                ).then(
-                                    ClientCommandManager
-                                        .literal("toggle")
-                                        .executes { context -> toggleFeatureState(context) },
-                                ).then(
-                                    ClientCommandManager
-                                        .literal("get")
-                                        .executes { context -> getFeatureStatus(context) },
-                                )
-                                // 3-2. /infinite feature <category> <name> set <key> <value>
-                                .then(
-                                    ClientCommandManager.literal("set").then(
-                                        getSettingKeyArgument().then(
-                                            getSettingValueArgument().executes { context ->
-                                                setFeatureSetting(context)
-                                            },
-                                        ),
-                                    ),
-                                ).then(
-                                    ClientCommandManager.literal("add").then(
-                                        getSettingKeyArgument().then(
-                                            getSettingValueArgument().executes { context ->
-                                                addRemoveFeatureSetting(context, true)
-                                            },
-                                        ),
-                                    ),
-                                ).then(
-                                    ClientCommandManager.literal("del").then(
-                                        getSettingKeyArgument().then(
-                                            getSettingValueArgument().executes { context ->
-                                                addRemoveFeatureSetting(context, false)
-                                            },
-                                        ),
-                                    ),
-                                ),
-                        ),
-                    ),
-                )
-                // 4. /infinite theme [name]
-                .then(
                     ClientCommandManager
                         .literal("theme")
                         .executes { context -> getTheme(context) } // /infinite theme
@@ -119,13 +68,114 @@ object InfiniteCommand {
                                         .executes { context -> setTheme(context) },
                                 ),
                         ),
-                ),
-        )
+                )
+
+        val featureRootLiteral = ClientCommandManager.literal("feature")
         featureCategories.forEach { category ->
+            val categoryLiteral = ClientCommandManager.literal(category.name)
+
             category.features.forEach { feature ->
-                feature.instance.registerCommands(dispatcher)
+                val featureBuilder = ClientCommandManager.literal(feature.name)
+                if (feature.instance.preRegisterCommands.contains("enable")) {
+                    featureBuilder.then(
+                        ClientCommandManager.literal("enable").executes { context ->
+                            toggleFeature(context, category.name, feature.name, true)
+                        },
+                    )
+                }
+                if (feature.instance.preRegisterCommands.contains("disable")) {
+                    featureBuilder.then(
+                        ClientCommandManager.literal("disable").executes { context ->
+                            toggleFeature(context, category.name, feature.name, false)
+                        },
+                    )
+                }
+                if (feature.instance.preRegisterCommands.contains("toggle")) {
+                    featureBuilder.then(
+                        ClientCommandManager.literal("toggle").executes { context ->
+                            toggleFeatureState(context, category.name, feature.name)
+                        },
+                    )
+                }
+                if (feature.instance.preRegisterCommands.contains("set")) {
+                    featureBuilder.then(
+                        ClientCommandManager
+                            .literal("set")
+                            .then(
+                                getSettingKeyArgument()
+                                    .then(
+                                        getSettingValueArgument()
+                                            .executes { context ->
+                                                setFeatureSetting(
+                                                    context,
+                                                    category.name,
+                                                    feature.name,
+                                                )
+                                            },
+                                    ),
+                            ),
+                    )
+                }
+                if (feature.instance.preRegisterCommands.contains("get")) {
+                    featureBuilder.then(
+                        ClientCommandManager
+                            .literal("get")
+                            .then(
+                                getSettingKeyArgument()
+                                    .executes { context -> getFeatureStatus(context, category.name, feature.name) },
+                            ),
+                    )
+                }
+                if (feature.instance.preRegisterCommands.contains("add")) {
+                    featureBuilder.then(
+                        ClientCommandManager
+                            .literal("add")
+                            .then(
+                                getSettingKeyArgument()
+                                    .then(
+                                        getSettingValueArgument()
+                                            .executes { context ->
+                                                addRemoveFeatureSetting(
+                                                    context,
+                                                    category.name,
+                                                    feature.name,
+                                                    true,
+                                                )
+                                            },
+                                    ),
+                            ),
+                    )
+                }
+                if (feature.instance.preRegisterCommands.contains("del")) {
+                    featureBuilder.then(
+                        ClientCommandManager
+                            .literal("del")
+                            .then(
+                                getSettingKeyArgument()
+                                    .then(
+                                        getSettingValueArgument()
+                                            .executes { context ->
+                                                addRemoveFeatureSetting(
+                                                    context,
+                                                    category.name,
+                                                    feature.name,
+                                                    false,
+                                                )
+                                            },
+                                    ),
+                            ),
+                    )
+                }
+
+                // Allow the feature to register its custom commands as subcommands to its own feature literal
+                feature.instance.registerCommands(featureBuilder)
+
+                categoryLiteral.then(featureBuilder)
             }
+            featureRootLiteral.then(categoryLiteral)
         }
+        infiniteCommand.then(featureRootLiteral)
+        dispatcher.register(infiniteCommand)
     }
 
     private fun getTheme(context: CommandContext<FabricClientCommandSource>): Int {
@@ -266,9 +316,11 @@ object InfiniteCommand {
         return 1
     }
 
-    private fun toggleFeatureState(context: CommandContext<*>): Int {
-        val categoryName = StringArgumentType.getString(context, "category")
-        val featureName = StringArgumentType.getString(context, "name")
+    private fun toggleFeatureState(
+        context: CommandContext<FabricClientCommandSource>,
+        categoryName: String,
+        featureName: String,
+    ): Int {
         val feature = searchFeature(categoryName, featureName)
         if (feature == null) {
             error("${Text.translatable("command.infinite.nofeature")}: $categoryName / $featureName")
@@ -360,11 +412,11 @@ object InfiniteCommand {
      */
 
     private fun toggleFeature(
-        context: CommandContext<*>,
+        context: CommandContext<FabricClientCommandSource>,
+        categoryName: String,
+        featureName: String,
         enable: Boolean,
     ): Int {
-        val categoryName = StringArgumentType.getString(context, "category")
-        val featureName = StringArgumentType.getString(context, "name")
         val action =
             if (enable) {
                 Text
@@ -392,9 +444,11 @@ object InfiniteCommand {
         return 1
     }
 
-    private fun setFeatureSetting(context: CommandContext<*>): Int {
-        val categoryName = StringArgumentType.getString(context, "category")
-        val featureName = StringArgumentType.getString(context, "name")
+    private fun setFeatureSetting(
+        context: CommandContext<FabricClientCommandSource>,
+        categoryName: String,
+        featureName: String,
+    ): Int {
         val settingKey = StringArgumentType.getString(context, "key")
         val rawValue = StringArgumentType.getString(context, "value")
         val feature = searchFeature(categoryName, featureName)
@@ -417,13 +471,19 @@ object InfiniteCommand {
                     is Int ->
                         rawValue.toIntOrNull()
                             ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.int").string)
+
                     is Float ->
                         rawValue.toFloatOrNull()
                             ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.float").string)
+
                     is String -> rawValue
                     is List<*> -> rawValue.split(",").map { it.trim() }.filter { it.isNotBlank() }
                     else -> throw IllegalStateException(
-                        Text.translatable("command.infinite.setting.type.unsupported", setting.value::class.simpleName).string,
+                        Text
+                            .translatable(
+                                "command.infinite.setting.type.unsupported",
+                                setting.value::class.simpleName,
+                            ).string,
                     )
                 }
 
@@ -439,11 +499,11 @@ object InfiniteCommand {
     }
 
     private fun addRemoveFeatureSetting(
-        context: CommandContext<*>,
+        context: CommandContext<FabricClientCommandSource>,
+        categoryName: String,
+        featureName: String,
         isAdd: Boolean,
     ): Int {
-        val categoryName = StringArgumentType.getString(context, "category")
-        val featureName = StringArgumentType.getString(context, "name")
         val settingKey = StringArgumentType.getString(context, "key")
         val value = StringArgumentType.getString(context, "value")
 
@@ -486,9 +546,11 @@ object InfiniteCommand {
         }
     }
 
-    private fun getFeatureStatus(context: CommandContext<*>): Int {
-        val categoryName = StringArgumentType.getString(context, "category")
-        val featureName = StringArgumentType.getString(context, "name")
+    private fun getFeatureStatus(
+        context: CommandContext<FabricClientCommandSource>,
+        categoryName: String,
+        featureName: String,
+    ): Int {
         val feature = searchFeature(categoryName, featureName)
         if (feature == null) {
             error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
