@@ -27,7 +27,7 @@ class PlayerInterface {
         }
     val velocity: Vec3d?
         get() = player?.velocity
-    val movementInterface: MovementInterface = MovementInterface(client)
+    val movement: MovementInterface = MovementInterface(client)
     val inventory: InventoryManager = InventoryManager(client)
     val ai: AISystem = AISystem(client)
 }
