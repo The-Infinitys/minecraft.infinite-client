@@ -88,18 +88,15 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
 
         // Skip if a screen is open (e.g., inventory GUI)
         if (client.currentScreen != null) return
-
         val chestSlotIndex = InventoryManager.Armor.CHEST
         val currentChestStack = invManager.get(chestSlotIndex)
+        if (currentChestStack.item == Items.ELYTRA) {
+            isElytraEquippedByHack = true
+        }
 
-        // 🛡️ マニュアル操作による状態不正を検出・修正するロジック
-        // 1. ハックがエリトラ装備中と信じているが、実際はエリトラが装備されていない場合（ユーザーが手動でエリトラを外した場合）
         if (isElytraEquippedByHack && currentChestStack.item != Items.ELYTRA) {
             resetElytraState()
         }
-
-        // 2. ハックが以前のチェストプレートを記憶しているが、ユーザーが手動で現在の装備を別のアイテムに変更した場合
-        //    (この場合、previousChestplateに戻す処理が邪魔になる可能性があるため、状態をクリアする)
         if (!previousChestplate.isEmpty && currentChestStack.item != previousChestplate.item && currentChestStack.item != Items.ELYTRA) {
             resetElytraState()
         }
@@ -130,16 +127,18 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         val options = MinecraftClient.getInstance().options ?: return
         // ★追加: Zキーによる手動解除のチェック
         val isReleaseElytraPressed = options.sneakKey.isPressed && options.sprintKey.isPressed
-        val shouldManualUnequip = isReleaseElytraPressed && isElytraEquippedByHack
-
         // Handle elytra unequip logic (自動解除 または 手動解除)
         if (isElytraEquippedByHack) {
             if (!isCurrentElytra) {
                 resetElytraState()
                 return
             }
-            val shouldAutoUnequip = player.isOnGround || player.health <= minHealth.value || player.isTouchingWater
-            if (shouldAutoUnequip || shouldManualUnequip) {
+
+            var shouldAutoUnequip = player.isOnGround || player.isTouchingWater
+            shouldAutoUnequip = shouldAutoUnequip || (player.health <= minHealth.value && !player.isGliding)
+            // --- 修正された自動解除ロジック 終了 ---
+
+            if (shouldAutoUnequip || isReleaseElytraPressed) {
                 var swapped = false
                 // 優先: 以前のアイテムがまだpreviousSlotにあるか確認してからスワップ
                 if (previousSlot != null && !previousChestplate.isEmpty) {

@@ -147,5 +147,7 @@
   "command.infinite.setting.list.footer": "--------------------",
   "feature.movement.antifall.description": "Prevent falling damage.",
   "feature.movement.superfly.power.description": "Flying power.",
-  "feature.rendering.extrasensory.containeresp.description": "Show Containers"
+  "feature.rendering.extrasensory.containeresp.description": "Show Containers",
+  "feature.automatic.autopilot.description": "Auto Pilot System",
+  "feature.movement.superfly.keepfly.description": "Keep Flying even if force cancelled."
 }

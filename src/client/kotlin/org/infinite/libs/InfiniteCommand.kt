@@ -50,13 +50,10 @@ object InfiniteCommand {
                                 ),
                             ),
                         ),
-                )
-                // 3. /infinite feature ...
-                .then(
+                ).then(
                     ClientCommandManager.literal("feature").then(
                         getCategoryArgument().then(
                             getFeatureNameArgument()
-                                // 3-1. /infinite feature <category> <name> <enable/disable/toggle/get>
                                 .then(
                                     ClientCommandManager
                                         .literal("enable")

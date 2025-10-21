@@ -26,25 +26,27 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
             FlyMethod.Acceleration,
             FlyMethod.entries,
         )
+    private val keepFly: FeatureSetting.BooleanSetting =
+        FeatureSetting.BooleanSetting(
+            "KeepFlying",
+            "feature.movement.superfly.keepflying.description",
+            true,
+        )
     private val power: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting("Power", "feature.movement.superfly.power.description", 1.0f, 0.5f, 5.0f)
     override val settings: List<FeatureSetting<*>> =
         listOf(
             method,
             power,
+            keepFly,
         )
 
     override fun tick() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
 
-        // Check if player is gliding (relevant mostly for Acceleration/Rocket methods)
         if (!player.isGliding && method.value != FlyMethod.CreativeFlight) return
-
-        // 1. Manage gliding (e.g., start fall flying if in water)
         manageGliding(client)
-
-        // 2. Control based on the selected method
         when (method.value) {
             FlyMethod.Acceleration -> {
                 // Check HyperBoost conditions: HyperBoost enabled, forward key, jump key, and sneak key pressed
@@ -76,6 +78,7 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
 
     private fun manageGliding(client: MinecraftClient) {
         val player = client.player ?: return
+        val options = client.options ?: return
         // Only apply this specific gliding management if we are in a method that relies on elytra gliding
         if (method.value == FlyMethod.Acceleration || method.value == FlyMethod.Rocket) {
             if (player.isTouchingWater) {
@@ -86,6 +89,15 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
                     )
                 player.networkHandler?.sendPacket(packet)
             }
+        }
+        val cancelKey = options.sprintKey.isPressed && options.sneakKey.isPressed
+        if (keepFly.value && !player.isGliding && !cancelKey) {
+            val packet =
+                ClientCommandC2SPacket(
+                    player,
+                    ClientCommandC2SPacket.Mode.START_FALL_FLYING,
+                )
+            player.networkHandler?.sendPacket(packet)
         }
     }
 

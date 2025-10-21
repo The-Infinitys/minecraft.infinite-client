@@ -42,7 +42,9 @@ class SuperSprint : ConfigurableFeature(initialEnabled = false) {
                 return // Prevent further sprint logic
             }
         }
-        options.sprintKey.isPressed = !player.isGliding && options.forwardKey.isPressed
+        if (!options.sprintKey.isPressed) {
+            options.sprintKey.isPressed = !player.isGliding && options.forwardKey.isPressed
+        }
         if (!onlyWhenForward.value) {
             val movementKeyPressed = (
                 options.forwardKey.isPressed ||

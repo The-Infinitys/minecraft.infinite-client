@@ -147,5 +147,7 @@
   "command.infinite.setting.list.footer": "--------------------",
   "feature.movement.antifall.description": "落下ダメージを無効化します。",
   "feature.movement.superfly.power.description": "飛行時の速度を設定します。",
-  "feature.rendering.extrasensory.containeresp.description": "コンテナを表示します。"
+  "feature.rendering.extrasensory.containeresp.description": "コンテナを表示します。",
+  "feature.automatic.autopilot.description": "自動飛行システムを提供します。",
+  "feature.movement.superfly.keepfly.description": "飛行状態が解除されないようにします。"
 }
