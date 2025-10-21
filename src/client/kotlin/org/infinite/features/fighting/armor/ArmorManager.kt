@@ -59,18 +59,22 @@ private val ARMOR_TOUGHNESS_VALUES =
     )
 
 class ArmorManager : ConfigurableFeature(initialEnabled = false) {
+    private val autoEquip: BooleanSetting =
+        BooleanSetting("AutoEquip", "Automatically equips the best available armor.", true)
+    private val elytraSwitch: BooleanSetting =
+        BooleanSetting("ElytraSwitch", "Automatically switches to elytra when airborne.", true)
+    private val minHealth: IntSetting =
+        IntSetting("MinHealth", "Disables elytra when health drops below this value.", 10, 1, 20)
+    private val durabilityThreshold: IntSetting =
+        IntSetting("DurabilityThreshold", "Ignores armor with durability below this percentage (%).", 5, 0, 100)
+
     override val settings: List<FeatureSetting<*>> =
         listOf(
-            BooleanSetting("Auto Equip", "Automatically equips the best available armor.", true),
-            BooleanSetting("Elytra Switch", "Automatically switches to elytra when airborne.", true),
-            IntSetting("Min Health", "Disables elytra when health drops below this value.", 10, 1, 20),
-            IntSetting("Durability Threshold", "Ignores armor with durability below this percentage (%).", 5, 0, 100),
+            autoEquip,
+            elytraSwitch,
+            minHealth,
+            durabilityThreshold,
         )
-
-    private val autoEquip: BooleanSetting by lazy { settings.find { it.name == "Auto Equip" } as BooleanSetting }
-    private val elytraSwitch: BooleanSetting by lazy { settings.find { it.name == "Elytra Switch" } as BooleanSetting }
-    private val minHealth: IntSetting by lazy { settings.find { it.name == "Min Health" } as IntSetting }
-    private val durabilityThreshold: IntSetting by lazy { settings.find { it.name == "Durability Threshold" } as IntSetting }
 
     private var previousChestplate: ItemStack = ItemStack.EMPTY
     private var previousSlot: InventoryManager.InventoryIndex? = null
