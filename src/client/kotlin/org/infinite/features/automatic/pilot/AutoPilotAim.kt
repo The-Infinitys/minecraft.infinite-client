@@ -80,14 +80,17 @@ class AutoPilotCondition(
     private fun handleJetFlying(): AimTaskConditionReturn {
         val distanceThreshold = autoPilot.landingStartDistance
         val currentDistance = autoPilot.target?.distance()
-        autoPilot.aimTaskCallBack =
-            if (currentDistance == null) {
-                AimTaskConditionReturn.Failure
-            } else if (currentDistance < distanceThreshold) {
-                AimTaskConditionReturn.Success
-            } else {
-                AimTaskConditionReturn.Exec
-            }
+
+        if (autoPilot.jetAcceleration.value == 0.0) {
+            // If jetAcceleration is 0.0, instantly reach the target
+            autoPilot.aimTaskCallBack = AimTaskConditionReturn.Success
+        } else if (currentDistance == null) {
+            autoPilot.aimTaskCallBack = AimTaskConditionReturn.Failure
+        } else if (currentDistance < distanceThreshold) {
+            autoPilot.aimTaskCallBack = AimTaskConditionReturn.Success
+        } else {
+            autoPilot.aimTaskCallBack = AimTaskConditionReturn.Exec
+        }
         return autoPilot.aimTaskCallBack!!
     }
 

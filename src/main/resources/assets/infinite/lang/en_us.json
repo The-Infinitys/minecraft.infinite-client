@@ -152,6 +152,7 @@
   "feature.automatic.autopilot.description": "Auto Pilot System",
   "feature.movement.superfly.keepfly.description": "Keep Flying even if force cancelled.",
   "feature.automatic.autopilot.maxspeed.description": "Max flying speed.",
+  "feature.automatic.autopilot.jetacceleration.description": "Acceleration power for JetFlying. 0.0 for instant arrival.",
   "autopilot.emergency_landing.start": "[AutoPilot] Emergency landing initiated! Remaining flight time: %s seconds, Terrain collision: %s",
   "autopilot.target.not_set": "[AutoPilot] Target not set. Please set target with `/infinite feature Automatic AutoPilot target {x} {z}`.",
   "autopilot.elytra.flight_interrupted": "[AutoPilot] Elytra flight interrupted. Attempting to redeploy.",

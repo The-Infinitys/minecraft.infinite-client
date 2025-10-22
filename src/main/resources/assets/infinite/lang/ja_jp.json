@@ -152,6 +152,7 @@
   "feature.automatic.autopilot.description": "自動飛行システムを提供します。",
   "feature.movement.superfly.keepfly.description": "飛行状態が解除されないようにします。",
   "feature.automatic.autopilot.maxspeed.description": "飛行時の最高速度",
+  "feature.automatic.autopilot.jetacceleration.description": "超速飛行時の加速力。0.0で瞬時に目標に到達します。",
   "autopilot.emergency_landing.start": "[AutoPilot] 緊急着陸を開始します！ 残り飛行時間: %s秒, 地形衝突: %s",
   "autopilot.target.not_set": "[AutoPilot] ターゲットが設定されていません。`/infinite feature Automatic AutoPilot target {x} {z}` でターゲットを設定してください。",
   "autopilot.elytra.flight_interrupted": "[AutoPilot] エリトラ飛行が中断されました。再展開を試みます。",

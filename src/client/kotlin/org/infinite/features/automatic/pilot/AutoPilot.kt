@@ -151,6 +151,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             10.0,
             50.0,
         )
+    val jetAcceleration =
+        FeatureSetting.DoubleSetting(
+            "JetAcceleration",
+            "feature.automatic.autopilot.jetacceleration.description",
+            0.5,
+            0.0,
+            1.0,
+        )
 
     // 機能設定リスト
     override val settings: List<FeatureSetting<*>> =
@@ -166,6 +174,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             collisionDetectionDistance,
             jetFlightMode,
             jetSpeedLimit,
+            jetAcceleration,
         )
     private var fallHeight: Double = 0.0
     private var riseHeight: Double = 0.0
@@ -469,7 +478,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         val yaw = player!!.yaw.toDouble()
                         val pitch = player!!.pitch.toDouble()
                         val moveVec = CameraRoll(yaw, pitch).vec()
-                        val power = 0.04
+                        val power = jetAcceleration.value // Use jetAcceleration
                         val vecY = velocity.y + if (height < standardHeight.value) power else -power
                         val vecX = velocity.x + moveVec.x * (if (moveSpeed < jetSpeedLimit.value) power else 0.0)
                         val vecZ = velocity.z + moveVec.z * (if (moveSpeed < jetSpeedLimit.value) power else 0.0)
