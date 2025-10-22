@@ -4,12 +4,11 @@ import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
+import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.world.Heightmap
@@ -17,20 +16,12 @@ import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.fly.SuperFly
 import org.infinite.libs.client.player.fighting.AimInterface
-import org.infinite.libs.client.player.fighting.aim.AimCalculateMethod
-import org.infinite.libs.client.player.fighting.aim.AimPriority
-import org.infinite.libs.client.player.fighting.aim.AimTarget
-import org.infinite.libs.client.player.fighting.aim.AimTask
-import org.infinite.libs.client.player.fighting.aim.AimTaskCondition
 import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
-import org.infinite.libs.client.player.fighting.aim.CameraRoll
-import org.infinite.libs.client.player.inventory.InventoryManager
 import org.infinite.libs.client.player.inventory.InventoryManager.Armor
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.settings.FeatureSetting
-import org.infinite.utils.item.enchantLevel
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -55,14 +46,6 @@ class Location(
         return sqrt(diffX * diffX + diffZ * diffZ)
     }
 }
-
-// 【新規】着陸に最適な地点の情報を保持するデータクラス
-data class LandingSpot(
-    val x: Int,
-    val y: Int, // 標高 (getTopYの結果)
-    val z: Int,
-    val score: Double, // 標高と平坦度に基づくスコア
-)
 
 // 自動操縦の状態を定義する列挙型
 enum class PilotState {
@@ -127,10 +110,18 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             256,
             1024,
         )
+    val landingDir =
+        FeatureSetting.DoubleSetting(
+            "LandingDirectory",
+            "feature.automatic.autopilot.landingdirectory.description",
+            -14.0,
+            -45.0,
+            0.0,
+        )
 
     // 機能設定リスト
     override val settings: List<FeatureSetting<*>> =
-        listOf(elytraThreshold, swapElytra, standardHeight, riseDir, glidingDir, fallDir)
+        listOf(elytraThreshold, swapElytra, standardHeight, riseDir, glidingDir, fallDir, landingDir)
     private var fallHeight: Double = 0.0
     private var riseHeight: Double = 0.0
 
@@ -495,16 +486,19 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     z,
                 )
 
-            // 探索地点 (x, z) がどの程度平らであるかを判定
-            val flatnessScore = calculateFlatnessScore(x, z)
+            // 【新規】危険なブロックを避ける
+            if (!isDangerousBlock(x, y, z)) {
+                // 探索地点 (x, z) がどの程度平らであるかを判定
+                val flatnessScore = calculateFlatnessScore(x, z)
 
-            // スコア計算: 標高 (y) を重視し、平坦度をボーナスとして加算
-            // 高い標高ほど良い。平坦なほどボーナス。平坦度ボーナスは最大で 10 * 1.0 = 10.0
-            val score = y.toDouble() + (flatnessScore * 10.0)
+                // スコア計算: 標高 (y) を重視し、平坦度をボーナスとして加算
+                // 高い標高ほど良い。平坦なほどボーナス。平坦度ボーナスは最大で 10 * 1.0 = 10.0
+                val score = y.toDouble() + (flatnessScore * 10.0)
 
-            if (score > currentBestScore) {
-                currentBestSpot = LandingSpot(x, y, z, score)
-                bestLandingSpot = currentBestSpot
+                if (score > currentBestScore) {
+                    currentBestSpot = LandingSpot(x, y, z, score)
+                    bestLandingSpot = currentBestSpot
+                }
             }
         }
     }
@@ -542,6 +536,30 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val avgDiff = totalDiff / count.toDouble()
         // スコア: 差が 0 のとき 1.0, 差が 5.0 のとき 0.0 に近づく
         return MathHelper.clamp(1.0 - (avgDiff / 5.0), 0.0, 1.0)
+    }
+
+    /**
+     * 【新規】指定された座標が危険なブロック (溶岩、火、サボテン、マグマブロック) であるかを判定します。
+     * また、その1ブロック上もチェックします。
+     */
+    private fun isDangerousBlock(
+        x: Int,
+        y: Int,
+        z: Int,
+    ): Boolean {
+        val blockPos = BlockPos(x, y, z)
+        val blockState = world.getBlockState(blockPos)
+        val block = blockState.block
+
+        // Check for dangerous blocks at the given position
+        if (block == Blocks.LAVA || block == Blocks.FIRE || block == Blocks.CACTUS || block == Blocks.MAGMA_BLOCK) {
+            return true
+        }
+
+        // Also check the block directly above, as we don't want to land *on* a dangerous block
+        val blockStateAbove = world.getBlockState(blockPos.up())
+        val blockAbove = blockStateAbove.block
+        return blockAbove == Blocks.LAVA || blockAbove == Blocks.FIRE || blockAbove == Blocks.CACTUS
     }
 
     /**
@@ -705,359 +723,4 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             graphics3D.renderSolidColorBoxes(listOf(box))
         }
     }
-}
-
-/**
- * 自動操縦のための AimTask 定義。
- */
-class AutoPilotAimTask(
-    state: PilotState,
-    location: Location,
-    bestLandingSpot: LandingSpot? = null, // 【変更】追加
-) : AimTask(
-        AimPriority.Normally,
-        PilotAimTarget(
-            state,
-            location,
-            bestLandingSpot, // 【変更】
-        ),
-        AutoPilotCondition(state),
-        AimCalculateMethod.Linear,
-        // Java ModConfig.turningSpeedDefault (3.0) や pullUpSpeed (2.16) に近い値を使用
-        2.0,
-    )
-
-/**
- * AimTask の実行条件を定義するクラス。
- * 目標速度/条件に達したかをチェックし、AimTask の継続/終了を決定します。
- */
-class AutoPilotCondition(
-    val state: PilotState,
-) : AimTaskCondition {
-    private val autoPilot: AutoPilot
-        get() = InfiniteClient.getFeature(AutoPilot::class.java)!!
-    val player: ClientPlayerEntity?
-        get() = MinecraftClient.getInstance().player
-
-    /**
-     * 実行条件をチェックします。
-     */
-    override fun check(): AimTaskConditionReturn =
-        when (state) {
-            PilotState.Idle, PilotState.SuperFlying -> AimTaskConditionReturn.Failure
-            PilotState.RiseFlying -> handleRiseFlying()
-            PilotState.FallFlying -> handleFallFlying()
-            PilotState.Gliding -> handleGliding()
-            PilotState.Circling -> handleCircling() // 【新規】
-            PilotState.Landing -> handleLanding() // 【変更】
-        }
-
-    private fun handleGliding(): AimTaskConditionReturn {
-        val heightThreshold = autoPilot.standardHeight.value
-        autoPilot.aimTaskCallBack =
-            if (autoPilot.isDisabled()) {
-                AimTaskConditionReturn.Failure
-            } else if (autoPilot.height > heightThreshold) {
-                AimTaskConditionReturn.Exec
-            } else {
-                AimTaskConditionReturn.Success
-            }
-        return autoPilot.aimTaskCallBack!!
-    }
-
-    /**
-     * 上昇 (RiseFlying) 中の条件処理。
-     */
-    private fun handleRiseFlying(): AimTaskConditionReturn {
-        val minSpeedThreshold = 1.0 // 速度が目標値を超えたと解釈
-
-        autoPilot.aimTaskCallBack =
-            if (autoPilot.isDisabled()) {
-                AimTaskConditionReturn.Failure
-            } else if (autoPilot.flySpeed > minSpeedThreshold) {
-                AimTaskConditionReturn.Exec
-            } else {
-                AimTaskConditionReturn.Success
-            }
-        return autoPilot.aimTaskCallBack!!
-    }
-
-    /**
-     * 下降 (FallFlying) 中の条件処理。
-     */
-    private fun handleFallFlying(): AimTaskConditionReturn {
-        val maxSpeedThreshold = 2.2 // 速度が目標値に達したと解釈
-
-        autoPilot.aimTaskCallBack =
-            if (autoPilot.isDisabled()) {
-                AimTaskConditionReturn.Failure
-            } else if (autoPilot.flySpeed < maxSpeedThreshold) {
-                AimTaskConditionReturn.Exec
-            } else {
-                AimTaskConditionReturn.Success
-            }
-        return autoPilot.aimTaskCallBack!!
-    }
-
-    /**
-     * 【新規】旋回 (Circling) 中の条件処理。
-     * 最適な着陸地点が見つかったら `Success` を返す。
-     */
-    private fun handleCircling(): AimTaskConditionReturn {
-        autoPilot.aimTaskCallBack =
-            if (autoPilot.isDisabled() || player == null) {
-                AimTaskConditionReturn.Failure
-            } else if (autoPilot.bestLandingSpot != null && autoPilot.bestLandingSpot!!.score > player!!.y - 10) {
-                AimTaskConditionReturn.Success // Landing へ移行
-            } else {
-                AimTaskConditionReturn.Exec // 旋回を継続
-            }
-        return autoPilot.aimTaskCallBack!!
-    }
-
-    /**
-     * 【変更】着陸 (Landing) 中の条件処理。
-     * 速度と高度が十分に落ちた場合に成功とします。
-     */
-    private fun handleLanding(): AimTaskConditionReturn {
-        autoPilot.aimTaskCallBack =
-            if (autoPilot.isDisabled() || player == null) {
-                AimTaskConditionReturn.Failure
-            } else if (!player!!.isGliding && (player!!.isOnGround || player!!.isTouchingWater)) {
-                AimTaskConditionReturn.Success // 成功として AimTask を終了
-            } else {
-                AimTaskConditionReturn.Exec // 継続
-            }
-        return autoPilot.aimTaskCallBack!!
-    }
-}
-
-class PilotAimTarget(
-    val state: PilotState,
-    val target: Location,
-    val bestLandingSpot: LandingSpot? = null, // 【変更】追加
-) : AimTarget.RollTarget(CameraRoll(0.0, 0.0)) {
-    // player の取得をゲッターに変更
-    private val player: ClientPlayerEntity
-        get() = MinecraftClient.getInstance().player!!
-    private val autoPilot: AutoPilot
-        get() = InfiniteClient.getFeature(AutoPilot::class.java)!!
-
-    override val roll: CameraRoll
-        get() {
-            return CameraRoll(
-                when (state) {
-                    PilotState.Circling -> calculateCirclingYaw() // 【変更】旋回中は専用のヨー角
-                    PilotState.Landing -> calculateLandingYaw() // 【変更】着陸中は専用のヨー角
-                    else -> calculateTargetYaw()
-                },
-                when (state) {
-                    PilotState.Landing -> handleLandingPitch()
-                    PilotState.Circling -> autoPilot.glidingDir.value / 2.0 // 緩やかに降下しながら旋回
-                    PilotState.FallFlying -> autoPilot.fallDir.value
-                    PilotState.RiseFlying -> autoPilot.riseDir.value
-                    PilotState.Gliding -> autoPilot.glidingDir.value
-                    else -> 0.0 // その他の状態
-                },
-            )
-        }
-
-    /**
-     * ターゲットへの方向を計算し、目標のヨー角 (YAW) を返します。
-     */
-    private fun calculateTargetYaw(): Double {
-        val currentPlayer = player
-        val d = target.x - currentPlayer.x
-        val f = target.z - currentPlayer.z
-        return MathHelper.wrapDegrees((MathHelper.atan2(f, d) * (180.0 / Math.PI)) - 90.0)
-    }
-
-    /**
-     * 【新規】旋回時のヨー角 (YAW) を計算します。
-     * ターゲット中心のヨー角にオフセットを加えることで旋回させます。
-     */
-    private fun calculateCirclingYaw(): Double {
-        val currentPlayer = player
-        val d = target.x - currentPlayer.x
-        val f = target.z - currentPlayer.z
-
-        // ターゲット中心のヨー角 (ターゲットを向く角度)
-        val yawToCenter = MathHelper.wrapDegrees((MathHelper.atan2(f, d) * (180.0 / Math.PI)) - 90.0)
-
-        // 旋回のためのオフセット (左手に見ながら回る = +90度)
-        val circlingOffset = 90.0
-
-        return MathHelper.wrapDegrees(yawToCenter + circlingOffset)
-    }
-
-    /**
-     * 【新規】着陸時のヨー角 (YAW) を計算します。
-     * 見つかった着陸地点 (bestLandingSpot) の方向を向きます。
-     */
-    private fun calculateLandingYaw(): Double {
-        val landingSpot = bestLandingSpot ?: return calculateTargetYaw() // 見つからなければ通常のターゲットへ
-
-        val currentPlayer = player
-        val d = landingSpot.x - currentPlayer.x
-        val f = landingSpot.z - currentPlayer.z
-
-        return MathHelper.wrapDegrees((MathHelper.atan2(f, d) * (180.0 / Math.PI)) - 90.0)
-    }
-
-    /**
-     * 【変更】着陸時のピッチ角を計算します。
-     */
-    private fun handleLandingPitch(): Double {
-        val currentPlayer = player
-        val landingSpot = bestLandingSpot ?: return autoPilot.fallDir.value
-
-        val targetX = landingSpot.x.toDouble()
-        // 着陸地点の標高より少し上を目標にする (+2.0)
-        val targetY = landingSpot.y.toDouble() + 10.0
-        val targetZ = landingSpot.z.toDouble()
-
-        val dX = targetX - currentPlayer.x
-        val dY = targetY - currentPlayer.y // ターゲット地点Y - プレイヤーY
-        val dZ = targetZ - currentPlayer.z
-
-        // 水平距離
-        val horizontalDistance = sqrt(dX * dX + dZ * dZ)
-
-        // 仰角 (pitch) の計算
-        val pitch = MathHelper.atan2(dY, horizontalDistance) * (180.0 / Math.PI)
-
-        // 着陸時は速度を落とすことが最優先。
-        val minPitch = autoPilot.glidingDir.value // 緩やかな降下
-        val maxPitch = 50.0 // 急降下
-
-        // 速度が速いほど、より急な降下 (より大きな正のピッチ) が必要
-        val maxSpeed = 10.0
-        val speedFactor = MathHelper.clamp(autoPilot.moveSpeedAverage / maxSpeed, 0.0, 1.0)
-
-        // 速度制御に基づき、targetPitchとmaxPitchの間で補間
-        val speedAdjustedPitch = (pitch * (1.0 - speedFactor)) + (maxPitch * speedFactor)
-
-        // 最終的なピッチをクランプ
-        return MathHelper.clamp(speedAdjustedPitch, minPitch, maxPitch)
-    }
-}
-
-/**
- * アイテムスタックがエリトラであるかを判定します。
- */
-private fun isElytra(stack: ItemStack): Boolean = stack.item == Items.ELYTRA
-
-/**
- * エリトラのインベントリ情報と耐久値を保持するためのデータクラス。
- */
-private data class ElytraInfo(
-    val index: InventoryManager.InventoryIndex,
-    val durability: Double,
-)
-
-/**
- * インベントリ (ホットバーとバックパック) の中で**最も耐久値の高い**エリトラの情報を返します。
- * チェストスロットに装備されているものは無視します。
- */
-private fun findBestElytraInInventory(): ElytraInfo? {
-    val playerInv = MinecraftClient.getInstance().player?.inventory ?: return null
-    val invManager = InfiniteClient.playerInterface.inventory
-    var bestElytra: ElytraInfo? = null
-
-    // すべてのインベントリスロット (ホットバーとバックパック) をチェック
-    // ホットバー (0-8) -> InventoryManager.Hotbar(i)
-    for (i in 0 until 9) {
-        val stack = playerInv.getStack(i)
-        if (isElytra(stack)) {
-            val durability = invManager.durabilityPercentage(stack) * 100
-            if (bestElytra == null || durability > bestElytra.durability) {
-                bestElytra = ElytraInfo(InventoryManager.Hotbar(i), durability)
-            }
-        }
-    }
-
-    // バックパック (9-35, Backpack index 0-26) -> InventoryManager.Backpack(i)
-    for (i in 0 until 27) {
-        val slotIndex = 9 + i
-        val stack = playerInv.getStack(slotIndex)
-        if (isElytra(stack)) {
-            val durability = invManager.durabilityPercentage(stack) * 100
-            if (bestElytra == null || durability > bestElytra.durability) {
-                bestElytra = ElytraInfo(InventoryManager.Backpack(i), durability)
-            }
-        }
-    }
-
-    return bestElytra
-}
-
-private fun flightTime(): Double {
-    val playerInv = MinecraftClient.getInstance().player?.inventory ?: return 0.0
-    val invManager = InfiniteClient.playerInterface.inventory
-    var total = 0.0
-
-    // 装備中のエリトラ
-    val equippedStack = invManager.get(Armor.CHEST)
-    if (isElytra(equippedStack)) {
-        val durability = invManager.durability(equippedStack)
-        val level = enchantLevel(equippedStack, Enchantments.UNBREAKING)
-        // 破壊不能エンチャントを考慮した耐久値
-        val multiply = 1.0 / (0.6 + 0.4 / (1.0 + level))
-        total += durability * multiply
-    }
-
-    // インベントリ内のエリトラ
-    for (i in 0 until 9) {
-        val stack = playerInv.getStack(i)
-        if (isElytra(stack)) {
-            val durability = invManager.durability(stack)
-            val level = enchantLevel(stack, Enchantments.UNBREAKING)
-            val multiply = 1.0 / (0.6 + 0.4 / (1.0 + level))
-            total += durability * multiply
-        }
-    }
-
-    for (i in 0 until 27) {
-        val slotIndex = 9 + i
-        val stack = playerInv.getStack(slotIndex)
-        if (isElytra(stack)) {
-            val durability = invManager.durability(stack)
-            val level = enchantLevel(stack, Enchantments.UNBREAKING)
-            val multiply = 1.0 / (0.6 + 0.4 / (1.0 + level))
-            total += durability * multiply
-        }
-    }
-    return total
-}
-
-/**
- * 秒数を Dd Hh Mm Ss 形式の文字列に変換します。
- */
-fun formatSecondsToDHMS(totalSeconds: Long): String {
-    if (totalSeconds < 0) return "N/A"
-
-    val secondsInDay = 24 * 60 * 60L
-    val secondsInHour = 60 * 60L
-    val secondsInMinute = 60L
-
-    val days = totalSeconds / secondsInDay
-    var remainingSeconds = totalSeconds % secondsInDay
-
-    val hours = remainingSeconds / secondsInHour
-    remainingSeconds %= secondsInHour
-
-    val minutes = remainingSeconds / secondsInMinute
-    val seconds = remainingSeconds % secondsInMinute
-
-    val parts = mutableListOf<String>()
-    if (days > 0) parts.add("${days}d")
-    if (hours > 0 || days > 0) parts.add("${hours}h") // 日がある場合は時も表示
-    if (minutes > 0 || hours > 0 || days > 0) parts.add("${minutes}m") // 時がある場合は分も表示
-    parts.add("${seconds}s") // 秒は常に表示
-
-    // 全て0秒の場合は "0s"
-    if (parts.isEmpty()) return "0s"
-
-    // 冗長にならないよう、最大3つの単位まで表示
-    return parts.take(3).joinToString(" ")
 }

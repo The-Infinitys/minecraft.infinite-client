@@ -54,6 +54,7 @@ enum class AimCalculateMethod {
     EaseIn, // 加速
     EaseOut, // 減速
     EaseInOut, // 両端での加速・減速
+    Immediate, // 即時
 }
 
 class CameraRoll(
@@ -320,6 +321,8 @@ open class AimTask(
                         easeOut
                     }
                 }
+
+                AimCalculateMethod.Immediate -> rollDiff
             }
         return result.diffNormalize()
     }
