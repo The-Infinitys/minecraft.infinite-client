@@ -486,7 +486,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     }
 
                     AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error("[AutoPilot] Circling 状態で予期せぬエラー。")
+                        InfiniteClient.error(Text.translatable("autopilot.error.circling").string)
                         disable()
                     }
 
