@@ -88,7 +88,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             bestGlidingDir,
             defaultFallDir,
         )
-    private val elytraThreshold =
+    val elytraThreshold =
         FeatureSetting.IntSetting(
             "ElytraThreshold",
             "feature.automatic.autopilot.elytrathreshold.description",
@@ -218,10 +218,10 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
 
         // Check blocks directly in front of the player
         for (i in 1..checkDistance) {
-            val checkPos = currentPos.add(lookVec.x * i, lookVec.y * i, lookVec.z * i)
+            val checkPos =
+                currentPos.add((lookVec.x * i).roundToInt(), (lookVec.y * i).roundToInt(), (lookVec.z * i).roundToInt())
             val blockState = world.getBlockState(checkPos)
-            if (!blockState.isAir && !blockState.isLiquid) {
-                // Found a solid block in the flight path
+            if (!blockState.isAir) {
                 return true
             }
         }
@@ -229,11 +229,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // Check blocks directly below the player (for sudden drops)
         val blockBelow = currentPos.down()
         val blockStateBelow = world.getBlockState(blockBelow)
-        if (!blockStateBelow.isAir && !blockStateBelow.isLiquid) {
-            return true
-        }
-
-        return false
+        return !blockStateBelow.isAir
     }
 
     /**
@@ -255,7 +251,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val remainingFlightTime = flightTime()
         if (remainingFlightTime < emergencyLandingThreshold.value || isCollidingWithTerrain()) {
             if (state != PilotState.EmergencyLanding) {
-                InfiniteClient.warn("[AutoPilot] 緊急着陸を開始します！ 残り飛行時間: ${remainingFlightTime.roundToInt()}秒, 地形衝突: ${isCollidingWithTerrain()}")
+                InfiniteClient.warn(
+                    "[AutoPilot] 緊急着陸を開始します！ 残り飛行時間: ${remainingFlightTime.roundToInt()}秒, 地形衝突: ${isCollidingWithTerrain()}",
+                )
                 state = PilotState.EmergencyLanding
                 aimTaskCallBack = null // 現在のAimTaskを中断
             }
@@ -350,9 +348,13 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     InfiniteClient.error("[AutoPilot] エリトラの交換に失敗しました。")
                 }
             } else if (isElytraEquipped) {
-                InfiniteClient.warn("[AutoPilot] エリトラの耐久値が ${currentDurability.roundToInt()}% ですが、予備のエリトラが見つかりませんでした。")
+                if (state != PilotState.EmergencyLanding) {
+                    InfiniteClient.warn("[AutoPilot] エリトラの耐久値が ${currentDurability.roundToInt()}% ですが、予備のエリトラが見つかりませんでした。")
+                }
             } else {
-                InfiniteClient.warn("[AutoPilot] エリトラを装備していませんが、予備のエリトラが見つかりませんでした。")
+                if (state != PilotState.EmergencyLanding) {
+                    InfiniteClient.warn("[AutoPilot] エリトラを装備していませんが、予備のエリトラが見つかりませんでした。")
+                }
             }
         }
     }

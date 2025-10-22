@@ -63,8 +63,6 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         BooleanSetting("AutoEquip", "Automatically equips the best available armor.", true)
     private val elytraSwitch: BooleanSetting =
         BooleanSetting("ElytraSwitch", "Automatically switches to elytra when airborne.", true)
-    private val minHealth: IntSetting =
-        IntSetting("MinHealth", "Disables elytra when health drops below this value.", 10, 1, 20)
     private val durabilityThreshold: IntSetting =
         IntSetting("DurabilityThreshold", "Ignores armor with durability below this percentage (%).", 5, 0, 100)
 
@@ -72,7 +70,6 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         listOf(
             autoEquip,
             elytraSwitch,
-            minHealth,
             durabilityThreshold,
         )
 
@@ -138,9 +135,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
                 return
             }
 
-            var shouldAutoUnequip = player.isOnGround || player.isTouchingWater
-            shouldAutoUnequip = shouldAutoUnequip || (player.health <= minHealth.value && !player.isGliding)
-            // --- 修正された自動解除ロジック 終了 ---
+            val shouldAutoUnequip = player.isOnGround || player.isTouchingWater
 
             if (shouldAutoUnequip || isReleaseElytraPressed) {
                 var swapped = false

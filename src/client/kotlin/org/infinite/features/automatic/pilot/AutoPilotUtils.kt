@@ -50,7 +50,15 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
         val stack = playerInv.getStack(i)
         if (isElytra(stack)) {
             val durability = invManager.durabilityPercentage(stack) * 100
-            if (bestElytra == null || durability > bestElytra.durability) {
+            if ((bestElytra == null || durability > bestElytra.durability) &&
+                durability > (
+                    InfiniteClient
+                        .getFeature(
+                            AutoPilot::class.java,
+                        )?.elytraThreshold
+                        ?.value ?: 100
+                ) / 100.0
+            ) {
                 bestElytra = ElytraInfo(InventoryManager.Hotbar(i), durability)
             }
         }

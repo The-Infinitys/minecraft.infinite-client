@@ -2,6 +2,7 @@ package org.infinite.features.automatic.pilot
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.world.ClientWorld
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.fighting.aim.AimCalculateMethod
@@ -11,6 +12,7 @@ import org.infinite.libs.client.player.fighting.aim.AimTask
 import org.infinite.libs.client.player.fighting.aim.AimTaskCondition
 import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
 import org.infinite.libs.client.player.fighting.aim.CameraRoll
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 /**
@@ -21,7 +23,7 @@ class AutoPilotAimTask(
     location: Location,
     bestLandingSpot: LandingSpot? = null, // 【変更】追加
 ) : AimTask(
-        AimPriority.Normally,
+        if (state == PilotState.EmergencyLanding) AimPriority.Preferentially else AimPriority.Normally,
         PilotAimTarget(
             state,
             location,
@@ -29,7 +31,19 @@ class AutoPilotAimTask(
         ),
         AutoPilotCondition(state),
         AimCalculateMethod.Linear,
-        if (state == PilotState.Landing) 4.0 else 2.0,
+        when (state) {
+            PilotState.EmergencyLanding -> {
+                16.0
+            }
+
+            PilotState.Landing -> {
+                4.0
+            }
+
+            else -> {
+                2.0
+            }
+        },
     )
 
 /**
@@ -43,6 +57,8 @@ class AutoPilotCondition(
         get() = InfiniteClient.getFeature(AutoPilot::class.java)!!
     val player: ClientPlayerEntity?
         get() = MinecraftClient.getInstance().player
+    val world: ClientWorld?
+        get() = MinecraftClient.getInstance().world
 
     /**
      * 実行条件をチェックします。
@@ -172,8 +188,8 @@ class AutoPilotCondition(
                 AimTaskConditionReturn.Failure
             } else {
                 // 緊急着陸では、とにかく早く地面に到達することを優先
-                // 地面にいるか、または非常に低い高度で速度が十分に落ちていれば成功
-                val isCloseToGround = player!!.isOnGround || player!!.y < player!!.world.seaLevel + 5 // 海面から5ブロック以内
+                // 地面にいるか、または水に触れていれば成功
+                val isCloseToGround = player!!.isOnGround || player!!.isTouchingWater // 海面
                 val isSpeedMinimal = kotlin.math.abs(player!!.velocity.y) < 0.2 && autoPilot.moveSpeedAverage < 1.0
 
                 if (isCloseToGround && isSpeedMinimal) {
@@ -182,6 +198,13 @@ class AutoPilotCondition(
                     AimTaskConditionReturn.Exec // 緊急着陸を継続
                 }
             }
+        if (autoPilot.aimTaskCallBack != AimTaskConditionReturn.Exec) {
+            MinecraftClient
+                .getInstance()
+                .options
+                ?.sneakKey
+                ?.isPressed = false
+        }
         return autoPilot.aimTaskCallBack!!
     }
 }
@@ -203,11 +226,12 @@ class PilotAimTarget(
                 when (state) {
                     PilotState.Circling -> calculateCirclingYaw() // 【変更】旋回中は専用のヨー角
                     PilotState.Landing -> calculateLandingYaw() // 【変更】着陸中は専用のヨー角
+                    PilotState.EmergencyLanding -> calculateEmergencyYaw()
                     else -> calculateTargetYaw()
                 },
                 when (state) {
                     PilotState.Landing -> handleLandingPitch()
-                    PilotState.EmergencyLanding -> autoPilot.fallDir.value + 15.0 // より急な下降
+                    PilotState.EmergencyLanding -> handleEmergencyLandingPitch()
                     PilotState.Circling -> autoPilot.glidingDir.value / 2.0 // 緩やかに降下しながら旋回
                     PilotState.FallFlying -> autoPilot.fallDir.value
                     PilotState.RiseFlying -> autoPilot.riseDir.value
@@ -216,6 +240,14 @@ class PilotAimTarget(
                 },
             )
         }
+
+    private fun calculateEmergencyYaw(): Double =
+        player.yaw +
+            if (emergencyLandFlag) {
+                60.0
+            } else {
+                0.0
+            }
 
     /**
      * ターゲットへの方向を計算し、目標のヨー角 (YAW) を返します。
@@ -359,5 +391,116 @@ class PilotAimTarget(
 
         // 最終的なピッチをクランプ
         return MathHelper.clamp(pitch, maxNegativePitch, minPositivePitch)
+    }
+
+    /**
+     * 緊急着陸時のピッチ角を計算します。
+     * 地面に激突するまでの猶予時間 (Time To Impact: TTI) を元に角度を決定します。
+     */
+    private var emergencyLandFlag = false
+
+    private fun handleEmergencyLandingPitch(): Double {
+        val currentPlayer = player
+        val currentY = currentPlayer.y
+        val verticalVelocity = currentPlayer.velocity.y // blocks per tick
+        val gravity = currentPlayer.finalGravity // blocks per tick^2
+
+        // 地面までの距離 (または着陸地点のY座標)
+        val groundY = bestLandingSpot?.y?.toDouble() ?: findDynamicGroundY()
+
+        // 自由落下の方程式: y = y0 + v0*t + 0.5*g*t^2
+        // 0 = currentY + verticalVelocity*t + 0.5*gravity*t^2 - groundY
+        // 0.5*gravity*t^2 + verticalVelocity*t + (currentY - groundY) = 0
+
+        val a = 0.5 * gravity
+        val c = currentY - groundY
+
+        var timeToImpactTicks = Double.MAX_VALUE
+
+        // 落下中の場合のみ二次方程式を解く
+        if (a > 0 && verticalVelocity < 0) { // 重力があり、かつ下降中
+            val discriminant = verticalVelocity * verticalVelocity - 4 * a * c
+            if (discriminant >= 0) {
+                val sqrtDiscriminant = sqrt(discriminant)
+                val t1 = (-verticalVelocity - sqrtDiscriminant) / (2 * a)
+                val t2 = (-verticalVelocity + sqrtDiscriminant) / (2 * a)
+
+                // 正の時間で、かつ小さい方の解が有効なTTI
+                if (t1 > 0) timeToImpactTicks = t1
+                if (t2 > 0 && t2 < timeToImpactTicks) timeToImpactTicks = t2
+            }
+        } else if (verticalVelocity > 0) { // 上昇中の場合、TTIは非常に大きい
+            timeToImpactTicks = Double.MAX_VALUE
+        } else if (verticalVelocity <= 0 && currentY <= groundY) { // 地面以下または地面にいる場合
+            timeToImpactTicks = 0.0
+        } else if (verticalVelocity < 0 && a == 0.0) { // 重力がないが下降している場合 (直線運動)
+            timeToImpactTicks = (groundY - currentY) / verticalVelocity
+        }
+
+        // TTI (秒)
+        val timeToImpactSeconds = timeToImpactTicks / 20.0 // 20 ticks per second
+
+        // TTI に基づいてピッチを調整
+        // TTI が短いほど、ピッチを浅く（または上昇気味に）する
+        // TTI が長いほど、ピッチを急に（下降気味に）する
+        val minPitch = 0.0
+        val maxPitch = 90.0
+
+        // TTI の閾値 (秒)
+        val criticalTTI = 1.0
+        val safeTTI = 2.0
+
+        var pitch: Double
+        if (timeToImpactSeconds <= criticalTTI || emergencyLandFlag) {
+            emergencyLandFlag = true
+            pitch = minPitch
+            MinecraftClient
+                .getInstance()
+                .options.sneakKey.isPressed = true
+        } else if (timeToImpactSeconds < safeTTI) {
+            // 中間の場合、TTIに応じて線形補間
+            val factor = (timeToImpactSeconds - criticalTTI) / (safeTTI - criticalTTI)
+            pitch = minPitch + (maxPitch - minPitch) * factor
+        } else {
+            // 十分な猶予がある場合、急下降
+            pitch = maxPitch
+        }
+
+        // 最終的なピッチをクランプ
+        return MathHelper.clamp(pitch, minPitch, maxPitch)
+    }
+
+    /**
+     * プレイヤーの移動速度を考慮して、周囲のブロックの最も高いY座標を計測し、
+     * 緊急着陸時の「地面」のY座標として使用します。
+     */
+    private fun findDynamicGroundY(): Double {
+        val currentPlayer = player
+        val world = MinecraftClient.getInstance().world ?: return 320.0
+
+        val currentX = currentPlayer.blockX
+        val currentZ = currentPlayer.blockZ
+
+        // 移動速度に基づいて探索範囲を決定
+        // 例えば、1秒先の予測位置までを考慮する
+        val horizontalSpeed = autoPilot.moveSpeedAverage // m/s
+        val searchDistanceBlocks = (horizontalSpeed).roundToInt().coerceAtLeast(5) // 最低5ブロック、最大で速度の1.5倍
+
+        var highestGroundY = 0.0
+
+        // 現在位置から前方、および左右に探索
+        for (dx in -searchDistanceBlocks..searchDistanceBlocks) {
+            for (dz in -searchDistanceBlocks..searchDistanceBlocks) {
+                val checkX = currentX + dx
+                val checkZ = currentZ + dz
+
+                // 地形のY座標を取得 (葉っぱのないMOTION_BLOCKINGブロック)
+                val y = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, checkX, checkZ)
+                if (y > highestGroundY) {
+                    highestGroundY = y.toDouble()
+                }
+            }
+        }
+        return highestGroundY
     }
 }
