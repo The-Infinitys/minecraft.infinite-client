@@ -11,12 +11,13 @@ import net.minecraft.client.world.ClientWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Heightmap
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.features.movement.fly.SuperFly
 import org.infinite.libs.client.player.fighting.AimInterface
 import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
+import org.infinite.libs.client.player.fighting.aim.CameraRoll
 import org.infinite.libs.client.player.inventory.InventoryManager.Armor
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
@@ -50,7 +51,7 @@ class Location(
 // 自動操縦の状態を定義する列挙型
 enum class PilotState {
     Idle, // 待機中
-    SuperFlying, // SuperFlyモードで飛行中
+    JetFlying, // SuperFlyモードで飛行中
     FallFlying, // 速度を落とすために下降中
     RiseFlying, // 速度を上げるために上昇中
     Gliding, // 一定以上の高さになったので滑空中
@@ -66,24 +67,24 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     val bestGlidingDir = 5.7
     val fallDir =
         FeatureSetting.DoubleSetting(
-            "FallDirectory",
-            "feature.automatic.autopilot.falldirectory.description",
+            "FallDirection",
+            "feature.automatic.autopilot.falldirection.description",
             defaultFallDir,
             defaultFallDir - 10,
             defaultFallDir + 10,
         )
     val riseDir =
         FeatureSetting.DoubleSetting(
-            "RiseDirectory",
-            "feature.automatic.autopilot.risingdirectory.description",
+            "RiseDirection",
+            "feature.automatic.autopilot.risingdirection.description",
             defaultRiseDir,
             defaultRiseDir - 10,
             defaultRiseDir + 10,
         )
     val glidingDir =
         FeatureSetting.DoubleSetting(
-            "GlidingDirectory",
-            "feature.automatic.autopilot.glidingdirectory.description",
+            "GlidingDirection",
+            "feature.automatic.autopilot.glidingdirection.description",
             20.0,
             bestGlidingDir,
             defaultFallDir,
@@ -135,6 +136,20 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             3,
             30,
         )
+    val jetFlightMode =
+        FeatureSetting.BooleanSetting(
+            "JetFlight",
+            "feature.automatic.autopilot.jetflight.description",
+            false,
+        )
+    val jetSpeedLimit =
+        FeatureSetting.DoubleSetting(
+            "JetSpeedLimit",
+            "feature.automatic.autopilot.jetspeedlimit.description",
+            30.0,
+            10.0,
+            50.0,
+        )
 
     // 機能設定リスト
     override val settings: List<FeatureSetting<*>> =
@@ -148,6 +163,8 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             landingDir,
             emergencyLandingThreshold,
             collisionDetectionDistance,
+            jetFlightMode,
+            jetSpeedLimit,
         )
     private var fallHeight: Double = 0.0
     private var riseHeight: Double = 0.0
@@ -170,10 +187,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         get() = client.player
     private val world: ClientWorld
         get() = client.world!!
-
-    // SuperFly の有効状態
-    private val isSuperFlyEnabled: Boolean
-        get() = InfiniteClient.isFeatureEnabled(SuperFly::class.java)
 
     // 現在の飛行速度 (m/s)
     val flySpeed: Double
@@ -211,8 +224,8 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             return sqrt(x * x + z * z) * 20.0 // m/s に変換
         }
 
-    private var target: Location? = null
-    private var state: PilotState = PilotState.Idle
+    var target: Location? = null
+    var state: PilotState = PilotState.Idle
 
     // 【新規】着陸に最適な地点を保持
     var bestLandingSpot: LandingSpot? = null
@@ -303,7 +316,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // 【変更】ターゲットに到達したかの判定 (Circling へ移行)
         // ----------------------------------------------------------------------
         val distance = currentTarget.distance()
-        val landingStartDistance = 256.0
 
         if (distance < 32 && state == PilotState.Landing) {
             // 非常に近づいたら成功として無効化（最終的な着地はプレイヤーに任せる）
@@ -317,9 +329,19 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             state = PilotState.Circling
         }
         // ----------------------------------------------------------------------
-
+        // JetFlying
+        if (jetFlightMode.value &&
+            listOf(PilotState.FallFlying, PilotState.Gliding, PilotState.RiseFlying).contains(
+                state,
+            )
+        ) {
+            state = PilotState.JetFlying
+        }
+        // ----------------------------------------------------------------------
         process(currentTarget)
     }
+
+    val landingStartDistance = 256.0
 
     /**
      * 現在装備しているエリトラの残り耐久値をパーセンテージで返します。
@@ -399,14 +421,10 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
      */
     private fun process(target: Location) {
         // SuperFly が有効な場合、状態を優先的に SuperFlying に設定
-        if (isSuperFlyEnabled) {
-            state = PilotState.SuperFlying
-        }
-
         when (state) {
-            PilotState.Idle, PilotState.SuperFlying -> {
+            PilotState.Idle -> {
                 // 自動操縦開始時または SuperFly 時の初期状態決定ロジック
-                val targetSpeed = 35
+                val targetSpeed = jetSpeedLimit.value
                 // 現在の速度に応じて、減速が必要な下降状態か、加速が必要な上昇状態かを決定
                 state =
                     if (moveSpeedAverage > targetSpeed) { // 平均速度で判定
@@ -417,6 +435,39 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 aimTaskCallBack = null
             }
 
+            PilotState.JetFlying -> {
+                when (aimTaskCallBack) {
+                    null -> {
+                        aimTaskCallBack = AimTaskConditionReturn.Suspend
+                        AimInterface.addTask(AutoPilotAimTask(state))
+                    }
+
+                    AimTaskConditionReturn.Exec -> {
+                        if (player == null) return
+                        val velocity = player!!.velocity
+                        val yaw = player!!.yaw.toDouble()
+                        val pitch = player!!.pitch.toDouble()
+                        val moveVec = CameraRoll(yaw, pitch).vec()
+                        val power = 0.04
+                        val vecY = velocity.y + if (height < standardHeight.value) power else -power
+                        val vecX = velocity.x + moveVec.x * (if (moveSpeed < jetSpeedLimit.value) power else 0.0)
+                        val vecZ = velocity.z + moveVec.z * (if (moveSpeed < jetSpeedLimit.value) power else 0.0)
+                        player!!.velocity = Vec3d(vecX, vecY, vecZ)
+                    }
+
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error("[AutoPilot] Circling 状態で予期せぬエラー。")
+                        disable()
+                    }
+
+                    AimTaskConditionReturn.Success -> {
+                        aimTaskCallBack = null
+                        state = PilotState.Circling
+                    }
+
+                    else -> {}
+                }
+            }
             // ----------------------------------------------------------------------
             // 【新規】旋回 (Circling) 状態の処理
             // ----------------------------------------------------------------------
@@ -425,7 +476,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     null -> {
                         // 旋回と探索の AimTask を開始
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
-                        AimInterface.addTask(AutoPilotAimTask(state, target, bestLandingSpot))
+                        AimInterface.addTask(AutoPilotAimTask(state, bestLandingSpot))
                     }
 
                     AimTaskConditionReturn.Success -> {
@@ -453,7 +504,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 when (aimTaskCallBack) {
                     null -> {
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
-                        AimInterface.addTask(AutoPilotAimTask(state, target, bestLandingSpot))
+                        AimInterface.addTask(AutoPilotAimTask(state, bestLandingSpot))
                         InfiniteClient.info("[AutoPilot] Landing AimTaskを開始。")
                     }
 
@@ -478,7 +529,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 when (aimTaskCallBack) {
                     null -> {
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
-                        AimInterface.addTask(AutoPilotAimTask(state, target, bestLandingSpot))
+                        AimInterface.addTask(AutoPilotAimTask(state, bestLandingSpot))
                         InfiniteClient.info("[AutoPilot] EmergencyLanding AimTaskを開始。")
                     }
 
@@ -506,7 +557,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
                         riseHeight = height
                         risingTime = System.currentTimeMillis()
-                        AimInterface.addTask(AutoPilotAimTask(state, target))
+                        AimInterface.addTask(AutoPilotAimTask(state))
                     }
 
                     AimTaskConditionReturn.Success -> {
@@ -532,7 +583,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
                         fallHeight = height
                         fallingTime = System.currentTimeMillis()
-                        AimInterface.addTask(AutoPilotAimTask(state, target))
+                        AimInterface.addTask(AutoPilotAimTask(state))
                     }
 
                     AimTaskConditionReturn.Success -> {
@@ -554,7 +605,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 when (aimTaskCallBack) {
                     null -> {
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
-                        AimInterface.addTask(AutoPilotAimTask(state, target))
+                        AimInterface.addTask(AutoPilotAimTask(state))
                     }
 
                     AimTaskConditionReturn.Success -> {
@@ -721,7 +772,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val stateText =
             when (state) {
                 PilotState.Idle -> "待機中"
-                PilotState.SuperFlying -> "超速飛行"
+                PilotState.JetFlying -> "超速飛行"
                 PilotState.FallFlying -> "減速下降 (Pitch: +40°)"
                 PilotState.RiseFlying -> "加速上昇 (Pitch: -45°)"
                 PilotState.Gliding -> "高度調整中"

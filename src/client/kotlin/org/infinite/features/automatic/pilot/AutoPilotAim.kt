@@ -20,13 +20,11 @@ import kotlin.math.sqrt
  */
 class AutoPilotAimTask(
     state: PilotState,
-    location: Location,
     bestLandingSpot: LandingSpot? = null, // 【変更】追加
 ) : AimTask(
         if (state == PilotState.EmergencyLanding) AimPriority.Preferentially else AimPriority.Normally,
         PilotAimTarget(
             state,
-            location,
             bestLandingSpot, // 【変更】
         ),
         AutoPilotCondition(state),
@@ -64,15 +62,34 @@ class AutoPilotCondition(
      * 実行条件をチェックします。
      */
     override fun check(): AimTaskConditionReturn =
-        when (state) {
-            PilotState.Idle, PilotState.SuperFlying -> AimTaskConditionReturn.Failure
-            PilotState.RiseFlying -> handleRiseFlying()
-            PilotState.FallFlying -> handleFallFlying()
-            PilotState.Gliding -> handleGliding()
-            PilotState.Circling -> handleCircling()
-            PilotState.Landing -> handleLanding()
-            PilotState.EmergencyLanding -> handleEmergencyLanding()
+        if (state != autoPilot.state) {
+            AimTaskConditionReturn.Success
+        } else {
+            when (state) {
+                PilotState.Idle -> AimTaskConditionReturn.Failure
+                PilotState.RiseFlying -> handleRiseFlying()
+                PilotState.FallFlying -> handleFallFlying()
+                PilotState.Gliding -> handleGliding()
+                PilotState.Circling -> handleCircling()
+                PilotState.Landing -> handleLanding()
+                PilotState.EmergencyLanding -> handleEmergencyLanding()
+                PilotState.JetFlying -> handleJetFlying()
+            }
         }
+
+    private fun handleJetFlying(): AimTaskConditionReturn {
+        val distanceThreshold = autoPilot.landingStartDistance
+        val currentDistance = autoPilot.target?.distance()
+        autoPilot.aimTaskCallBack =
+            if (currentDistance == null) {
+                AimTaskConditionReturn.Failure
+            } else if (currentDistance < distanceThreshold) {
+                AimTaskConditionReturn.Success
+            } else {
+                AimTaskConditionReturn.Exec
+            }
+        return autoPilot.aimTaskCallBack!!
+    }
 
     private fun handleGliding(): AimTaskConditionReturn {
         val heightThreshold = autoPilot.standardHeight.value
@@ -209,10 +226,10 @@ class AutoPilotCondition(
 
 class PilotAimTarget(
     val state: PilotState,
-    val target: Location,
     val bestLandingSpot: LandingSpot? = null, // 【変更】追加
 ) : AimTarget.RollTarget(CameraRoll(0.0, 0.0)) {
-    // player の取得をゲッターに変更
+    val target: Location
+        get() = autoPilot.target!!
     private val player: ClientPlayerEntity
         get() = MinecraftClient.getInstance().player!!
     private val autoPilot: AutoPilot
