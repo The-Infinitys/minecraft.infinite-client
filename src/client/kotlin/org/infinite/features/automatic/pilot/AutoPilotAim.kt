@@ -53,8 +53,9 @@ class AutoPilotCondition(
             PilotState.RiseFlying -> handleRiseFlying()
             PilotState.FallFlying -> handleFallFlying()
             PilotState.Gliding -> handleGliding()
-            PilotState.Circling -> handleCircling() // 【新規】
-            PilotState.Landing -> handleLanding() // 【変更】
+            PilotState.Circling -> handleCircling()
+            PilotState.Landing -> handleLanding()
+            PilotState.EmergencyLanding -> handleEmergencyLanding()
         }
 
     private fun handleGliding(): AimTaskConditionReturn {
@@ -160,6 +161,29 @@ class AutoPilotCondition(
             }
         return autoPilot.aimTaskCallBack!!
     }
+
+    /**
+     * 【新規】緊急着陸 (EmergencyLanding) 中の条件処理。
+     * 速度と高度が十分に落ちた場合に成功とします。
+     */
+    private fun handleEmergencyLanding(): AimTaskConditionReturn {
+        autoPilot.aimTaskCallBack =
+            if (autoPilot.isDisabled() || player == null) {
+                AimTaskConditionReturn.Failure
+            } else {
+                // 緊急着陸では、とにかく早く地面に到達することを優先
+                // 地面にいるか、または非常に低い高度で速度が十分に落ちていれば成功
+                val isCloseToGround = player!!.isOnGround || player!!.y < player!!.world.seaLevel + 5 // 海面から5ブロック以内
+                val isSpeedMinimal = kotlin.math.abs(player!!.velocity.y) < 0.2 && autoPilot.moveSpeedAverage < 1.0
+
+                if (isCloseToGround && isSpeedMinimal) {
+                    AimTaskConditionReturn.Success // 緊急着陸成功
+                } else {
+                    AimTaskConditionReturn.Exec // 緊急着陸を継続
+                }
+            }
+        return autoPilot.aimTaskCallBack!!
+    }
 }
 
 class PilotAimTarget(
@@ -183,6 +207,7 @@ class PilotAimTarget(
                 },
                 when (state) {
                     PilotState.Landing -> handleLandingPitch()
+                    PilotState.EmergencyLanding -> autoPilot.fallDir.value + 15.0 // より急な下降
                     PilotState.Circling -> autoPilot.glidingDir.value / 2.0 // 緩やかに降下しながら旋回
                     PilotState.FallFlying -> autoPilot.fallDir.value
                     PilotState.RiseFlying -> autoPilot.riseDir.value

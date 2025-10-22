@@ -56,6 +56,7 @@ enum class PilotState {
     Gliding, // 一定以上の高さになったので滑空中
     Circling, // 【追加】目標点の周りを旋回し、着陸地点を探索中
     Landing, // 着陸中
+    EmergencyLanding, // 緊急着陸中
 }
 
 // AutoPilot メイン機能クラス
@@ -118,10 +119,36 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             -45.0,
             0.0,
         )
+    val emergencyLandingThreshold =
+        FeatureSetting.IntSetting(
+            "EmergencyLandingThreshold",
+            "feature.automatic.autopilot.emergencylandingthreshold.description",
+            60, // 60 seconds of remaining flight time
+            10,
+            300,
+        )
+    val collisionDetectionDistance =
+        FeatureSetting.IntSetting(
+            "CollisionDetectionDistance",
+            "feature.automatic.autopilot.collisiondetectiondistance.description",
+            10, // Check 10 blocks ahead for collision
+            3,
+            30,
+        )
 
     // 機能設定リスト
     override val settings: List<FeatureSetting<*>> =
-        listOf(elytraThreshold, swapElytra, standardHeight, riseDir, glidingDir, fallDir, landingDir)
+        listOf(
+            elytraThreshold,
+            swapElytra,
+            standardHeight,
+            riseDir,
+            glidingDir,
+            fallDir,
+            landingDir,
+            emergencyLandingThreshold,
+            collisionDetectionDistance,
+        )
     private var fallHeight: Double = 0.0
     private var riseHeight: Double = 0.0
 
@@ -182,6 +209,33 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     // AimTask の結果を受け取るコールバック変数
     var aimTaskCallBack: AimTaskConditionReturn? = null
 
+    private fun isCollidingWithTerrain(): Boolean {
+        if (player == null) return false
+
+        val currentPos = player!!.blockPos
+        val lookVec = player!!.rotationVector
+        val checkDistance = collisionDetectionDistance.value
+
+        // Check blocks directly in front of the player
+        for (i in 1..checkDistance) {
+            val checkPos = currentPos.add(lookVec.x * i, lookVec.y * i, lookVec.z * i)
+            val blockState = world.getBlockState(checkPos)
+            if (!blockState.isAir && !blockState.isLiquid) {
+                // Found a solid block in the flight path
+                return true
+            }
+        }
+
+        // Check blocks directly below the player (for sudden drops)
+        val blockBelow = currentPos.down()
+        val blockStateBelow = world.getBlockState(blockBelow)
+        if (!blockStateBelow.isAir && !blockStateBelow.isLiquid) {
+            return true
+        }
+
+        return false
+    }
+
     /**
      * 【変更点】Tick ごとに移動速度と上昇速度の EMA を更新
      */
@@ -194,6 +248,19 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // 指数移動平均 (EMA) の計算
         moveSpeedAverage = alpha * currentMoveSpeed + (1.0 - alpha) * moveSpeedAverage
         riseSpeedAverage = alpha * currentRiseSpeed + (1.0 - alpha) * riseSpeedAverage
+
+        // ----------------------------------------------------------------------
+        // 緊急着陸の判定
+        // ----------------------------------------------------------------------
+        val remainingFlightTime = flightTime()
+        if (remainingFlightTime < emergencyLandingThreshold.value || isCollidingWithTerrain()) {
+            if (state != PilotState.EmergencyLanding) {
+                InfiniteClient.warn("[AutoPilot] 緊急着陸を開始します！ 残り飛行時間: ${remainingFlightTime.roundToInt()}秒, 地形衝突: ${isCollidingWithTerrain()}")
+                state = PilotState.EmergencyLanding
+                aimTaskCallBack = null // 現在のAimTaskを中断
+            }
+        }
+        // ----------------------------------------------------------------------
 
         if (target == null) {
             InfiniteClient.error("[AutoPilot] ターゲットを `/infinite feature Automatic AutoPilot target {x} {z}` で設定してください。")
@@ -375,6 +442,31 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
 
                     AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
                         InfiniteClient.error("[AutoPilot] Landing 状態で予期せぬエラー。")
+                        disable()
+                    }
+
+                    else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
+                }
+            }
+            // ----------------------------------------------------------------------
+
+            // 【新規】緊急着陸 (EmergencyLanding) 状態の処理
+            PilotState.EmergencyLanding -> {
+                when (aimTaskCallBack) {
+                    null -> {
+                        aimTaskCallBack = AimTaskConditionReturn.Suspend
+                        AimInterface.addTask(AutoPilotAimTask(state, target, bestLandingSpot))
+                        InfiniteClient.info("[AutoPilot] EmergencyLanding AimTaskを開始。")
+                    }
+
+                    AimTaskConditionReturn.Success -> {
+                        aimTaskCallBack = null
+                        InfiniteClient.info("[AutoPilot] 緊急着陸を完了しました。自動操縦を終了します。")
+                        disable()
+                    }
+
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error("[AutoPilot] EmergencyLanding 状態で予期せぬエラー。")
                         disable()
                     }
 
@@ -612,6 +704,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 PilotState.Gliding -> "高度調整中"
                 PilotState.Circling -> "旋回/地点探索"
                 PilotState.Landing -> "着陸準備中"
+                PilotState.EmergencyLanding -> "緊急着陸中"
             }
 
         // E. エリトラ耐久値
