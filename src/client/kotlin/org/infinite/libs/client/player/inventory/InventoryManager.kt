@@ -327,15 +327,21 @@ class InventoryManager(
         return null
     }
 
+    fun durability(stack: ItemStack): Int {
+        if (!stack.isDamageable || stack.isEmpty) {
+            return 1
+        }
+        val maxDurability = stack.maxDamage
+        val currentDamage = stack.damage
+        return maxDurability - currentDamage
+    }
+
     fun durabilityPercentage(stack: ItemStack): Double {
         if (!stack.isDamageable || stack.isEmpty) {
             return 100.0
         }
         val maxDurability = stack.maxDamage
-        val currentDamage = stack.damage
-        val remainingDurability = maxDurability - currentDamage
-
         // (残り耐久値 / 最大耐久値) * 100
-        return (remainingDurability / maxDurability.toDouble())
+        return (durability(stack) / maxDurability.toDouble())
     }
 }
