@@ -134,6 +134,7 @@
   "command.infinite.setting.type.boolean": "Not a Boolean type. (Use true or false).",
   "command.infinite.setting.type.int": "Not an Int type.",
   "command.infinite.setting.type.float": "Not a Float type.",
+  "command.infinite.setting.type.double": "Not a Double type.",
   "command.infinite.setting.type.unsupported": "Unsupported setting type: %s",
   "command.infinite.setting.changed": "Setting '%s' of feature '%s' changed to %s.",
   "command.infinite.setting.parseerror": "Setting value parsing error: %s",

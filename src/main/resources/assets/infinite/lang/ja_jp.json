@@ -134,6 +134,7 @@
   "command.infinite.setting.type.boolean": "Boolean型ではありません。（trueまたはfalseを使用してください）。",
   "command.infinite.setting.type.int": "Int型ではありません。",
   "command.infinite.setting.type.float": "Float型ではありません。",
+  "command.infinite.setting.type.double": "Double型ではありません。",
   "command.infinite.setting.type.unsupported": "サポートされていない設定タイプ: %s",
   "command.infinite.setting.changed": "機能「%s」の設定「%s」が%sに変更されました。",
   "command.infinite.setting.parseerror": "設定値の解析エラー: %s",

@@ -476,6 +476,10 @@ object InfiniteCommand {
                         rawValue.toFloatOrNull()
                             ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.float").string)
 
+                    is Double ->
+                        rawValue.toDoubleOrNull()
+                            ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.double").string)
+
                     is String -> rawValue
                     is List<*> -> rawValue.split(",").map { it.trim() }.filter { it.isNotBlank() }
                     else -> throw IllegalStateException(

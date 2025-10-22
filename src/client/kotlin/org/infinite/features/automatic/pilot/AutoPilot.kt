@@ -8,6 +8,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
@@ -276,7 +277,12 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         if (remainingFlightTime < emergencyLandingThreshold.value || isCollidingWithTerrain()) {
             if (state != PilotState.EmergencyLanding) {
                 InfiniteClient.warn(
-                    "[AutoPilot] 緊急着陸を開始します！ 残り飛行時間: ${remainingFlightTime.roundToInt()}秒, 地形衝突: ${isCollidingWithTerrain()}",
+                    Text
+                        .translatable(
+                            "autopilot.emergency_landing.start",
+                            remainingFlightTime.roundToInt(),
+                            isCollidingWithTerrain(),
+                        ).string,
                 )
                 state = PilotState.EmergencyLanding
                 aimTaskCallBack = null // 現在のAimTaskを中断
@@ -285,7 +291,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // ----------------------------------------------------------------------
 
         if (target == null) {
-            InfiniteClient.error("[AutoPilot] ターゲットを `/infinite feature Automatic AutoPilot target {x} {z}` で設定してください。")
+            InfiniteClient.error(Text.translatable("autopilot.target.not_set").string)
             disable()
             return
         }
@@ -302,10 +308,10 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         if (player?.isGliding != true) {
             // エリトラ飛行中でなければ、エリトラを再展開または装備を試みる
             if (isElytra(InfiniteClient.playerInterface.inventory.get(Armor.CHEST))) {
-                InfiniteClient.warn("[AutoPilot] エリトラ飛行が中断されました。再展開を試みます。")
+                InfiniteClient.warn(Text.translatable("autopilot.elytra.flight_interrupted").string)
                 redeployElytra()
             } else {
-                InfiniteClient.error("[AutoPilot] エリトラが装備されていません。自動操縦を停止します。")
+                InfiniteClient.error(Text.translatable("autopilot.elytra.not_equipped").string)
                 disable()
                 return
             }
@@ -319,11 +325,11 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
 
         if (distance < 32 && state == PilotState.Landing) {
             // 非常に近づいたら成功として無効化（最終的な着地はプレイヤーに任せる）
-            InfiniteClient.info("[AutoPilot] ターゲット地点への着陸を完了しました。")
+            InfiniteClient.info(Text.translatable("autopilot.landing.completed").string)
             disable()
             return
         } else if (distance < landingStartDistance && state != PilotState.Circling && state != PilotState.Landing) {
-            InfiniteClient.info("[AutoPilot] ターゲット圏内に到達しました。着陸地点の探索を開始します。")
+            InfiniteClient.info(Text.translatable("autopilot.circling.start").string)
             // AimTaskを中断し、状態を旋回に移行
             aimTaskCallBack = null
             state = PilotState.Circling
@@ -378,23 +384,38 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 if (invManager.swap(Armor.CHEST, bestElytra.index)) {
                     val swapMessage =
                         if (isElytraEquipped) {
-                            "[AutoPilot] エリトラの耐久値が ${currentDurability.roundToInt()}% になったため、より耐久値の高い (${bestElytra.durability.roundToInt()}%) エリトラと交換しました。"
+                            Text
+                                .translatable(
+                                    "autopilot.elytra.swapped.low_durability",
+                                    currentDurability.roundToInt(),
+                                    bestElytra.durability.roundToInt(),
+                                ).string
                         } else {
-                            "[AutoPilot] エリトラを装備していなかったため、最も耐久値の高い (${bestElytra.durability.roundToInt()}%) エリトラと交換しました。"
+                            Text
+                                .translatable(
+                                    "autopilot.elytra.swapped.not_equipped",
+                                    bestElytra.durability.roundToInt(),
+                                ).string
                         }
                     InfiniteClient.info(swapMessage)
                 } else {
-                    InfiniteClient.error("[AutoPilot] エリトラの交換に失敗しました。")
+                    InfiniteClient.error(Text.translatable("autopilot.elytra.swap_failed").string)
                 }
             } else if (isElytraEquipped) {
                 if (state != PilotState.EmergencyLanding) {
-                    InfiniteClient.warn("[AutoPilot] エリトラの耐久値が ${currentDurability.roundToInt()}% ですが、予備のエリトラが見つかりませんでした。緊急着陸を開始します。")
+                    InfiniteClient.warn(
+                        Text
+                            .translatable(
+                                "autopilot.elytra.no_spare.low_durability",
+                                currentDurability.roundToInt(),
+                            ).string,
+                    )
                     state = PilotState.EmergencyLanding
                     aimTaskCallBack = null
                 }
             } else {
                 if (state != PilotState.EmergencyLanding) {
-                    InfiniteClient.warn("[AutoPilot] エリトラを装備していませんが、予備のエリトラが見つかりませんでした。緊急着陸を開始します。")
+                    InfiniteClient.warn(Text.translatable("autopilot.elytra.no_spare.not_equipped").string)
                     state = PilotState.EmergencyLanding
                     aimTaskCallBack = null
                 }
@@ -483,11 +504,11 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         // 着陸地点が見つかり、着陸フェーズに移行
                         aimTaskCallBack = null
                         state = PilotState.Landing
-                        InfiniteClient.info("[AutoPilot] 最適な着陸地点が見つかりました。着陸を開始します。")
+                        InfiniteClient.info(Text.translatable("autopilot.landing.spot_found").string)
                     }
 
                     AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error("[AutoPilot] Circling 状態で予期せぬエラー。")
+                        InfiniteClient.error(Text.translatable("autopilot.error.circling").string)
                         disable()
                     }
 
@@ -505,17 +526,17 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     null -> {
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
                         AimInterface.addTask(AutoPilotAimTask(state, bestLandingSpot))
-                        InfiniteClient.info("[AutoPilot] Landing AimTaskを開始。")
+                        InfiniteClient.info(Text.translatable("autopilot.landing.aimtask_start").string)
                     }
 
                     AimTaskConditionReturn.Success -> {
                         aimTaskCallBack = null
-                        InfiniteClient.info("[AutoPilot] 着陸条件を満たしました。自動操縦を終了します。")
+                        InfiniteClient.info(Text.translatable("autopilot.landing.conditions_met").string)
                         disable()
                     }
 
                     AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error("[AutoPilot] Landing 状態で予期せぬエラー。")
+                        InfiniteClient.error(Text.translatable("autopilot.error.landing").string)
                         disable()
                     }
 
@@ -530,17 +551,17 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     null -> {
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
                         AimInterface.addTask(AutoPilotAimTask(state, bestLandingSpot))
-                        InfiniteClient.info("[AutoPilot] EmergencyLanding AimTaskを開始。")
+                        InfiniteClient.info(Text.translatable("autopilot.emergency_landing.aimtask_start").string)
                     }
 
                     AimTaskConditionReturn.Success -> {
                         aimTaskCallBack = null
-                        InfiniteClient.info("[AutoPilot] 緊急着陸を完了しました。自動操縦を終了します。")
+                        InfiniteClient.info(Text.translatable("autopilot.emergency_landing.completed").string)
                         disable()
                     }
 
                     AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error("[AutoPilot] EmergencyLanding 状態で予期せぬエラー。")
+                        InfiniteClient.error(Text.translatable("autopilot.error.emergency_landing").string)
                         disable()
                     }
 
@@ -567,7 +588,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     }
 
                     AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error("[AutoPilot] FallFlying 状態で予期せぬエラー。")
+                        InfiniteClient.error(Text.translatable("autopilot.error.fallflying").string)
                         disable()
                     }
 
@@ -589,11 +610,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     AimTaskConditionReturn.Success -> {
                         // AimTask が目標速度に達して成功した場合、状態を切り替え
                         aimTaskCallBack = null
-                        state = if (height > standardHeight.value) PilotState.Gliding else PilotState.FallFlying
-                    }
-
-                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error("[AutoPilot] RiseFlying 状態で予期せぬエラー。")
+                        InfiniteClient.error(Text.translatable("autopilot.error.riseflying").string)
                         disable()
                     }
 
@@ -614,7 +631,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     }
 
                     AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error("[AutoPilot] RiseFlying 状態で予期せぬエラー。")
+                        InfiniteClient.error(Text.translatable("autopilot.error.gliding").string)
                         disable()
                     }
 
@@ -740,7 +757,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         val x = IntegerArgumentType.getInteger(context, "x")
                         val z = IntegerArgumentType.getInteger(context, "z")
                         this.target = Location(x, z)
-                        InfiniteClient.info("[AutoPilot] ターゲットを設定: X: $x, Z: $z")
+                        InfiniteClient.info(Text.translatable("autopilot.command.target_set", x, z).string)
                         1
                     },
                 ),
@@ -771,14 +788,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // D. 現在の状態
         val stateText =
             when (state) {
-                PilotState.Idle -> "待機中"
-                PilotState.JetFlying -> "超速飛行"
-                PilotState.FallFlying -> "減速下降 (Pitch: +40°)"
-                PilotState.RiseFlying -> "加速上昇 (Pitch: -45°)"
-                PilotState.Gliding -> "高度調整中"
-                PilotState.Circling -> "旋回/地点探索"
-                PilotState.Landing -> "着陸準備中"
-                PilotState.EmergencyLanding -> "緊急着陸中"
+                PilotState.Idle -> Text.translatable("autopilot.state.idle").string
+                PilotState.JetFlying -> Text.translatable("autopilot.state.jet_flying").string
+                PilotState.FallFlying -> Text.translatable("autopilot.state.fall_flying").string
+                PilotState.RiseFlying -> Text.translatable("autopilot.state.rise_flying").string
+                PilotState.Gliding -> Text.translatable("autopilot.state.gliding").string
+                PilotState.Circling -> Text.translatable("autopilot.state.circling").string
+                PilotState.Landing -> Text.translatable("autopilot.state.landing").string
+                PilotState.EmergencyLanding -> Text.translatable("autopilot.state.emergency_landing").string
             }
 
         // E. エリトラ耐久値
@@ -812,20 +829,20 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // 3. 情報の描画 (背景とテキスト)
         // ----------------------------------------------------------------------
         val infoLines = mutableListOf<String>()
-        infoLines.add("AutoPilot | $stateText")
-        infoLines.add("Target: X=${currentTarget.x}, Z=${currentTarget.z}")
-        infoLines.add("Distance: ${"%.1f".format(distance / 1000.0)} km (%.0f blocks)".format(distance))
-        infoLines.add("Average Speed: ${"%.1f".format(moveSpeedAverage)} m/s")
-        infoLines.add("Current Speed: ${"%.1f".format(flySpeedDisplay)} m/s")
-        infoLines.add("Average Rising: ${"%.1f".format(riseSpeedAverage)} m/s")
-        infoLines.add("Current Rising: ${"%.1f".format(riseSpeedDisplay)} m/s")
-        infoLines.add("Elytra: $durability") // 耐久値情報を追加
-        infoLines.add("ETA: ${formatSecondsToDHMS(etaSeconds)}")
-        infoLines.add("REMAIN: ${formatSecondsToDHMS(flightSeconds)}")
+        infoLines.add(Text.translatable("autopilot.display.title", stateText).string)
+        infoLines.add(Text.translatable("autopilot.display.target", currentTarget.x, currentTarget.z).string)
+        infoLines.add(Text.translatable("autopilot.display.distance", "%.1f".format(distance / 1000.0), "%.0f".format(distance)).string)
+        infoLines.add(Text.translatable("autopilot.display.average_speed", "%.1f".format(moveSpeedAverage)).string)
+        infoLines.add(Text.translatable("autopilot.display.current_speed", "%.1f".format(flySpeedDisplay)).string)
+        infoLines.add(Text.translatable("autopilot.display.average_rising", "%.1f".format(riseSpeedAverage)).string)
+        infoLines.add(Text.translatable("autopilot.display.current_rising", "%.1f".format(riseSpeedDisplay)).string)
+        infoLines.add(Text.translatable("autopilot.display.elytra", durability).string)
+        infoLines.add(Text.translatable("autopilot.display.eta", formatSecondsToDHMS(etaSeconds)).string)
+        infoLines.add(Text.translatable("autopilot.display.remain", formatSecondsToDHMS(flightSeconds)).string)
 
         // 【新規】着陸地点情報
         bestLandingSpot?.let {
-            infoLines.add("Land Spot: Y=${it.y}, Score=${"%.1f".format(it.score)}")
+            infoLines.add(Text.translatable("autopilot.display.land_spot", it.y, "%.1f".format(it.score)).string)
         }
 
         // 最大幅を計算
