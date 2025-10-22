@@ -57,7 +57,7 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
                             AutoPilot::class.java,
                         )?.elytraThreshold
                         ?.value ?: 100
-                ) / 100.0
+                )
             ) {
                 bestElytra = ElytraInfo(InventoryManager.Hotbar(i), durability)
             }
@@ -70,7 +70,15 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
         val stack = playerInv.getStack(slotIndex)
         if (isElytra(stack)) {
             val durability = invManager.durabilityPercentage(stack) * 100
-            if (bestElytra == null || durability > bestElytra.durability) {
+            if ((bestElytra == null || durability > bestElytra.durability) &&
+                durability > (
+                    InfiniteClient
+                        .getFeature(
+                            AutoPilot::class.java,
+                        )?.elytraThreshold
+                        ?.value ?: 100
+                )
+            ) {
                 bestElytra = ElytraInfo(InventoryManager.Backpack(i), durability)
             }
         }
@@ -82,17 +90,7 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
 fun flightTime(): Double {
     val playerInv = MinecraftClient.getInstance().player?.inventory ?: return 0.0
     val invManager = InfiniteClient.playerInterface.inventory
-    var total = 0.0
-
-    // 装備中のエリトラ
-    val equippedStack = invManager.get(Armor.CHEST)
-    if (isElytra(equippedStack)) {
-        val durability = invManager.durability(equippedStack)
-        val level = enchantLevel(equippedStack, Enchantments.UNBREAKING)
-        // 破壊不能エンチャントを考慮した耐久値
-        val multiply = 1.0 / (0.6 + 0.4 / (1.0 + level))
-        total += durability * multiply
-    }
+    var total = currentFlightTime()
 
     // インベントリ内のエリトラ
     for (i in 0 until 9) {
@@ -116,6 +114,20 @@ fun flightTime(): Double {
         }
     }
     return total
+}
+
+fun currentFlightTime(): Double {
+    val invManager = InfiniteClient.playerInterface.inventory
+    val equippedStack = invManager.get(Armor.CHEST)
+    return if (isElytra(equippedStack)) {
+        val durability = invManager.durability(equippedStack)
+        val level = enchantLevel(equippedStack, Enchantments.UNBREAKING)
+        // 破壊不能エンチャントを考慮した耐久値
+        val multiply = 1.0 / (0.6 + 0.4 / (1.0 + level))
+        durability * multiply
+    } else {
+        0.0
+    }
 }
 
 /**

@@ -189,10 +189,8 @@ class AutoPilotCondition(
             } else {
                 // 緊急着陸では、とにかく早く地面に到達することを優先
                 // 地面にいるか、または水に触れていれば成功
-                val isCloseToGround = player!!.isOnGround || player!!.isTouchingWater // 海面
-                val isSpeedMinimal = kotlin.math.abs(player!!.velocity.y) < 0.2 && autoPilot.moveSpeedAverage < 1.0
-
-                if (isCloseToGround && isSpeedMinimal) {
+                val isCloseToGround = player!!.isOnGround || player!!.isTouchingWater
+                if (isCloseToGround) {
                     AimTaskConditionReturn.Success // 緊急着陸成功
                 } else {
                     AimTaskConditionReturn.Exec // 緊急着陸を継続

@@ -152,6 +152,17 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     private var fallHeight: Double = 0.0
     private var riseHeight: Double = 0.0
 
+    /**
+     * エリトラ飛行を再開するためにジャンプをシミュレートします。
+     */
+    private fun redeployElytra() {
+        if (player == null) return
+        // ジャンプキーを短時間押すことでエリトラを再展開
+        client.options.jumpKey.isPressed = true
+        // 少し待ってからキーを離す (次のティックで自動的に離されることを期待)
+        // または、より制御された方法でキーを離すロジックを追加することも可能
+    }
+
     // Minecraft クライアント/プレイヤー/ワールドの簡易参照
     private val client: MinecraftClient
         get() = MinecraftClient.getInstance()
@@ -267,18 +278,24 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         }
         val currentTarget = target!!
 
-        if (player?.isGliding != true) {
-            // エリトラ飛行中でなければ、交換ロジックは実行しない
-            InfiniteClient.error("[AutoPilot] エリトラで飛行を開始してください。")
-            disable()
-            return
-        }
-
         // ----------------------------------------------------------------------
         // エリトラの自動交換ロジック
         // ----------------------------------------------------------------------
         if (swapElytra.value) {
             checkAndSwapElytra()
+        }
+        // ----------------------------------------------------------------------
+
+        if (player?.isGliding != true) {
+            // エリトラ飛行中でなければ、エリトラを再展開または装備を試みる
+            if (isElytra(InfiniteClient.playerInterface.inventory.get(Armor.CHEST))) {
+                InfiniteClient.warn("[AutoPilot] エリトラ飛行が中断されました。再展開を試みます。")
+                redeployElytra()
+            } else {
+                InfiniteClient.error("[AutoPilot] エリトラが装備されていません。自動操縦を停止します。")
+                disable()
+                return
+            }
         }
         // ----------------------------------------------------------------------
 
@@ -349,11 +366,15 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 }
             } else if (isElytraEquipped) {
                 if (state != PilotState.EmergencyLanding) {
-                    InfiniteClient.warn("[AutoPilot] エリトラの耐久値が ${currentDurability.roundToInt()}% ですが、予備のエリトラが見つかりませんでした。")
+                    InfiniteClient.warn("[AutoPilot] エリトラの耐久値が ${currentDurability.roundToInt()}% ですが、予備のエリトラが見つかりませんでした。緊急着陸を開始します。")
+                    state = PilotState.EmergencyLanding
+                    aimTaskCallBack = null
                 }
             } else {
                 if (state != PilotState.EmergencyLanding) {
-                    InfiniteClient.warn("[AutoPilot] エリトラを装備していませんが、予備のエリトラが見つかりませんでした。")
+                    InfiniteClient.warn("[AutoPilot] エリトラを装備していませんが、予備のエリトラが見つかりませんでした。緊急着陸を開始します。")
+                    state = PilotState.EmergencyLanding
+                    aimTaskCallBack = null
                 }
             }
         }
