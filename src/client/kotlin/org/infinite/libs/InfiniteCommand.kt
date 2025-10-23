@@ -822,7 +822,8 @@ object InfiniteCommand {
             return 0
         }
 
-        if (setting is FeatureSetting.StringListSetting || setting is FeatureSetting.BlockListSetting ||
+        if (setting is FeatureSetting.StringListSetting ||
+            setting is FeatureSetting.BlockListSetting ||
             setting is FeatureSetting.EntityListSetting ||
             setting is FeatureSetting.PlayerListSetting
         ) {

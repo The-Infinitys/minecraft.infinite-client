@@ -180,7 +180,8 @@ class AutoPilotCondition(
                     // 速度が最小限であり、かつ以下のいずれかを満たす場合に成功:
                     //   a) プレイヤーが陸上にいる (isOnGround)
                     //   b) ボートに乗っており、水に触れている (isTouchingWater)
-                    if (isHorizontalVelocityMinimal && isVerticalVelocityMinimal &&
+                    if (isHorizontalVelocityMinimal &&
+                        isVerticalVelocityMinimal &&
                         (player!!.isOnGround || (player!!.vehicle is BoatEntity && player!!.isTouchingWater))
                     ) {
                         AimTaskConditionReturn.Success
