@@ -73,7 +73,7 @@ class AutoPilotCondition(
                 PilotState.Circling -> handleCircling()
                 PilotState.Landing -> handleLanding()
                 PilotState.EmergencyLanding -> handleEmergencyLanding()
-                PilotState.JetFlying -> handleJetFlying()
+                PilotState.JetFlying, PilotState.HoverFlying -> handleJetFlying()
             }
         }
 

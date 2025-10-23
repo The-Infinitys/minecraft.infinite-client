@@ -8,7 +8,10 @@ import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.vehicle.BoatEntity
+import net.minecraft.predicate.entity.EntityPredicates
 import net.minecraft.text.Text
+import net.minecraft.util.TypeFilter
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
@@ -25,6 +28,7 @@ import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.settings.FeatureSetting
 import kotlin.math.abs
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.math.sqrt
@@ -53,6 +57,7 @@ class Location(
 enum class PilotState {
     Idle, // 待機中
     JetFlying, // SuperFlyモードで飛行中
+    HoverFlying, // ボートで飛行中
     FallFlying, // 速度を落とすために下降中
     RiseFlying, // 速度を上げるために上昇中
     Gliding, // 一定以上の高さになったので滑空中
@@ -270,6 +275,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
      * 【変更点】Tick ごとに移動速度と上昇速度の EMA を更新
      */
     override fun tick() {
+        val world = MinecraftClient.getInstance().world ?: return
         // 現在の移動速度 (m/s)
         val currentMoveSpeed = moveSpeed
         // 現在の上昇速度 (m/s)
@@ -351,6 +357,36 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             )
         ) {
             state = PilotState.JetFlying
+        }
+        if (jetFlightMode.value) {
+            if (player?.vehicle is BoatEntity) {
+                if (state !in listOf(PilotState.Circling, PilotState.Landing, PilotState.EmergencyLanding)) {
+                    state = PilotState.HoverFlying
+                }
+            } else if (state == PilotState.HoverFlying) {
+                // ボートから落ちた場合、近くのボートを探して乗り直す
+                val searchBox = player!!.boundingBox.expand(10.0) // 10ブロック範囲で検索
+                val boats =
+                    world.getEntitiesByType(TypeFilter.instanceOf(BoatEntity::class.java), searchBox) {
+                        EntityPredicates.VALID_ENTITY.test(it)
+                    }
+                if (boats.isNotEmpty()) {
+                    val closestBoat = boats.minBy { it.distanceTo(player) }
+                    if (player!!.startRiding(closestBoat)) {
+                        InfiniteClient.info(Text.translatable("autopilot.hover.remounted").string)
+                    } else {
+                        InfiniteClient.warn(Text.translatable("autopilot.hover.remount_failed").string)
+                        state = PilotState.JetFlying
+                    }
+                } else {
+                    InfiniteClient.warn(Text.translatable("autopilot.hover.no_boat_found").string)
+                    state = PilotState.JetFlying
+                }
+            } else {
+                if (state !in listOf(PilotState.Circling, PilotState.Landing, PilotState.EmergencyLanding)) {
+                    state = PilotState.JetFlying
+                }
+            }
         }
         // ----------------------------------------------------------------------
         process(currentTarget)
@@ -474,19 +510,80 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
 
                     AimTaskConditionReturn.Exec -> {
                         if (player == null) return
-                        val velocity = player!!.velocity
+                        var velocity = player!!.velocity
                         val yaw = player!!.yaw.toDouble()
                         val pitch = player!!.pitch.toDouble()
                         val moveVec = CameraRoll(yaw, pitch).vec()
                         val power = jetAcceleration.value // Use jetAcceleration
-                        val vecY = velocity.y + if (height < standardHeight.value) power else -power
+                        val vecY =
+                            velocity.y +
+                                if (height < standardHeight.value) {
+                                    min(
+                                        power,
+                                        standardHeight.value - velocity.y,
+                                    )
+                                } else {
+                                    -power
+                                }
                         val vecX = velocity.x + moveVec.x * (if (moveSpeed < jetSpeedLimit.value) power else 0.0)
                         val vecZ = velocity.z + moveVec.z * (if (moveSpeed < jetSpeedLimit.value) power else 0.0)
-                        player!!.velocity = Vec3d(vecX, vecY, vecZ)
+                        velocity = Vec3d(vecX, vecY, vecZ)
+                        if (velocity.length() * 20 > jetSpeedLimit.value) {
+                            velocity = velocity.normalize().multiply(jetSpeedLimit.value / 20)
+                        }
+                        player!!.velocity = velocity
                     }
 
                     AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
                         InfiniteClient.error(Text.translatable("autopilot.error.circling").string)
+                        disable()
+                    }
+
+                    AimTaskConditionReturn.Success -> {
+                        aimTaskCallBack = null
+                        state = PilotState.Circling
+                    }
+
+                    else -> {}
+                }
+            }
+
+            PilotState.HoverFlying -> {
+                when (aimTaskCallBack) {
+                    null -> {
+                        aimTaskCallBack = AimTaskConditionReturn.Suspend
+                        AimInterface.addTask(AutoPilotAimTask(state))
+                    }
+
+                    AimTaskConditionReturn.Exec -> {
+                        if (player == null || player!!.vehicle !is BoatEntity) return
+                        val boat = player!!.vehicle as BoatEntity
+                        var velocity = boat.velocity
+                        val yaw = player!!.yaw.toDouble()
+                        val pitch = player!!.pitch.toDouble()
+                        val moveVec = CameraRoll(yaw, pitch).vec()
+                        val power = jetAcceleration.value // Use same jetAcceleration for hover
+                        val vecY =
+                            velocity.y +
+                                if (height < standardHeight.value) {
+                                    min(
+                                        power,
+                                        standardHeight.value - velocity.y,
+                                    )
+                                } else {
+                                    -power
+                                }
+                        val vecX = velocity.x + moveVec.x * (if (moveSpeed < jetSpeedLimit.value) power else 0.0)
+                        val vecZ = velocity.z + moveVec.z * (if (moveSpeed < jetSpeedLimit.value) power else 0.0)
+                        velocity = Vec3d(vecX, vecY, vecZ)
+                        if (velocity.length() * 20 > jetSpeedLimit.value) {
+                            velocity = velocity.normalize().multiply(jetSpeedLimit.value / 20)
+                        }
+                        boat.velocity = velocity
+                    }
+
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error(Text.translatable("autopilot.error.hover_flying").string)
                         disable()
                     }
 
@@ -799,6 +896,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             when (state) {
                 PilotState.Idle -> Text.translatable("autopilot.state.idle").string
                 PilotState.JetFlying -> Text.translatable("autopilot.state.jet_flying").string
+                PilotState.HoverFlying -> Text.translatable("autopilot.state.hover_flying").string
                 PilotState.FallFlying -> Text.translatable("autopilot.state.fall_flying").string
                 PilotState.RiseFlying -> Text.translatable("autopilot.state.rise_flying").string
                 PilotState.Gliding -> Text.translatable("autopilot.state.gliding").string
@@ -840,7 +938,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val infoLines = mutableListOf<String>()
         infoLines.add(Text.translatable("autopilot.display.title", stateText).string)
         infoLines.add(Text.translatable("autopilot.display.target", currentTarget.x, currentTarget.z).string)
-        infoLines.add(Text.translatable("autopilot.display.distance", "%.1f".format(distance / 1000.0), "%.0f".format(distance)).string)
+        infoLines.add(
+            Text
+                .translatable(
+                    "autopilot.display.distance",
+                    "%.1f".format(distance / 1000.0),
+                    "%.0f".format(distance),
+                ).string,
+        )
         infoLines.add(Text.translatable("autopilot.display.average_speed", "%.1f".format(moveSpeedAverage)).string)
         infoLines.add(Text.translatable("autopilot.display.current_speed", "%.1f".format(flySpeedDisplay)).string)
         infoLines.add(Text.translatable("autopilot.display.average_rising", "%.1f".format(riseSpeedAverage)).string)
