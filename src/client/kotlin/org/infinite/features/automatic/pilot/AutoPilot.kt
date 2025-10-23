@@ -289,7 +289,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // 緊急着陸の判定
         // ----------------------------------------------------------------------
         val remainingFlightTime = flightTime()
-        if (remainingFlightTime < emergencyLandingThreshold.value || isCollidingWithTerrain()) {
+        // If in a boat, remainingFlightTime is not relevant for emergency landing
+        val isEmergencyCondition = if (player?.vehicle is BoatEntity) {
+            isCollidingWithTerrain() // Only check for terrain collision if in a boat
+        } else {
+            remainingFlightTime < emergencyLandingThreshold.value || isCollidingWithTerrain()
+        }
+
+        if (isEmergencyCondition) {
             if (state != PilotState.EmergencyLanding) {
                 InfiniteClient.warn(
                     Text
@@ -856,7 +863,11 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         return blockAbove == Blocks.LAVA || blockAbove == Blocks.FIRE || blockAbove == Blocks.CACTUS
     }
 
-    private fun isWaterBlock(x: Int, y: Int, z: Int): Boolean {
+    private fun isWaterBlock(
+        x: Int,
+        y: Int,
+        z: Int,
+    ): Boolean {
         val blockPos = BlockPos(x, y, z)
         val blockState = world.getBlockState(blockPos)
         return blockState.isOf(Blocks.WATER)

@@ -3,6 +3,7 @@ package org.infinite.features.automatic.pilot
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.fighting.aim.AimCalculateMethod
@@ -178,10 +179,15 @@ class AutoPilotCondition(
                     val verticalVelocity = player!!.velocity.y
 
                     // Check if player is close to the ground and vertical velocity is minimal
-                    val isCloseToGround = kotlin.math.abs(verticalDistance) < 2.0 || (player!!.vehicle is BoatEntity && player!!.isTouchingWater) // Within 2 blocks of target Y or boat on water
-                    val isVerticalVelocityMinimal = kotlin.math.abs(verticalVelocity) < 0.1 // Close to 0 vertical speed
-
-                    if (isCloseToGround && isVerticalVelocityMinimal) {
+                                        val isCloseToGround = kotlin.math.abs(verticalDistance) < 2.0 || (player!!.vehicle is BoatEntity && player!!.isTouchingWater) // Within 2 blocks of target Y or boat on water
+                                        val isVerticalVelocityMinimal = kotlin.math.abs(verticalVelocity) < 0.1 // Close to 0 vertical speed
+                                        val isHorizontalVelocityMinimal = if (player!!.vehicle is BoatEntity) {
+                                            player!!.vehicle!!.velocity.horizontalLength() < 0.1 // Check boat's horizontal speed
+                                        } else {
+                                            true // Not in a boat, so horizontal speed is not a primary landing condition here
+                                        }
+                    
+                                        if (isCloseToGround && isVerticalVelocityMinimal && isHorizontalVelocityMinimal) {
                         AimTaskConditionReturn.Success // Successfully landed
                     } else {
                         AimTaskConditionReturn.Exec // Continue landing
