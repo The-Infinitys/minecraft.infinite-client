@@ -228,12 +228,11 @@ object ContainerEsp {
         graphics3D: Graphics3D,
         value: ExtraSensory.Method,
     ) {
-        val quads = BlockMeshGenerator.generateMesh(containerPositions)
+        val mesh = BlockMeshGenerator.generateMesh(containerPositions)
         // 実線と枠線の両方を描画
         if (value == ExtraSensory.Method.HitBox) {
-            graphics3D.renderSolidQuads(quads, true)
+            graphics3D.renderSolidQuads(mesh.quads, true)
         }
-        // TODO: 線を描画する場合は、renderLinedQuadsのような関数が必要
-        // graphics3D.renderLinedColorBoxes(combinedBoxes, true)
+        graphics3D.renderLinedLines(mesh.lines, true)
     }
 }

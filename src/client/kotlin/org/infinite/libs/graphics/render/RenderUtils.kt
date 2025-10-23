@@ -7,6 +7,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import org.infinite.utils.rendering.Line
 import org.infinite.utils.rendering.Quad
 import org.joml.Vector3f
 
@@ -174,6 +175,26 @@ object RenderUtils {
                 v4.y.toFloat(),
                 v4.z.toFloat(),
             )
+        }
+    }
+
+    fun renderLinedLines(
+        matrix: MatrixStack,
+        lines: List<Line>,
+        buffer: VertexConsumer,
+    ) {
+        val camPos = cameraPos().negate()
+        val entry = matrix.peek()
+        lines.forEach { line ->
+            val s = line.start.add(camPos)
+            val e = line.end.add(camPos)
+
+            val start3f = Vector3f(s.x.toFloat(), s.y.toFloat(), s.z.toFloat())
+            val end3f = Vector3f(e.x.toFloat(), e.y.toFloat(), e.z.toFloat())
+            val normal = Vector3f(end3f).sub(start3f).normalize()
+
+            buffer.vertex(entry, start3f).color(line.color).normal(entry, normal.x, normal.y, normal.z)
+            buffer.vertex(entry, end3f).color(line.color).normal(entry, normal.x, normal.y, normal.z)
         }
     }
 

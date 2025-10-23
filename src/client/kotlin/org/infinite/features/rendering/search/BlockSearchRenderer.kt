@@ -160,9 +160,8 @@ object BlockSearchRenderer {
     }
 
     fun render(graphics3D: Graphics3D) {
-        val quads = BlockMeshGenerator.generateMesh(blockPositions)
-        graphics3D.renderSolidQuads(quads, true)
-        // TODO: 線を描画する場合は、renderLinedQuadsのような関数が必要
-        // graphics3D.renderLinedColorBoxes(combinedBoxes, true)
+        val mesh = BlockMeshGenerator.generateMesh(blockPositions)
+        graphics3D.renderSolidQuads(mesh.quads, true)
+        graphics3D.renderLinedLines(mesh.lines, true)
     }
 }
