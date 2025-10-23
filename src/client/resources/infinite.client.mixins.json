@@ -23,6 +23,7 @@
     "features.rendering.detailinfo.ChestMixin",
     "features.rendering.detailinfo.ClientPlayNetworkHandlerMixin",
     "features.rendering.detailinfo.ShulkerBoxMixin",
+    "features.rendering.extrasensory.EntityRendererMixin",
     "features.rendering.freecamera.AbstractBlockStateMixin",
     "features.rendering.freecamera.ClientPlayerEntityMixin",
     "features.rendering.freecamera.ZeroHitBox",
@@ -43,6 +44,7 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "features.movement.antihunger.ClientCommonNetworkHandlerMixin"
+    "features.movement.antihunger.ClientCommonNetworkHandlerMixin",
+    "features.rendering.extrasensory.EntityMixin"
   ]
 }

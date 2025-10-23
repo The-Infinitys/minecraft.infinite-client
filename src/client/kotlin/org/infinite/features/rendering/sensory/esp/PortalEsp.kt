@@ -7,6 +7,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.world.chunk.ChunkSection
 import net.minecraft.world.dimension.DimensionType
 import org.infinite.InfiniteClient
+import org.infinite.features.rendering.sensory.ExtraSensory
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
@@ -187,7 +188,10 @@ object PortalEsp {
         currentScanIndex = 0 // スキャンインデックスもリセット
     }
 
-    fun render(graphics3D: Graphics3D) {
+    fun render(
+        graphics3D: Graphics3D,
+        value: ExtraSensory.Method,
+    ) {
         // Mapのエントリをイテレート
         val boxes =
             portalPositions.map { (pos, color) ->
@@ -203,7 +207,9 @@ object PortalEsp {
                     ),
                 )
             }
-        graphics3D.renderSolidColorBoxes(boxes, true)
+        if (value == ExtraSensory.Method.HitBox) {
+            graphics3D.renderSolidColorBoxes(boxes, true)
+        }
         graphics3D.renderLinedColorBoxes(boxes, true)
     }
 }

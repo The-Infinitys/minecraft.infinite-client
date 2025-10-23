@@ -1,13 +1,16 @@
 package org.infinite.features.rendering.sensory.esp
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.render.entity.state.ItemEntityRenderState
 import net.minecraft.entity.ItemEntity
 import net.minecraft.util.Rarity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import org.infinite.features.rendering.sensory.ExtraSensory
 import org.infinite.libs.graphics.Graphics3D // Graphics3D をインポート
 import org.infinite.libs.graphics.render.RenderUtils
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 
 object ItemEsp {
     private fun itemEntities(): List<ItemEntity> {
@@ -28,7 +31,11 @@ object ItemEsp {
      *
      * @param graphics3d 描画コンテキスト
      */
-    fun render(graphics3d: Graphics3D) {
+    fun render(
+        graphics3d: Graphics3D,
+        value: ExtraSensory.Method,
+    ) {
+        if (value == ExtraSensory.Method.OutLine) return
         val tickProgress = graphics3d.tickProgress
         val expand = 0.1
 
@@ -74,7 +81,7 @@ object ItemEsp {
                 org.infinite.InfiniteClient
                     .theme()
                     .colors.foregroundColor
-        }.toInt()
+        }
 
     private fun itemBox(
         entity: ItemEntity,
@@ -101,5 +108,14 @@ object ItemEsp {
         val y: Double = MathHelper.lerp(partialTicks.toDouble(), entity.lastRenderY, entity.y)
         val z: Double = MathHelper.lerp(partialTicks.toDouble(), entity.lastRenderZ, entity.z)
         return Vec3d(x, y, z)
+    }
+
+    fun handleRenderState(
+        entity: ItemEntity,
+        state: ItemEntityRenderState,
+        tickProgress: Float,
+        ci: CallbackInfo,
+    ) {
+        state.outlineColor = rarityColor(entity)
     }
 }
