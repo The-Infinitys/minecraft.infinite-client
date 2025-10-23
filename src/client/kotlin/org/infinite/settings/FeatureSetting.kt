@@ -4,7 +4,7 @@ sealed class FeatureSetting<T>(
     val name: String,
     val descriptionKey: String,
     var value: T,
-    private val defaultValue: T,
+    val defaultValue: T,
 ) {
     fun reset() {
         value = defaultValue
