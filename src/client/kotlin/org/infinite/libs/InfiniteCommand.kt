@@ -12,7 +12,8 @@ import net.minecraft.command.CommandSource
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.infinite.ConfigManager
-import org.infinite.InfiniteClient // Add this import
+import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient
 import org.infinite.InfiniteClient.error
 import org.infinite.InfiniteClient.info
 import org.infinite.InfiniteClient.log
@@ -24,7 +25,7 @@ import org.infinite.settings.FeatureSetting
 object InfiniteCommand {
     fun registerCommands(
         dispatcher: CommandDispatcher<FabricClientCommandSource>,
-        registryAccess: CommandRegistryAccess,
+        registry: CommandRegistryAccess,
     ) {
         val infiniteCommand =
             ClientCommandManager
@@ -33,7 +34,7 @@ object InfiniteCommand {
                 .then(
                     ClientCommandManager.literal("version").executes { _ -> getVersion() },
                 )
-                // 2. /infinite config save/load
+                // 2. /infinite config save/load/reset
                 .then(
                     ClientCommandManager
                         .literal("config")
@@ -45,7 +46,12 @@ object InfiniteCommand {
                             ClientCommandManager.literal("reset").executes { context -> resetConfig(context) }.then(
                                 getCategoryArgument().executes { context -> resetConfig(context) }.then(
                                     getFeatureNameArgument().executes { context -> resetConfig(context) }.then(
-                                        getSettingKeyArgument().executes { context -> resetConfig(context) },
+                                        // 💡 修正点: /infinite config reset のサジェストのために動的ルックアップを必要とする
+                                        getSettingKeyArgument(dynamicLookup = true).executes { context ->
+                                            resetConfig(
+                                                context,
+                                            )
+                                        },
                                     ),
                                 ),
                             ),
@@ -53,11 +59,11 @@ object InfiniteCommand {
                 ).then(
                     ClientCommandManager
                         .literal("theme")
-                        .executes { context -> getTheme(context) } // /infinite theme
+                        .executes { _ -> getTheme() } // /infinite theme
                         .then(
                             ClientCommandManager
                                 .literal("list") // /infinite theme list
-                                .executes { context -> getTheme(context) },
+                                .executes { _ -> getTheme() },
                         ).then(
                             ClientCommandManager
                                 .literal("set") // /infinite theme set {name}
@@ -76,33 +82,38 @@ object InfiniteCommand {
 
             category.features.forEach { feature ->
                 val featureBuilder = ClientCommandManager.literal(feature.name)
+
+                // --- フィーチャーの状態トグル ---
                 if (feature.instance.preRegisterCommands.contains("enable")) {
                     featureBuilder.then(
-                        ClientCommandManager.literal("enable").executes { context ->
-                            toggleFeature(context, category.name, feature.name, true)
+                        ClientCommandManager.literal("enable").executes { _ ->
+                            toggleFeature(category.name, feature.name, true)
                         },
                     )
                 }
                 if (feature.instance.preRegisterCommands.contains("disable")) {
                     featureBuilder.then(
-                        ClientCommandManager.literal("disable").executes { context ->
-                            toggleFeature(context, category.name, feature.name, false)
+                        ClientCommandManager.literal("disable").executes { _ ->
+                            toggleFeature(category.name, feature.name, false)
                         },
                     )
                 }
                 if (feature.instance.preRegisterCommands.contains("toggle")) {
                     featureBuilder.then(
-                        ClientCommandManager.literal("toggle").executes { context ->
-                            toggleFeatureState(context, category.name, feature.name)
+                        ClientCommandManager.literal("toggle").executes { _ ->
+                            toggleFeatureState(category.name, feature.name)
                         },
                     )
                 }
+
+                // --- セッティング操作: set ---
                 if (feature.instance.preRegisterCommands.contains("set")) {
                     featureBuilder.then(
                         ClientCommandManager
                             .literal("set")
                             .then(
-                                getSettingKeyArgument()
+                                // 💡 修正点: feature.instance を渡す
+                                getSettingKeyArgument(feature.instance)
                                     .then(
                                         getSettingValueArgument()
                                             .executes { context ->
@@ -116,22 +127,30 @@ object InfiniteCommand {
                             ),
                     )
                 }
+
+                // --- セッティング操作: get (status) ---
                 if (feature.instance.preRegisterCommands.contains("get")) {
                     featureBuilder.then(
                         ClientCommandManager
                             .literal("get")
                             .then(
-                                getSettingKeyArgument()
-                                    .executes { context -> getFeatureStatus(context, category.name, feature.name) },
+                                // 💡 修正点: feature.instance を渡す
+                                getSettingKeyArgument(feature.instance)
+                                    .executes { _ ->
+                                        getFeatureStatus(category.name, feature.name)
+                                    },
                             ),
                     )
                 }
+
+                // --- セッティング操作: add ---
                 if (feature.instance.preRegisterCommands.contains("add")) {
                     featureBuilder.then(
                         ClientCommandManager
                             .literal("add")
                             .then(
-                                getSettingKeyArgument()
+                                // 💡 修正点: feature.instance を渡す
+                                getSettingKeyArgument(feature.instance)
                                     .then(
                                         getSettingValueArgument()
                                             .executes { context ->
@@ -146,12 +165,15 @@ object InfiniteCommand {
                             ),
                     )
                 }
+
+                // --- セッティング操作: del ---
                 if (feature.instance.preRegisterCommands.contains("del")) {
                     featureBuilder.then(
                         ClientCommandManager
                             .literal("del")
                             .then(
-                                getSettingKeyArgument()
+                                // 💡 修正点: feature.instance を渡す
+                                getSettingKeyArgument(feature.instance)
                                     .then(
                                         getSettingValueArgument()
                                             .executes { context ->
@@ -178,7 +200,7 @@ object InfiniteCommand {
         dispatcher.register(infiniteCommand)
     }
 
-    private fun getTheme(context: CommandContext<FabricClientCommandSource>): Int {
+    private fun getTheme(): Int {
         val currentThemeName = InfiniteClient.currentTheme
         info(Text.translatable("command.infinite.theme.current", currentThemeName).string)
         val availableThemes = InfiniteClient.themes.joinToString(", ") { it.name }
@@ -317,7 +339,6 @@ object InfiniteCommand {
     }
 
     private fun toggleFeatureState(
-        context: CommandContext<FabricClientCommandSource>,
         categoryName: String,
         featureName: String,
     ): Int {
@@ -348,7 +369,7 @@ object InfiniteCommand {
     }
 
     /*
-     * 既存の引数定義関数 (変更なし)
+     * 既存の引数定義関数 (変更あり: feature引数とdynamicLookupフラグの追加)
      */
 
     private fun getCategoryArgument() =
@@ -357,13 +378,18 @@ object InfiniteCommand {
     private fun getFeatureNameArgument() =
         ClientCommandManager.argument("name", StringArgumentType.word()).suggests(getFeatureNameSuggestions())
 
-    private fun getSettingKeyArgument() =
-        ClientCommandManager.argument("key", StringArgumentType.word()).suggests(getSettingKeySuggestions())
+    // 💡 修正: featureインスタンスを直接受け取るか、動的ルックアップを行うフラグを受け取る
+    private fun getSettingKeyArgument(
+        feature: ConfigurableFeature? = null,
+        dynamicLookup: Boolean = false,
+    ) = ClientCommandManager
+        .argument("key", StringArgumentType.word())
+        .suggests(getSettingKeySuggestions(feature, dynamicLookup))
 
     private fun getSettingValueArgument() = ClientCommandManager.argument("value", StringArgumentType.greedyString())
 
     /*
-     * 既存のサジェスト関数 (変更なし)
+     * 既存のサジェスト関数 (変更あり: feature引数とdynamicLookupフラグの追加)
      */
 
     private fun getCategorySuggestions(): SuggestionProvider<FabricClientCommandSource> =
@@ -385,34 +411,48 @@ object InfiniteCommand {
                         builder,
                     )
                 }
-            } catch (_: IllegalArgumentException) {
+            } catch (e: IllegalArgumentException) {
+                error("IllegalArgumentException: $e")
             }
             builder.buildFuture()
         }
 
-    private fun getSettingKeySuggestions(): SuggestionProvider<FabricClientCommandSource> =
+    // 修正後の getSettingKeySuggestions
+    private fun getSettingKeySuggestions(
+        feature: ConfigurableFeature? = null,
+        dynamicLookup: Boolean = false,
+    ): SuggestionProvider<FabricClientCommandSource> =
         SuggestionProvider { context, builder ->
             try {
-                val categoryName = StringArgumentType.getString(context, "category")
-                val featureName = StringArgumentType.getString(context, "name")
-                val feature = searchFeature(categoryName, featureName)
-                if (feature != null) {
+                val targetFeature =
+                    when {
+                        feature != null -> feature // Case 1: feature.instanceが直接渡された場合 (feature-specific commands)
+                        dynamicLookup -> { // Case 2: dynamicLookupがtrueの場合 (/infinite config reset)
+                            // context.parent は使用できないため、context.getArgument() で既に解析された引数を取得する
+                            // これらの引数は、/infinite config reset <category> <name> のように、
+                            // 現在の <key> に到達する前に定義されているため取得可能
+                            val categoryName = StringArgumentType.getString(context, "category")
+                            val featureName = StringArgumentType.getString(context, "name")
+
+                            searchFeature(categoryName, featureName)
+                        }
+
+                        else -> null
+                    }
+
+                if (targetFeature != null) {
                     CommandSource.suggestMatching(
-                        feature.settings.map { it.name },
+                        targetFeature.settings.map { it.name },
                         builder,
                     )
                 }
-            } catch (_: IllegalArgumentException) {
+            } catch (e: Exception) {
+                error("Error in getSettingKeySuggestions: ${e.message}")
             }
             builder.buildFuture()
         }
 
-    /*
-     * 既存の機能操作関数 (一部変更/再利用)
-     */
-
     private fun toggleFeature(
-        context: CommandContext<FabricClientCommandSource>,
         categoryName: String,
         featureName: String,
         enable: Boolean,
@@ -551,7 +591,6 @@ object InfiniteCommand {
     }
 
     private fun getFeatureStatus(
-        context: CommandContext<FabricClientCommandSource>,
         categoryName: String,
         featureName: String,
     ): Int {

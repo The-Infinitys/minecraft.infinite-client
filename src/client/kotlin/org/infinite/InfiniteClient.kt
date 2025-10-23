@@ -196,6 +196,18 @@ object InfiniteClient : ClientModInitializer {
             ?.find { it.name.equals(name, ignoreCase = true) }
             ?.instance
 
+    fun searchFeatureWithName(name: String): ConfigurableFeature? =
+        featureCategories
+            .map { category ->
+                category.features
+                    .find { feature ->
+                        feature.name.equals(
+                            name,
+                            ignoreCase = true,
+                        )
+                    }?.instance
+            }.firstOrNull()
+
     fun <T : ConfigurableFeature> isFeatureEnabled(featureClass: Class<T>): Boolean {
         val feature = getFeature(featureClass)
         return feature != null && feature.isEnabled()
