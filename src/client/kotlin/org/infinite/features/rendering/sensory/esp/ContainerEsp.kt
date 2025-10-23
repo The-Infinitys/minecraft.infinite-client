@@ -3,14 +3,13 @@ package org.infinite.features.rendering.sensory.esp
 import net.minecraft.client.MinecraftClient
 import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 import net.minecraft.world.chunk.ChunkSection
 import net.minecraft.world.dimension.DimensionType
 import org.infinite.InfiniteClient
 import org.infinite.features.rendering.sensory.ExtraSensory
 import org.infinite.libs.graphics.Graphics3D
-import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
+import org.infinite.utils.rendering.BlockMeshGenerator
 import org.infinite.utils.rendering.transparent
 
 object ContainerEsp {
@@ -229,27 +228,12 @@ object ContainerEsp {
         graphics3D: Graphics3D,
         value: ExtraSensory.Method,
     ) {
-        // Mapのエントリをイテレート
-        val boxes =
-            containerPositions.map { (pos, color) ->
-                RenderUtils.ColorBox(
-                    color, // コンテナ情報から色を使用
-                    Box(
-                        pos.x.toDouble(),
-                        pos.y.toDouble(),
-                        pos.z.toDouble(),
-                        // コンテナの中には1ブロック未満のサイズのものがあるが、
-                        // 汎用性を高めるため、ここではPortalEspと同様に1x1x1のBoxを描画する。
-                        pos.x + 1.0,
-                        pos.y + 1.0,
-                        pos.z + 1.0,
-                    ),
-                )
-            }
+        val quads = BlockMeshGenerator.generateMesh(containerPositions)
         // 実線と枠線の両方を描画
         if (value == ExtraSensory.Method.HitBox) {
-            graphics3D.renderSolidColorBoxes(boxes, true)
+            graphics3D.renderSolidQuads(quads, true)
         }
-        graphics3D.renderLinedColorBoxes(boxes, true)
+        // TODO: 線を描画する場合は、renderLinedQuadsのような関数が必要
+        // graphics3D.renderLinedColorBoxes(combinedBoxes, true)
     }
 }

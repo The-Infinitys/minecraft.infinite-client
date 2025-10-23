@@ -13,6 +13,7 @@ import net.minecraft.util.math.Vec3d
 import org.infinite.libs.client.player.fighting.aim.CameraRoll
 import org.infinite.libs.graphics.render.RenderResources
 import org.infinite.libs.graphics.render.RenderUtils
+import org.infinite.utils.rendering.Quad
 import org.joml.Matrix4f
 import org.joml.Vector4f
 
@@ -102,6 +103,15 @@ class Graphics3D(
         val layer = RenderResources.renderSolidLayer(isOverDraw)
         val buffer = immediate.getBuffer(layer)
         RenderUtils.renderSolidColorBoxes(matrixStack, boxes, buffer)
+    }
+
+    fun renderSolidQuads(
+        quads: List<Quad>,
+        isOverDraw: Boolean = false,
+    ) {
+        val layer = RenderResources.renderSolidLayer(isOverDraw)
+        val buffer = immediate.getBuffer(layer)
+        RenderUtils.renderSolidQuads(matrixStack, quads, buffer)
     }
 
     /**

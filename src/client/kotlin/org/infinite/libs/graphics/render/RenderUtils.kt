@@ -7,6 +7,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import org.infinite.utils.rendering.Quad
 import org.joml.Vector3f
 
 object RenderUtils {
@@ -137,6 +138,42 @@ object RenderUtils {
         val camPos = cameraPos().negate()
         boxes.forEach {
             renderSolidBox(matrix, it.box.offset(camPos), it.color, buffer)
+        }
+    }
+
+    fun renderSolidQuads(
+        matrix: MatrixStack,
+        quads: List<Quad>,
+        buffer: VertexConsumer,
+    ) {
+        val camPos = cameraPos().negate()
+        val entry = matrix.peek()
+        quads.forEach { quad ->
+            // カメラ位置オフセットを適用
+            val v1 = quad.vertex1.add(camPos)
+            val v2 = quad.vertex2.add(camPos)
+            val v3 = quad.vertex3.add(camPos)
+            val v4 = quad.vertex4.add(camPos)
+
+            buffer.quad(
+                entry,
+                quad.normal.x,
+                quad.normal.y,
+                quad.normal.z,
+                quad.color,
+                v1.x.toFloat(),
+                v1.y.toFloat(),
+                v1.z.toFloat(),
+                v2.x.toFloat(),
+                v2.y.toFloat(),
+                v2.z.toFloat(),
+                v3.x.toFloat(),
+                v3.y.toFloat(),
+                v3.z.toFloat(),
+                v4.x.toFloat(),
+                v4.y.toFloat(),
+                v4.z.toFloat(),
+            )
         }
     }
 
