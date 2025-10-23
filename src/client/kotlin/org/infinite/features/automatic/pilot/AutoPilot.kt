@@ -9,6 +9,8 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.vehicle.BoatEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.predicate.entity.EntityPredicates
 import net.minecraft.text.Text
 import net.minecraft.util.TypeFilter
@@ -19,6 +21,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Heightmap
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.features.movement.boat.HoverBoat
 import org.infinite.libs.client.player.fighting.AimInterface
 import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
 import org.infinite.libs.client.player.fighting.aim.CameraRoll
@@ -61,13 +64,20 @@ enum class PilotState {
     FallFlying, // 速度を落とすために下降中
     RiseFlying, // 速度を上げるために上昇中
     Gliding, // 一定以上の高さになったので滑空中
-    Circling, // 【追加】目標点の周りを旋回し、着陸地点を探索中
+    Circling, // 目標点の周りを旋回し、着陸地点を探索中
     Landing, // 着陸中
     EmergencyLanding, // 緊急着陸中
+    TakingOff, // 離陸中
 }
 
 // AutoPilot メイン機能クラス
 class AutoPilot : ConfigurableFeature(initialEnabled = false) {
+    override fun disabled() {
+        MinecraftClient
+            .getInstance()
+            .options.jumpKey.isPressed = false
+    }
+
     val defaultFallDir = 40.0
     val defaultRiseDir = -45.0
     val bestGlidingDir = 5.7
@@ -99,7 +109,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         FeatureSetting.IntSetting(
             "ElytraThreshold",
             "feature.automatic.autopilot.elytrathreshold.description",
-            // デフォルト値を5%に設定
             5,
             1,
             50,
@@ -130,7 +139,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         FeatureSetting.IntSetting(
             "EmergencyLandingThreshold",
             "feature.automatic.autopilot.emergencylandingthreshold.description",
-            60, // 60 seconds of remaining flight time
+            60,
             10,
             300,
         )
@@ -138,7 +147,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         FeatureSetting.IntSetting(
             "CollisionDetectionDistance",
             "feature.automatic.autopilot.collisiondetectiondistance.description",
-            10, // Check 10 blocks ahead for collision
+            10,
             3,
             30,
         )
@@ -165,7 +174,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             1.0,
         )
 
-    // 機能設定リスト
     override val settings: List<FeatureSetting<*>> =
         listOf(
             elytraThreshold,
@@ -184,18 +192,11 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     private var fallHeight: Double = 0.0
     private var riseHeight: Double = 0.0
 
-    /**
-     * エリトラ飛行を再開するためにジャンプをシミュレートします。
-     */
     private fun redeployElytra() {
         if (player == null) return
-        // ジャンプキーを短時間押すことでエリトラを再展開
         client.options.jumpKey.isPressed = true
-        // 少し待ってからキーを離す (次のティックで自動的に離されることを期待)
-        // または、より制御された方法でキーを離すロジックを追加することも可能
     }
 
-    // Minecraft クライアント/プレイヤー/ワールドの簡易参照
     private val client: MinecraftClient
         get() = MinecraftClient.getInstance()
     private val player: ClientPlayerEntity?
@@ -203,7 +204,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     private val world: ClientWorld
         get() = client.world!!
 
-    // 現在の飛行速度 (m/s)
     val flySpeed: Double
         get() {
             if (player == null) return 0.0
@@ -216,16 +216,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     var risingTime = System.currentTimeMillis()
     var fallingTime = System.currentTimeMillis()
 
-    // Y方向の速度 (m/s)
     val riseSpeed: Double
         get() = (player?.velocity?.y ?: 0.0) * 20.0
     val riseSpeedDisplay: Double
         get() = riseSpeed
 
-    // EMA の平滑化係数 (alpha)。
     private val alpha = 0.0015
-    var moveSpeedAverage: Double = 0.0 // 平均移動速度 (m/s)
-    private var riseSpeedAverage: Double = 0.0 // 平均上昇速度 (m/s)
+    var moveSpeedAverage: Double = 0.0
+    private var riseSpeedAverage: Double = 0.0
 
     val height: Double
         get() = player?.y ?: 0.0
@@ -234,28 +232,25 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             if (player == null) {
                 return 0.0
             }
-            val x = player!!.velocity.x
-            val z = player!!.velocity.z
-            return sqrt(x * x + z * z) * 20.0 // m/s に変換
+            val entity = if (player!!.vehicle is BoatEntity) player!!.vehicle!! else player!!
+            val x = entity.velocity.x
+            val z = entity.velocity.z
+            return sqrt(x * x + z * z) * 20.0
         }
 
     var target: Location? = null
     var state: PilotState = PilotState.Idle
-
-    // 【新規】着陸に最適な地点を保持
     var bestLandingSpot: LandingSpot? = null
-
-    // AimTask の結果を受け取るコールバック変数
     var aimTaskCallBack: AimTaskConditionReturn? = null
 
     private fun isCollidingWithTerrain(): Boolean {
         if (player == null) return false
 
-        val currentPos = player!!.blockPos
+        val entity = if (player!!.vehicle is BoatEntity) player!!.vehicle!! else player!!
+        val currentPos = entity.blockPos
         val lookVec = player!!.rotationVector
         val checkDistance = collisionDetectionDistance.value
 
-        // Check blocks directly in front of the player
         for (i in 1..checkDistance) {
             val checkPos =
                 currentPos.add((lookVec.x * i).roundToInt(), (lookVec.y * i).roundToInt(), (lookVec.z * i).roundToInt())
@@ -265,36 +260,44 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             }
         }
 
-        // Check blocks directly below the player (for sudden drops)
         val blockBelow = currentPos.down()
         val blockStateBelow = world.getBlockState(blockBelow)
         return !blockStateBelow.isAir
     }
 
-    /**
-     * 【変更点】Tick ごとに移動速度と上昇速度の EMA を更新
-     */
-    override fun tick() {
-        val world = MinecraftClient.getInstance().world ?: return
-        // 現在の移動速度 (m/s)
-        val currentMoveSpeed = moveSpeed
-        // 現在の上昇速度 (m/s)
-        val currentRiseSpeed = riseSpeed
+    private fun isBoatOnWater(): Boolean {
+        if (player?.vehicle !is BoatEntity) return false
+        val boat = player!!.vehicle as BoatEntity
+        val blockPos = boat.blockPos
+        val blockState = world.getBlockState(blockPos)
+        return blockState.isOf(Blocks.WATER)
+    }
 
-        // 指数移動平均 (EMA) の計算
+    override fun tick() {
+        if (jetFlightMode.value) {
+            if (!InfiniteClient.isFeatureEnabled(HoverBoat::class.java)) {
+                InfiniteClient.error(Text.translatable("autopilot.error.hoverboat").string)
+                disable()
+                return
+            }
+        }
+        val world = MinecraftClient.getInstance().world ?: return
+        val currentMoveSpeed = moveSpeed
+        val currentRiseSpeed = riseSpeed
         moveSpeedAverage = alpha * currentMoveSpeed + (1.0 - alpha) * moveSpeedAverage
         riseSpeedAverage = alpha * currentRiseSpeed + (1.0 - alpha) * riseSpeedAverage
-
-        // ----------------------------------------------------------------------
-        // 緊急着陸の判定
-        // ----------------------------------------------------------------------
-        val remainingFlightTime = flightTime()
-        // If in a boat, remainingFlightTime is not relevant for emergency landing
-        val isEmergencyCondition = if (player?.vehicle is BoatEntity) {
-            isCollidingWithTerrain() // Only check for terrain collision if in a boat
-        } else {
-            remainingFlightTime < emergencyLandingThreshold.value || isCollidingWithTerrain()
+        if (listOf(PilotState.Landing, PilotState.EmergencyLanding).contains(state)) {
+            MinecraftClient
+                .getInstance()
+                .options.jumpKey.isPressed = false
         }
+        val remainingFlightTime = flightTime()
+        val isEmergencyCondition =
+            if (player?.vehicle is BoatEntity || state == PilotState.Landing) {
+                false
+            } else {
+                remainingFlightTime < emergencyLandingThreshold.value || isCollidingWithTerrain()
+            }
 
         if (isEmergencyCondition) {
             if (state != PilotState.EmergencyLanding) {
@@ -307,10 +310,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         ).string,
                 )
                 state = PilotState.EmergencyLanding
-                aimTaskCallBack = null // 現在のAimTaskを中断
+                aimTaskCallBack = null
             }
         }
-        // ----------------------------------------------------------------------
 
         if (target == null) {
             InfiniteClient.error(Text.translatable("autopilot.target.not_set").string)
@@ -318,17 +320,12 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             return
         }
         val currentTarget = target!!
-
-        // ----------------------------------------------------------------------
-        // エリトラの自動交換ロジック
-        // ----------------------------------------------------------------------
-        if (swapElytra.value) {
+        val hoverMode = player?.vehicle is BoatEntity
+        if (swapElytra.value && player?.vehicle !is BoatEntity) {
             checkAndSwapElytra()
         }
-        // ----------------------------------------------------------------------
 
-        if (player?.isGliding != true) {
-            // エリトラ飛行中でなければ、エリトラを再展開または装備を試みる
+        if (player?.isGliding != true && !hoverMode) {
             if (isElytra(InfiniteClient.playerInterface.inventory.get(Armor.CHEST))) {
                 InfiniteClient.warn(Text.translatable("autopilot.elytra.flight_interrupted").string)
                 redeployElytra()
@@ -338,32 +335,31 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 return
             }
         }
-        // ----------------------------------------------------------------------
 
-        // ----------------------------------------------------------------------
-        // 【変更】ターゲットに到達したかの判定 (Circling へ移行)
-        // ----------------------------------------------------------------------
         val distance = currentTarget.distance()
-
         if (distance < 32 && state == PilotState.Landing) {
-            // 非常に近づいたら成功として無効化（最終的な着地はプレイヤーに任せる）
-            InfiniteClient.info(Text.translatable("autopilot.landing.completed").string)
-            disable()
-            return
+            if (player?.vehicle is BoatEntity && isBoatOnWater()) {
+                InfiniteClient.info(Text.translatable("autopilot.landing.boat_completed").string)
+                player!!.dismountVehicle()
+                disable()
+                return
+            } else if (player?.vehicle !is BoatEntity) {
+                InfiniteClient.info(Text.translatable("autopilot.landing.completed").string)
+                disable()
+                return
+            }
         } else if (distance < landingStartDistance && state != PilotState.Circling && state != PilotState.Landing) {
             InfiniteClient.info(Text.translatable("autopilot.circling.start").string)
-            // AimTaskを中断し、状態を旋回に移行
             aimTaskCallBack = null
             state = PilotState.Circling
         }
-        // ----------------------------------------------------------------------
-        // JetFlying
+
         if (jetFlightMode.value &&
-            listOf(PilotState.FallFlying, PilotState.Gliding, PilotState.RiseFlying).contains(
+            listOf(PilotState.FallFlying, PilotState.Gliding, PilotState.RiseFlying, PilotState.TakingOff).contains(
                 state,
             )
         ) {
-            state = PilotState.JetFlying
+            state = if (player?.vehicle is BoatEntity) PilotState.HoverFlying else PilotState.JetFlying
         }
         if (jetFlightMode.value) {
             if (player?.vehicle is BoatEntity) {
@@ -371,8 +367,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     state = PilotState.HoverFlying
                 }
             } else if (state == PilotState.HoverFlying) {
-                // ボートから落ちた場合、近くのボートを探して乗り直す
-                val searchBox = player!!.boundingBox.expand(10.0) // 10ブロック範囲で検索
+                val searchBox = player!!.boundingBox.expand(10.0)
                 val boats =
                     world.getEntitiesByType(TypeFilter.instanceOf(BoatEntity::class.java), searchBox) {
                         EntityPredicates.VALID_ENTITY.test(it)
@@ -394,25 +389,23 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     state = PilotState.JetFlying
                 }
             }
+        } else if (state == PilotState.Idle && player?.vehicle is BoatEntity && isBoatOnWater()) {
+            state = PilotState.TakingOff
+            aimTaskCallBack = null
         }
-        // ----------------------------------------------------------------------
+
         process(currentTarget)
     }
 
     val landingStartDistance = 256.0
 
-    /**
-     * 現在装備しているエリトラの残り耐久値をパーセンテージで返します。
-     * エリトラを装備していない、またはエリトラでない場合は 100% を返します。
-     */
     private fun elytraDurability(): Double {
         val chestStack = InfiniteClient.playerInterface.inventory.get(Armor.CHEST)
         return InfiniteClient.playerInterface.inventory.durabilityPercentage(chestStack) * 100
     }
 
-    /**
-     * エリトラの耐久値をチェックし、閾値以下であれば最も耐久値の高いエリトラと交換を試みます。
-     */
+    private fun isElytra(stack: ItemStack): Boolean = stack.item == Items.ELYTRA
+
     private fun checkAndSwapElytra() {
         if (player == null) return
 
@@ -421,18 +414,10 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val isElytraEquipped = isElytra(equippedElytraStack)
         val currentDurability = if (isElytraEquipped) elytraDurability() else 0.0
 
-        // 交換が必要な条件:
-        // 1. エリトラを装備していない (isElytraEquipped == false)
-        // 2. エリトラを装備しているが、耐久値が閾値以下である (currentDurability <= elytraThreshold.value)
         val needsSwap = !isElytraEquipped || (currentDurability <= elytraThreshold.value)
-
         if (needsSwap) {
-            // 最も耐久値の高い予備のエリトラをインベントリから探す
             val bestElytra = findBestElytraInInventory()
-
             if (bestElytra != null) {
-                // 交換ロジック:
-                // 1. チェストスロットと予備のエリトラスロットをスワップする
                 if (invManager.swap(Armor.CHEST, bestElytra.index)) {
                     val swapMessage =
                         if (isElytraEquipped) {
@@ -453,59 +438,96 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 } else {
                     InfiniteClient.error(Text.translatable("autopilot.elytra.swap_failed").string)
                 }
-            } else if (isElytraEquipped) {
-                if (state != PilotState.EmergencyLanding) {
-                    InfiniteClient.warn(
-                        Text
-                            .translatable(
-                                "autopilot.elytra.no_spare.low_durability",
-                                currentDurability.roundToInt(),
-                            ).string,
-                    )
-                    state = PilotState.EmergencyLanding
-                    aimTaskCallBack = null
-                }
-            } else {
-                if (state != PilotState.EmergencyLanding) {
-                    InfiniteClient.warn(Text.translatable("autopilot.elytra.no_spare.not_equipped").string)
-                    state = PilotState.EmergencyLanding
-                    aimTaskCallBack = null
+            } else if (player?.vehicle !is BoatEntity) {
+                if (isElytraEquipped) {
+                    if (state != PilotState.EmergencyLanding) {
+                        InfiniteClient.warn(
+                            Text
+                                .translatable(
+                                    "autopilot.elytra.no_spare.low_durability",
+                                    currentDurability.roundToInt(),
+                                ).string,
+                        )
+                        state = PilotState.EmergencyLanding
+                        aimTaskCallBack = null
+                    }
+                } else {
+                    if (state != PilotState.EmergencyLanding) {
+                        InfiniteClient.warn(Text.translatable("autopilot.elytra.no_spare.not_equipped").string)
+                        state = PilotState.EmergencyLanding
+                        aimTaskCallBack = null
+                    }
                 }
             }
         }
     }
 
-    /**
-     * 機能が有効になったときに一度だけ実行されます。
-     */
     override fun enabled() {
-        // 初期の平均を現在の瞬時速度に設定
         moveSpeedAverage = moveSpeed
         riseSpeedAverage = riseSpeed
-        state = if (player?.vehicle is BoatEntity) PilotState.HoverFlying else PilotState.Idle
+        state = if (player?.vehicle is BoatEntity && isBoatOnWater()) PilotState.TakingOff else PilotState.Idle
         aimTaskCallBack = null
         riseHeight = height
         fallHeight = height
-        bestLandingSpot = null // 【新規】着陸地点情報をリセット
+        bestLandingSpot = null
     }
 
-    /**
-     * 状態に応じた処理を実行します。
-     */
     private fun process(target: Location) {
-        // SuperFly が有効な場合、状態を優先的に SuperFlying に設定
         when (state) {
             PilotState.Idle -> {
-                // 自動操縦開始時または SuperFly 時の初期状態決定ロジック
                 val targetSpeed = jetSpeedLimit.value
-                // 現在の速度に応じて、減速が必要な下降状態か、加速が必要な上昇状態かを決定
                 state =
-                    if (moveSpeedAverage > targetSpeed) { // 平均速度で判定
-                        PilotState.FallFlying // 速すぎる -> 下降して減速
+                    if (moveSpeedAverage > targetSpeed) {
+                        PilotState.FallFlying
                     } else {
-                        PilotState.RiseFlying // 遅すぎる -> 上昇して加速
+                        PilotState.RiseFlying
                     }
                 aimTaskCallBack = null
+            }
+
+            PilotState.TakingOff -> {
+                when (aimTaskCallBack) {
+                    null -> {
+                        aimTaskCallBack = AimTaskConditionReturn.Suspend
+                        AimInterface.addTask(AutoPilotAimTask(state))
+                        InfiniteClient.info(Text.translatable("autopilot.takeoff.start").string)
+                    }
+
+                    AimTaskConditionReturn.Exec -> {
+                        if (player == null || player!!.vehicle !is BoatEntity) return
+                        val boat = player!!.vehicle as BoatEntity
+                        var velocity = boat.velocity
+                        val yaw = player!!.yaw.toDouble()
+                        val pitch = player!!.pitch.toDouble()
+                        val moveVec = CameraRoll(yaw, pitch).vec()
+                        val power = jetAcceleration.value
+                        val vecY =
+                            velocity.y + min(power, standardHeight.value - height)
+                        val vecX = velocity.x + moveVec.x * power
+                        val vecZ = velocity.z + moveVec.z * power
+                        velocity = Vec3d(vecX, vecY, vecZ)
+                        if (velocity.length() * 20 > jetSpeedLimit.value) {
+                            velocity = velocity.normalize().multiply(jetSpeedLimit.value / 20)
+                        }
+                        boat.velocity = velocity
+                        if (height >= standardHeight.value) {
+                            aimTaskCallBack = AimTaskConditionReturn.Success
+                        }
+                    }
+
+                    AimTaskConditionReturn.Success -> {
+                        aimTaskCallBack = null
+                        state = PilotState.HoverFlying
+                        InfiniteClient.info(Text.translatable("autopilot.takeoff.completed").string)
+                    }
+
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error(Text.translatable("autopilot.error.takeoff").string)
+                        disable()
+                    }
+
+                    else -> {}
+                }
             }
 
             PilotState.JetFlying -> {
@@ -521,14 +543,11 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         val yaw = player!!.yaw.toDouble()
                         val pitch = player!!.pitch.toDouble()
                         val moveVec = CameraRoll(yaw, pitch).vec()
-                        val power = jetAcceleration.value // Use jetAcceleration
+                        val power = jetAcceleration.value
                         val vecY =
                             velocity.y +
                                 if (height < standardHeight.value) {
-                                    min(
-                                        power,
-                                        standardHeight.value - velocity.y,
-                                    )
+                                    min(power, standardHeight.value - velocity.y)
                                 } else {
                                     -power
                                 }
@@ -541,14 +560,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         player!!.velocity = velocity
                     }
 
-                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error(Text.translatable("autopilot.error.circling").string)
-                        disable()
-                    }
-
                     AimTaskConditionReturn.Success -> {
                         aimTaskCallBack = null
                         state = PilotState.Circling
+                    }
+
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error(Text.translatable("autopilot.error.circling").string)
+                        disable()
                     }
 
                     else -> {}
@@ -569,14 +588,11 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         val yaw = player!!.yaw.toDouble()
                         val pitch = player!!.pitch.toDouble()
                         val moveVec = CameraRoll(yaw, pitch).vec()
-                        val power = jetAcceleration.value // Use same jetAcceleration for hover
+                        val power = jetAcceleration.value
                         val vecY =
                             velocity.y +
                                 if (height < standardHeight.value) {
-                                    min(
-                                        power,
-                                        standardHeight.value - velocity.y,
-                                    )
+                                    min(power, standardHeight.value - velocity.y)
                                 } else {
                                     -power
                                 }
@@ -589,32 +605,28 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         boat.velocity = velocity
                     }
 
-                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
-                        InfiniteClient.error(Text.translatable("autopilot.error.hover_flying").string)
-                        disable()
-                    }
-
                     AimTaskConditionReturn.Success -> {
                         aimTaskCallBack = null
                         state = PilotState.Circling
                     }
 
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error(Text.translatable("autopilot.error.hover_flying").string)
+                        disable()
+                    }
+
                     else -> {}
                 }
             }
-            // ----------------------------------------------------------------------
-            // 【新規】旋回 (Circling) 状態の処理
-            // ----------------------------------------------------------------------
+
             PilotState.Circling -> {
                 when (aimTaskCallBack) {
                     null -> {
-                        // 旋回と探索の AimTask を開始
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
                         AimInterface.addTask(AutoPilotAimTask(state, bestLandingSpot))
                     }
 
                     AimTaskConditionReturn.Success -> {
-                        // 着陸地点が見つかり、着陸フェーズに移行
                         aimTaskCallBack = null
                         state = PilotState.Landing
                         InfiniteClient.info(Text.translatable("autopilot.landing.spot_found").string)
@@ -626,15 +638,15 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     }
 
                     else -> {
-                        // Exec 中は着陸地点の探索を行う
+                        if (player?.vehicle is BoatEntity) {
+                            player!!.vehicle!!.velocity = player!!.vehicle!!.velocity.add(0.0, -1.0, 0.0)
+                        }
                         searchLandingSpot(target)
                     }
                 }
             }
-            // ----------------------------------------------------------------------
 
-            // 【変更】着陸 (Landing) 状態の処理
-            PilotState.Landing -> { // 着陸ロジック
+            PilotState.Landing -> {
                 when (aimTaskCallBack) {
                     null -> {
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
@@ -642,9 +654,62 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         InfiniteClient.info(Text.translatable("autopilot.landing.aimtask_start").string)
                     }
 
+                    AimTaskConditionReturn.Exec -> {
+                        if (player == null) return
+                        val isBoat = player!!.vehicle is BoatEntity
+                        if (!isBoat) return // Elytra landing handled by glide pitch
+                        val boat = player!!.vehicle as BoatEntity
+                        var velocity = boat.velocity
+                        val yaw = player!!.yaw.toDouble()
+                        val pitch = player!!.pitch.toDouble()
+                        val moveVec = CameraRoll(yaw, pitch).vec()
+                        val power = jetAcceleration.value
+                        val landingSpot = bestLandingSpot ?: return
+                        val dX = landingSpot.x - player!!.x
+                        val dZ = landingSpot.z - player!!.z
+                        val horizontalDist = sqrt(dX * dX + dZ * dZ)
+                        val heightAboveSpot = player!!.y - landingSpot.y
+                        val vecY: Double
+                        val vecX: Double
+                        val vecZ: Double
+                        if (horizontalDist < 5.0 && heightAboveSpot > 0) {
+                            // Vertical descend
+                            vecY = velocity.y - power * 0.5 // Slow descend
+                            vecX = velocity.x * 0.9 // Dampen horizontal
+                            vecZ = velocity.z * 0.9
+                        } else {
+                            // Approach
+                            val verticalThreshold = 10.0
+                            vecY =
+                                velocity.y +
+                                if (heightAboveSpot >
+                                    verticalThreshold
+                                ) {
+                                    -power
+                                } else if (heightAboveSpot < verticalThreshold - 5) {
+                                    power
+                                } else {
+                                    0.0
+                                }
+                            vecX = velocity.x + moveVec.x * power
+                            vecZ = velocity.z + moveVec.z * power
+                        }
+                        velocity = Vec3d(vecX, vecY, vecZ)
+                        boat.velocity = velocity
+                    }
+
                     AimTaskConditionReturn.Success -> {
                         aimTaskCallBack = null
-                        InfiniteClient.info(Text.translatable("autopilot.landing.conditions_met").string)
+                        if (player?.vehicle is BoatEntity) {
+                            if (isBoatOnWater()) {
+                                InfiniteClient.info(Text.translatable("autopilot.landing.boat_completed").string)
+                                player!!.dismountVehicle()
+                            } else {
+                                InfiniteClient.info(Text.translatable("autopilot.landing.boat_not_on_water").string)
+                            }
+                        } else {
+                            InfiniteClient.info(Text.translatable("autopilot.landing.conditions_met").string)
+                        }
                         disable()
                     }
 
@@ -653,12 +718,10 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         disable()
                     }
 
-                    else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
+                    else -> {}
                 }
             }
-            // ----------------------------------------------------------------------
 
-            // 【新規】緊急着陸 (EmergencyLanding) 状態の処理
             PilotState.EmergencyLanding -> {
                 when (aimTaskCallBack) {
                     null -> {
@@ -669,6 +732,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
 
                     AimTaskConditionReturn.Success -> {
                         aimTaskCallBack = null
+                        if (player?.vehicle is BoatEntity && isBoatOnWater()) {
+                            player!!.dismountVehicle()
+                        }
                         InfiniteClient.info(Text.translatable("autopilot.emergency_landing.completed").string)
                         disable()
                     }
@@ -678,16 +744,13 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         disable()
                     }
 
-                    else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
+                    else -> {}
                 }
             }
-            // ----------------------------------------------------------------------
 
-            // 下降 (FallFlying) 状態の処理
             PilotState.FallFlying -> {
                 when (aimTaskCallBack) {
                     null -> {
-                        // AimTask が未開始の場合、新しい AimTask を追加
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
                         riseHeight = height
                         risingTime = System.currentTimeMillis()
@@ -695,7 +758,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     }
 
                     AimTaskConditionReturn.Success -> {
-                        // AimTask が目標速度に達して成功した場合、状態を切り替え
                         aimTaskCallBack = null
                         state = PilotState.RiseFlying
                     }
@@ -705,15 +767,13 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         disable()
                     }
 
-                    else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
+                    else -> {}
                 }
             }
 
-            // 上昇 (RiseFlying) 状態の処理
             PilotState.RiseFlying -> {
                 when (aimTaskCallBack) {
                     null -> {
-                        // AimTask が未開始の場合、新しい AimTask を追加
                         aimTaskCallBack = AimTaskConditionReturn.Suspend
                         fallHeight = height
                         fallingTime = System.currentTimeMillis()
@@ -721,13 +781,17 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                     }
 
                     AimTaskConditionReturn.Success -> {
-                        // AimTask が目標速度に達して成功した場合、状態を切り替え
                         aimTaskCallBack = null
                         InfiniteClient.error(Text.translatable("autopilot.error.riseflying").string)
                         disable()
                     }
 
-                    else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
+                    AimTaskConditionReturn.Failure, AimTaskConditionReturn.Force -> {
+                        InfiniteClient.error(Text.translatable("autopilot.error.riseflying").string)
+                        disable()
+                    }
+
+                    else -> {}
                 }
             }
 
@@ -748,54 +812,34 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         disable()
                     }
 
-                    else -> {} // AimTaskConditionReturn.Exec (実行中) の場合は待機
+                    else -> {}
                 }
             }
         }
     }
 
-    /**
-     * 【新規】ターゲット周辺の着陸に最適な地点を探索します。
-     * 最も高く、かつ平らな場所を優先します。
-     */
     private fun searchLandingSpot(target: Location) {
         if (player == null) return
 
         val centerX = target.x
         val centerZ = target.z
-        val searchRadius = 128 // 探索半径 (ブロック)
+        val searchRadius = 128
 
         var currentBestSpot: LandingSpot? = bestLandingSpot
         val currentBestScore = currentBestSpot?.score ?: -1.0
 
-        // プレイヤーの周囲のグリッドをスキャン（簡略化のためランダムな点をチェック）
         repeat(5) {
-            // 毎ティック5点チェック
             val x = centerX + MathHelper.nextBetween(player!!.random, -searchRadius, searchRadius)
             val z = centerZ + MathHelper.nextBetween(player!!.random, -searchRadius, searchRadius)
+            val y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z)
 
-            // 地形のY座標を取得
-            val y =
-                world.getTopY(
-                    Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
-                    x,
-                    z,
-                )
-
-            // 【新規】危険なブロックを避ける
             if (!isDangerousBlock(x, y, z)) {
-                // 探索地点 (x, z) がどの程度平らであるかを判定
                 val flatnessScore = calculateFlatnessScore(x, z)
-
-                // スコア計算: 標高 (y) を重視し、平坦度をボーナスとして加算
-                // 高い標高ほど良い。平坦なほどボーナス。平坦度ボーナスは最大で 10 * 1.0 = 10.0
                 val score = y.toDouble() + (flatnessScore * 10.0)
-
                 var adjustedScore = score
-                if (state == PilotState.HoverFlying && isWaterBlock(x, y, z)) {
-                    adjustedScore += 1000.0 // 大幅なボーナスを与えて水上着陸を優先
+                if (player?.vehicle is BoatEntity && isWaterBlock(x, y, z)) {
+                    adjustedScore += 2000000000000000000.0 // さらに高いボーナスで水を優先
                 }
-
                 if (adjustedScore > currentBestScore) {
                     currentBestSpot = LandingSpot(x, y, z, adjustedScore)
                     bestLandingSpot = currentBestSpot
@@ -804,10 +848,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         }
     }
 
-    /**
-     * 【新規】指定されたX, Z座標周辺の平坦度を計算します。
-     * 1.0 (完全に平ら) から 0.0 (非常に起伏が激しい)
-     */
     private fun calculateFlatnessScore(
         x: Int,
         z: Int,
@@ -819,30 +859,17 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         for (dx in -1..1) {
             for (dz in -1..1) {
                 if (dx == 0 && dz == 0) continue
-
-                val neighborH =
-                    world.getTopY(
-                        Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
-                        x + dx,
-                        z + dz,
-                    )
+                val neighborH = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz)
                 totalDiff += abs(centerH - neighborH)
                 count++
             }
         }
 
         if (count == 0) return 1.0
-
-        // 平均標高差が 5.0ブロック以下の範囲でスコアを計算
         val avgDiff = totalDiff / count.toDouble()
-        // スコア: 差が 0 のとき 1.0, 差が 5.0 のとき 0.0 に近づく
         return MathHelper.clamp(1.0 - (avgDiff / 5.0), 0.0, 1.0)
     }
 
-    /**
-     * 【新規】指定された座標が危険なブロック (溶岩、火、サボテン、マグマブロック) であるかを判定します。
-     * また、その1ブロック上もチェックします。
-     */
     private fun isDangerousBlock(
         x: Int,
         y: Int,
@@ -851,13 +878,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val blockPos = BlockPos(x, y, z)
         val blockState = world.getBlockState(blockPos)
         val block = blockState.block
-
-        // Check for dangerous blocks at the given position
         if (block == Blocks.LAVA || block == Blocks.FIRE || block == Blocks.CACTUS || block == Blocks.MAGMA_BLOCK) {
             return true
         }
-
-        // Also check the block directly above, as we don't want to land *on* a dangerous block
         val blockStateAbove = world.getBlockState(blockPos.up())
         val blockAbove = blockStateAbove.block
         return blockAbove == Blocks.LAVA || blockAbove == Blocks.FIRE || blockAbove == Blocks.CACTUS
@@ -870,13 +893,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     ): Boolean {
         val blockPos = BlockPos(x, y, z)
         val blockState = world.getBlockState(blockPos)
-        return blockState.isOf(Blocks.WATER)
+        return blockState.isOf(Blocks.WATER) || blockState.isOf(Blocks.WATER_CAULDRON)
     }
 
-    /**
-     * コマンド登録ロジック。
-     * /infinite feature Automatic AutoPilot target <x> <z> コマンドを登録。
-     */
     override fun registerCommands(builder: LiteralArgumentBuilder<FabricClientCommandSource>) {
         builder.then(
             ClientCommandManager.literal("target").then(
@@ -894,26 +913,18 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     }
 
     override fun render2d(graphics2D: Graphics2D) {
-        if (target == null) return // ターゲットが設定されていない場合は描画しない
+        if (target == null) return
         val currentTarget = target!!
 
-        // ----------------------------------------------------------------------
-        // 1. データ計算
-        // ----------------------------------------------------------------------
-
-        // A. 距離
         val distance = currentTarget.distance()
-
-        // B. 平均速度 (moveSpeedAverageを使用)
         val speed = moveSpeedAverage
         val etaSeconds: Long =
-            if (speed > 1.0) { // 速度が1m/s以上の場合のみ計算
+            if (speed > 1.0) {
                 (distance / speed).roundToLong()
             } else {
-                -1L // 飛行していない、または非常に遅い場合は計算不可
+                -1L
             }
         val flightSeconds: Long = flightTime().roundToLong()
-        // D. 現在の状態
         val stateText =
             when (state) {
                 PilotState.Idle -> Text.translatable("autopilot.state.idle").string
@@ -925,21 +936,18 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 PilotState.Circling -> Text.translatable("autopilot.state.circling").string
                 PilotState.Landing -> Text.translatable("autopilot.state.landing").string
                 PilotState.EmergencyLanding -> Text.translatable("autopilot.state.emergency_landing").string
+                PilotState.TakingOff -> Text.translatable("autopilot.state.taking_off").string
             }
 
-        // E. エリトラ耐久値
         val durability =
-            if (swapElytra.value) {
+            if (swapElytra.value && player?.vehicle !is BoatEntity) {
                 "${elytraDurability().roundToInt()}%"
             } else {
                 "Disabled"
             }
 
-        // ----------------------------------------------------------------------
-        // 2. UI描画パラメータ
-        // ----------------------------------------------------------------------
-        val startX = 5 // 画面左端からのオフセット
-        var currentY = 5 // 描画開始Y座標
+        val startX = 5
+        var currentY = 5
         val lineHeight = graphics2D.fontHeight() + 2
         val bgColor = InfiniteClient.theme().colors.backgroundColor
         val white = InfiniteClient.theme().colors.foregroundColor
@@ -948,15 +956,12 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val isElytraEquipped = isElytra(InfiniteClient.playerInterface.inventory.get(Armor.CHEST))
 
         val durabilityColor =
-            if (swapElytra.value && isElytraEquipped && durabilityValue <= elytraThreshold.value) {
+            if (swapElytra.value && isElytraEquipped && durabilityValue <= elytraThreshold.value && player?.vehicle !is BoatEntity) {
                 InfiniteClient.theme().colors.warnColor
             } else {
                 white
             }
 
-        // ----------------------------------------------------------------------
-        // 3. 情報の描画 (背景とテキスト)
-        // ----------------------------------------------------------------------
         val infoLines = mutableListOf<String>()
         infoLines.add(Text.translatable("autopilot.display.title", stateText).string)
         infoLines.add(Text.translatable("autopilot.display.target", currentTarget.x, currentTarget.z).string)
@@ -975,46 +980,36 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         infoLines.add(Text.translatable("autopilot.display.elytra", durability).string)
         infoLines.add(Text.translatable("autopilot.display.eta", formatSecondsToDHMS(etaSeconds)).string)
         infoLines.add(Text.translatable("autopilot.display.remain", formatSecondsToDHMS(flightSeconds)).string)
-
-        // 【新規】着陸地点情報
         bestLandingSpot?.let {
             infoLines.add(Text.translatable("autopilot.display.land_spot", it.y, "%.1f".format(it.score)).string)
         }
 
-        // 最大幅を計算
         val maxWidth = (infoLines.maxOfOrNull { graphics2D.textWidth(it) } ?: 128).coerceAtLeast(128)
         val boxWidth = maxWidth + 10
         val boxHeight = infoLines.size * lineHeight + 6
 
-        // 背景ボックスの描画
         graphics2D.fill(startX, currentY, boxWidth, boxHeight, bgColor)
-        // 枠線の描画
         graphics2D.drawBorder(startX, currentY, boxWidth, boxHeight, primaryColor, 1)
 
-        currentY += 4 // テキストの開始位置
-
-        // テキストの描画
+        currentY += 4
         infoLines.forEachIndexed { index, line ->
             val color =
                 when (index) {
-                    0 -> primaryColor // 1行目はタイトルとしてプライマリカラー
-                    6 -> durabilityColor // 7行目はエリトラ耐久値として耐久値の色
-                    else -> white // それ以外は白
+                    0 -> primaryColor
+                    6 -> durabilityColor
+                    else -> white
                 }
             graphics2D.drawText(line, startX + 5, currentY, color)
             currentY += lineHeight
         }
     }
 
-    /**
-     * 3D レンダリングロジック。ターゲット地点と、見つかった着陸地点を描画します。
-     */
     override fun render3d(graphics3D: Graphics3D) {
         if (target != null) {
             val x = target!!.x.toDouble()
             val y = world.bottomY.toDouble()
             val z = target!!.z.toDouble()
-            val height = world.height * 10 // ワールドの高さの10倍の高さ
+            val height = world.height * 10
             val size = 2
             val box =
                 RenderUtils.ColorBox(
@@ -1024,10 +1019,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             graphics3D.renderSolidColorBoxes(listOf(box))
         }
 
-        // 【新規】最も良い着陸地点を視覚化
         bestLandingSpot?.let {
             val size = 5.0
-            val color = if (state == PilotState.Circling) 0xAA00FFFF.toInt() else 0xAA00FF00.toInt() // 探索中はシアン、着陸中は緑
+            val color = if (state == PilotState.Circling) 0xAA00FFFF.toInt() else 0xAA00FF00.toInt()
             val box =
                 RenderUtils.ColorBox(
                     color,
@@ -1036,7 +1030,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                         it.y.toDouble(),
                         it.z - size,
                         it.x + size,
-                        it.y.toDouble() + 5.0, // 地面から5ブロックの高さでマーキング
+                        it.y.toDouble() + 5.0,
                         it.z + size,
                     ),
                 )

@@ -176,6 +176,7 @@
   "autopilot.emergency_landing.aimtask_start": "[AutoPilot] Emergency Landing AimTask started.",
   "autopilot.emergency_landing.completed": "[AutoPilot] Emergency landing completed. Autopilot terminated.",
   "autopilot.error.circling": "[AutoPilot] Unexpected error in Circling state.",
+  "autopilot.error.hoverboat": "[AutoPilot] You have to turn on HoverBoat if you use JetFlight",
   "autopilot.error.fallflying": "[AutoPilot] Unexpected error in FallFlying state.",
   "autopilot.error.riseflying": "[AutoPilot] Unexpected error in RiseFlying state.",
   "autopilot.error.landing": "[AutoPilot] Unexpected error in Landing state.",

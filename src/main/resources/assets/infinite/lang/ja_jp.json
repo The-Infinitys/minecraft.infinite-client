@@ -176,6 +176,7 @@
   "autopilot.emergency_landing.aimtask_start": "[AutoPilot] 緊急着陸AimTaskを開始。",
   "autopilot.emergency_landing.completed": "[AutoPilot] 緊急着陸を完了しました。自動操縦を終了します。",
   "autopilot.error.circling": "[AutoPilot] 旋回状態で予期せぬエラー。",
+  "autopilot.error.hoverboat": "[AutoPilot] JetFlightを有効にする際は、HoverBoatも有効にしてください。",
   "autopilot.error.fallflying": "[AutoPilot] 減速下降状態で予期せぬエラー。",
   "autopilot.error.riseflying": "[AutoPilot] 加速上昇状態で予期せぬエラー。",
   "autopilot.error.landing": "[AutoPilot] 着陸状態で予期せぬエラー。",
@@ -194,7 +195,6 @@
   "autopilot.state.jet_flying": "超速飛行",
   "autopilot.state.fall_flying": "減速下降 (Pitch: +40°)",
   "autopilot.state.rise_flying": "加速上昇 (Pitch: -45°)",
-  "autopilot.state.hover_flying": "ホバー飛行",
   "autopilot.state.gliding": "高度調整中",
   "autopilot.state.circling": "旋回/地点探索",
   "autopilot.state.landing": "着陸準備中",
@@ -215,5 +215,6 @@
   "time.unit.hour": "%s時間",
   "time.unit.minute": "%s分",
   "time.unit.second": "%s秒",
-  "time.zero_seconds": "0秒"
+  "time.zero_seconds": "0秒",
+  "autopilot.state.hover_flying": "ホバー飛行"
 }

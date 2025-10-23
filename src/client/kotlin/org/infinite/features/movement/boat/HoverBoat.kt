@@ -80,7 +80,7 @@ class HoverBoat : ConfigurableFeature(initialEnabled = false) {
         val pitch = player.pitch
         boat.yaw = yaw // ボートの向きをプレイヤーの向きに合わせる
         val yawRadians = toRadians(yaw)
-
+        boat.setNoGravity(true)
         // --- 望ましい移動方向ベクトルを計算 ---
 
         // 前後移動 (W/S) - 視線方向
