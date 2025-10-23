@@ -178,7 +178,7 @@ class AutoPilotCondition(
                     val verticalVelocity = player!!.velocity.y
 
                     // Check if player is close to the ground and vertical velocity is minimal
-                    val isCloseToGround = kotlin.math.abs(verticalDistance) < 2.0 // Within 2 blocks of target Y
+                    val isCloseToGround = kotlin.math.abs(verticalDistance) < 2.0 || (player!!.vehicle is BoatEntity && player!!.isTouchingWater) // Within 2 blocks of target Y or boat on water
                     val isVerticalVelocityMinimal = kotlin.math.abs(verticalVelocity) < 0.1 // Close to 0 vertical speed
 
                     if (isCloseToGround && isVerticalVelocityMinimal) {

@@ -475,7 +475,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         // 初期の平均を現在の瞬時速度に設定
         moveSpeedAverage = moveSpeed
         riseSpeedAverage = riseSpeed
-        state = PilotState.Idle
+        state = if (player?.vehicle is BoatEntity) PilotState.HoverFlying else PilotState.Idle
         aimTaskCallBack = null
         riseHeight = height
         fallHeight = height
@@ -784,8 +784,13 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 // 高い標高ほど良い。平坦なほどボーナス。平坦度ボーナスは最大で 10 * 1.0 = 10.0
                 val score = y.toDouble() + (flatnessScore * 10.0)
 
-                if (score > currentBestScore) {
-                    currentBestSpot = LandingSpot(x, y, z, score)
+                var adjustedScore = score
+                if (state == PilotState.HoverFlying && isWaterBlock(x, y, z)) {
+                    adjustedScore += 1000.0 // 大幅なボーナスを与えて水上着陸を優先
+                }
+
+                if (adjustedScore > currentBestScore) {
+                    currentBestSpot = LandingSpot(x, y, z, adjustedScore)
                     bestLandingSpot = currentBestSpot
                 }
             }
@@ -849,6 +854,12 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val blockStateAbove = world.getBlockState(blockPos.up())
         val blockAbove = blockStateAbove.block
         return blockAbove == Blocks.LAVA || blockAbove == Blocks.FIRE || blockAbove == Blocks.CACTUS
+    }
+
+    private fun isWaterBlock(x: Int, y: Int, z: Int): Boolean {
+        val blockPos = BlockPos(x, y, z)
+        val blockState = world.getBlockState(blockPos)
+        return blockState.isOf(Blocks.WATER)
     }
 
     /**
