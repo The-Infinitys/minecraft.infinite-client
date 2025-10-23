@@ -36,9 +36,27 @@ object InfiniteClient : ClientModInitializer {
 
     fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: InfiniteTheme()
 
+    private fun checkTranslations(): List<String> {
+        val result = mutableListOf<String>()
+        for (category in featureCategories) {
+            for (features in category.features) {
+                for (setting in features.instance.settings) {
+                    val key = setting.descriptionKey
+                    if (Text.translatable(key).string == key) {
+                        result.add(key)
+                    }
+                }
+            }
+        }
+        return result
+    }
+
     override fun onInitializeClient() {
-        println("[InfiniteClient] Translation system loaded.")
-        // --- ティックイベントの登録 ---
+        val lackedTranslations = checkTranslations()
+        if (!lackedTranslations.isEmpty()) {
+            val translationList = lackedTranslations.joinToString(",")
+            warn("Missing Translations: [$translationList]")
+        }
         LogQueue.registerTickEvent()
 
         InfiniteKeyBind.registerKeybindings()
