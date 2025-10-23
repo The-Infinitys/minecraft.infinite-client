@@ -216,5 +216,12 @@
   "time.unit.minute": "%s分",
   "time.unit.second": "%s秒",
   "time.zero_seconds": "0秒",
-  "autopilot.state.hover_flying": "ホバー飛行"
+  "autopilot.state.hover_flying": "ホバー飛行",
+  "autopilot.display.elytra.normal": "%s%% (予備あり)",
+  "autopilot.display.elytra.low": "%s%% (低耐久!)",
+  "autopilot.display.elytra.no_spare": "%s%% (予備なし!)",
+  "autopilot.display.elytra.none": "なし",
+  "feature.movement.hoverboat.description": "ボートをホバーボートのように振る舞わせます。",
+  "feature.movement.hoverboat.speed.description": "ボートのホバー速度を設定します。",
+  "feature.movement.hoverboat.acceleration.description": "ボートのホバー時の加速力を設定します。"
 }

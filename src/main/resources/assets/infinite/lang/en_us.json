@@ -215,5 +215,13 @@
   "time.unit.hour": "%sh",
   "time.unit.minute": "%sm",
   "time.unit.second": "%ss",
-  "time.zero_seconds": "0s"
+  "time.zero_seconds": "0s",
+  "autopilot.state.hover_flying": "Hover Flying",
+  "autopilot.display.elytra.normal": "%s%% (Spare available)",
+  "autopilot.display.elytra.low": "%s%% (LOW DURABILITY!)",
+  "autopilot.display.elytra.no_spare": "%s%% (No Spare!)",
+  "autopilot.display.elytra.none": "None Equipped",
+  "feature.movement.hoverboat.description": "Makes boats act like hoverboats, allowing faster travel over water.",
+  "feature.movement.hoverboat.speed.description": "Sets the speed multiplier for the hoverboat.",
+  "feature.movement.hoverboat.acceleration.description": "Sets the acceleration power for the hoverboat."
 }

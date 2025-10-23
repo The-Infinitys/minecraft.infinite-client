@@ -52,11 +52,6 @@ object InfiniteClient : ClientModInitializer {
     }
 
     override fun onInitializeClient() {
-        val lackedTranslations = checkTranslations()
-        if (!lackedTranslations.isEmpty()) {
-            val translationList = lackedTranslations.joinToString(",")
-            warn("Missing Translations: [$translationList]")
-        }
         LogQueue.registerTickEvent()
 
         InfiniteKeyBind.registerKeybindings()
@@ -94,6 +89,11 @@ object InfiniteClient : ClientModInitializer {
                 for (features in category.features) {
                     features.instance.stop()
                 }
+            }
+            val lackedTranslations = checkTranslations()
+            if (!lackedTranslations.isEmpty()) {
+                val translationList = lackedTranslations.joinToString(",")
+                warn("Missing Translations: [$translationList]")
             }
         }
         ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }
@@ -213,18 +213,6 @@ object InfiniteClient : ClientModInitializer {
             ?.features
             ?.find { it.name.equals(name, ignoreCase = true) }
             ?.instance
-
-    fun searchFeatureWithName(name: String): ConfigurableFeature? =
-        featureCategories
-            .map { category ->
-                category.features
-                    .find { feature ->
-                        feature.name.equals(
-                            name,
-                            ignoreCase = true,
-                        )
-                    }?.instance
-            }.firstOrNull()
 
     fun <T : ConfigurableFeature> isFeatureEnabled(featureClass: Class<T>): Boolean {
         val feature = getFeature(featureClass)

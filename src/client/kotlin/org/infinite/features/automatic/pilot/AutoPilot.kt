@@ -207,8 +207,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     val flySpeed: Double
         get() {
             if (player == null) return 0.0
-            val moveVelocity = player!!.velocity
-            val lookVelocity = player!!.rotationVector
+            val entity = player!!.vehicle ?: player!!
+            val moveVelocity = entity.velocity
+            val lookVelocity = entity.rotationVector
             return moveVelocity.dotProduct(lookVelocity)
         }
     val flySpeedDisplay: Double
@@ -217,9 +218,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     var fallingTime = System.currentTimeMillis()
 
     val riseSpeed: Double
-        get() = (player?.velocity?.y ?: 0.0) * 20.0
+        get() = (player?.vehicle?.velocity?.y ?: player?.velocity?.y ?: 0.0)
     val riseSpeedDisplay: Double
-        get() = riseSpeed
+        get() = riseSpeed * 20.0
 
     private val alpha = 0.0015
     var moveSpeedAverage: Double = 0.0
@@ -232,7 +233,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             if (player == null) {
                 return 0.0
             }
-            val entity = if (player!!.vehicle is BoatEntity) player!!.vehicle!! else player!!
+            val entity = player!!.vehicle ?: player!!
             val x = entity.velocity.x
             val z = entity.velocity.z
             return sqrt(x * x + z * z) * 20.0
