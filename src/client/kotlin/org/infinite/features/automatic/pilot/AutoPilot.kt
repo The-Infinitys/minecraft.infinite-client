@@ -276,6 +276,11 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
 
     override fun start() {
         reconnectInterval = 20
+        aimTaskCallBack = null // AimTaskの状態をリセット
+        state = PilotState.Idle // 状態を適切に初期化
+        moveSpeedAverage = moveSpeed // 移動速度の平均をリセット
+        riseSpeedAverage = riseSpeed // 上昇速度の平均をリセット
+        bestLandingSpot = null // 着陸地点をリセット
     }
 
     override fun tick() {
