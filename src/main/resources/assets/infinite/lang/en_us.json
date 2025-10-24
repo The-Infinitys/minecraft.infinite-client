@@ -232,5 +232,11 @@
   "feature.fighting.armormanager.autoelytra.description": "Automatically switches to elytra when airborne.",
   "feature.fighting.armormanager.ignorebelow.description": "Ignores armor with durability below this percentage (%).",
   "feature.utils.afkmode.description": "For AFK.",
-  "afkmode.damege_detected": "Damage detected. Disable AFK Mode."
+  "afkmode.damege_detected": "Damage detected. Disable AFK Mode.",
+  "feature.utils.autotool.method.description": "Method for selecting the best tool.",
+  "feature.utils.backpackmanager.description": "Manages items in the backpack.",
+  "feature.utils.backpackmanager.sort_enabled.description": "Automatically sorts items in the backpack.",
+  "feature.utils.backpackmanager.auto_move_to_backpack_enabled.description": "Automatically moves collected items to the backpack.",
+  "feature.utils.backpackmanager.auto_replenish_hotbar_enabled.description": "Automatically replenishes items in the hotbar from the backpack.",
+  "feature.utils.backpackmanager.sort_interval.description": "Interval (in ticks) for automatic sorting."
 }

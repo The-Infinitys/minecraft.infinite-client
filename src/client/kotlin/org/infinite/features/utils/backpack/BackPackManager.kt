@@ -33,12 +33,12 @@ class BackPackManager : ConfigurableFeature() {
         )
     private val sortInterval =
         FeatureSetting.IntSetting(
-            "Sort Interval",
+            "SortInterval",
             "feature.utils.backpackmanager.sort_interval.description",
             20 * 5,
             20,
             20 * 60,
-        ) // 5秒ごと (20 tick/秒 * 5秒)
+        )
 
     override val settings: List<FeatureSetting<*>> =
         listOf(

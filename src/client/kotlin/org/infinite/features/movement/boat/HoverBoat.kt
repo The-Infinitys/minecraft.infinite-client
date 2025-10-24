@@ -7,6 +7,8 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
+import org.infinite.InfiniteClient
+import org.infinite.features.automatic.pilot.AutoPilot
 import org.infinite.libs.client.player.fighting.aim.CameraRoll
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.toRadians
@@ -85,9 +87,7 @@ class HoverBoat : ConfigurableFeature(initialEnabled = false) {
 
         // 前後移動 (W/S) - 視線方向
         if (options.forwardKey.isPressed || options.backKey.isPressed) {
-            // 水平方向の移動を主とし、ホバー移動のため垂直方向は無視
             val forwardDirection = CameraRoll(yaw.toDouble(), pitch.toDouble()).vec().normalize()
-
             if (options.forwardKey.isPressed) {
                 inputVector = inputVector.add(forwardDirection)
             }
@@ -155,8 +155,9 @@ class HoverBoat : ConfigurableFeature(initialEnabled = false) {
             }
 
             boat.velocity = newVelocity
-        } else {
+        } else if (InfiniteClient.isSettingEnabled(AutoPilot::class.java, "JeetFlight")) {
             // 移動キーが押されていない場合、減速（摩擦）を適用して停止させる
+            // AutoPilotとの整合性を確保
             // 摩擦係数を設定 (例: 10% 減速)
             val friction = 0.90 // 10%減速
 

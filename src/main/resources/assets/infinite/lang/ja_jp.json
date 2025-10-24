@@ -232,5 +232,11 @@
   "feature.fighting.armormanager.autoelytra.description": "空中時にエリトラに自動的に切り替えます。",
   "feature.fighting.armormanager.ignorebelow.description": "耐久度がこの割合 (%) 未満の防具を無視します。",
   "feature.utils.afkmode.description": "放置の、放置による、放置のための機能。",
-  "afkmode.damege_detected": "ダメージを受けました。AFKモードを解除します。"
+  "afkmode.damege_detected": "ダメージを受けました。AFKモードを解除します。",
+  "feature.utils.autotool.method.description": "最適なツールを選択する方法。",
+  "feature.utils.backpackmanager.description": "バックパック内のアイテムを管理します。",
+  "feature.utils.backpackmanager.sort_enabled.description": "バックパック内のアイテムを自動的にソートします。",
+  "feature.utils.backpackmanager.auto_move_to_backpack_enabled.description": "収集したアイテムを自動的にバックパックに移動します。",
+  "feature.utils.backpackmanager.auto_replenish_hotbar_enabled.description": "ホットバーのアイテムをバックパックから自動的に補充します。",
+  "feature.utils.backpackmanager.sort_interval.description": "自動ソートの間隔（ティック）。"
 }
