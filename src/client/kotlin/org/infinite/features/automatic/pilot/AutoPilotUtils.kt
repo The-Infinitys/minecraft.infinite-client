@@ -7,7 +7,7 @@ import net.minecraft.item.Items
 import net.minecraft.text.Text
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.Armor
+import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
 import org.infinite.utils.item.enchantLevel
 
 // 【新規】着陸に最適な地点の情報を保持するデータクラス
@@ -32,7 +32,7 @@ fun isElytra(stack: ItemStack): Boolean = stack.item == Items.ELYTRA
  * エリトラのインベントリ情報と耐久値を保持するためのデータクラス。
  */
 internal data class ElytraInfo(
-    val index: InventoryManager.InventoryIndex,
+    val index: InventoryIndex,
     val durability: Double,
 )
 
@@ -42,7 +42,7 @@ internal data class ElytraInfo(
  */
 internal fun findBestElytraInInventory(): ElytraInfo? {
     val playerInv = MinecraftClient.getInstance().player?.inventory ?: return null
-    val invManager = InfiniteClient.playerInterface.inventory
+    val invManager = InventoryManager
     var bestElytra: ElytraInfo? = null
 
     // すべてのインベントリスロット (ホットバーとバックパック) をチェック
@@ -60,7 +60,7 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
                         ?.value ?: 100
                 )
             ) {
-                bestElytra = ElytraInfo(InventoryManager.Hotbar(i), durability)
+                bestElytra = ElytraInfo(InventoryIndex.Hotbar(i), durability)
             }
         }
     }
@@ -80,7 +80,7 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
                         ?.value ?: 100
                 )
             ) {
-                bestElytra = ElytraInfo(InventoryManager.Backpack(i), durability)
+                bestElytra = ElytraInfo(InventoryIndex.Backpack(i), durability)
             }
         }
     }
@@ -90,7 +90,7 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
 
 fun flightTime(): Double {
     val playerInv = MinecraftClient.getInstance().player?.inventory ?: return 0.0
-    val invManager = InfiniteClient.playerInterface.inventory
+    val invManager = InventoryManager
     var total = currentFlightTime()
 
     // インベントリ内のエリトラ
@@ -118,8 +118,8 @@ fun flightTime(): Double {
 }
 
 fun currentFlightTime(): Double {
-    val invManager = InfiniteClient.playerInterface.inventory
-    val equippedStack = invManager.get(Armor.CHEST)
+    val invManager = InventoryManager
+    val equippedStack = invManager.get(InventoryIndex.Armor.Chest())
     return if (isElytra(equippedStack)) {
         val durability = invManager.durability(equippedStack)
         val level = enchantLevel(equippedStack, Enchantments.UNBREAKING)

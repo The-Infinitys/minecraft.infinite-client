@@ -11,6 +11,7 @@ import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.inventory.InventoryManager
+import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
@@ -77,13 +78,12 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
         val tippedArrowItem = Registries.ITEM.get(Identifier.of("minecraft:tipped_arrow"))
         val spectralArrowItem = Registries.ITEM.get(Identifier.of("minecraft:spectral_arrow"))
         val fireworkItem = Registries.ITEM.get(Identifier.of("minecraft:firework_rocket"))
-        val playerInventory = InfiniteClient.playerInterface.inventory
 
         // 各アイテムの個数を合計
-        val arrowCount = playerInventory.count(arrowItem)
-        val tippedArrowCount = playerInventory.count(tippedArrowItem)
-        val spectralArrowCount = playerInventory.count(spectralArrowItem)
-        val fireworkCount = playerInventory.count(fireworkItem)
+        val arrowCount = InventoryManager.count(arrowItem)
+        val tippedArrowCount = InventoryManager.count(tippedArrowItem)
+        val spectralArrowCount = InventoryManager.count(spectralArrowItem)
+        val fireworkCount = InventoryManager.count(fireworkItem)
 
         return arrowCount + tippedArrowCount + spectralArrowCount + fireworkCount
     }
@@ -102,10 +102,10 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
 
     override fun tick() {
         switchMode()
-        val manager = InfiniteClient.playerInterface.inventory
+        val manager = InventoryManager
         when (mode) {
             GunnerMode.SHOT -> {
-                val mainHandItem = manager.get(InventoryManager.Other.MAIN_HAND)
+                val mainHandItem = manager.get(InventoryIndex.MainHand())
                 if (isLoadedCrossbow(mainHandItem)) {
                     state = GunnerState.READY
                 } else {
@@ -116,12 +116,12 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
                             (fireMode.value == FireMode.SEMI_AUTO && !InfiniteClient.playerInterface.options.useKey.isPressed)
                     if (loadedCrossbow != null && readyToSet) {
                         intervalCount = additionalInterval.value
-                        manager.swap(InventoryManager.Other.MAIN_HAND, loadedCrossbow)
+                        manager.swap(InventoryIndex.MainHand(), loadedCrossbow)
                     } else {
                         if (intervalCount > 0) intervalCount--
                         val emptySlot = manager.findFirstEmptyBackpackSlot()
                         if (emptySlot != null) {
-                            manager.swap(InventoryManager.Other.MAIN_HAND, emptySlot)
+                            manager.swap(InventoryIndex.MainHand(), emptySlot)
                         }
                     }
                 }
@@ -129,15 +129,15 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
 
             GunnerMode.RELOAD -> {
                 state = GunnerState.IDLE
-                val mainHandItem = manager.get(InventoryManager.Other.MAIN_HAND)
+                val mainHandItem = manager.get(InventoryIndex.MainHand())
                 if (!isUnloadedCrossbow(mainHandItem)) {
                     val loadedCrossbow = findFirstUnloadedCrossbow()
                     if (loadedCrossbow != null) {
-                        manager.swap(InventoryManager.Other.MAIN_HAND, loadedCrossbow)
+                        manager.swap(InventoryIndex.MainHand(), loadedCrossbow)
                     } else {
                         val emptySlot = manager.findFirstEmptyBackpackSlot()
                         if (emptySlot != null) {
-                            manager.swap(InventoryManager.Other.MAIN_HAND, emptySlot)
+                            manager.swap(InventoryIndex.MainHand(), emptySlot)
                         }
                     }
                 }
@@ -174,23 +174,23 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
 
     private fun getCrossbowItem(): Item = Registries.ITEM.get(Identifier.of("minecraft:crossbow"))
 
-    fun totalCrossbows(): Int = InfiniteClient.playerInterface.inventory.count(getCrossbowItem())
+    fun totalCrossbows(): Int = InventoryManager.count(getCrossbowItem())
 
     fun loadedCrossbows(): Int {
         var count = 0
         // ホットバー
         for (i in 0 until 9) {
-            val stack = InfiniteClient.playerInterface.inventory.get(InventoryManager.Hotbar(i))
+            val stack = InventoryManager.get(InventoryIndex.Hotbar(i))
             if (isLoadedCrossbow(stack)) count++
         }
 
         // バックパック
         for (i in 0 until 27) {
-            val stack = InfiniteClient.playerInterface.inventory.get(InventoryManager.Backpack(i))
+            val stack = InventoryManager.get(InventoryIndex.Backpack(i))
             if (isLoadedCrossbow(stack)) count++
         }
         // オフハンド
-        val offHand = InfiniteClient.playerInterface.inventory.get(InventoryManager.Other.OFF_HAND)
+        val offHand = InventoryManager.get(InventoryIndex.OffHand())
         if (isLoadedCrossbow(offHand)) count++
 
         return count
@@ -208,44 +208,44 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
         return chargedProjectiles != null && chargedProjectiles.projectiles.isEmpty()
     }
 
-    private fun findFirstLoadedCrossbow(): InventoryManager.InventoryIndex? {
+    private fun findFirstLoadedCrossbow(): InventoryIndex? {
         for (i in 0 until 27) {
-            val stack = InfiniteClient.playerInterface.inventory.get(InventoryManager.Backpack(i))
+            val stack = InventoryManager.get(InventoryIndex.Backpack(i))
             if (isLoadedCrossbow(stack)) {
-                return InventoryManager.Backpack(i)
+                return InventoryIndex.Backpack(i)
             }
         }
 
         for (i in 0 until 9) {
-            val stack = InfiniteClient.playerInterface.inventory.get(InventoryManager.Hotbar(i))
+            val stack = InventoryManager.get(InventoryIndex.Hotbar(i))
             if (isLoadedCrossbow(stack)) {
-                return InventoryManager.Hotbar(i)
+                return InventoryIndex.Hotbar(i)
             }
         }
-        val offHand = InfiniteClient.playerInterface.inventory.get(InventoryManager.Other.OFF_HAND)
+        val offHand = InventoryManager.get(InventoryIndex.OffHand())
         if (isLoadedCrossbow(offHand)) {
-            return InventoryManager.Other.OFF_HAND
+            return InventoryIndex.OffHand()
         }
 
         return null
     }
 
-    private fun findFirstUnloadedCrossbow(): InventoryManager.InventoryIndex? {
+    private fun findFirstUnloadedCrossbow(): InventoryIndex? {
         for (i in 0 until 27) {
-            val stack = InfiniteClient.playerInterface.inventory.get(InventoryManager.Backpack(i))
+            val stack = InventoryManager.get(InventoryIndex.Backpack(i))
             if (stack.item is CrossbowItem && !isLoadedCrossbow(stack)) {
-                return InventoryManager.Backpack(i)
+                return InventoryIndex.Backpack(i)
             }
         }
         for (i in 0 until 9) {
-            val stack = InfiniteClient.playerInterface.inventory.get(InventoryManager.Hotbar(i))
+            val stack = InventoryManager.get(InventoryIndex.Hotbar(i))
             if (stack.item is CrossbowItem && !isLoadedCrossbow(stack)) {
-                return InventoryManager.Hotbar(i)
+                return InventoryIndex.Hotbar(i)
             }
         }
-        val offHand = InfiniteClient.playerInterface.inventory.get(InventoryManager.Other.OFF_HAND)
+        val offHand = InventoryManager.get(InventoryIndex.OffHand())
         if (offHand.item is CrossbowItem && !isLoadedCrossbow(offHand)) {
-            return InventoryManager.Other.OFF_HAND
+            return InventoryIndex.OffHand()
         }
 
         return null

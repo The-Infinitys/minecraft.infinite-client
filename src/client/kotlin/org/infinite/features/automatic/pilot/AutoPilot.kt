@@ -24,7 +24,8 @@ import org.infinite.features.movement.boat.HoverBoat
 import org.infinite.libs.client.player.fighting.AimInterface
 import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
 import org.infinite.libs.client.player.fighting.aim.CameraRoll
-import org.infinite.libs.client.player.inventory.InventoryManager.Armor
+import org.infinite.libs.client.player.inventory.InventoryManager
+import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
@@ -172,9 +173,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             0.0,
             1.0,
         )
-
+    private val targetX =
+        FeatureSetting.IntSetting("TargetX", "feature.automatic.autopilot.targetx.description", 0, -30000000, 30000000)
+    private val targetZ =
+        FeatureSetting.IntSetting("TargetZ", "feature.automatic.autopilot.targetz.description", 0, -30000000, 30000000)
     override val settings: List<FeatureSetting<*>> =
         listOf(
+            targetX,
+            targetZ,
             elytraThreshold,
             swapElytra,
             standardHeight,
@@ -231,7 +237,8 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             return sqrt(x * x + z * z) * 20.0
         }
 
-    var target: Location? = null
+    val target: Location
+        get() = Location(targetX.value, targetZ.value)
     var state: PilotState = PilotState.Idle
     var bestLandingSpot: LandingSpot? = null
     var aimTaskCallBack: AimTaskConditionReturn? = null
@@ -306,19 +313,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             }
         }
 
-        if (target == null) {
-            InfiniteClient.error(Text.translatable("autopilot.target.not_set").string)
-            disable()
-            return
-        }
-        val currentTarget = target!!
+        val currentTarget = target
         val hoverMode = player?.vehicle is BoatEntity
         if (swapElytra.value && player?.vehicle !is BoatEntity) {
             checkAndSwapElytra()
         }
 
         if (player?.isGliding != true && !hoverMode) {
-            if (isElytra(InfiniteClient.playerInterface.inventory.get(Armor.CHEST))) {
+            if (isElytra(InventoryManager.get(InventoryIndex.Armor.Chest()))) {
                 InfiniteClient.warn(Text.translatable("autopilot.elytra.flight_interrupted").string)
                 redeployElytra()
             } else {
@@ -392,8 +394,8 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     val landingStartDistance = 256.0
 
     private fun elytraDurability(): Double {
-        val chestStack = InfiniteClient.playerInterface.inventory.get(Armor.CHEST)
-        return InfiniteClient.playerInterface.inventory.durabilityPercentage(chestStack) * 100
+        val chestStack = InventoryManager.get(InventoryIndex.Armor.Chest())
+        return InventoryManager.durabilityPercentage(chestStack) * 100
     }
 
     private fun isElytra(stack: ItemStack): Boolean = stack.item == Items.ELYTRA
@@ -401,8 +403,8 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     private fun checkAndSwapElytra() {
         if (player == null) return
 
-        val invManager = InfiniteClient.playerInterface.inventory
-        val equippedElytraStack = invManager.get(Armor.CHEST)
+        val invManager = InventoryManager
+        val equippedElytraStack = invManager.get(InventoryIndex.Armor.Chest())
         val isElytraEquipped = isElytra(equippedElytraStack)
         val currentDurability = if (isElytraEquipped) elytraDurability() else 0.0
 
@@ -410,7 +412,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         if (needsSwap) {
             val bestElytra = findBestElytraInInventory()
             if (bestElytra != null) {
-                if (invManager.swap(Armor.CHEST, bestElytra.index)) {
+                if (invManager.swap(InventoryIndex.Armor.Chest(), bestElytra.index)) {
                     val swapMessage =
                         if (isElytraEquipped) {
                             Text
@@ -892,10 +894,16 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             ClientCommandManager.literal("target").then(
                 ClientCommandManager.argument("x", IntegerArgumentType.integer()).then(
                     ClientCommandManager.argument("z", IntegerArgumentType.integer()).executes { context ->
-                        val x = IntegerArgumentType.getInteger(context, "x")
-                        val z = IntegerArgumentType.getInteger(context, "z")
-                        this.target = Location(x, z)
-                        InfiniteClient.info(Text.translatable("autopilot.command.target_set", x, z).string)
+                        targetX.value = IntegerArgumentType.getInteger(context, "x")
+                        targetZ.value = IntegerArgumentType.getInteger(context, "z")
+                        InfiniteClient.info(
+                            Text
+                                .translatable(
+                                    "autopilot.command.target_set",
+                                    targetX.value,
+                                    targetZ.value,
+                                ).string,
+                        )
                         1
                     },
                 ),
@@ -904,8 +912,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     }
 
     override fun render2d(graphics2D: Graphics2D) {
-        if (target == null) return
-        val currentTarget = target!!
+        val currentTarget = target
 
         val distance = currentTarget.distance()
         val speed = moveSpeedAverage
@@ -944,7 +951,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val white = InfiniteClient.theme().colors.foregroundColor
         val primaryColor = InfiniteClient.theme().colors.primaryColor
         val durabilityValue = elytraDurability()
-        val isElytraEquipped = isElytra(InfiniteClient.playerInterface.inventory.get(Armor.CHEST))
+        val isElytraEquipped = isElytra(InventoryManager.get(InventoryIndex.Armor.Chest()))
 
         val durabilityColor =
             if (swapElytra.value && isElytraEquipped && durabilityValue <= elytraThreshold.value && player?.vehicle !is BoatEntity) {
@@ -996,19 +1003,17 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     }
 
     override fun render3d(graphics3D: Graphics3D) {
-        if (target != null) {
-            val x = target!!.x.toDouble()
-            val y = world!!.bottomY.toDouble()
-            val z = target!!.z.toDouble()
-            val height = world!!.height * 10
-            val size = 2
-            val box =
-                RenderUtils.ColorBox(
-                    InfiniteClient.theme().colors.primaryColor,
-                    Box(x - size, y, z - size, x + size, y + height, z + size),
-                )
-            graphics3D.renderSolidColorBoxes(listOf(box))
-        }
+        val x = target.x.toDouble()
+        val y = world!!.bottomY.toDouble()
+        val z = target.z.toDouble()
+        val height = world!!.height * 10
+        val size = 2
+        val box =
+            RenderUtils.ColorBox(
+                InfiniteClient.theme().colors.primaryColor,
+                Box(x - size, y, z - size, x + size, y + height, z + size),
+            )
+        graphics3D.renderSolidColorBoxes(listOf(box))
 
         bestLandingSpot?.let {
             val size = 5.0

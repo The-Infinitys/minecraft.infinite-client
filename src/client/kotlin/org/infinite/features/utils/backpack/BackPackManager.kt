@@ -4,8 +4,8 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.item.ItemStack
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
-import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.inventory.InventoryManager
+import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 
 class BackPackManager : ConfigurableFeature() {
@@ -14,7 +14,7 @@ class BackPackManager : ConfigurableFeature() {
     private val sortEnabled =
         FeatureSetting.BooleanSetting(
             "SortEnabled",
-            "feature.utils.backpackmanager.sort_enabled.description",
+            "feature.utils.backpackInventoryManager.sort_enabled.description",
             true,
         )
 
@@ -22,19 +22,19 @@ class BackPackManager : ConfigurableFeature() {
     private val autoMoveToBackpackEnabled =
         FeatureSetting.BooleanSetting(
             "AutoMoveToBackpack",
-            "feature.utils.backpackmanager.auto_move_to_backpack_enabled.description",
+            "feature.utils.backpackInventoryManager.auto_move_to_backpack_enabled.description",
             true,
         )
     private val autoReplenishHotbarEnabled =
         FeatureSetting.BooleanSetting(
             "AutoReplenishHotbar",
-            "feature.utils.backpackmanager.auto_replenish_hotbar_enabled.description",
+            "feature.utils.backpackInventoryManager.auto_replenish_hotbar_enabled.description",
             true,
         )
     private val sortInterval =
         FeatureSetting.IntSetting(
             "SortInterval",
-            "feature.utils.backpackmanager.sort_interval.description",
+            "feature.utils.backpackInventoryManager.sort_interval.description",
             20 * 5,
             20,
             20 * 60,
@@ -78,7 +78,6 @@ class BackPackManager : ConfigurableFeature() {
     override fun tick() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
-        val manager = InfiniteClient.playerInterface.inventory
 
         val currentScreen = client.currentScreen
 
@@ -97,7 +96,7 @@ class BackPackManager : ConfigurableFeature() {
         // --- 1. 定期ソート機能 ---
         // バックパックのアイテムを左上から順番にソートします。
         if (sortEnabled.value && (client.world?.time?.minus(lastSortTick) ?: 0) >= sortInterval.value) {
-            manager.sort()
+            InventoryManager.sort()
             lastSortTick = client.world?.time ?: 0
             previousInventory =
                 (0 until player.inventory.size()).map { player.inventory.getStack(it).copy() }
@@ -113,11 +112,11 @@ class BackPackManager : ConfigurableFeature() {
 
                 // 本来空であるべきスロットに、アイテムが入っている場合
                 if (i in emptyHotbarSlots && !currentStack.isEmpty) {
-                    val emptyBackpackSlot = manager.findFirstEmptyBackpackSlot()
+                    val emptyBackpackSlot = InventoryManager.findFirstEmptyBackpackSlot()
 
                     if (emptyBackpackSlot != null) {
                         // ホットバーのスロット (i) のアイテムをバックパックの空きスロットに移動 (スワップ)
-                        manager.swap(emptyBackpackSlot, InventoryManager.Hotbar(i))
+                        InventoryManager.swap(emptyBackpackSlot, InventoryIndex.Hotbar(i))
 
                         // インベントリ状態を更新
                         previousInventory =
@@ -140,10 +139,10 @@ class BackPackManager : ConfigurableFeature() {
                     ) {
                         val itemToReplenish = previousStack.item
                         // ホットバー以外の場所から同じアイテムを探す
-                        val foundIndex = manager.findFirstFromBackPack(itemToReplenish)
+                        val foundIndex = InventoryManager.findFirstFromBackPack(itemToReplenish)
                         if (foundIndex != null) {
                             // ホットバーのスロットと見つかったアイテムのスロットをスワップ
-                            manager.replenish(foundIndex, InventoryManager.Hotbar(i))
+                            InventoryManager.replenish(foundIndex, InventoryIndex.Hotbar(i))
                             previousInventory =
                                 (0 until player.inventory.size()).map { player.inventory.getStack(it).copy() }
                             return // 1回のtickで1つの補充のみ

@@ -6,9 +6,9 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 
-class InventoryManager(
-    private val client: MinecraftClient,
-) {
+object InventoryManager {
+    private val client
+        get() = MinecraftClient.getInstance()
     private val interactionManager
         get() = client.interactionManager // null許容に変更
     private val player
@@ -18,56 +18,58 @@ class InventoryManager(
     private val isCreative: Boolean
         get() = player?.isCreative ?: false // nullの場合falseを返す
 
-    sealed interface InventoryIndex
+    sealed class InventoryIndex {
+        open class Armor : InventoryIndex() {
+            class Head : Armor()
 
-    enum class Armor : InventoryIndex {
-        HEAD,
-        CHEST,
-        LEGS,
-        FEET,
-    }
+            class Chest : Armor()
 
-    data class Hotbar(
-        val index: Int,
-    ) : InventoryIndex {
-        init {
-            require(index in 0..8) { "Hotbar index must be between 0 and 8" }
+            class Legs : Armor()
+
+            class Feet : Armor()
         }
-    }
 
-    data class Backpack(
-        val index: Int,
-    ) : InventoryIndex {
-        init {
-            require(index in 0..26) { "Backpack index must be between 0 and 26" }
+        data class Hotbar(
+            val index: Int,
+        ) : InventoryIndex() {
+            init {
+                require(index in 0..8) { "Hotbar index must be between 0 and 8" }
+            }
         }
-    }
 
-    enum class Other : InventoryIndex {
-        OFF_HAND,
-        MAIN_HAND,
+        data class Backpack(
+            val index: Int,
+        ) : InventoryIndex() {
+            init {
+                require(index in 0..26) { "Backpack index must be between 0 and 26" }
+            }
+        }
+
+        class MainHand : InventoryIndex()
+
+        class OffHand : InventoryIndex()
     }
 
     fun get(index: InventoryIndex): ItemStack {
         val playerInv = inv ?: return ItemStack.EMPTY // nullチェック
         return when (index) {
-            is Armor ->
+            is InventoryIndex.Armor ->
                 playerInv.getStack(
                     when (index) {
-                        Armor.HEAD -> 39
-                        Armor.CHEST -> 38
-                        Armor.LEGS -> 37
-                        Armor.FEET -> 36
+                        is InventoryIndex.Armor.Head -> 39
+                        is InventoryIndex.Armor.Chest -> 38
+                        is InventoryIndex.Armor.Legs -> 37
+                        is InventoryIndex.Armor.Feet -> 36
+                        else -> {
+                            throw IllegalStateException("Illegal State on InventoryIndex.Armor")
+                        }
                     },
                 ) ?: ItemStack.EMPTY
 
-            is Hotbar -> playerInv.getStack(index.index) ?: ItemStack.EMPTY
-            is Backpack -> playerInv.getStack(9 + index.index) ?: ItemStack.EMPTY
-            is Other ->
-                when (index) {
-                    Other.OFF_HAND -> playerInv.getStack(40) ?: ItemStack.EMPTY
-                    Other.MAIN_HAND -> playerInv.getStack(playerInv.selectedSlot) ?: ItemStack.EMPTY
-                }
+            is InventoryIndex.Hotbar -> playerInv.getStack(index.index) ?: ItemStack.EMPTY
+            is InventoryIndex.Backpack -> playerInv.getStack(9 + index.index) ?: ItemStack.EMPTY
+            is InventoryIndex.MainHand -> playerInv.getStack(40) ?: ItemStack.EMPTY
+            is InventoryIndex.OffHand -> playerInv.getStack(playerInv.selectedSlot) ?: ItemStack.EMPTY
         }
     }
 
@@ -152,7 +154,7 @@ class InventoryManager(
                 }
                 if (minIdx != i) {
                     // バックパック内のスワップ
-                    swap(Backpack(i), Backpack(minIdx))
+                    swap(InventoryIndex.Backpack(i), InventoryIndex.Backpack(minIdx))
                 }
             }
         }
@@ -163,39 +165,39 @@ class InventoryManager(
         // ホットバー (0-8)
         for (i in 0 until 9) {
             if (playerInv.getStack(i).item == item) {
-                return Hotbar(i)
+                return InventoryIndex.Hotbar(i)
             }
         }
         // バックパック (9-35, Backpack index 0-26)
         for (i in 0 until 27) {
             if (playerInv.getStack(9 + i).item == item) {
-                return Backpack(i)
+                return InventoryIndex.Backpack(i)
             }
         }
         // 防具 (36-39)
         for (i in 36 until 40) {
             if (playerInv.getStack(i).item == item) {
                 return when (i) {
-                    36 -> Armor.FEET
-                    37 -> Armor.LEGS
-                    38 -> Armor.CHEST
-                    39 -> Armor.HEAD
+                    36 -> InventoryIndex.Armor.Feet()
+                    37 -> InventoryIndex.Armor.Legs()
+                    38 -> InventoryIndex.Armor.Chest()
+                    39 -> InventoryIndex.Armor.Head()
                     else -> null
                 }
             }
         }
         // オフハンド (40)
         if (playerInv.getStack(40).item == item) {
-            return Other.OFF_HAND
+            return InventoryIndex.OffHand()
         }
         return null
     }
 
-    fun findFirstFromBackPack(item: Item): Backpack? {
+    fun findFirstFromBackPack(item: Item): InventoryIndex.Backpack? {
         val playerInv = inv ?: return null // nullチェック
         for (i in 0 until 27) {
             if (playerInv.getStack(9 + i).item == item) {
-                return Backpack(i)
+                return InventoryIndex.Backpack(i)
             }
         }
         return null
@@ -272,12 +274,12 @@ class InventoryManager(
         }
     }
 
-    fun findFirstEmptyBackpackSlot(): Backpack? {
+    fun findFirstEmptyBackpackSlot(): InventoryIndex.Backpack? {
         val playerInv = inv ?: return null // nullチェック
         // バックパックの内部スロット 9 から 35
         for (i in 0 until 27) {
             if (playerInv.getStack(9 + i).isEmpty) {
-                return Backpack(i)
+                return InventoryIndex.Backpack(i)
             }
         }
         return null
@@ -291,21 +293,19 @@ class InventoryManager(
      */
     private fun indexToSlot(index: InventoryIndex): Int? =
         when (index) {
-            is Armor ->
+            is InventoryIndex.Armor ->
                 when (index) {
-                    Armor.HEAD -> 39
-                    Armor.CHEST -> 38
-                    Armor.LEGS -> 37
-                    Armor.FEET -> 36
+                    is InventoryIndex.Armor.Head -> 39
+                    is InventoryIndex.Armor.Chest -> 38
+                    is InventoryIndex.Armor.Legs -> 37
+                    is InventoryIndex.Armor.Feet -> 36
+                    else -> null
                 }
 
-            is Hotbar -> index.index
-            is Backpack -> 9 + index.index
-            is Other ->
-                when (index) {
-                    Other.OFF_HAND -> 40
-                    Other.MAIN_HAND -> inv?.selectedSlot // nullチェックを追加
-                }
+            is InventoryIndex.Hotbar -> index.index
+            is InventoryIndex.Backpack -> 9 + index.index
+            is InventoryIndex.OffHand -> 40
+            is InventoryIndex.MainHand -> inv?.selectedSlot // nullチェックを追加
         }
 
     /**

@@ -238,5 +238,17 @@
   "feature.utils.backpackmanager.sort_enabled.description": "バックパック内のアイテムを自動的にソートします。",
   "feature.utils.backpackmanager.auto_move_to_backpack_enabled.description": "収集したアイテムを自動的にバックパックに移動します。",
   "feature.utils.backpackmanager.auto_replenish_hotbar_enabled.description": "ホットバーのアイテムをバックパックから自動的に補充します。",
-  "feature.utils.backpackmanager.sort_interval.description": "自動ソートの間隔（ティック）。"
+  "feature.utils.backpackmanager.sort_interval.description": "自動ソートの間隔（ティック）。",
+  "feature.server.autoleave.description": "特定の条件が満たされたときに自動的にサーバーを離脱します。",
+  "feature.server.autoleave.hpenabled.description": "自動離脱のHPしきい値チェックを有効にします。",
+  "feature.server.autoleave.hpthreshold.description": "サーバーを離脱するHPの割合。",
+  "feature.server.autoleave.reason.lowhp": "低HPを検出",
+  "feature.server.autoleave.leaving": "AutoLeave: %sのためサーバーを離脱します。",
+
+  "feature.server.autoconnect.description": "切断後、最後に接続していたサーバーに自動的に再接続します。",
+  "feature.server.autoconnect.enabled.description": "自動再接続を有効にします。",
+  "feature.server.autoconnect.delay.description": "再接続を試みるまでの遅延時間（ティック）。",
+  "feature.server.autoconnect.disconnected": "AutoConnect: サーバーから切断されました。まもなく再接続を試みます...",
+  "feature.server.autoconnect.reconnecting": "AutoConnect: %sに再接続中...",
+  "feature.server.autoconnect.noserver": "AutoConnect: 再接続するための以前のサーバー情報が見つかりませんでした。"
 }

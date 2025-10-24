@@ -6,9 +6,9 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
-import org.infinite.InfiniteClient
 import org.infinite.features.rendering.detailinfo.ToolChecker
 import org.infinite.libs.client.player.inventory.InventoryManager
+import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 
 /**
@@ -110,8 +110,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             }
 
             // プレイヤーのインベントリマネージャーを取得
-            val manager = InfiniteClient.playerInterface.inventory
-            val currentlyHeldItem = manager.get(InventoryManager.Other.MAIN_HAND)
+            val currentlyHeldItem = InventoryManager.get(InventoryIndex.MainHand())
 
             // 必要なレベル以上のツールを最高グレードから検索するためのレベルリストを生成
             // (例: requiredToolLevel=1(石)の場合, [4, 3, 2, 1] となる)
@@ -121,7 +120,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                     .distinct() // 重複を削除 (wooden/golden=0)
                     .sortedDescending() // ネザライトから順に検索
 
-            var bestToolIndex: InventoryManager.InventoryIndex? = null
+            var bestToolIndex: InventoryIndex? = null
             var bestToolId: String? = null
 
             // 必要なレベル以上のツールを最高グレードから順に検索
@@ -134,7 +133,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                 if (toolItem == Items.BARRIER || toolItem == Items.AIR) continue
 
                 // インベントリ内で該当アイテムを検索
-                val foundIndex = manager.findFirst(toolItem)
+                val foundIndex = InventoryManager.findFirst(toolItem)
 
                 if (foundIndex != null) {
                     // 最初に発見した最もグレードの高いツールを採用し、検索を終了
@@ -161,11 +160,11 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                     Method.Swap -> {
                         // 現在手に持っているアイテムと見つけたツールをスワップ
                         // MainHandはHotbarのselectedSlotに対応
-                        manager.swap(InventoryManager.Hotbar(player.inventory.selectedSlot), bestToolIndex)
+                        InventoryManager.swap(InventoryIndex.Hotbar(player.inventory.selectedSlot), bestToolIndex)
                     }
                     Method.HotBar -> {
                         // ホットバーモードの場合、ホットバー内の最適なツールを選択
-                        if (bestToolIndex is InventoryManager.Hotbar) {
+                        if (bestToolIndex is InventoryIndex.Hotbar) {
                             player.inventory.selectedSlot = bestToolIndex.index
                         }
                     }
@@ -185,20 +184,18 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
     private fun resetTool() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
-        val manager = InfiniteClient.playerInterface.inventory
-
         // ツールを切り替えていた場合のみ元のスロットに戻す
         if (previousSelectedSlot != -1) {
             val currentSlot = player.inventory.selectedSlot
-            val originalIndex = InventoryManager.Hotbar(previousSelectedSlot)
-            val currentIndex = InventoryManager.Hotbar(currentSlot)
+            val originalIndex = InventoryIndex.Hotbar(previousSelectedSlot)
+            val currentIndex = InventoryIndex.Hotbar(currentSlot)
 
             when (method.value) {
                 Method.Swap -> {
                     try {
                         // 現在手に持っているアイテム（ツール）と、元のスロットにあるアイテムをスワップ
                         // これにより、元のアイテムがCurrentSlotに戻り、ツールはOriginalIndex（以前のアイテムがあった場所）に移動する
-                        manager.swap(currentIndex, originalIndex)
+                        InventoryManager.swap(currentIndex, originalIndex)
                         previousSelectedSlot = -1 // リセット完了
                     } catch (_: Exception) {
                         // スワップ失敗時 (例: クリエイティブモードで元のスロットが空になったなど)

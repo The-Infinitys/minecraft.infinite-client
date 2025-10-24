@@ -74,12 +74,10 @@ class AutoPilotCondition(
 
     private fun handleJetFlying(): AimTaskConditionReturn {
         val distanceThreshold = autoPilot.landingStartDistance
-        val currentDistance = autoPilot.target?.distance()
+        val currentDistance = autoPilot.target.distance()
 
         if (autoPilot.jetAcceleration.value == 0.0) {
             autoPilot.aimTaskCallBack = AimTaskConditionReturn.Success
-        } else if (currentDistance == null) {
-            autoPilot.aimTaskCallBack = AimTaskConditionReturn.Failure
         } else if (currentDistance < distanceThreshold) {
             autoPilot.aimTaskCallBack = AimTaskConditionReturn.Success
         } else {
@@ -234,7 +232,7 @@ class PilotAimTarget(
     val bestLandingSpot: LandingSpot? = null,
 ) : AimTarget.RollTarget(CameraRoll(0.0, 0.0)) {
     val target: Location
-        get() = autoPilot.target!!
+        get() = autoPilot.target
     private val player: ClientPlayerEntity
         get() = MinecraftClient.getInstance().player!!
     private val autoPilot: AutoPilot
