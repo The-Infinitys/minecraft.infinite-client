@@ -2,7 +2,6 @@ package org.infinite.features.automatic.pilot
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
@@ -47,10 +46,9 @@ class AutoPilotCondition(
 ) : AimTaskCondition {
     private val autoPilot: AutoPilot
         get() = InfiniteClient.getFeature(AutoPilot::class.java)!!
-    val player: ClientPlayerEntity?
+    private val player: ClientPlayerEntity?
         get() = MinecraftClient.getInstance().player
-    val world: ClientWorld?
-        get() = MinecraftClient.getInstance().world
+    private var tickCounter = 0
 
     /**
      * 実行条件をチェックします。
@@ -58,7 +56,11 @@ class AutoPilotCondition(
     override fun check(): AimTaskConditionReturn =
         if (state != autoPilot.state) {
             AimTaskConditionReturn.Success
+        } else if (tickCounter >= 20) {
+            autoPilot.aimTaskCallBack = null
+            AimTaskConditionReturn.Success
         } else {
+            tickCounter++
             when (state) {
                 PilotState.Idle -> AimTaskConditionReturn.Failure
                 PilotState.RiseFlying -> handleRiseFlying()
