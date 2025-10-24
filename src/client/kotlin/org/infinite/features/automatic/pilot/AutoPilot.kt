@@ -78,6 +78,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             .options.jumpKey.isPressed = false
     }
 
+    private var reconnectInterval = 20
     val defaultFallDir = 40.0
     val defaultRiseDir = -45.0
     val bestGlidingDir = 5.7
@@ -273,7 +274,17 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         return blockState.isOf(Blocks.WATER)
     }
 
+    override fun start() {
+        reconnectInterval = 20
+    }
+
     override fun tick() {
+        if (reconnectInterval > 0) {
+            if (player != null) {
+                reconnectInterval--
+            }
+            return
+        }
         if (jetFlightMode.value) {
             if (!InfiniteClient.isFeatureEnabled(HoverBoat::class.java)) {
                 InfiniteClient.error(Text.translatable("autopilot.error.hoverboat").string)
