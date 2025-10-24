@@ -37,7 +37,7 @@ class AutoConnect : ConfigurableFeature() {
     val waitTicks =
         FeatureSetting.IntSetting(
             "WaitTicks",
-            "再接続するまでの待機時間 (ティック、20 ticks = 1 second)",
+            "feature.server.autoconnect.delay.description",
             40,
             10,
             300,

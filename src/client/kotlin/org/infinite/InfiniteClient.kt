@@ -84,7 +84,7 @@ object InfiniteClient : ClientModInitializer {
             if (lackedTranslations.isEmpty()) {
                 log("Mod initialized successfully.")
             } else {
-                val translationList = lackedTranslations.joinToString(",")
+                val translationList = lackedTranslations.joinToString(",") { "\"$it\":\"$it\"" }
                 warn("Missing Translations: [$translationList]")
             }
         }

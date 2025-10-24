@@ -232,7 +232,6 @@ class Graphics2D(
      * @param y3 頂点3 Y座標
      * @param color ARGB形式の色
      * @param size 枠線の太さ (ピクセル)
-     * @param miterLimit ベベル結合の制限角度（ラジアン）。これより鋭い角ではベベルを切り詰める
      */
     fun drawTriangle(
         x1: Float,
@@ -420,6 +419,84 @@ class Graphics2D(
             prevX = currentX
             prevY = currentY
         }
+    }
+
+    /**
+     * 四角形（4つの任意の頂点）を指定した色で塗りつぶし描画します。
+     * @param x1 頂点1 X座標
+     * @param y1 頂点1 Y座標
+     * @param x2 頂点2 X座標
+     * @param y2 頂点2 Y座標
+     * @param x3 頂点3 X座標
+     * @param y3 頂点3 Y座標
+     * @param x4 頂点4 X座標
+     * @param y4 頂点4 Y座標
+     * @param color ARGB形式の色 (0xAARRGGBB)
+     */
+    fun fillQuad(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        x3: Float,
+        y3: Float,
+        x4: Float,
+        y4: Float,
+        color: Int,
+    ) {
+        val pose = Matrix3x2f(context.matrices)
+        val scissor = context.scissorStack.peekLast()
+        context.state.addSimpleElement(
+            QuadrilateralRenderState(
+                RenderPipelines.GUI,
+                TextureSetup.empty(),
+                pose,
+                x1,
+                y1,
+                x2,
+                y2,
+                x3,
+                y3,
+                x4,
+                y4,
+                color,
+                scissor,
+            ),
+        )
+    }
+
+    // --- Rectangle (Rect) ---
+
+    /**
+     * 長方形（左上隅と右下隅で定義）を指定した色で塗りつぶし描画します。
+     * @param x1 左上隅 X座標
+     * @param y1 左上隅 Y座標
+     * @param x2 右下隅 X座標
+     * @param y2 右下隅 Y座標
+     * @param color ARGB形式の色 (0xAARRGGBB)
+     */
+    fun fillRect(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        color: Int,
+    ) {
+        val pose = Matrix3x2f(context.matrices)
+        val scissor = context.scissorStack.peekLast()
+        context.state.addSimpleElement(
+            RectangleRenderState(
+                RenderPipelines.GUI,
+                TextureSetup.empty(),
+                pose,
+                x1,
+                y1,
+                x2,
+                y2,
+                color,
+                scissor,
+            ),
+        )
     }
 
     data class DisplayPos(

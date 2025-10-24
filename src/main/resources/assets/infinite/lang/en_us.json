@@ -244,11 +244,18 @@
   "feature.server.autoleave.hpthreshold.description": "HP percentage below which the server will be left.",
   "feature.server.autoleave.reason.lowhp": "Low HP detected",
   "feature.server.autoleave.leaving": "AutoLeave: Leaving server due to %s.",
-
   "feature.server.autoconnect.description": "Automatically reconnects to the last server after disconnection.",
   "feature.server.autoconnect.enabled.description": "Enable automatic reconnection.",
   "feature.server.autoconnect.delay.description": "Delay in ticks before attempting to reconnect.",
   "feature.server.autoconnect.disconnected": "AutoConnect: Disconnected from server. Attempting to reconnect soon...",
   "feature.server.autoconnect.reconnecting": "AutoConnect: Reconnecting to %s...",
-  "feature.server.autoconnect.noserver": "AutoConnect: No previous server information found to reconnect."
+  "feature.server.autoconnect.noserver": "AutoConnect: No previous server information found to reconnect.",
+  "feature.automatic.autopilot.targetx.description": "feature.automatic.autopilot.targetx.description",
+  "feature.automatic.autopilot.targetz.description": "feature.automatic.autopilot.targetz.description",
+  "feature.server.autoleave.totemthreshold.description": "feature.server.autoleave.totemthreshold.description",
+  "feature.server.autoleave.method.description": "feature.server.autoleave.method.description",
+  "feature.utils.backpackInventoryManager.sort_enabled.description": "feature.utils.backpackInventoryManager.sort_enabled.description",
+  "feature.utils.backpackInventoryManager.auto_move_to_backpack_enabled.description": "feature.utils.backpackInventoryManager.auto_move_to_backpack_enabled.description",
+  "feature.utils.backpackInventoryManager.auto_replenish_hotbar_enabled.description": "feature.utils.backpackInventoryManager.auto_replenish_hotbar_enabled.description",
+  "feature.utils.backpackInventoryManager.sort_interval.description": "feature.utils.backpackInventoryManager.sort_interval.description"
 }

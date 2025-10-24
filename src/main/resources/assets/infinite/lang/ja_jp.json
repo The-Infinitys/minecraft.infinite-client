@@ -244,11 +244,18 @@
   "feature.server.autoleave.hpthreshold.description": "サーバーを離脱するHPの割合。",
   "feature.server.autoleave.reason.lowhp": "低HPを検出",
   "feature.server.autoleave.leaving": "AutoLeave: %sのためサーバーを離脱します。",
-
   "feature.server.autoconnect.description": "切断後、最後に接続していたサーバーに自動的に再接続します。",
   "feature.server.autoconnect.enabled.description": "自動再接続を有効にします。",
   "feature.server.autoconnect.delay.description": "再接続を試みるまでの遅延時間（ティック）。",
   "feature.server.autoconnect.disconnected": "AutoConnect: サーバーから切断されました。まもなく再接続を試みます...",
   "feature.server.autoconnect.reconnecting": "AutoConnect: %sに再接続中...",
-  "feature.server.autoconnect.noserver": "AutoConnect: 再接続するための以前のサーバー情報が見つかりませんでした。"
+  "feature.server.autoconnect.noserver": "AutoConnect: 再接続するための以前のサーバー情報が見つかりませんでした。",
+  "feature.automatic.autopilot.targetx.description": "feature.automatic.autopilot.targetx.description",
+  "feature.automatic.autopilot.targetz.description": "feature.automatic.autopilot.targetz.description",
+  "feature.server.autoleave.totemthreshold.description": "feature.server.autoleave.totemthreshold.description",
+  "feature.server.autoleave.method.description": "feature.server.autoleave.method.description",
+  "feature.utils.backpackInventoryManager.sort_enabled.description": "feature.utils.backpackInventoryManager.sort_enabled.description",
+  "feature.utils.backpackInventoryManager.auto_move_to_backpack_enabled.description": "feature.utils.backpackInventoryManager.auto_move_to_backpack_enabled.description",
+  "feature.utils.backpackInventoryManager.auto_replenish_hotbar_enabled.description": "feature.utils.backpackInventoryManager.auto_replenish_hotbar_enabled.description",
+  "feature.utils.backpackInventoryManager.sort_interval.description": "feature.utils.backpackInventoryManager.sort_interval.description"
 }
