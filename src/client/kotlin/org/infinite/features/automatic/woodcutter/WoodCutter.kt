@@ -8,7 +8,7 @@ import org.infinite.settings.FeatureSetting
 
 class WoodCutter : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> = listOf()
-    override val available: Boolean = false
+    override val togglable: Boolean = false
 
     /**
      * MinecraftのブロックIDが「*_log」のパターンに一致するかどうかを判定します。

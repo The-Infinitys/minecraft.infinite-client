@@ -2,6 +2,10 @@ package org.infinite
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.option.GameOptions
+import net.minecraft.client.world.ClientWorld
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.world.WorldManager
@@ -18,10 +22,18 @@ enum class FeatureLevel {
 abstract class ConfigurableFeature(
     private val initialEnabled: Boolean = false,
 ) {
+    internal val client: MinecraftClient
+        get() = MinecraftClient.getInstance()
+    internal val player: ClientPlayerEntity?
+        get() = client.player
+    internal val world: ClientWorld?
+        get() = client.world
+    internal val options: GameOptions
+        get() = client.options
     internal var enabled: Property<Boolean> = Property(initialEnabled)
     private val disabled: Property<Boolean> = Property(!initialEnabled)
     open val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_DONT_CARE)
-    open val available = true
+    open val togglable = true
     open val preRegisterCommands: List<String> = listOf("enable", "disable", "toggle", "set", "get", "add", "del")
     open val level: FeatureLevel = FeatureLevel.EXTEND
 

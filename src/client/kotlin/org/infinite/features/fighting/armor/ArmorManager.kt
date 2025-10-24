@@ -60,11 +60,11 @@ private val ARMOR_TOUGHNESS_VALUES =
 
 class ArmorManager : ConfigurableFeature(initialEnabled = false) {
     private val autoEquip: BooleanSetting =
-        BooleanSetting("AutoEquip", "Automatically equips the best available armor.", true)
+        BooleanSetting("AutoEquip", "feature.fighting.armormanager.autoequip.description", true)
     private val elytraSwitch: BooleanSetting =
-        BooleanSetting("ElytraSwitch", "Automatically switches to elytra when airborne.", true)
+        BooleanSetting("ElytraSwitch", "feature.fighting.armormanager.autoelytra.description", true)
     private val durabilityThreshold: IntSetting =
-        IntSetting("DurabilityThreshold", "Ignores armor with durability below this percentage (%).", 5, 0, 100)
+        IntSetting("DurabilityThreshold", "feature.fighting.armormanager.ignorebelow.description", 5, 0, 100)
 
     override val settings: List<FeatureSetting<*>> =
         listOf(

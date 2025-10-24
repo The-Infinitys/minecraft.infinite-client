@@ -12,7 +12,7 @@ import org.infinite.settings.FeatureSetting
 class AIMode : ConfigurableFeature(initialEnabled = false) {
     // WoodCutterがこのAIを利用することを示唆
     private val aiFeatureClasses: List<Class<out ConfigurableFeature>> = listOf(WoodCutter::class.java)
-    override val available: Boolean = false
+    override val togglable: Boolean = false
     private var lastKnownHealth: Float = -1.0f
 
     override val settings: List<FeatureSetting<*>> =

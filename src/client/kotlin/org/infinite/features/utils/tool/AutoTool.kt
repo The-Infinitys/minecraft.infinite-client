@@ -1,7 +1,9 @@
-package org.infinite.features.movement.tool
+package org.infinite.features.utils.tool
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.Items
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.hit.HitResult
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
@@ -15,9 +17,24 @@ import org.infinite.settings.FeatureSetting
  */
 class AutoTool : ConfigurableFeature(initialEnabled = false) {
     // AutoToolは、プレイヤーのインベントリを操作し、サーバーに特定の動作を行わせるため、EXTENDレベルに設定します。
+    enum class Method {
+        Swap,
+        HotBar,
+    }
+
+    private val method =
+        FeatureSetting.EnumSetting<Method>(
+            "Method",
+            "feature.utils.autotool.method.description",
+            Method.HotBar,
+            Method.entries,
+        )
     override val level: FeatureLevel = FeatureLevel.EXTEND
 
-    override val settings: List<FeatureSetting<*>> = emptyList()
+    override val settings: List<FeatureSetting<*>> =
+        listOf(
+            method,
+        )
 
     private var previousSelectedSlot: Int = -1
 
@@ -68,7 +85,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
         val blockHitResult = client.crosshairTarget // プレイヤーが見ているエンティティやブロックを取得
 
         // ブロックのヒット結果でない場合は処理を中断
-        if (blockHitResult?.type != net.minecraft.util.hit.HitResult.Type.BLOCK) {
+        if (blockHitResult?.type != HitResult.Type.BLOCK) {
             resetTool() // ターゲットがブロックでなくなった場合はツールを元に戻す
             return
         }
@@ -77,7 +94,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
         val isMining = client.options.attackKey.isPressed
 
         if (isMining) {
-            val blockPos = (blockHitResult as net.minecraft.util.hit.BlockHitResult).blockPos
+            val blockPos = (blockHitResult as BlockHitResult).blockPos
             val blockState = client.world?.getBlockState(blockPos) ?: return
             val block = blockState.block
 
@@ -140,9 +157,19 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                     previousSelectedSlot = player.inventory.selectedSlot
                 }
 
-                // 現在手に持っているアイテムと見つけたツールをスワップ
-                // MainHandはHotbarのselectedSlotに対応
-                manager.swap(InventoryManager.Hotbar(player.inventory.selectedSlot), bestToolIndex)
+                when (method.value) {
+                    Method.Swap -> {
+                        // 現在手に持っているアイテムと見つけたツールをスワップ
+                        // MainHandはHotbarのselectedSlotに対応
+                        manager.swap(InventoryManager.Hotbar(player.inventory.selectedSlot), bestToolIndex)
+                    }
+                    Method.HotBar -> {
+                        // ホットバーモードの場合、ホットバー内の最適なツールを選択
+                        if (bestToolIndex is InventoryManager.Hotbar) {
+                            player.inventory.selectedSlot = bestToolIndex.index
+                        }
+                    }
+                }
             } else {
                 // 最適なツールがインベントリに見つからなかった場合は、元のツールに戻す
                 resetTool()
@@ -166,14 +193,23 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             val originalIndex = InventoryManager.Hotbar(previousSelectedSlot)
             val currentIndex = InventoryManager.Hotbar(currentSlot)
 
-            try {
-                // 現在手に持っているアイテム（ツール）と、元のスロットにあるアイテムをスワップ
-                // これにより、元のアイテムがCurrentSlotに戻り、ツールはOriginalIndex（以前のアイテムがあった場所）に移動する
-                manager.swap(currentIndex, originalIndex)
-                previousSelectedSlot = -1 // リセット完了
-            } catch (_: Exception) {
-                // スワップ失敗時 (例: クリエイティブモードで元のスロットが空になったなど)
-                previousSelectedSlot = -1
+            when (method.value) {
+                Method.Swap -> {
+                    try {
+                        // 現在手に持っているアイテム（ツール）と、元のスロットにあるアイテムをスワップ
+                        // これにより、元のアイテムがCurrentSlotに戻り、ツールはOriginalIndex（以前のアイテムがあった場所）に移動する
+                        manager.swap(currentIndex, originalIndex)
+                        previousSelectedSlot = -1 // リセット完了
+                    } catch (_: Exception) {
+                        // スワップ失敗時 (例: クリエイティブモードで元のスロットが空になったなど)
+                        previousSelectedSlot = -1
+                    }
+                }
+                Method.HotBar -> {
+                    // ホットバーモードの場合、元のホットバーのスロットを選択
+                    player.inventory.selectedSlot = previousSelectedSlot
+                    previousSelectedSlot = -1 // リセット完了
+                }
             }
         }
     }

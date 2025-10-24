@@ -15,7 +15,7 @@
   "feature.fighting.autototem.description": "体力が低いときにトーテムを自動的に装備します。",
   "feature.fighting.aimassist.description": "ターゲットへの照準を支援します。",
   "feature.fighting.lockon.description": "ターゲットにロックオンし、照準を支援します。",
-  "feature.movement.autotool.description": "採掘に最適なツールに自動的に切り替えます。",
+  "feature.utils.autotool.description": "採掘に最適なツールに自動的に切り替えます。",
   "feature.movement.supersprint.description": "空腹時や後方移動時でも強制的にスプリントします。",
   "feature.movement.safewalk.description": "スニークして端から落下するのを防ぎます。",
   "feature.movement.freeze.description": "サーバーへの移動パケットの送信を停止し、テレポートを可能にします。",
@@ -223,5 +223,14 @@
   "autopilot.display.elytra.none": "なし",
   "feature.movement.hoverboat.description": "ボートをホバーボートのように振る舞わせます。",
   "feature.movement.hoverboat.speed.description": "ボートのホバー速度を設定します。",
-  "feature.movement.hoverboat.acceleration.description": "ボートのホバー時の加速力を設定します。"
+  "feature.movement.hoverboat.acceleration.description": "ボートのホバー時の加速力を設定します。",
+  "feature.movement.superfly.keepflying.description": "強制的にキャンセルされても飛行を維持します。",
+  "feature.rendering.extrasensory.method.description": "エンティティを強調表示する方法。",
+  "feature.rendering.search.blocksearch.colors.description": "ブロックを強調表示する色。",
+  "feature.fighting.reach.reachdistance.description": "最大到達距離を設定します。",
+  "feature.fighting.armormanager.autoequip.description": "利用可能な最高の防具を自動的に装備します。",
+  "feature.fighting.armormanager.autoelytra.description": "空中時にエリトラに自動的に切り替えます。",
+  "feature.fighting.armormanager.ignorebelow.description": "耐久度がこの割合 (%) 未満の防具を無視します。",
+  "feature.utils.afkmode.description": "放置の、放置による、放置のための機能。",
+  "afkmode.damege_detected": "ダメージを受けました。AFKモードを解除します。"
 }

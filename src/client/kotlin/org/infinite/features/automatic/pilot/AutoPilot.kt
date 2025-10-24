@@ -7,7 +7,6 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -197,13 +196,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         client.options.jumpKey.isPressed = true
     }
 
-    private val client: MinecraftClient
-        get() = MinecraftClient.getInstance()
-    private val player: ClientPlayerEntity?
-        get() = client.player
-    private val world: ClientWorld
-        get() = client.world!!
-
     val flySpeed: Double
         get() {
             if (player == null) return 0.0
@@ -255,14 +247,14 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         for (i in 1..checkDistance) {
             val checkPos =
                 currentPos.add((lookVec.x * i).roundToInt(), (lookVec.y * i).roundToInt(), (lookVec.z * i).roundToInt())
-            val blockState = world.getBlockState(checkPos)
+            val blockState = world!!.getBlockState(checkPos)
             if (!blockState.isAir) {
                 return true
             }
         }
 
         val blockBelow = currentPos.down()
-        val blockStateBelow = world.getBlockState(blockBelow)
+        val blockStateBelow = world!!.getBlockState(blockBelow)
         return !blockStateBelow.isAir
     }
 
@@ -270,7 +262,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         if (player?.vehicle !is BoatEntity) return false
         val boat = player!!.vehicle as BoatEntity
         val blockPos = boat.blockPos
-        val blockState = world.getBlockState(blockPos)
+        val blockState = world!!.getBlockState(blockPos)
         return blockState.isOf(Blocks.WATER)
     }
 
@@ -282,7 +274,6 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
                 return
             }
         }
-        val world = MinecraftClient.getInstance().world ?: return
         val currentMoveSpeed = moveSpeed
         val currentRiseSpeed = riseSpeed
         moveSpeedAverage = alpha * currentMoveSpeed + (1.0 - alpha) * moveSpeedAverage
@@ -370,7 +361,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             } else if (state == PilotState.HoverFlying) {
                 val searchBox = player!!.boundingBox.expand(10.0)
                 val boats =
-                    world.getEntitiesByType(TypeFilter.instanceOf(BoatEntity::class.java), searchBox) {
+                    world!!.getEntitiesByType(TypeFilter.instanceOf(BoatEntity::class.java), searchBox) {
                         EntityPredicates.VALID_ENTITY.test(it)
                     }
                 if (boats.isNotEmpty()) {
@@ -832,7 +823,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         repeat(5) {
             val x = centerX + MathHelper.nextBetween(player!!.random, -searchRadius, searchRadius)
             val z = centerZ + MathHelper.nextBetween(player!!.random, -searchRadius, searchRadius)
-            val y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z)
+            val y = world!!.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z)
 
             if (!isDangerousBlock(x, y, z)) {
                 val flatnessScore = calculateFlatnessScore(x, z)
@@ -854,13 +845,12 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         z: Int,
     ): Double {
         var totalDiff = 0.0
-        val centerH = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z)
+        val centerH = world!!.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z)
         var count = 0
-
         for (dx in -1..1) {
             for (dz in -1..1) {
                 if (dx == 0 && dz == 0) continue
-                val neighborH = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz)
+                val neighborH = world!!.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz)
                 totalDiff += abs(centerH - neighborH)
                 count++
             }
@@ -877,12 +867,12 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         z: Int,
     ): Boolean {
         val blockPos = BlockPos(x, y, z)
-        val blockState = world.getBlockState(blockPos)
+        val blockState = world!!.getBlockState(blockPos)
         val block = blockState.block
         if (block == Blocks.LAVA || block == Blocks.FIRE || block == Blocks.CACTUS || block == Blocks.MAGMA_BLOCK) {
             return true
         }
-        val blockStateAbove = world.getBlockState(blockPos.up())
+        val blockStateAbove = world!!.getBlockState(blockPos.up())
         val blockAbove = blockStateAbove.block
         return blockAbove == Blocks.LAVA || blockAbove == Blocks.FIRE || blockAbove == Blocks.CACTUS
     }
@@ -893,7 +883,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         z: Int,
     ): Boolean {
         val blockPos = BlockPos(x, y, z)
-        val blockState = world.getBlockState(blockPos)
+        val blockState = world!!.getBlockState(blockPos)
         return blockState.isOf(Blocks.WATER) || blockState.isOf(Blocks.WATER_CAULDRON)
     }
 
@@ -1008,9 +998,9 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
     override fun render3d(graphics3D: Graphics3D) {
         if (target != null) {
             val x = target!!.x.toDouble()
-            val y = world.bottomY.toDouble()
+            val y = world!!.bottomY.toDouble()
             val z = target!!.z.toDouble()
-            val height = world.height * 10
+            val height = world!!.height * 10
             val size = 2
             val box =
                 RenderUtils.ColorBox(

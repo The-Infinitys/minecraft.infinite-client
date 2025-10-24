@@ -39,8 +39,12 @@ object InfiniteClient : ClientModInitializer {
     private fun checkTranslations(): List<String> {
         val result = mutableListOf<String>()
         for (category in featureCategories) {
-            for (features in category.features) {
-                for (setting in features.instance.settings) {
+            for (feature in category.features) {
+                val key = feature.descriptionKey
+                if (Text.translatable(key).string == key) {
+                    result.add(key)
+                }
+                for (setting in feature.instance.settings) {
                     val key = setting.descriptionKey
                     if (Text.translatable(key).string == key) {
                         result.add(key)
@@ -55,13 +59,6 @@ object InfiniteClient : ClientModInitializer {
         LogQueue.registerTickEvent()
 
         InfiniteKeyBind.registerKeybindings()
-
-        for (category in featureCategories) {
-            for (features in category.features) {
-                features.instance.start()
-            }
-        }
-
         // --- Event: when player joins a world ---
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             themes =
@@ -74,12 +71,22 @@ object InfiniteClient : ClientModInitializer {
                     CyberTheme(),
                 )
             ConfigManager.loadConfig()
-
+            for (category in featureCategories) {
+                for (features in category.features) {
+                    features.instance.start()
+                }
+            }
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
 
             log("version $modVersion")
-            log("Mod initialized successfully.")
+            val lackedTranslations = checkTranslations()
+            if (lackedTranslations.isEmpty()) {
+                log("Mod initialized successfully.")
+            } else {
+                val translationList = lackedTranslations.joinToString(",")
+                warn("Missing Translations: [$translationList]")
+            }
         }
 
         // --- Event: when player leaves a world ---
@@ -89,11 +96,6 @@ object InfiniteClient : ClientModInitializer {
                 for (features in category.features) {
                     features.instance.stop()
                 }
-            }
-            val lackedTranslations = checkTranslations()
-            if (!lackedTranslations.isEmpty()) {
-                val translationList = lackedTranslations.joinToString(",")
-                warn("Missing Translations: [$translationList]")
             }
         }
         ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }

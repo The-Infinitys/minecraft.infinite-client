@@ -1,15 +1,11 @@
 package org.infinite.features.movement.walk
 
-import net.minecraft.client.MinecraftClient
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.util.math.Box
 import org.infinite.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class SafeWalk : ConfigurableFeature(initialEnabled = false) {
-    private val client: MinecraftClient
-        get() = MinecraftClient.getInstance()
-
     private val sneakAtEdges: Boolean = false
     private val edgeDistance: Double = 0.05
 

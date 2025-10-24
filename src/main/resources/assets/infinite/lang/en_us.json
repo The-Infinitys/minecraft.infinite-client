@@ -15,7 +15,7 @@
   "feature.fighting.autototem.description": "Automatically equips a totem when health is low.",
   "feature.fighting.aimassist.description": "Assists with aiming at targets.",
   "feature.fighting.lockon.description": "Locks onto a target and assists with aiming.",
-  "feature.movement.autotool.description": "Automatically switches to the best tool for mining.",
+  "feature.utils.autotool.description": "Automatically switches to the best tool for mining.",
   "feature.movement.supersprint.description": "Forces sprinting even when hungry or moving backward.",
   "feature.movement.safewalk.description": "Prevents falling off edges by sneaking.",
   "feature.movement.freeze.description": "Stops sending movement packets to the server, allowing for teleportation.",
@@ -223,5 +223,14 @@
   "autopilot.display.elytra.none": "None Equipped",
   "feature.movement.hoverboat.description": "Makes boats act like hoverboats, allowing faster travel over water.",
   "feature.movement.hoverboat.speed.description": "Sets the speed multiplier for the hoverboat.",
-  "feature.movement.hoverboat.acceleration.description": "Sets the acceleration power for the hoverboat."
+  "feature.movement.hoverboat.acceleration.description": "Sets the acceleration power for the hoverboat.",
+  "feature.movement.superfly.keepflying.description": "Keeps flying even if force cancelled.",
+  "feature.rendering.extrasensory.method.description": "Method for highlighting entities.",
+  "feature.rendering.search.blocksearch.colors.description": "Colors for highlighting blocks.",
+  "feature.fighting.reach.reachdistance.description": "Sets the maximum reach distance.",
+  "feature.fighting.armormanager.autoequip.description": "Automatically equips the best available armor.",
+  "feature.fighting.armormanager.autoelytra.description": "Automatically switches to elytra when airborne.",
+  "feature.fighting.armormanager.ignorebelow.description": "Ignores armor with durability below this percentage (%).",
+  "feature.utils.afkmode.description": "For AFK.",
+  "afkmode.damege_detected": "Damage detected. Disable AFK Mode."
 }

@@ -191,6 +191,16 @@ class InventoryManager(
         return null
     }
 
+    fun findFirstFromBackPack(item: Item): Backpack? {
+        val playerInv = inv ?: return null // nullチェック
+        for (i in 0 until 27) {
+            if (playerInv.getStack(9 + i).item == item) {
+                return Backpack(i)
+            }
+        }
+        return null
+    }
+
     /**
      * 2つのインベントリスロット間でアイテムをスワップします。
      * マウスカーソルにアイテムが残る問題を回避するためのロジックを含みます。
@@ -343,5 +353,101 @@ class InventoryManager(
         val maxDurability = stack.maxDamage
         // (残り耐久値 / 最大耐久値) * 100
         return (durability(stack) / maxDurability.toDouble())
+    }
+
+    /**
+     * 指定されたインデックスのアイテムをホットバーの指定されたスロットに補充します。
+     * - 両スロットのアイテムが同じであること。
+     * - 'to' スロットのアイテムがスタック可能なアイテムであり、かつ最大スタック数に達していないこと。
+     * - 'from' のアイテムを 'to' に移動し、カーソルにアイテムが残った場合は 'from' に戻します。
+     * @param from 補充元のインベントリインデックス
+     * @param to 補充先のホットバーインデックス
+     * @return 処理が成功した場合は true、それ以外は false
+     */
+    fun replenish(
+        from: InventoryIndex,
+        to: InventoryIndex,
+    ): Boolean {
+        val currentPlayer = player ?: return false // nullチェック
+        val fromStack = get(from)
+        val toStack = get(to)
+
+        // 1. アイテムが同じか、かつ 'to' が空でないかを確認
+        if (fromStack.isEmpty || toStack.item != fromStack.item) {
+            if (!toStack.isEmpty) {
+                return false
+            }
+        }
+
+        // 2. 'to' スロットが最大スタック数に達していないかを確認
+        if (toStack.count >= toStack.maxCount) {
+            return false
+        }
+
+        // 3. 補充操作（スワップの応用）を実行
+        val slotFrom = indexToSlot(from) ?: return false
+        val slotTo = indexToSlot(to) ?: return false
+
+        if (isCreative) {
+            // クリエイティブモードでは、直接スタックを操作する方がシンプルで確実です。
+            val amountToTransfer = minOf(fromStack.count, toStack.maxCount - toStack.count)
+
+            if (amountToTransfer > 0) {
+                // スタック数を更新
+                val newToStack = toStack.copy().apply { count += amountToTransfer }
+                val newFromStack = fromStack.copy().apply { count -= amountToTransfer }
+
+                // set関数を使用してパケット送信
+                set(to, newToStack)
+                set(from, newFromStack)
+
+                return true
+            }
+            return false
+        } else {
+            // サバイバルモードの場合、クリック操作で補充（右クリック相当）
+            try {
+                val netFrom = toNetworkSlot(slotFrom)
+                val netTo = toNetworkSlot(slotTo)
+                val currentScreenId = currentPlayer.currentScreenHandler.syncId
+                // 【補充ロジック（3クリック）】
+                // 1. from を左クリック: from のスタックを全てカーソルに移動
+                interactionManager?.clickSlot(currentScreenId, netFrom, 0, SlotActionType.PICKUP, currentPlayer)
+                // 2. to を左クリック: to のスタックとカーソルのスタックをマージ
+                //    - カーソルのアイテムはマージされ、カーソルには残りのアイテムが保持される
+                interactionManager?.clickSlot(currentScreenId, netTo, 0, SlotActionType.PICKUP, currentPlayer)
+                // 3. from を左クリック: カーソルに残ったアイテムを from スロットに戻す
+                //    - これにより、補充操作が完了し、カーソルが空になる
+                interactionManager?.clickSlot(currentScreenId, netFrom, 0, SlotActionType.PICKUP, currentPlayer)
+
+                // 4. 【カーソル残留アイテムのクリーンアップ】
+                if (!currentPlayer.currentScreenHandler.cursorStack.isEmpty) {
+                    // 3クリック後もカーソルにアイテムが残っている場合、空きスロットに戻す
+                    // (swap関数と同じロジックを使用)
+                    val emptyBackpackSlot = findFirstEmptyBackpackSlot()
+
+                    if (emptyBackpackSlot != null) {
+                        // 空きスロットが見つかった場合、そこにカーソルのアイテムを配置する
+                        val emptyNetSlot = toNetworkSlot(indexToSlot(emptyBackpackSlot)!!)
+
+                        // 4クリック目: カーソルのアイテムを空きスロットに配置して操作を完了させる
+                        interactionManager?.clickSlot(
+                            currentScreenId,
+                            emptyNetSlot,
+                            0,
+                            SlotActionType.PICKUP,
+                            currentPlayer,
+                        )
+                    } else {
+                        // 空きスロットがない場合: ドロップする
+                        interactionManager?.clickSlot(currentScreenId, -999, 0, SlotActionType.PICKUP, currentPlayer)
+                    }
+                }
+
+                return true
+            } catch (_: Exception) {
+                return false
+            }
+        }
     }
 }

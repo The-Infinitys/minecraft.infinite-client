@@ -36,6 +36,7 @@
     "features.rendering.xray.XRayBlockRenderInfoMixin",
     "features.rendering.xray.XRayFluidRendererMixin",
     "features.rendering.xray.XRayGammaMixin",
+    "features.utils.afk.WorldRendererMixin",
     "infinite.graphics.InGameHudMixin",
     "infinite.graphics.WorldRendererMixin",
     "infinite.world.ClientPlayNetworkHandlerMixin"

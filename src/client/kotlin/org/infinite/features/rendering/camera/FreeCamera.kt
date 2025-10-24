@@ -1,6 +1,5 @@
 package org.infinite.features.rendering.camera
 
-import net.minecraft.client.MinecraftClient
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import org.infinite.ConfigurableFeature
@@ -30,8 +29,6 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
         listOf(
             speed,
         )
-    private val client: MinecraftClient
-        get() = MinecraftClient.getInstance()
     private var currentMode: GameMode? = GameMode.SURVIVAL
 
     override fun disabled() {
