@@ -155,7 +155,7 @@ class HoverBoat : ConfigurableFeature(initialEnabled = false) {
             }
 
             boat.velocity = newVelocity
-        } else if (InfiniteClient.isSettingEnabled(AutoPilot::class.java, "JeetFlight")) {
+        } else {
             // 移動キーが押されていない場合、減速（摩擦）を適用して停止させる
             // AutoPilotとの整合性を確保
             // 摩擦係数を設定 (例: 10% 減速)
@@ -171,7 +171,11 @@ class HoverBoat : ConfigurableFeature(initialEnabled = false) {
                     boat.velocity = Vec3d.ZERO
                 } else {
                     // 速度に摩擦係数を適用
-                    boat.velocity = currentVelocity.multiply(friction)
+                    if (InfiniteClient.isSettingEnabled(AutoPilot::class.java, "JeetFlight")) {
+                        boat.velocity = currentVelocity.multiply(1.0, friction, 1.0)
+                    } else {
+                        boat.velocity = currentVelocity.multiply(friction)
+                    }
                 }
             } else {
                 // 完全に停止している場合
