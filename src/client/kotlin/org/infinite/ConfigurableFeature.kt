@@ -175,4 +175,8 @@ abstract class ConfigurableFeature(
     }
 
     open fun handleChunk(worldChunk: WorldManager.Chunk) {}
+
+    fun toggle() {
+        if (isEnabled()) disable() else enable()
+    }
 }

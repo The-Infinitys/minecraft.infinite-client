@@ -354,12 +354,7 @@ object InfiniteCommand {
             } else {
                 Text.translatable("command.infinite.action.disabled").string
             }
-
-        if (enable) {
-            feature.enable()
-        } else {
-            feature.disable()
-        }
+        feature.toggle()
         info(Text.translatable("command.infinite.feature.toggled", featureName, action).string)
         return 1
     }

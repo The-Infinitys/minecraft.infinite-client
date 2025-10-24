@@ -78,6 +78,7 @@ public abstract class DisconnectedScreenMixin extends Screen {
   private void pressAutoReconnect() {
     AutoConnect autoConnect = getAutoConnectFeature();
     autoReconnectTimer = autoConnect.getWaitTicks().getValue();
+    autoConnect.toggle();
   }
 
   /** tick()メソッド: 画面が描画されるたびに呼ばれ、タイマーのカウントダウンと再接続処理を行う */
