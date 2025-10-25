@@ -100,20 +100,17 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
                 val world = client.world ?: return
                 val player = client.player ?: return
                 val radius = radiusSetting.value
-                val height = heightSetting.value
 
                 nearbyBlocks.clear()
 
                 val playerBlockX = player.blockX
-                val playerBlockY = player.blockY
                 val playerBlockZ = player.blockZ
 
                 for (x in -radius..radius) {
                     for (z in -radius..radius) {
                         // Search from slightly above player down to playerBlockY - height
-                        for (yOffset in 0..height) { // Iterate downwards from player's Y level
-                            val currentY = playerBlockY - yOffset
-                            val blockPos = BlockPos(playerBlockX + x, currentY, playerBlockZ + z)
+                        for (y in world.bottomY..world.bottomY + world.height) { // Iterate downwards from player's Y level
+                            val blockPos = BlockPos(playerBlockX + x, y, playerBlockZ + z)
                             val blockState = world.getBlockState(blockPos)
 
                             // Check if the block itself is not air

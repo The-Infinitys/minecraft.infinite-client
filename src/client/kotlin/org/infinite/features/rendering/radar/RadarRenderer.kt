@@ -201,7 +201,7 @@ object RadarRenderer {
 
         val featureRadius = ((radarFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
         val playerYaw = player.headYaw
-        val yawRad = toRadians(playerYaw)
+        val yawRad = toRadians(-playerYaw)
 
         val blockDotSize = 1f // Half-size of each block square on the radar
 
@@ -212,7 +212,7 @@ object RadarRenderer {
             val distance = sqrt(dx * dx + dz * dz)
             val scaledDistance = (distance / featureRadius * halfSizePx.toDouble()).coerceAtMost(halfSizePx.toDouble())
 
-            val angleToBlock = atan2(dz, dx) - yawRad.toDouble() - toRadians(90f)
+            val angleToBlock = atan2(dz, dx) + yawRad.toDouble() - toRadians(90f)
 
             val blockCenterX = centerX + (sin(angleToBlock) * scaledDistance)
             val blockCenterY = centerY - (cos(angleToBlock) * scaledDistance)
