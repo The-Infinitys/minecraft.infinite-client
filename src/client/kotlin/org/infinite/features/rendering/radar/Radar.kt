@@ -97,37 +97,60 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
         if (isEnabled() && renderTerrain.value) {
             tickCounter++
             if (tickCounter % updateInterval == 0) {
+                val client = MinecraftClient.getInstance()
                 val world = client.world ?: return
                 val player = client.player ?: return
                 val radius = radiusSetting.value
+                val playerY = player.blockY // プレイヤーのY座標（ブロック単位）を取得
 
                 nearbyBlocks.clear()
 
                 val playerBlockX = player.blockX
                 val playerBlockZ = player.blockZ
 
+                // ----------------------------------------------------
+                // 修正された地形スキャンロジック
+                // ----------------------------------------------------
                 for (x in -radius..radius) {
                     for (z in -radius..radius) {
-                        // Search from slightly above player down to playerBlockY - height
-                        for (y in world.bottomY..world.bottomY + world.height) { // Iterate downwards from player's Y level
+                        var closestBlockPos: BlockPos? = null
+                        var minAbsDiffY: Int = Int.MAX_VALUE // 最小のY座標の差の絶対値
+
+                        // プレイヤーのY座標の上下を中心にスキャン範囲を調整
+                        // 例：プレイヤーY - 高さ設定 から プレイヤーY + 高さ設定 の範囲
+                        val scanMinY = (playerY - radius).coerceAtLeast(world.bottomY)
+                        val scanMaxY = (playerY + radius).coerceAtMost(world.bottomY + world.height - 1)
+
+                        for (y in scanMaxY downTo scanMinY) { // 上から下にスキャン
                             val blockPos = BlockPos(playerBlockX + x, y, playerBlockZ + z)
                             val blockState = world.getBlockState(blockPos)
 
-                            // Check if the block itself is not air
+                            // 1. ブロック自体が空気ブロックでない
                             if (!blockState.isAir) {
-                                // Check if the two blocks above are air
+                                // 2. その上2ブロックが空気ブロックである
                                 val blockAbove1 = world.getBlockState(blockPos.up(1))
                                 val blockAbove2 = world.getBlockState(blockPos.up(2))
 
                                 if (blockAbove1.isAir && blockAbove2.isAir) {
-                                    // This is a passable surface block
-                                    nearbyBlocks[blockPos] = blockState
-                                    break // Found a block, move to the next (x, z) column
+                                    // 候補ブロックが見つかった
+                                    val absDiffY = kotlin.math.abs(y - playerY)
+
+                                    if (absDiffY < minAbsDiffY) {
+                                        // プレイヤーのY座標に最も近いブロックを更新
+                                        minAbsDiffY = absDiffY
+                                        closestBlockPos = blockPos
+                                    }
                                 }
                             }
                         }
+
+                        // (x, z)列で最もプレイヤーYに近いブロックが特定された場合、それを保存
+                        if (closestBlockPos != null) {
+                            nearbyBlocks[closestBlockPos] = world.getBlockState(closestBlockPos)
+                        }
                     }
                 }
+                // ----------------------------------------------------
             }
         } else {
             nearbyBlocks.clear()
