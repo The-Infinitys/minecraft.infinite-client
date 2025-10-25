@@ -8,8 +8,6 @@ import org.infinite.features.fighting.gun.Gunner
 import org.infinite.features.fighting.impact.ImpactAttack
 import org.infinite.features.fighting.killaura.KillAura
 import org.infinite.features.fighting.lockon.LockOn
-import org.infinite.features.fighting.noattack.NoAttack
-import org.infinite.features.fighting.playermanager.PlayerManager
 import org.infinite.features.fighting.reach.Reach
 import org.infinite.features.fighting.superattack.SuperAttack
 import org.infinite.features.fighting.totem.AutoTotem
@@ -25,16 +23,6 @@ val fighting =
             "Reach",
             Reach(),
             "feature.fighting.reach.description",
-        ),
-        feature(
-            "NoAttack",
-            NoAttack(),
-            "feature.fighting.noattack.description",
-        ),
-        feature(
-            "PlayerManager",
-            PlayerManager(),
-            "feature.fighting.playermanager.description",
         ),
         feature(
             "SuperAttack",
