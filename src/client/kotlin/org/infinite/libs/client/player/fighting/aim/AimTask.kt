@@ -262,7 +262,7 @@ open class AimTask(
             AimTaskConditionReturn.Exec -> {
                 val rollDiff =
                     if (target is AimTarget.RollTarget) {
-                        (target as AimTarget.RollTarget).roll - playerRoll(player)
+                        ((target as AimTarget.RollTarget).roll - playerRoll(player)).diffNormalize()
                     } else {
                         calculateRotation(player, targetPos)
                     }
