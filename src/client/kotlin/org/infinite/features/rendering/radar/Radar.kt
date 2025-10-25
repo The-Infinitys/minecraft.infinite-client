@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.entity.LivingEntity
 import org.infinite.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics2D
+import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 
 // =================================================================================================
@@ -11,8 +12,14 @@ import org.infinite.settings.FeatureSetting
 // =================================================================================================
 
 class Radar : ConfigurableFeature(initialEnabled = false) {
-    val radiusSetting = FeatureSetting.IntSetting("Radius", "feature.rendering.radar.radius.description", 32, 5, 256)
+    enum class Mode {
+        Flat,
+        Solid,
+    }
 
+    val mode =
+        FeatureSetting.EnumSetting<Mode>("Mode", "feature.rendering.radar.mode.description", Mode.Flat, Mode.entries)
+    val radiusSetting = FeatureSetting.IntSetting("Radius", "feature.rendering.radar.radius.description", 32, 5, 256)
     val heightSetting = FeatureSetting.IntSetting("Height", "feature.rendering.radar.height.description", 8, 1, 32)
     val marginPercent =
         FeatureSetting.IntSetting(
@@ -29,6 +36,7 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
             heightSetting,
             marginPercent,
             sizePercent,
+            mode,
         )
 
     fun findTargetMobs(): List<LivingEntity> {
@@ -81,8 +89,14 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
      * GUI描画を実行します。Graphics2Dヘルパーを使用します。
      */
     override fun render2d(graphics2D: Graphics2D) {
-        if (isEnabled()) {
+        if (mode.value == Mode.Flat) {
             RadarRenderer.render(graphics2D, this)
+        }
+    }
+
+    override fun render3d(graphics3D: Graphics3D) {
+        if (mode.value == Mode.Solid) {
+            RadarRenderer.render(graphics3D, this)
         }
     }
 }
