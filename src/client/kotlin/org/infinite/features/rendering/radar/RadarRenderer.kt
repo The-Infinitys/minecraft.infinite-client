@@ -1,19 +1,13 @@
 package org.infinite.features.rendering.radar
 
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics2D
-import org.infinite.libs.graphics.Graphics3D
-import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.rendering.transparent
 import org.infinite.utils.toRadians
@@ -22,7 +16,6 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-import net.minecraft.util.math.RotationAxis as Axis
 
 object RadarRenderer {
     /**
@@ -68,6 +61,10 @@ object RadarRenderer {
         graphics2d: Graphics2D, // Graphics2Dを受け取るように修正
         radarFeature: Radar,
     ) {
+        if (radarFeature.renderTerrain.value) {
+            renderTerrain(graphics2d, radarFeature)
+        }
+
         val client = graphics2d.client
         val player = client.player ?: return
         val font = client.textRenderer
@@ -183,245 +180,71 @@ object RadarRenderer {
         }
     }
 
-    fun render(
-        graphics3D: Graphics3D,
+    fun renderTerrain(
+        graphics2d: Graphics2D,
         radarFeature: Radar,
     ) {
-        val client = graphics3D.client
+        val client = graphics2d.client
         val player = client.player ?: return
-        val world = client.world ?: return
 
-        val featureRadius = (radarFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10
-        val featureHeight = (radarFeature.getSetting("Height") as? FeatureSetting.IntSetting)?.value ?: 5
-
-        // Get 2D radar position and size for 3D minimap placement
-        val screenWidth = client.window.scaledWidth
-        val screenHeight = client.window.scaledHeight
+        val screenWidth = graphics2d.width
+        val screenHeight = graphics2d.height
         val shortSide = screenWidth.coerceAtMost(screenHeight)
         val marginPercent = InfiniteClient.getSettingInt(Radar::class.java, "Margin", 4)
         val sizePercent = InfiniteClient.getSettingInt(Radar::class.java, "Size", 40)
         val marginPx = (shortSide * marginPercent / 100.0).toInt()
         val sizePx = (shortSide * sizePercent / 100.0).toInt()
+        val halfSizePx = sizePx / 2
 
-        graphics3D.pushMatrix()
+        val centerX = marginPx + halfSizePx
+        val centerY = screenHeight - marginPx - halfSizePx
 
-        // --- Step 1: Apply screen-space positioning and scaling ---
+        val featureRadius = ((radarFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
+        val playerYaw = player.headYaw
+        val yawRad = toRadians(playerYaw)
 
-        // Calculate the desired screen position for the minimap's center in normalized device coordinates (NDC).
+        val blockDotSize = 1f // Half-size of each block square on the radar
 
-        // NDC ranges from -1 to 1 for X and Y, where (-1,-1) is bottom-left and (1,1) is top-right.
+        for ((blockPos, blockState) in radarFeature.nearbyBlocks) {
+            val dx = (blockPos.x - player.x)
+            val dz = (blockPos.z - player.z)
 
-        // The 2D radar's centerX and centerY are in screen pixels (0,0 top-left).
+            val distance = sqrt(dx * dx + dz * dz)
+            val scaledDistance = (distance / featureRadius * halfSizePx.toDouble()).coerceAtMost(halfSizePx.toDouble())
 
-        val ndcX = (marginPx + sizePx / 2.0) / screenWidth * 2.0 - 1.0
+            val angleToBlock = atan2(dz, dx) - yawRad.toDouble() - toRadians(90f)
 
-        val ndcY = 1.0 - (marginPx + sizePx / 2.0) / screenHeight * 2.0
+            val blockCenterX = centerX + (sin(angleToBlock) * scaledDistance)
+            val blockCenterY = centerY - (cos(angleToBlock) * scaledDistance)
 
-        val ndcZ = -2.0 // Fixed Z to place it in front of the camera
+            // Define corners of a square centered at (0,0) with side length 2 * blockDotSize
+            val corners =
+                arrayOf(
+                    -blockDotSize to -blockDotSize,
+                    blockDotSize to -blockDotSize,
+                    blockDotSize to blockDotSize,
+                    -blockDotSize to blockDotSize,
+                )
 
-        // Translate the entire scene to this screen-space position.
-
-        // This is applied to the model-view matrix, effectively moving the rendered content.
-
-        graphics3D.translate(ndcX, ndcY, ndcZ)
-
-        // Scale the minimap scene to the desired size.
-
-        // The scale factor needs to be adjusted based on the screen size and desired minimap size.
-
-        // We want the minimap to occupy 'sizePx' pixels on screen.
-
-        // A simple way to approximate this is to scale relative to the screen height.
-
-        val fixedMinimapScale = sizePx / 200.0 // Adjust this factor as needed for visual size
-
-        graphics3D.matrixStack.scale(
-            fixedMinimapScale.toFloat(),
-            fixedMinimapScale.toFloat(),
-            fixedMinimapScale.toFloat(),
-        )
-
-        // --- Step 2: Rotate the minimap scene ---
-
-        // Rotate to look down from above (X-axis rotation)
-
-        graphics3D.matrixStack.multiply(Axis.POSITIVE_X.rotationDegrees(90f))
-
-        // Rotate around the Y-axis to align with the player's yaw
-
-        graphics3D.matrixStack.multiply(Axis.POSITIVE_Y.rotationDegrees(-player.headYaw))
-
-        // --- Step 3: Translate to player's relative position ---
-
-        // This makes the terrain/mobs/compass render relative to the player's current position,
-
-        // effectively centering the minimap on the player.
-
-        graphics3D.translate(-player.x, -player.y, -player.z)
-
-        // Render terrain
-
-        render3DTerrain(graphics3D, player, world, featureRadius, featureHeight)
-
-        // Render mobs
-
-        render3DMobs(graphics3D, radarFeature, player)
-
-        // Render compass
-
-        render3DCompass(graphics3D, player, featureRadius)
-
-        graphics3D.popMatrix()
-    }
-
-    private fun render3DTerrain(
-        graphics3D: Graphics3D,
-        player: PlayerEntity,
-        world: net.minecraft.client.world.ClientWorld,
-        radius: Int,
-        height: Int,
-    ) {
-        val playerBlockX = player.blockX
-        val playerBlockY = player.blockY
-        val playerBlockZ = player.blockZ
-
-        val terrainBoxes = mutableListOf<RenderUtils.ColorBox>()
-
-        for (x in -radius..radius) {
-            for (y in -height..height) {
-                for (z in -radius..radius) {
-                    val blockPos = BlockPos(playerBlockX + x, playerBlockY + y, playerBlockZ + z)
-                    val blockState = world.getBlockState(blockPos)
-
-                    if (!blockState.isAir && blockState.isOpaqueFullCube) {
-                        val blockColor = getBlockColor(blockState)
-                        // Render blocks relative to the player's current position
-                        val box =
-                            Box(
-                                blockPos.x.toDouble() - player.x,
-                                blockPos.y.toDouble() - player.y,
-                                blockPos.z.toDouble() - player.z,
-                                blockPos.x + 1.0 - player.x,
-                                blockPos.y + 1.0 - player.y,
-                                blockPos.z + 1.0 - player.z,
-                            )
-                        terrainBoxes.add(RenderUtils.ColorBox(blockColor.transparent(128), box))
-                    }
+            val rotatedCorners =
+                corners.map { (x, y) ->
+                    val rotatedX = x * cos(yawRad) - y * sin(yawRad)
+                    val rotatedY = x * sin(yawRad) + y * cos(yawRad)
+                    rotatedX + blockCenterX to rotatedY + blockCenterY
                 }
-            }
-        }
-        graphics3D.renderSolidColorBoxes(terrainBoxes, false) // Render with depth test
-    }
 
-    private fun getBlockColor(blockState: BlockState): Int {
-        // Simple color mapping for common blocks, can be expanded
-        return when (blockState.block) {
-            Blocks.GRASS_BLOCK -> 0xFF00AA00.toInt() // Dark Green
-            Blocks.DIRT -> 0xFF8B4513.toInt() // Saddle Brown
-            Blocks.STONE -> 0xFF808080.toInt() // Gray
-            Blocks.WATER -> 0xFF0000FF.toInt() // Blue
-            Blocks.LAVA -> 0xFFFF0000.toInt() // Red
-            Blocks.OAK_LOG -> 0xFF8B4513.toInt() // Brown
-            Blocks.OAK_LEAVES -> 0xFF00FF00.toInt() // Green
-            else -> 0xFFCCCCCC.toInt() // Light Gray for others
-        }
-    }
-
-    private fun render3DMobs(
-        graphics3D: Graphics3D,
-        radarFeature: Radar,
-        player: PlayerEntity,
-    ) {
-        val mobBoxes = mutableListOf<RenderUtils.ColorBox>()
-        val mobSize = 0.3 // Size of mob cube
-
-        for (mob in radarFeature.nearbyMobs) {
-            val mobPos = mob.getLerpedPos(graphics3D.tickProgress)
-            val baseColor = getBaseDotColor(mob)
-            val alpha =
-                getAlphaBasedOnHeight(
-                    mob,
-                    player.y,
-                    (radarFeature.getSetting("Height") as? FeatureSetting.IntSetting)?.value ?: 5,
-                )
-            val mobColor = baseColor.transparent(alpha)
-
-            // Render mobs relative to the player's current position
-            val box =
-                Box(
-                    mobPos.x - mobSize / 2 - player.x,
-                    mobPos.y - player.y,
-                    mobPos.z - mobSize / 2 - player.z,
-                    mobPos.x + mobSize / 2 - player.x,
-                    mobPos.y + mob.height - player.y,
-                    mobPos.z + mob.height - player.z, // Fix: mob.height for Z-axis extent
-                )
-            mobBoxes.add(RenderUtils.ColorBox(mobColor, box))
-        }
-        graphics3D.renderSolidColorBoxes(mobBoxes, true) // Render mobs always on top (no depth test)
-    }
-
-    private fun render3DCompass(
-        graphics3D: Graphics3D,
-        player: PlayerEntity,
-        radius: Int,
-    ) {
-        val compassColor =
-            InfiniteClient
-                .theme()
-                .colors.foregroundColor
-                .transparent(200)
-
-        // Render lines for cardinal directions relative to player's position
-        val lineLength = radius.toDouble() * 0.8 // Shorter lines for compass
-        val tick = graphics3D.tickCounter.getTickProgress(false)
-        val pos = player.getLerpedPos(tick) // This is player's interpolated world position
-
-        // North (Z-)
-        graphics3D.renderLine(
-            pos.add(0.0, 0.0, -lineLength).subtract(player.x, player.y, player.z),
-            pos.add(0.0, 0.0, -lineLength - 1.0).subtract(player.x, player.y, player.z),
-            compassColor,
-            true,
-        )
-        // South (Z+)
-        graphics3D.renderLine(
-            pos.add(0.0, 0.0, lineLength).subtract(player.x, player.y, player.z),
-            pos.add(0.0, 0.0, lineLength + 1.0).subtract(player.x, player.y, player.z),
-            compassColor,
-            true,
-        )
-        // East (X+)
-        graphics3D.renderLine(
-            pos.add(lineLength, 0.0, 0.0).subtract(player.x, player.y, player.z),
-            pos.add(lineLength + 1.0, 0.0, 0.0).subtract(player.x, player.y, player.z),
-            compassColor,
-            true,
-        )
-        // West (X-)
-        graphics3D.renderLine(
-            pos.add(-lineLength, 0.0, 0.0).subtract(player.x, player.y, player.z),
-            pos.add(-lineLength - 1.0, 0.0, 0.0).subtract(player.x, player.y, player.z),
-            compassColor,
-            true,
-        )
-
-        // Render player's current position marker at the center of the minimap (0,0,0 relative)
-        val playerMarkerColor =
-            InfiniteClient
-                .theme()
-                .colors.primaryColor
-                .transparent(255)
-        val markerSize = 0.2
-        val playerBox =
-            Box(
-                -markerSize,
-                -markerSize,
-                -markerSize,
-                markerSize,
-                markerSize,
-                markerSize,
+            val blockColor = blockState.mapColor.color.transparent(255)
+            graphics2d.fillQuad(
+                rotatedCorners[0].first.toFloat(),
+                rotatedCorners[0].second.toFloat(),
+                rotatedCorners[1].first.toFloat(),
+                rotatedCorners[1].second.toFloat(),
+                rotatedCorners[2].first.toFloat(),
+                rotatedCorners[2].second.toFloat(),
+                rotatedCorners[3].first.toFloat(),
+                rotatedCorners[3].second.toFloat(),
+                blockColor,
             )
-        graphics3D.renderSolidColorBoxes(listOf(RenderUtils.ColorBox(playerMarkerColor, playerBox)), true)
+        }
     }
 }
