@@ -79,9 +79,9 @@ object HyperMapRenderer {
         val sizePx = (shortSide * sizePercent / 100.0).toInt()
         val halfSizePx = sizePx / 2
 
-        // レーダーの中心座標を左下に設定
-        val centerX = marginPx + halfSizePx
-        val centerY = screenHeight - marginPx - halfSizePx
+        // レーダーの中心座標を右上に設定 **変更点**
+        val centerX = screenWidth - marginPx - halfSizePx // 画面右端からマージンと半分のサイズを引く
+        val centerY = marginPx + halfSizePx // 画面上端からマージンと半分のサイズを足す
 
         // レーダーの左上と右下の座標
         val startX = centerX - halfSizePx
@@ -131,7 +131,8 @@ object HyperMapRenderer {
         }
 
         // モブの描画
-        val featureRadius = ((hyperMapFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
+        val featureRadius =
+            ((hyperMapFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
         val mobDotRadius = 1
         val yawRad = toRadians(playerYaw)
         val featureHeight = (hyperMapFeature.getSetting("Height") as? FeatureSetting.IntSetting)?.value ?: 5
@@ -209,53 +210,30 @@ object HyperMapRenderer {
     ) {
         val client = graphics2d.client
         val player = client.player ?: return
-
+        val camera = client.cameraEntity ?: return
         val screenWidth = graphics2d.width
         val screenHeight = graphics2d.height
         val shortSide = screenWidth.coerceAtMost(screenHeight)
-        val marginPercent = InfiniteClient.getSettingInt(HyperMap::class.java, "Margin", 4)
-        val sizePercent = InfiniteClient.getSettingInt(HyperMap::class.java, "Size", 40)
+        val marginPercent = hyperMapFeature.marginPercent.value
+        val sizePercent = hyperMapFeature.sizePercent.value
         val marginPx = (shortSide * marginPercent / 100.0).toInt()
         val sizePx = (shortSide * sizePercent / 100.0).toInt()
         val halfSizePx = sizePx / 2
-
-        val centerX = marginPx + halfSizePx
-        val centerY = screenHeight - marginPx - halfSizePx
-
-        val featureRadius = ((hyperMapFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
-        val playerYaw = player.headYaw
-        val yawRad = toRadians(-playerYaw)
-
+        val centerX = screenWidth - marginPx - halfSizePx
+        val centerY = marginPx + halfSizePx
+        val featureRadius =
+            hyperMapFeature.radiusSetting.value
+        val yaw = camera.yaw
+        val yawRad = toRadians(yaw)
         val blockDotSize = 1f // Half-size of each block square on the radar
-
         for ((blockPos, blockState) in hyperMapFeature.nearbyBlocks) {
             val dx = (blockPos.x - player.x)
             val dz = (blockPos.z - player.z)
-
             val distance = sqrt(dx * dx + dz * dz)
             val scaledDistance = (distance / featureRadius * halfSizePx.toDouble()).coerceAtMost(halfSizePx.toDouble())
-
-            val angleToBlock = atan2(dz, dx) + yawRad.toDouble()
-
-            val blockCenterX = centerX + (sin(angleToBlock) * scaledDistance)
-            val blockCenterY = centerY - (cos(angleToBlock) * scaledDistance)
-
-            // Define corners of a square centered at (0,0) with side length 2 * blockDotSize
-            val corners =
-                arrayOf(
-                    -blockDotSize to -blockDotSize,
-                    blockDotSize to -blockDotSize,
-                    blockDotSize to blockDotSize,
-                    -blockDotSize to blockDotSize,
-                )
-
-            val rotatedCorners =
-                corners.map { (x, y) ->
-                    val rotatedX = x * cos(yawRad + toRadians(90f)) - y * sin(yawRad + toRadians(90f))
-                    val rotatedY = x * sin(yawRad + toRadians(90f)) + y * cos(yawRad + toRadians(90f))
-                    rotatedX + blockCenterX to rotatedY + blockCenterY
-                }
-
+            val angleToBlock = atan2(dz, dx) - yawRad.toDouble()
+            val blockCenterX = centerX + scaledDistance * sin(angleToBlock)
+            val blockCenterY = centerY - scaledDistance * cos(angleToBlock)
             val baseBlockColor = blockState.mapColor.color
             val blockAlpha = if (!blockState.fluidState.isEmpty) 128 else 255 // 液体なら半透明 (128), それ以外は不透明 (255)
             val blockColor = baseBlockColor.transparent(blockAlpha)
@@ -283,17 +261,61 @@ object HyperMapRenderer {
                     else -> blockColor
                 }
 
-            graphics2d.fillQuad(
-                rotatedCorners[0].first.toFloat(),
-                rotatedCorners[0].second.toFloat(),
-                rotatedCorners[1].first.toFloat(),
-                rotatedCorners[1].second.toFloat(),
-                rotatedCorners[2].first.toFloat(),
-                rotatedCorners[2].second.toFloat(),
-                rotatedCorners[3].first.toFloat(),
-                rotatedCorners[3].second.toFloat(),
+            graphics2d.renderBlockDot(
+                blockCenterX,
+                blockCenterY,
+                blockDotSize,
+                -yawRad,
                 finalBlockColor,
             )
         }
     }
+}
+
+private fun Graphics2D.renderBlockDot(
+    blockCenterX: Double,
+    blockCenterY: Double,
+    blockDotSize: Float,
+    direction: Float,
+    finalBlockColor: Int,
+) {
+    // 中心から角までの距離（半対角線の長さ）
+    val r = 1.5 * blockDotSize
+
+    // 正方形の4つの角の初期角度 (角度0を右 (X+) としたときの反時計回り)
+    // 頂点順序: 右上(45), 左上(135), 左下(225), 右下(315)
+    val baseAngles = listOf(
+        toRadians(45f),
+        toRadians(135f),
+        toRadians(225f),
+        toRadians(315f),
+    )
+
+    // 【修正2: ドットの回転角】
+    // 進行方向が上になる座標系での描画に対応するため、マイクラのヨー角に90度のオフセットを加える
+    val rotation = direction
+
+    val corners = baseAngles.map { baseAngle ->
+        // 頂点の角度 = (基準角度) + (回転角度)
+        val angle = baseAngle + rotation
+
+        // 回転された頂点座標を計算 (X: sin, Y: -cos)
+        // sin(angle) が X 座標の増減、-cos(angle) が Y 座標の増減に対応
+        val x = blockCenterX + r * sin(angle)
+        val y = blockCenterY - r * cos(angle)
+
+        x.toFloat() to y.toFloat()
+    }
+
+    this.fillQuad(
+        corners[0].first,
+        corners[0].second,
+        corners[1].first,
+        corners[1].second,
+        corners[2].first,
+        corners[2].second,
+        corners[3].first,
+        corners[3].second,
+        finalBlockColor
+    )
 }

@@ -220,9 +220,77 @@ class Graphics2D(
         context.matrices.popMatrix()
     }
 
+// 省略...
+
+// ----------------------------------------------------------------------
+// Draw Primitives プリミティブ描画
+// ----------------------------------------------------------------------
+
+// ... (他のメソッドは省略) ...
+
     /**
-     * 三角形の枠をベベル結合で描画します。
-     * fillTriangleを利用して、頂点での交点に尖ったベベル形状を作成します。
+     * 2点間に太さを持つ線分を描画します。
+     * 線分の太さ分だけオフセットされた四角形として描画します。
+     *
+     * @param x1 始点 X座標
+     * @param y1 始点 Y座標
+     * @param x2 終点 X座標
+     * @param y2 終点 Y座標
+     * @param color ARGB形式の色
+     * @param size 枠線の太さ (ピクセル)
+     */
+    private fun drawThickLineSegment(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        color: Int,
+        size: Int,
+    ) {
+        val halfSize = size / 2.0f
+
+        // 線分のベクトル
+        val dx = x2 - x1
+        val dy = y2 - y1
+        val length = MathHelper.sqrt(dx * dx + dy * dy)
+
+        if (length < 1e-6) return // 長さが0に近い場合は描画しない
+
+        // 単位法線ベクトル (線分に対して垂直)
+        // N_unit = (-dy/length, dx/length)
+        val nx = -dy / length
+        val ny = dx / length
+
+        // 太さの半分をかけたオフセットベクトル
+        val offsetX = nx * halfSize
+        val offsetY = ny * halfSize
+
+        // 太さを持つ線分（四角形）の4つの頂点
+        val p1x = x1 + offsetX
+        val p1y = y1 + offsetY
+
+        val p2x = x2 + offsetX
+        val p2y = y2 + offsetY
+
+        val p3x = x2 - offsetX
+        val p3y = y2 - offsetY
+
+        val p4x = x1 - offsetX
+        val p4y = y1 - offsetY
+
+        // fillQuad で太さを持った四角形を描画
+        fillQuad(
+            p1x, p1y,
+            p2x, p2y,
+            p3x, p3y,
+            p4x, p4y,
+            color
+        )
+    }
+
+    /**
+     * 三角形の枠を指定した太さで描画します。
+     * 各辺を太さを持った線分として描画します。
      *
      * @param x1 頂点1 X座標
      * @param y1 頂点1 Y座標
@@ -243,94 +311,20 @@ class Graphics2D(
         color: Int,
         size: Int = 1,
     ) {
-        val halfSize = size / 2.0f
-        drawLine(x1, y1, x2, y2, color, size)
-        drawLine(x2, y2, x3, y3, color, size)
-        drawLine(x3, y3, x1, y1, color, size)
-        // 各頂点でのベベル結合を計算して描画
-        drawBevelJointAtVertex(x1, y1, x2, y2, x3, y3, halfSize, color)
-        drawBevelJointAtVertex(x2, y2, x3, y3, x1, y1, halfSize, color)
-        drawBevelJointAtVertex(x3, y3, x1, y1, x2, y2, halfSize, color)
+        // 各辺を太さを持った線分（四角形）として描画
+        // この方法では、各辺の四角形が頂点で重なり、結合部を埋める役割も果たします。
+        drawThickLineSegment(x1, y1, x2, y2, color, size)
+        drawThickLineSegment(x2, y2, x3, y3, color, size)
+        drawThickLineSegment(x3, y3, x1, y1, color, size)
     }
 
     /**
      * 指定された頂点でのベベル結合を描画します。
-     * 2本の一定の太さを持つ線分が交わる頂点で、外部の点２つと頂点を結んだ三角形を描画します。
+     * (このメソッドは使用されなくなったため削除)
+     * // private fun drawBevelJointAtVertex(...) { ... }
      */
-    private fun drawBevelJointAtVertex(
-        vertexX: Float,
-        vertexY: Float,
-        prevX: Float,
-        prevY: Float,
-        nextX: Float,
-        nextY: Float,
-        halfSize: Float,
-        color: Int,
-    ) {
-        // 頂点と前の点 (prev) を結ぶ線分のベクトル (V_prev)
-        val dx1 = vertexX - prevX
-        val dy1 = vertexY - prevY
-        // 頂点と次の点 (next) を結ぶ線分のベクトル (V_next)
-        val dx2 = nextX - vertexX
-        val dy2 = nextY - vertexY
 
-        // ----------------------------------------------------------------------
-        // V_prev の外側への法線ベクトルを計算
-        // 法線 N = (-dy, dx) または (dy, -dx)
-        // 進行方向 V_prev = (dx1, dy1)
-        //
-        // 線分の太さの半分 (halfSize) の長さを持つ法線ベクトルを求める
-        val len1 = MathHelper.sqrt(dx1 * dx1 + dy1 * dy1)
-        val nx1: Float
-        val ny1: Float
-        if (len1 > 1e-6) { // ゼロ割を避ける
-            // 単位法線ベクトル: N1_unit = (-dy1/len1, dx1/len1)
-            // 外側のオフセット点 p1 を求めるためのベクトル: N1 = N1_unit * halfSize
-            // 線分の「外側」は、線分 (prev->vertex) の左側、つまり V_prev の左側を仮定
-            nx1 = -dy1 / len1 * halfSize
-            ny1 = dx1 / len1 * halfSize
-        } else {
-            nx1 = 0f
-            ny1 = 0f
-        }
-
-        // p1 = vertex + N1
-        val p1X = vertexX + nx1
-        val p1Y = vertexY + ny1
-
-        // ----------------------------------------------------------------------
-        // V_next の外側への法線ベクトルを計算
-        // 進行方向 V_next = (dx2, dy2)
-        // 線分の「外側」は、線分 (vertex->next) の左側、つまり V_next の左側を仮定
-        val len2 = MathHelper.sqrt(dx2 * dx2 + dy2 * dy2)
-        val nx2: Float
-        val ny2: Float
-        if (len2 > 1e-6) { // ゼロ割を避ける
-            // 単位法線ベクトル: N2_unit = (-dy2/len2, dx2/len2)
-            // 外側のオフセット点 p2 を求めるためのベクトル: N2 = N2_unit * halfSize
-            nx2 = -dy2 / len2 * halfSize
-            ny2 = dx2 / len2 * halfSize
-        } else {
-            nx2 = 0f
-            ny2 = 0f
-        }
-
-        // p2 = vertex + N2
-        val p2X = vertexX + nx2
-        val p2Y = vertexY + ny2
-
-        // ----------------------------------------------------------------------
-        // ベベル結合は、頂点 V と、それぞれの線分の外側のオフセット点 p1, p2 を結ぶ三角形
-        fillTriangle(
-            vertexX,
-            vertexY, // 頂点 V
-            p1X,
-            p1Y, // 線分 (prev-V) の外側点 p1
-            p2X,
-            p2Y, // 線分 (V-next) の外側点 p2
-            color,
-        )
-    }
+// 省略...
 
     /**
      * 円（真円）を指定した色で塗りつぶし描画します。
