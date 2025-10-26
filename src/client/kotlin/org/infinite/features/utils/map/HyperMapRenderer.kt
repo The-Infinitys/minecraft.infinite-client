@@ -1,4 +1,4 @@
-package org.infinite.features.rendering.radar
+package org.infinite.features.utils.map
 
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.HostileEntity
@@ -11,13 +11,14 @@ import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.rendering.transparent
 import org.infinite.utils.toRadians
+import kotlin.collections.iterator
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-object RadarRenderer {
+object HyperMapRenderer {
     /**
      * エンティティの種類に基づいてドットの色を決定します。（アルファ値は含まない）
      */
@@ -59,10 +60,10 @@ object RadarRenderer {
 
     fun render(
         graphics2d: Graphics2D, // Graphics2Dを受け取るように修正
-        radarFeature: Radar,
+        hyperMapFeature: HyperMap,
     ) {
-        if (radarFeature.renderTerrain.value) {
-            renderTerrain(graphics2d, radarFeature)
+        if (hyperMapFeature.renderTerrain.value) {
+            renderTerrain(graphics2d, hyperMapFeature)
         }
 
         val client = graphics2d.client
@@ -72,8 +73,8 @@ object RadarRenderer {
         val screenWidth = graphics2d.width
         val screenHeight = graphics2d.height
         val shortSide = screenWidth.coerceAtMost(screenHeight)
-        val marginPercent = InfiniteClient.getSettingInt(Radar::class.java, "Margin", 4)
-        val sizePercent = InfiniteClient.getSettingInt(Radar::class.java, "Size", 40)
+        val marginPercent = InfiniteClient.getSettingInt(HyperMap::class.java, "Margin", 4)
+        val sizePercent = InfiniteClient.getSettingInt(HyperMap::class.java, "Size", 40)
         val marginPx = (shortSide * marginPercent / 100.0).toInt()
         val sizePx = (shortSide * sizePercent / 100.0).toInt()
         val halfSizePx = sizePx / 2
@@ -130,10 +131,10 @@ object RadarRenderer {
         }
 
         // モブの描画
-        val featureRadius = ((radarFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
+        val featureRadius = ((hyperMapFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
         val mobDotRadius = 1
         val yawRad = toRadians(playerYaw)
-        val featureHeight = (radarFeature.getSetting("Height") as? FeatureSetting.IntSetting)?.value ?: 5
+        val featureHeight = (hyperMapFeature.getSetting("Height") as? FeatureSetting.IntSetting)?.value ?: 5
 
         // プレイヤーのドットを中央に描画
         val playerDotColor =
@@ -153,7 +154,7 @@ object RadarRenderer {
             playerDotColor,
         )
 
-        for (mob in radarFeature.nearbyMobs) {
+        for (mob in hyperMapFeature.nearbyMobs) {
             val dx = (mob.x - player.x)
             val dz = (mob.z - player.z)
 
@@ -166,8 +167,30 @@ object RadarRenderer {
             val mobY = centerY - (cos(angleToMob) * scaledDistance)
 
             val baseColor = (getBaseDotColor(mob))
+            val relativeHeight = mob.y - player.y
+            val maxBlendFactor = 0.5 // Maximum 50% black or white
+
+            val blendFactor = (abs(relativeHeight) / featureHeight).coerceIn(0.0, maxBlendFactor).toFloat()
+
+            val blendedColor =
+                when {
+                    relativeHeight > 0 ->
+                        ColorHelper.lerp(
+                            blendFactor,
+                            baseColor,
+                            0xFFFFFFFF.toInt(),
+                        ) // Blend with white
+                    relativeHeight < 0 ->
+                        ColorHelper.lerp(
+                            blendFactor,
+                            baseColor,
+                            0xFF000000.toInt(),
+                        ) // Blend with black
+                    else -> baseColor
+                }
+
             val alpha = getAlphaBasedOnHeight(mob, player.y, featureHeight)
-            val finalDotColor = baseColor.transparent(alpha)
+            val finalDotColor = blendedColor.transparent(alpha)
             val x = mobX.toFloat()
             val y = mobY.toFloat()
             graphics2d.fillRect(
@@ -182,7 +205,7 @@ object RadarRenderer {
 
     fun renderTerrain(
         graphics2d: Graphics2D,
-        radarFeature: Radar,
+        hyperMapFeature: HyperMap,
     ) {
         val client = graphics2d.client
         val player = client.player ?: return
@@ -190,8 +213,8 @@ object RadarRenderer {
         val screenWidth = graphics2d.width
         val screenHeight = graphics2d.height
         val shortSide = screenWidth.coerceAtMost(screenHeight)
-        val marginPercent = InfiniteClient.getSettingInt(Radar::class.java, "Margin", 4)
-        val sizePercent = InfiniteClient.getSettingInt(Radar::class.java, "Size", 40)
+        val marginPercent = InfiniteClient.getSettingInt(HyperMap::class.java, "Margin", 4)
+        val sizePercent = InfiniteClient.getSettingInt(HyperMap::class.java, "Size", 40)
         val marginPx = (shortSide * marginPercent / 100.0).toInt()
         val sizePx = (shortSide * sizePercent / 100.0).toInt()
         val halfSizePx = sizePx / 2
@@ -199,20 +222,20 @@ object RadarRenderer {
         val centerX = marginPx + halfSizePx
         val centerY = screenHeight - marginPx - halfSizePx
 
-        val featureRadius = ((radarFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
+        val featureRadius = ((hyperMapFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
         val playerYaw = player.headYaw
         val yawRad = toRadians(-playerYaw)
 
         val blockDotSize = 1f // Half-size of each block square on the radar
 
-        for ((blockPos, blockState) in radarFeature.nearbyBlocks) {
+        for ((blockPos, blockState) in hyperMapFeature.nearbyBlocks) {
             val dx = (blockPos.x - player.x)
             val dz = (blockPos.z - player.z)
 
             val distance = sqrt(dx * dx + dz * dz)
             val scaledDistance = (distance / featureRadius * halfSizePx.toDouble()).coerceAtMost(halfSizePx.toDouble())
 
-            val angleToBlock = atan2(dz, dx) + yawRad.toDouble() - toRadians(90f)
+            val angleToBlock = atan2(dz, dx) + yawRad.toDouble()
 
             val blockCenterX = centerX + (sin(angleToBlock) * scaledDistance)
             val blockCenterY = centerY - (cos(angleToBlock) * scaledDistance)
@@ -228,12 +251,38 @@ object RadarRenderer {
 
             val rotatedCorners =
                 corners.map { (x, y) ->
-                    val rotatedX = x * cos(yawRad) - y * sin(yawRad)
-                    val rotatedY = x * sin(yawRad) + y * cos(yawRad)
+                    val rotatedX = x * cos(yawRad + toRadians(90f)) - y * sin(yawRad + toRadians(90f))
+                    val rotatedY = x * sin(yawRad + toRadians(90f)) + y * cos(yawRad + toRadians(90f))
                     rotatedX + blockCenterX to rotatedY + blockCenterY
                 }
 
-            val blockColor = blockState.mapColor.color.transparent(255)
+            val baseBlockColor = blockState.mapColor.color
+            val blockAlpha = if (!blockState.fluidState.isEmpty) 128 else 255 // 液体なら半透明 (128), それ以外は不透明 (255)
+            val blockColor = baseBlockColor.transparent(blockAlpha)
+
+            val relativeHeight = blockPos.y - player.y
+            val featureHeight = (hyperMapFeature.getSetting("Height") as? FeatureSetting.IntSetting)?.value ?: 5
+            val maxBlendFactor = 0.5 // Maximum 50% black or white
+
+            val blendFactor = (abs(relativeHeight) / featureHeight).coerceIn(0.0, maxBlendFactor).toFloat()
+
+            val finalBlockColor =
+                when {
+                    relativeHeight > 0 ->
+                        ColorHelper.lerp(
+                            blendFactor,
+                            blockColor,
+                            0xFFFFFFFF.toInt(),
+                        ) // Blend with white
+                    relativeHeight < 0 ->
+                        ColorHelper.lerp(
+                            blendFactor,
+                            blockColor,
+                            0xFF000000.toInt(),
+                        ) // Blend with black
+                    else -> blockColor
+                }
+
             graphics2d.fillQuad(
                 rotatedCorners[0].first.toFloat(),
                 rotatedCorners[0].second.toFloat(),
@@ -243,7 +292,7 @@ object RadarRenderer {
                 rotatedCorners[2].second.toFloat(),
                 rotatedCorners[3].first.toFloat(),
                 rotatedCorners[3].second.toFloat(),
-                blockColor,
+                finalBlockColor,
             )
         }
     }

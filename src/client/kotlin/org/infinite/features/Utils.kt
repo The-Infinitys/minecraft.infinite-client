@@ -3,6 +3,7 @@ package org.infinite.features
 import org.infinite.feature
 import org.infinite.features.utils.afk.AfkMode
 import org.infinite.features.utils.backpack.BackPackManager // 追加
+import org.infinite.features.utils.map.HyperMap
 import org.infinite.features.utils.noattack.NoAttack
 import org.infinite.features.utils.playermanager.PlayerManager
 import org.infinite.features.utils.tool.AutoTool
@@ -31,4 +32,5 @@ val utils =
             PlayerManager(),
             "feature.utils.playermanager.description",
         ),
+        feature("HyperMap", HyperMap(), "feature.utils.hypermap.description"),
     )

@@ -1,4 +1,4 @@
-package org.infinite.features.rendering.radar
+package org.infinite.features.utils.map
 
 import net.minecraft.block.BlockState
 import net.minecraft.client.MinecraftClient
@@ -8,31 +8,34 @@ import org.infinite.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.abs
 
 // =================================================================================================
 // 1. Feature Class: Radar (render2d メソッドを追加)
 // =================================================================================================
 
-class Radar : ConfigurableFeature(initialEnabled = false) {
+class HyperMap : ConfigurableFeature(initialEnabled = false) {
     enum class Mode {
         Flat,
         Solid,
     }
 
     val mode =
-        FeatureSetting.EnumSetting<Mode>("Mode", "feature.rendering.radar.mode.description", Mode.Flat, Mode.entries)
-    val radiusSetting = FeatureSetting.IntSetting("Radius", "feature.rendering.radar.radius.description", 32, 5, 256)
-    val heightSetting = FeatureSetting.IntSetting("Height", "feature.rendering.radar.height.description", 8, 1, 32)
+        FeatureSetting.EnumSetting<Mode>("Mode", "feature.utils.hypermapmode.description", Mode.Flat, Mode.entries)
+    val radiusSetting = FeatureSetting.IntSetting("Radius", "feature.utils.hypermapradius.description", 32, 5, 256)
+    val heightSetting = FeatureSetting.IntSetting("Height", "feature.utils.hypermapheight.description", 8, 1, 32)
     val marginPercent =
         FeatureSetting.IntSetting(
             "Margin",
-            "feature.rendering.radar.margin.description",
+            "feature.utils.hypermapmargin.description",
             4,
             0,
             40,
         )
-    val sizePercent = FeatureSetting.IntSetting("Size", "feature.rendering.radar.size.description", 40, 5, 100)
-    val renderTerrain = FeatureSetting.BooleanSetting("Render Terrain", "feature.rendering.radar.render_terrain.description", true)
+    val sizePercent = FeatureSetting.IntSetting("Size", "feature.utils.hypermapsize.description", 40, 5, 100)
+    val renderTerrain =
+        FeatureSetting.BooleanSetting("Render Terrain", "feature.utils.hypermaprender_terrain.description", true)
     override val settings: List<FeatureSetting<*>> =
         listOf(
             radiusSetting,
@@ -81,7 +84,7 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
     var nearbyMobs: List<LivingEntity> = listOf()
 
     @Volatile
-    var nearbyBlocks: MutableMap<BlockPos, BlockState> = java.util.concurrent.ConcurrentHashMap()
+    var nearbyBlocks: MutableMap<BlockPos, BlockState> = ConcurrentHashMap()
 
     private var tickCounter: Int = 0
     private val updateInterval = 10 // Update every 10 ticks (0.5 seconds)
@@ -125,15 +128,19 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
                             val blockPos = BlockPos(playerBlockX + x, y, playerBlockZ + z)
                             val blockState = world.getBlockState(blockPos)
 
-                            // 1. ブロック自体が空気ブロックでない
-                            if (!blockState.isAir) {
-                                // 2. その上2ブロックが空気ブロックである
+                            // 1. ブロック自体が空気ブロックでない、または液体ブロックである
+                            if (!blockState.isAir || !blockState.fluidState.isEmpty) {
                                 val blockAbove1 = world.getBlockState(blockPos.up(1))
                                 val blockAbove2 = world.getBlockState(blockPos.up(2))
 
-                                if (blockAbove1.isAir && blockAbove2.isAir) {
+                                val isAboveAir = blockAbove1.isAir && blockAbove2.isAir
+                                val isAboveLiquid = !blockAbove1.fluidState.isEmpty && !blockAbove2.fluidState.isEmpty
+                                val isLiquidAndAboveSolid =
+                                    !blockState.fluidState.isEmpty && !blockAbove1.isAir && !blockAbove2.isAir
+
+                                if (isAboveAir || isAboveLiquid || isLiquidAndAboveSolid) {
                                     // 候補ブロックが見つかった
-                                    val absDiffY = kotlin.math.abs(y - playerY)
+                                    val absDiffY = abs(y - playerY)
 
                                     if (absDiffY < minAbsDiffY) {
                                         // プレイヤーのY座標に最も近いブロックを更新
@@ -163,7 +170,7 @@ class Radar : ConfigurableFeature(initialEnabled = false) {
      */
     override fun render2d(graphics2D: Graphics2D) {
         if (mode.value == Mode.Flat) {
-            RadarRenderer.render(graphics2D, this)
+            HyperMapRenderer.render(graphics2D, this)
         }
     }
 
