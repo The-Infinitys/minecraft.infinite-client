@@ -4,9 +4,10 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.text.Text
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.Armor
+import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
 import org.infinite.utils.item.enchantLevel
 
 // 【新規】着陸に最適な地点の情報を保持するデータクラス
@@ -31,7 +32,7 @@ fun isElytra(stack: ItemStack): Boolean = stack.item == Items.ELYTRA
  * エリトラのインベントリ情報と耐久値を保持するためのデータクラス。
  */
 internal data class ElytraInfo(
-    val index: InventoryManager.InventoryIndex,
+    val index: InventoryIndex,
     val durability: Double,
 )
 
@@ -41,7 +42,7 @@ internal data class ElytraInfo(
  */
 internal fun findBestElytraInInventory(): ElytraInfo? {
     val playerInv = MinecraftClient.getInstance().player?.inventory ?: return null
-    val invManager = InfiniteClient.playerInterface.inventory
+    val invManager = InventoryManager
     var bestElytra: ElytraInfo? = null
 
     // すべてのインベントリスロット (ホットバーとバックパック) をチェック
@@ -59,7 +60,7 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
                         ?.value ?: 100
                 )
             ) {
-                bestElytra = ElytraInfo(InventoryManager.Hotbar(i), durability)
+                bestElytra = ElytraInfo(InventoryIndex.Hotbar(i), durability)
             }
         }
     }
@@ -79,7 +80,7 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
                         ?.value ?: 100
                 )
             ) {
-                bestElytra = ElytraInfo(InventoryManager.Backpack(i), durability)
+                bestElytra = ElytraInfo(InventoryIndex.Backpack(i), durability)
             }
         }
     }
@@ -89,7 +90,7 @@ internal fun findBestElytraInInventory(): ElytraInfo? {
 
 fun flightTime(): Double {
     val playerInv = MinecraftClient.getInstance().player?.inventory ?: return 0.0
-    val invManager = InfiniteClient.playerInterface.inventory
+    val invManager = InventoryManager
     var total = currentFlightTime()
 
     // インベントリ内のエリトラ
@@ -117,8 +118,8 @@ fun flightTime(): Double {
 }
 
 fun currentFlightTime(): Double {
-    val invManager = InfiniteClient.playerInterface.inventory
-    val equippedStack = invManager.get(Armor.CHEST)
+    val invManager = InventoryManager
+    val equippedStack = invManager.get(InventoryIndex.Armor.Chest())
     return if (isElytra(equippedStack)) {
         val durability = invManager.durability(equippedStack)
         val level = enchantLevel(equippedStack, Enchantments.UNBREAKING)
@@ -134,7 +135,7 @@ fun currentFlightTime(): Double {
  * 秒数を Dd Hh Mm Ss 形式の文字列に変換します。
  */
 fun formatSecondsToDHMS(totalSeconds: Long): String {
-    if (totalSeconds < 0) return "N/A"
+    if (totalSeconds < 0) return Text.translatable("time.na").string
 
     val secondsInDay = 24 * 60 * 60L
     val secondsInHour = 60 * 60L
@@ -150,13 +151,13 @@ fun formatSecondsToDHMS(totalSeconds: Long): String {
     val seconds = remainingSeconds % secondsInMinute
 
     val parts = mutableListOf<String>()
-    if (days > 0) parts.add("${days}d")
-    if (hours > 0 || days > 0) parts.add("${hours}h") // 日がある場合は時も表示
-    if (minutes > 0 || hours > 0 || days > 0) parts.add("${minutes}m") // 時がある場合は分も表示
-    parts.add("${seconds}s") // 秒は常に表示
+    if (days > 0) parts.add(Text.translatable("time.unit.day", days).string)
+    if (hours > 0 || days > 0) parts.add(Text.translatable("time.unit.hour", hours).string)
+    if (minutes > 0 || hours > 0 || days > 0) parts.add(Text.translatable("time.unit.minute", minutes).string)
+    parts.add(Text.translatable("time.unit.second", seconds).string)
 
     // 全て0秒の場合は "0s"
-    if (parts.isEmpty()) return "0s"
+    if (parts.isEmpty()) return Text.translatable("time.zero_seconds").string
 
     // 冗長にならないよう、最大3つの単位まで表示
     return parts.take(3).joinToString(" ")

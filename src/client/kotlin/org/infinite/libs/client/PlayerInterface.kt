@@ -6,7 +6,6 @@ import net.minecraft.client.option.GameOptions
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.util.math.Vec3d
 import org.infinite.libs.client.player.ai.AISystem
-import org.infinite.libs.client.player.inventory.InventoryManager
 import org.infinite.libs.client.player.movement.MovementInterface
 
 class PlayerInterface {
@@ -28,6 +27,5 @@ class PlayerInterface {
     val velocity: Vec3d?
         get() = player?.velocity
     val movement: MovementInterface = MovementInterface(client)
-    val inventory: InventoryManager = InventoryManager(client)
     val ai: AISystem = AISystem(client)
 }

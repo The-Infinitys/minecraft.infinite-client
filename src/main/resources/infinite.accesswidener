@@ -28,3 +28,6 @@ accessible field net/minecraft/client/render/block/entity/BlockEntityRenderManag
 
 # --- Anti Hunger ---
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGround Z
+
+# --- 3D Radar ---
+accessible field net/minecraft/block/AbstractBlock$AbstractBlockState mapColor Lnet/minecraft/block/MapColor;

@@ -36,19 +36,29 @@ object InfiniteClient : ClientModInitializer {
 
     fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: InfiniteTheme()
 
+    private fun checkTranslations(): List<String> {
+        val result = mutableListOf<String>()
+        for (category in featureCategories) {
+            for (feature in category.features) {
+                val key = feature.descriptionKey
+                if (Text.translatable(key).string == key) {
+                    result.add(key)
+                }
+                for (setting in feature.instance.settings) {
+                    val key = setting.descriptionKey
+                    if (Text.translatable(key).string == key) {
+                        result.add(key)
+                    }
+                }
+            }
+        }
+        return result
+    }
+
     override fun onInitializeClient() {
-        println("[InfiniteClient] Translation system loaded.")
-        // --- ティックイベントの登録 ---
         LogQueue.registerTickEvent()
 
         InfiniteKeyBind.registerKeybindings()
-
-        for (category in featureCategories) {
-            for (features in category.features) {
-                features.instance.start()
-            }
-        }
-
         // --- Event: when player joins a world ---
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             themes =
@@ -61,12 +71,22 @@ object InfiniteClient : ClientModInitializer {
                     CyberTheme(),
                 )
             ConfigManager.loadConfig()
-
+            for (category in featureCategories) {
+                for (features in category.features) {
+                    features.instance.start()
+                }
+            }
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
 
             log("version $modVersion")
-            log("Mod initialized successfully.")
+            val lackedTranslations = checkTranslations()
+            if (lackedTranslations.isEmpty()) {
+                log("Mod initialized successfully.")
+            } else {
+                val translationList = lackedTranslations.joinToString(",") { "\"$it\":\"$it\"" }
+                warn("Missing Translations: [$translationList]")
+            }
         }
 
         // --- Event: when player leaves a world ---

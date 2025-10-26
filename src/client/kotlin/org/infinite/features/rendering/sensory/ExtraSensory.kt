@@ -1,8 +1,14 @@
 package org.infinite.features.rendering.sensory
 
+import net.minecraft.client.render.entity.state.ItemEntityRenderState
+import net.minecraft.client.render.entity.state.LivingEntityRenderState
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState
+import net.minecraft.entity.Entity
+import net.minecraft.entity.ItemEntity
+import net.minecraft.entity.mob.MobEntity
+import net.minecraft.entity.player.PlayerEntity
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
-import org.infinite.InfiniteClient
 import org.infinite.features.rendering.sensory.esp.ContainerEsp
 import org.infinite.features.rendering.sensory.esp.ItemEsp
 import org.infinite.features.rendering.sensory.esp.MobEsp
@@ -11,39 +17,66 @@ import org.infinite.features.rendering.sensory.esp.PortalEsp
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.world.WorldManager
 import org.infinite.settings.FeatureSetting
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 
 class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
+    enum class Method {
+        HitBox,
+        OutLine,
+    }
+
     override val level: FeatureLevel = FeatureLevel.CHEAT
-    override val settings: List<FeatureSetting<*>> =
-        listOf(
-            FeatureSetting.BooleanSetting("PlayerEsp", "feature.rendering.extrasensory.playeresp.description", true),
-            FeatureSetting.BooleanSetting("MobEsp", "feature.rendering.extrasensory.mobesp.description", true),
-            FeatureSetting.BooleanSetting("ItemEsp", "feature.rendering.extrasensory.itemesp.description", true),
-            FeatureSetting.BooleanSetting("PortalEsp", "feature.rendering.extrasensory.portalesp.description", true),
-            FeatureSetting.BooleanSetting(
-                "ContainerEsp",
-                "feature.rendering.extrasensory.containeresp.description",
-                true,
-            ),
+    val method =
+        FeatureSetting.EnumSetting<Method>(
+            "Method",
+            "feature.rendering.extrasensory.method.description",
+            Method.HitBox,
+            Method.entries,
+        )
+    private val playerEsp =
+        FeatureSetting.BooleanSetting("PlayerEsp", "feature.rendering.extrasensory.playeresp.description", true)
+    private val mobEsp =
+        FeatureSetting.BooleanSetting("MobEsp", "feature.rendering.extrasensory.mobesp.description", true)
+
+    private val itemEsp =
+        FeatureSetting.BooleanSetting("ItemEsp", "feature.rendering.extrasensory.itemesp.description", true)
+
+    private val portalEsp =
+        FeatureSetting.BooleanSetting("PortalEsp", "feature.rendering.extrasensory.portalesp.description", true)
+
+    private val containerEsp =
+        FeatureSetting.BooleanSetting(
+            "ContainerEsp",
+            "feature.rendering.extrasensory.containeresp.description",
+            true,
         )
 
-    private fun isEnabled(type: String): Boolean = InfiniteClient.isSettingEnabled(ExtraSensory::class.java, type + "Esp")
+    override val settings: List<FeatureSetting<*>> =
+        listOf(
+            method,
+            playerEsp,
+            mobEsp,
+            itemEsp,
+            portalEsp,
+            containerEsp,
+        )
 
     override fun render3d(graphics3D: Graphics3D) {
-        if (isEnabled("Portal")) {
-            PortalEsp.render(graphics3D)
+        if (portalEsp.value) {
+            PortalEsp.render(graphics3D, method.value)
         }
-        if (isEnabled("Player")) {
-            PlayerEsp.render(graphics3D)
+        if (playerEsp.value) {
+            PlayerEsp.render(graphics3D, method.value)
         }
-        if (isEnabled("Mob")) {
-            MobEsp.render(graphics3D)
+        if (mobEsp.value) {
+            MobEsp.render(graphics3D, method.value)
         }
-        if (isEnabled("Item")) {
-            ItemEsp.render(graphics3D)
+        if (itemEsp.value) {
+            ItemEsp.render(graphics3D, method.value)
         }
-        if (isEnabled("Container")) {
-            ContainerEsp.render(graphics3D)
+        if (containerEsp.value) {
+            ContainerEsp.render(graphics3D, method.value)
         }
     }
 
@@ -61,5 +94,58 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
     override fun tick() {
         PortalEsp.tick()
         ContainerEsp.tick()
+    }
+
+    fun handleIsGlowing(
+        entity: Entity,
+        cir: CallbackInfoReturnable<Boolean>,
+    ) {
+        if (method.value == Method.OutLine) {
+            when (entity) {
+                is PlayerEntity -> {
+                    if (playerEsp.value) {
+                        cir.returnValue = true
+                    }
+                }
+
+                is MobEntity -> {
+                    if (mobEsp.value) {
+                        cir.returnValue = true
+                    }
+                }
+
+                is ItemEntity -> {
+                    if (itemEsp.value) {
+                        cir.returnValue = true
+                    }
+                }
+            }
+        }
+    }
+
+    fun <T, S> handleRenderState(
+        entity: T,
+        state: S,
+        tickProgress: Float,
+        ci: CallbackInfo,
+    ) {
+        when (entity) {
+            is ItemEntity -> {
+                if (state is ItemEntityRenderState) {
+                    ItemEsp.handleRenderState(entity, state, tickProgress, ci)
+                }
+            }
+            is PlayerEntity -> {
+                if (state is PlayerEntityRenderState) {
+                    PlayerEsp.handleRenderState(entity, state, tickProgress, ci)
+                }
+            }
+
+            is MobEntity -> {
+                if (state is LivingEntityRenderState) {
+                    MobEsp.handleRenderState(entity, state, tickProgress, ci)
+                }
+            }
+        }
     }
 }

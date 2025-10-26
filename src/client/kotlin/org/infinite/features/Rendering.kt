@@ -6,7 +6,6 @@ import org.infinite.features.rendering.camera.FreeCamera
 import org.infinite.features.rendering.detailinfo.DetailInfo
 import org.infinite.features.rendering.overlay.AntiOverlay
 import org.infinite.features.rendering.portalgui.PortalGui
-import org.infinite.features.rendering.radar.Radar
 import org.infinite.features.rendering.search.BlockSearch
 import org.infinite.features.rendering.sensory.ExtraSensory
 import org.infinite.features.rendering.sight.SuperSight
@@ -39,11 +38,6 @@ val rendering =
             "FreeCamera", // 追加
             FreeCamera(), // 追加
             "feature.rendering.freecamera.description", // 追加
-        ),
-        feature(
-            "Radar",
-            Radar(),
-            "feature.rendering.radar.description",
         ),
         feature(
             "ExtraSensory",

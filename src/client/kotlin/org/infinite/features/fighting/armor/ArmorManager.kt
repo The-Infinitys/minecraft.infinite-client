@@ -12,6 +12,7 @@ import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.inventory.InventoryManager
+import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.FeatureSetting.BooleanSetting
 import org.infinite.settings.FeatureSetting.IntSetting
@@ -60,11 +61,11 @@ private val ARMOR_TOUGHNESS_VALUES =
 
 class ArmorManager : ConfigurableFeature(initialEnabled = false) {
     private val autoEquip: BooleanSetting =
-        BooleanSetting("AutoEquip", "Automatically equips the best available armor.", true)
+        BooleanSetting("AutoEquip", "feature.fighting.armormanager.autoequip.description", true)
     private val elytraSwitch: BooleanSetting =
-        BooleanSetting("ElytraSwitch", "Automatically switches to elytra when airborne.", true)
+        BooleanSetting("ElytraSwitch", "feature.fighting.armormanager.autoelytra.description", true)
     private val durabilityThreshold: IntSetting =
-        IntSetting("DurabilityThreshold", "Ignores armor with durability below this percentage (%).", 5, 0, 100)
+        IntSetting("DurabilityThreshold", "feature.fighting.armormanager.ignorebelow.description", 5, 0, 100)
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
@@ -74,7 +75,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         )
 
     private var previousChestplate: ItemStack = ItemStack.EMPTY
-    private var previousSlot: InventoryManager.InventoryIndex? = null
+    private var previousSlot: InventoryIndex? = null
     private var isElytraEquippedByHack: Boolean = false
     private var shouldSendElytraPacket: Boolean = false
     private var floatTick: Int = 0
@@ -84,12 +85,12 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
 
     override fun tick() {
         val player = InfiniteClient.playerInterface.player ?: return
-        val invManager = InfiniteClient.playerInterface.inventory
+        val invManager = InventoryManager
         val client = InfiniteClient.playerInterface.client
 
         // Skip if a screen is open (e.g., inventory GUI)
         if (client.currentScreen != null) return
-        val chestSlotIndex = InventoryManager.Armor.CHEST
+        val chestSlotIndex = InventoryIndex.Armor.Chest()
         val currentChestStack = invManager.get(chestSlotIndex)
         if (currentChestStack.item == Items.ELYTRA) {
             isElytraEquippedByHack = true
@@ -122,7 +123,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         player: ClientPlayerEntity,
         invManager: InventoryManager,
     ) {
-        val chestSlotIndex = InventoryManager.Armor.CHEST
+        val chestSlotIndex = InventoryIndex.Armor.Chest()
         val currentChestStack = invManager.get(chestSlotIndex)
         val isCurrentElytra = currentChestStack.item == Items.ELYTRA
         val options = MinecraftClient.getInstance().options ?: return
@@ -220,10 +221,10 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         for (slot in slots) {
             val armorIndex =
                 when (slot) {
-                    EquipmentSlot.HEAD -> InventoryManager.Armor.HEAD
-                    EquipmentSlot.CHEST -> InventoryManager.Armor.CHEST
-                    EquipmentSlot.LEGS -> InventoryManager.Armor.LEGS
-                    EquipmentSlot.FEET -> InventoryManager.Armor.FEET
+                    EquipmentSlot.HEAD -> InventoryIndex.Armor.Head()
+                    EquipmentSlot.CHEST -> InventoryIndex.Armor.Chest()
+                    EquipmentSlot.LEGS -> InventoryIndex.Armor.Legs()
+                    EquipmentSlot.FEET -> InventoryIndex.Armor.Feet()
                     else -> continue
                 }
 
@@ -232,7 +233,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
             bestArmorData[slot] = bestData
 
             for (i in 0 until 36) {
-                val inventoryIndex = if (i < 9) InventoryManager.Hotbar(i) else InventoryManager.Backpack(i - 9)
+                val inventoryIndex = if (i < 9) InventoryIndex.Hotbar(i) else InventoryIndex.Backpack(i - 9)
                 val stack = invManager.get(inventoryIndex)
 
                 if (slot == EquipmentSlot.CHEST && stack.item == Items.ELYTRA) continue
@@ -257,15 +258,15 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
 
             val inventoryIndex =
                 when {
-                    data.invSlot < 9 -> InventoryManager.Hotbar(data.invSlot)
-                    else -> InventoryManager.Backpack(data.invSlot - 9)
+                    data.invSlot < 9 -> InventoryIndex.Hotbar(data.invSlot)
+                    else -> InventoryIndex.Backpack(data.invSlot - 9)
                 }
             val armorSlot =
                 when (slot) {
-                    EquipmentSlot.HEAD -> InventoryManager.Armor.HEAD
-                    EquipmentSlot.CHEST -> InventoryManager.Armor.CHEST
-                    EquipmentSlot.LEGS -> InventoryManager.Armor.LEGS
-                    EquipmentSlot.FEET -> InventoryManager.Armor.FEET
+                    EquipmentSlot.HEAD -> InventoryIndex.Armor.Head()
+                    EquipmentSlot.CHEST -> InventoryIndex.Armor.Chest()
+                    EquipmentSlot.LEGS -> InventoryIndex.Armor.Legs()
+                    EquipmentSlot.FEET -> InventoryIndex.Armor.Feet()
                     else -> continue
                 }
 
@@ -291,12 +292,12 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         return armorPoints * 5 + (toughness + fireProtection + blastProtection + projectileProtection) * 2 + protection * 3
     }
 
-    private fun findBestElytraSlot(invManager: InventoryManager): InventoryManager.InventoryIndex? {
-        var bestSlot: InventoryManager.InventoryIndex? = null
+    private fun findBestElytraSlot(invManager: InventoryManager): InventoryIndex? {
+        var bestSlot: InventoryIndex? = null
         var maxDurability = -1
 
         for (i in 0 until 36) {
-            val index = if (i < 9) InventoryManager.Hotbar(i) else InventoryManager.Backpack(i - 9)
+            val index = if (i < 9) InventoryIndex.Hotbar(i) else InventoryIndex.Backpack(i - 9)
             val stack = invManager.get(index)
             if (stack.item != Items.ELYTRA) continue
 

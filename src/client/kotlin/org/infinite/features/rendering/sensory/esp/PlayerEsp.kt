@@ -1,16 +1,18 @@
 package org.infinite.features.rendering.sensory.esp
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import org.infinite.features.rendering.sensory.ExtraSensory
 import org.infinite.libs.graphics.Graphics3D // Graphics3D をインポート
 import org.infinite.libs.graphics.render.RenderUtils
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 import kotlin.math.sqrt
 
 object PlayerEsp {
-    // 枠の色は水色 (0xFF00FFFF) に固定
     private val BOX_COLOR =
         org.infinite.InfiniteClient
             .theme()
@@ -39,8 +41,10 @@ object PlayerEsp {
      * @param graphics3d 描画コンテキスト
      */
     fun render(
-        graphics3d: Graphics3D, // Graphics3D を引数として受け取る
+        graphics3d: Graphics3D,
+        value: ExtraSensory.Method, // Graphics3D を引数として受け取る
     ) {
+        if (value == ExtraSensory.Method.OutLine) return
         val client = MinecraftClient.getInstance()
 
         // Graphics3D から tickProgress を取得
@@ -108,5 +112,14 @@ object PlayerEsp {
         val y: Double = MathHelper.lerp(partialTicks.toDouble(), entity.lastRenderY, entity.y)
         val z: Double = MathHelper.lerp(partialTicks.toDouble(), entity.lastRenderZ, entity.z)
         return Vec3d(x, y, z)
+    }
+
+    fun handleRenderState(
+        entity: PlayerEntity,
+        state: PlayerEntityRenderState,
+        tickProgress: Float,
+        ci: CallbackInfo,
+    ) {
+        state.outlineColor = BOX_COLOR
     }
 }

@@ -1,15 +1,11 @@
 package org.infinite.features.movement.mine
 
-import net.minecraft.client.MinecraftClient
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class AutoMine : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel = FeatureLevel.UTILS
-    private val client: MinecraftClient
-        get() = MinecraftClient.getInstance()
-
     override val settings: List<FeatureSetting<*>> = emptyList()
 
     override fun tick() {

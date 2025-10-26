@@ -1,4 +1,4 @@
-package org.infinite.features.fighting.playermanager
+package org.infinite.features.utils.playermanager
 
 import org.infinite.ConfigurableFeature
 import org.infinite.FeatureLevel
@@ -11,12 +11,12 @@ class PlayerManager : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.PlayerListSetting(
                 "Friends",
-                "feature.fighting.playermanager.friends.description",
+                "feature.utils.playermanager.friends.description",
                 mutableListOf(),
             ),
             FeatureSetting.PlayerListSetting(
                 "Enemies",
-                "feature.fighting.playermanager.enemies.description",
+                "feature.utils.playermanager.enemies.description",
                 mutableListOf(),
             ),
         )

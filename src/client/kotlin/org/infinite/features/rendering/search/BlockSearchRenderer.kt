@@ -3,13 +3,12 @@ package org.infinite.features.rendering.search
 import net.minecraft.client.MinecraftClient
 import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 import net.minecraft.world.chunk.ChunkSection
 import net.minecraft.world.dimension.DimensionType
 import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics3D
-import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.libs.world.WorldManager
+import org.infinite.utils.rendering.BlockMeshGenerator
 import org.infinite.utils.rendering.transparent
 
 object BlockSearchRenderer {
@@ -161,22 +160,8 @@ object BlockSearchRenderer {
     }
 
     fun render(graphics3D: Graphics3D) {
-        // Mapのエントリをイテレート
-        val boxes =
-            blockPositions.map { (pos, color) ->
-                RenderUtils.ColorBox(
-                    color, // ブロック情報から色を使用
-                    Box(
-                        pos.x.toDouble(),
-                        pos.y.toDouble(),
-                        pos.z.toDouble(),
-                        pos.x + 1.0,
-                        pos.y + 1.0,
-                        pos.z + 1.0,
-                    ),
-                )
-            }
-        graphics3D.renderSolidColorBoxes(boxes, true)
-        graphics3D.renderLinedColorBoxes(boxes, true)
+        val mesh = BlockMeshGenerator.generateMesh(blockPositions)
+        graphics3D.renderSolidQuads(mesh.quads, true)
+        graphics3D.renderLinedLines(mesh.lines, true)
     }
 }

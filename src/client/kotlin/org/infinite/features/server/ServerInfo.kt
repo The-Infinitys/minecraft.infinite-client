@@ -1,5 +1,8 @@
 package org.infinite.features.server
 
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ServerInfo
 import org.infinite.ConfigurableFeature
@@ -7,11 +10,13 @@ import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 
-class ServerInfo : ConfigurableFeature(initialEnabled = true) {
+class ServerInfo : ConfigurableFeature() {
     override val settings: List<FeatureSetting<*>> = emptyList()
     override val level: FeatureLevel = FeatureLevel.UTILS
+    override val preRegisterCommands: List<String> = emptyList()
+    override val togglable: Boolean = false
 
-    override fun tick() {
+    fun show(): Int {
         val info = getCurrentServerInfo()
         if (info != null) {
             var serverInfoText = ""
@@ -29,7 +34,17 @@ class ServerInfo : ConfigurableFeature(initialEnabled = true) {
         } else {
             InfiniteClient.error("Failed to get Server Info")
         }
+        return 1
+    }
+
+    override fun enabled() {
         disable()
+    }
+
+    override fun registerCommands(builder: LiteralArgumentBuilder<FabricClientCommandSource>) {
+        builder.then(
+            ClientCommandManager.literal("show").executes { _ -> show() },
+        )
     }
 
     fun getCurrentServerInfo(): ServerInfo? {

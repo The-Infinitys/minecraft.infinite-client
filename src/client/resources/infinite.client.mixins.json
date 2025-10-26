@@ -11,6 +11,7 @@
     "features.fighting.reach.ReachMixin",
     "features.fighting.superattack.SuperAttackMixin",
     "features.movement.antifall.ClientCommonNetworkHandlerMixin",
+    "features.movement.antihunger.ClientCommonNetworkHandlerMixin",
     "features.movement.fastbreak.ClientPlayerInteractionManagerAccessor",
     "features.movement.fastbreak.FastBreakMixin",
     "features.movement.freeze.FreezeNetworkHandlerMixin",
@@ -23,6 +24,8 @@
     "features.rendering.detailinfo.ChestMixin",
     "features.rendering.detailinfo.ClientPlayNetworkHandlerMixin",
     "features.rendering.detailinfo.ShulkerBoxMixin",
+    "features.rendering.extrasensory.EntityMixin",
+    "features.rendering.extrasensory.EntityRendererMixin",
     "features.rendering.freecamera.AbstractBlockStateMixin",
     "features.rendering.freecamera.ClientPlayerEntityMixin",
     "features.rendering.freecamera.ZeroHitBox",
@@ -35,6 +38,9 @@
     "features.rendering.xray.XRayBlockRenderInfoMixin",
     "features.rendering.xray.XRayFluidRendererMixin",
     "features.rendering.xray.XRayGammaMixin",
+    "features.server.DisconnectedScreenMixin",
+    "features.server.MultiPlayerScreenMixin",
+    "features.utils.afk.WorldRendererMixin",
     "infinite.graphics.InGameHudMixin",
     "infinite.graphics.WorldRendererMixin",
     "infinite.world.ClientPlayNetworkHandlerMixin"
@@ -43,6 +49,5 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "features.movement.antihunger.ClientCommonNetworkHandlerMixin"
   ]
 }

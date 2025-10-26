@@ -262,7 +262,7 @@ open class AimTask(
             AimTaskConditionReturn.Exec -> {
                 val rollDiff =
                     if (target is AimTarget.RollTarget) {
-                        (target as AimTarget.RollTarget).roll - playerRoll(player)
+                        ((target as AimTarget.RollTarget).roll - playerRoll(player)).diffNormalize()
                     } else {
                         calculateRotation(player, targetPos)
                     }
@@ -333,7 +333,7 @@ open class AimTask(
     private fun targetPos(target: AimTarget): Vec3d? =
         when (target) {
             is AimTarget.EntityTarget -> {
-                target.entity.eyePos
+                target.entity.getLerpedPos(MinecraftClient.getInstance().renderTickCounter.getTickProgress(false))
             }
 
             is AimTarget.BlockTarget -> {

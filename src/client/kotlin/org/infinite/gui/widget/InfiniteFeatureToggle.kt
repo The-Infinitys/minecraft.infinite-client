@@ -38,7 +38,7 @@ class InfiniteFeatureToggle(
                 buttonWidth,
                 height,
                 configurableFeature.isEnabled(),
-                configurableFeature.available,
+                configurableFeature.togglable,
             ) { newState ->
                 if (newState) {
                     configurableFeature.enable()
