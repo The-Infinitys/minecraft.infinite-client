@@ -29,6 +29,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
+import net.minecraft.util.WorldSavePath
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
@@ -378,14 +379,25 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
 
     private fun getDataDirectory(dimension: String? = null): Path {
         val gameDir = FabricLoader.getInstance().gameDir
+        val isSinglePlayer = client.isIntegratedServerRunning // Check if integrated server is running
+        val serverName =
+            if (isSinglePlayer) {
+                client.server
+                    ?.getSavePath(WorldSavePath.ROOT)
+                    ?.parent
+                    ?.fileName
+                    ?.toString() ?: "single_player_world" // Use world name for single player
+            } else {
+                client.currentServerEntry?.address ?: "multi_player_server" // Use server address for multiplayer
+            }
         val dataName = "inventories"
         // Use a default dimension key or the provided one
         val dimensionKey = dimension ?: getDimensionKey()
         return gameDir
             .resolve("infinite")
             .resolve("data")
-            .resolve("single_player")
-            .resolve("新規ワールド")
+            .resolve(if (isSinglePlayer) "single_player" else "multi_player")
+            .resolve(serverName)
             .resolve(dimensionKey)
             .resolve(dataName)
     }

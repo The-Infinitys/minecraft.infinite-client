@@ -7,6 +7,7 @@ import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
 import org.infinite.utils.rendering.drawBorder
 import org.joml.Matrix3x2f
@@ -79,9 +80,63 @@ class Graphics2D(
         matrixStack.scale(scaleX, scaleY)
     }
 
-    // ----------------------------------------------------------------------
-    // Draw Primitives プリミティブ描画
-    // ----------------------------------------------------------------------
+    /**
+     * テクスチャを指定した位置とサイズで描画します。
+     * @param identifier 描画するテクスチャのIdentifier
+     * @param x 描画開始X座標 (ピクセル)
+     * @param y 描画開始Y座標 (ピクセル)
+     * @param width 描画幅 (ピクセル)
+     * @param height 描画高さ (ピクセル)
+     * @param u テクスチャのU座標 (0.0-1.0)
+     * @param v テクスチャのV座標 (0.0-1.0)
+     * @param uWidth テクスチャのU方向の幅 (ピクセル)
+     * @param vHeight テクスチャのV方向の高さ (ピクセル)
+     * @param textureWidth テクスチャの実際の幅 (ピクセル)
+     * @param textureHeight テクスチャの実際の高さ (ピクセル)
+     * @param rotation 回転角度 (ラジアン)
+     */
+    fun drawTexture(
+        identifier: Identifier,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        u: Float = 0f,
+        v: Float = 0f,
+        uWidth: Int,
+        vHeight: Int,
+        textureWidth: Int,
+        textureHeight: Int,
+        rotation: Float = 0f,
+    ) {
+        // Check if the texture exists before attempting to d
+        if (client.textureManager.getTexture(identifier) == null) {
+            return
+        }
+
+        pushState()
+        if (rotation != 0f) {
+            translate(x + width / 2, y + height / 2)
+            matrixStack.rotate(rotation)
+            translate(-(x + width / 2), -(y + height / 2))
+        }
+
+        context.drawTexture(
+            RenderPipelines.GUI_TEXTURED,
+            identifier,
+            x.toInt(),
+            y.toInt(),
+            width,
+            height,
+            u.toInt(),
+            v.toInt(),
+            uWidth,
+            vHeight,
+            textureWidth,
+            textureHeight,
+        )
+        popState()
+    }
 
     /**
      * 矩形（四角形）を指定した色で塗りつぶし描画します。
@@ -195,6 +250,7 @@ class Graphics2D(
         )
     }
 
+    // drawLineは、新しい太い線分描画ロジックの簡略化のために残します。
     fun drawLine(
         x1: Float,
         y1: Float,
@@ -220,17 +276,9 @@ class Graphics2D(
         context.matrices.popMatrix()
     }
 
-// 省略...
-
-// ----------------------------------------------------------------------
-// Draw Primitives プリミティブ描画
-// ----------------------------------------------------------------------
-
-// ... (他のメソッドは省略) ...
-
     /**
-     * 2点間に太さを持つ線分を描画します。
-     * 線分の太さ分だけオフセットされた四角形として描画します。
+     * 2点間に太さを持つ線分を四角形として描画します。
+     * このメソッドは、drawTriangleやdrawCircleの辺描画に使用されます。
      *
      * @param x1 始点 X座標
      * @param y1 始点 Y座標
@@ -257,7 +305,6 @@ class Graphics2D(
         if (length < 1e-6) return // 長さが0に近い場合は描画しない
 
         // 単位法線ベクトル (線分に対して垂直)
-        // N_unit = (-dy/length, dx/length)
         val nx = -dy / length
         val ny = dx / length
 
@@ -280,17 +327,21 @@ class Graphics2D(
 
         // fillQuad で太さを持った四角形を描画
         fillQuad(
-            p1x, p1y,
-            p2x, p2y,
-            p3x, p3y,
-            p4x, p4y,
-            color
+            p1x,
+            p1y,
+            p2x,
+            p2y,
+            p3x,
+            p3y,
+            p4x,
+            p4y,
+            color,
         )
     }
 
     /**
      * 三角形の枠を指定した太さで描画します。
-     * 各辺を太さを持った線分として描画します。
+     * 各辺を太さを持った線分（四角形）として描画することで、角が重なり合って結合されます。
      *
      * @param x1 頂点1 X座標
      * @param y1 頂点1 Y座標
@@ -312,23 +363,45 @@ class Graphics2D(
         size: Int = 1,
     ) {
         // 各辺を太さを持った線分（四角形）として描画
-        // この方法では、各辺の四角形が頂点で重なり、結合部を埋める役割も果たします。
         drawThickLineSegment(x1, y1, x2, y2, color, size)
         drawThickLineSegment(x2, y2, x3, y3, color, size)
         drawThickLineSegment(x3, y3, x1, y1, color, size)
     }
 
     /**
-     * 指定された頂点でのベベル結合を描画します。
-     * (このメソッドは使用されなくなったため削除)
-     * // private fun drawBevelJointAtVertex(...) { ... }
+     * 半径に応じて、円を近似するために使用するセグメント数（頂点数）を計算します。
+     * 最小値は4、最大値は256です。
      */
+    private fun calculateSegments(radius: Float): Int {
+        val minSegments = 4
+        val maxSegments = 256
 
-// 省略...
+        val segments = radius.roundToInt()
+
+        return MathHelper.clamp(segments, minSegments, maxSegments)
+    }
+
+    fun fillCircle(
+        cx: Int,
+        cy: Int,
+        radius: Int,
+        color: Int,
+    ) {
+        fillCircle(cx.toFloat(), cy.toFloat(), radius.toFloat(), color)
+    }
+
+    fun drawCircle(
+        cx: Int,
+        cy: Int,
+        radius: Int,
+        color: Int,
+    ) {
+        drawCircle(cx.toFloat(), cy.toFloat(), radius.toFloat(), color)
+    }
 
     /**
      * 円（真円）を指定した色で塗りつぶし描画します。
-     * 多数の三角形で円を近似して描画します。
+     * 半径に応じて動的に決定された多数の三角形（トライアングルファン）で円を近似して描画します。
      *
      * @param cx 円の中心X座標 (ピクセル)
      * @param cy 円の中心Y座標 (ピクセル)
@@ -341,8 +414,8 @@ class Graphics2D(
         radius: Float,
         color: Int,
     ) {
-        // 円を近似するための三角形の数 (多いほど滑らかになるが、描画負荷が増す)
-        val segments = 32
+        // 半径に基づいてセグメント数を動的に決定
+        val segments = calculateSegments(radius)
         val twoPi = 2.0 * Math.PI
 
         // 現在の行列を保存
@@ -351,12 +424,12 @@ class Graphics2D(
         // 描画の中心を (cx, cy) に移動
         translate(cx, cy)
 
-        // 中心点と円周上の2点を使って三角形を順次描画
+        // 中心点 (0, 0) と円周上の2点を使って三角形を順次描画
         for (i in 0 until segments) {
             val angle1 = (i.toFloat() / segments.toFloat() * twoPi).toFloat()
             val angle2 = ((i.toFloat() + 1f) / segments.toFloat() * twoPi).toFloat()
 
-            // 頂点1 (中心)
+            // 頂点1 (中心 - 変換後)
             val x1 = 0f
             val y1 = 0f
             // 頂点2 (円周上)
@@ -376,7 +449,7 @@ class Graphics2D(
 
     /**
      * 円（真円）を指定した太さの枠線で描画します。
-     * 多数の線分で円を近似して描画します。
+     * 半径に応じて動的に決定された多数の太い線分で円を近似して描画します。
      *
      * @param cx 円の中心X座標 (ピクセル)
      * @param cy 円の中心Y座標 (ピクセル)
@@ -391,14 +464,14 @@ class Graphics2D(
         color: Int,
         size: Int = 1,
     ) {
-        // 円周を近似するための線分の数
-        val segments = 32
+        // 半径に基づいてセグメント数を動的に決定
+        val segments = calculateSegments(radius)
         val twoPi = 2.0 * Math.PI
 
         var prevX = cx + radius
         var prevY = cy
 
-        // 円周上の点を結んで線分を描画
+        // 円周上の点を結んで太い線分を描画
         for (i in 1..segments) {
             val angle = (i.toFloat() / segments.toFloat() * twoPi).toFloat()
 
@@ -406,8 +479,8 @@ class Graphics2D(
             val currentX = cx + MathHelper.cos(angle) * radius
             val currentY = cy + MathHelper.sin(angle) * radius
 
-            // 前の点と現在の点を結んで線を描画
-            drawLine(prevX, prevY, currentX, currentY, color, size)
+            // 前の点と現在の点を結んで太い線分を描画
+            drawThickLineSegment(prevX, prevY, currentX, currentY, color, size)
 
             // 現在の点を次の線の始点として保存
             prevX = currentX
