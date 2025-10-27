@@ -395,8 +395,9 @@ class Graphics2D(
         cy: Int,
         radius: Int,
         color: Int,
+        size: Int = 1,
     ) {
-        drawCircle(cx.toFloat(), cy.toFloat(), radius.toFloat(), color)
+        drawCircle(cx.toFloat(), cy.toFloat(), radius.toFloat(), color, size)
     }
 
     /**
