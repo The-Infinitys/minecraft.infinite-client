@@ -1,5 +1,7 @@
 package org.infinite.features.utils.map
 
+import net.minecraft.client.gui.ScreenRect
+import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.passive.PassiveEntity
@@ -8,7 +10,6 @@ import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics2D
-import org.infinite.settings.FeatureSetting
 import org.infinite.utils.rendering.transparent
 import org.infinite.utils.toRadians
 import kotlin.math.abs
@@ -57,14 +58,14 @@ object HyperMapRenderer {
         return alpha
     }
 
+    /**
+     * メインレンダリング関数: モードを受け取るように変更
+     */
     fun render(
-        graphics2d: Graphics2D, // Graphics2Dを受け取るように修正
+        graphics2d: Graphics2D,
         hyperMapFeature: HyperMap,
+        mode: HyperMap.Mode, // Mode を受け取るように変更
     ) {
-        if (hyperMapFeature.renderTerrain.value) {
-            renderTerrain(graphics2d, hyperMapFeature)
-        }
-
         val client = graphics2d.client
         val player = client.player ?: return
         val font = client.textRenderer
@@ -72,23 +73,30 @@ object HyperMapRenderer {
         val screenWidth = graphics2d.width
         val screenHeight = graphics2d.height
         val shortSide = screenWidth.coerceAtMost(screenHeight)
-        val marginPercent = InfiniteClient.getSettingInt(HyperMap::class.java, "Margin", 4)
-        val sizePercent = InfiniteClient.getSettingInt(HyperMap::class.java, "Size", 40)
+        // NOTE: FeatureSettingの取得方法を、受け取ったhyperMapFeatureから直接取得するように変更しました
+        val marginPercent = hyperMapFeature.marginPercent.value
+        val sizePercent = hyperMapFeature.sizePercent.value
         val marginPx = (shortSide * marginPercent / 100.0).toInt()
         val sizePx = (shortSide * sizePercent / 100.0).toInt()
         val halfSizePx = sizePx / 2
 
-        // レーダーの中心座標を右上に設定 **変更点**
-        val centerX = screenWidth - marginPx - halfSizePx // 画面右端からマージンと半分のサイズを引く
-        val centerY = marginPx + halfSizePx // 画面上端からマージンと半分のサイズを足す
+        // レーダーの中心座標を右上に設定
+        val centerX = screenWidth - marginPx - halfSizePx
+        val centerY = marginPx + halfSizePx
         val rainbowColor = InfiniteClient.theme().colors.primaryColor
         val innerColor =
             InfiniteClient
                 .theme()
                 .colors.backgroundColor
                 .transparent(128)
+
+        // 背景と外枠の描画
         graphics2d.fillCircle(centerX, centerY, halfSizePx, innerColor)
+        if (hyperMapFeature.renderTerrain.value) {
+            renderTerrain(graphics2d, hyperMapFeature, mode) // mode を渡す
+        }
         graphics2d.drawCircle(centerX, centerY, halfSizePx, rainbowColor, 4)
+
         val playerYaw = player.headYaw
 
         // 方位描画 (Graphics2D.drawText を使用)
@@ -119,12 +127,12 @@ object HyperMapRenderer {
                 true, // shadow
             )
         }
+
         // モブの描画
-        val featureRadius =
-            ((hyperMapFeature.getSetting("Radius") as? FeatureSetting.IntSetting)?.value ?: 10).toDouble()
+        val featureRadius = hyperMapFeature.radiusSetting.value.toDouble()
         val mobDotRadius = 1
         val yawRad = toRadians(playerYaw)
-        val featureHeight = (hyperMapFeature.getSetting("Height") as? FeatureSetting.IntSetting)?.value ?: 5
+        val featureHeight = hyperMapFeature.heightSetting.value
 
         // プレイヤーのドットを中央に描画
         val playerDotColor =
@@ -191,6 +199,8 @@ object HyperMapRenderer {
                 finalDotColor,
             )
         }
+
+        // 座標情報の描画
         val textWidth = graphics2d.textWidth("x: -300000000.00")
         val textX = centerX - halfSizePx - marginPx + (halfSizePx - textWidth) / 2
         val textY = centerY + halfSizePx + marginPx
@@ -206,9 +216,13 @@ object HyperMapRenderer {
         graphics2d.drawText("fps: ${client.currentFps}", textX, textY + 3 * fontSize, colors.foregroundColor, true)
     }
 
+    /**
+     * 地形レンダリング関数: モードを受け取るように変更し、テクスチャファイル名を動的に決定
+     */
     fun renderTerrain(
         graphics2d: Graphics2D,
         hyperMapFeature: HyperMap,
+        mode: HyperMap.Mode, // Mode を受け取るように変更
     ) {
         val client = graphics2d.client
         val player = client.player ?: return
@@ -223,55 +237,131 @@ object HyperMapRenderer {
         val halfSizePx = sizePx / 2
         val centerX = screenWidth - marginPx - halfSizePx
         val centerY = marginPx + halfSizePx
-        val featureRadius = hyperMapFeature.radiusSetting.value
+        val featureRadius = hyperMapFeature.radiusSetting.value.toDouble()
         val yaw = camera.yaw
         val yawRad = toRadians(yaw)
-        val blockDotSize = 1f // Half-size of each block square on the radar
-        for ((blockPos, blockState) in hyperMapFeature.nearbyBlocks) {
-            val dx = (blockPos.x - player.x)
-            val dz = (blockPos.z - player.z)
-            val distance = sqrt(dx * dx + dz * dz)
-            if (distance >= featureRadius) continue
-            val scaledDistance = (distance / featureRadius * halfSizePx.toDouble()).coerceAtMost(halfSizePx.toDouble())
-            val angleToBlock = atan2(dz, dx) - yawRad.toDouble()
-            val blockCenterX = centerX + scaledDistance * sin(angleToBlock)
-            val blockCenterY = centerY - scaledDistance * cos(angleToBlock)
-            val baseBlockColor = blockState.mapColor.color
-            val blockAlpha = if (!blockState.fluidState.isEmpty) 128 else 255 // 液体なら半透明 (128), それ以外は不透明 (255)
-            val blockColor = baseBlockColor.transparent(blockAlpha)
 
-            val relativeHeight = blockPos.y - player.y
-            val featureHeight = (hyperMapFeature.getSetting("Height") as? FeatureSetting.IntSetting)?.value ?: 5
-            val maxBlendFactor = 0.5 // Maximum 50% black or white
-            val blendFactor = (abs(relativeHeight) / featureHeight).coerceIn(0.0, maxBlendFactor).toFloat()
+        val playerBlockX = player.blockX
+        val playerBlockZ = player.blockZ
+        val playerChunkX = playerBlockX shr 4
+        val playerChunkZ = playerBlockZ shr 4
 
-            val finalBlockColor =
-                when {
-                    relativeHeight > 0 ->
-                        ColorHelper.lerp(
-                            blendFactor,
-                            blockColor,
-                            0xFFFFFFFF.toInt(),
-                        ) // Blend with white
-                    relativeHeight < 0 ->
-                        ColorHelper.lerp(
-                            blendFactor,
-                            blockColor,
-                            0xFF000000.toInt(),
-                        ) // Blend with black
-                    else -> blockColor
+        val renderDistanceChunks = (featureRadius / 16.0).toInt() + 1
+
+        val minChunkX = playerChunkX - renderDistanceChunks
+        val maxChunkX = playerChunkX + renderDistanceChunks
+        val minChunkZ = playerChunkZ - renderDistanceChunks
+        val maxChunkZ = playerChunkZ + renderDistanceChunks
+
+        val dimensionKey = MapTextureManager.dimensionKey
+        val maxPixelsPerFrame = 4096
+        var drawnPixels = 0
+        val blockRenderSize = (sizePx / (2 * featureRadius)).toFloat()
+
+        // ------------------------------------------------
+        // 1. テクスチャファイル名の決定
+        // ------------------------------------------------
+        val textureFileName =
+            when (mode) {
+                HyperMap.Mode.Flat -> "surface.png"
+                HyperMap.Mode.Solid -> {
+                    // プレイヤーのY座標からセクションの開始Y座標を計算 (例: Y=64 -> 64)
+                    val sectionY = (player.blockY / 16) * 16
+                    "section_$sectionY.png"
                 }
+            }
+        graphics2d.context.scissorStack.push(ScreenRect(centerX - halfSizePx, centerY - halfSizePx, sizePx, sizePx))
+        for (chunkX in minChunkX..maxChunkX) {
+            for (chunkZ in minChunkZ..maxChunkZ) {
+                val chunkWorldCenterX = chunkX * 16 + 8.0
+                val chunkWorldCenterZ = chunkZ * 16 + 8.0
 
-            graphics2d.renderBlockDot(
-                blockCenterX,
-                blockCenterY,
-                blockDotSize,
-                -yawRad,
-                finalBlockColor,
-            )
+                val dx = (chunkWorldCenterX - player.x)
+                val dz = (chunkWorldCenterZ - player.z)
+
+                val distanceToChunkCenter2 = dx * dx + dz * dz
+                val featureRange2 = (featureRadius - 10) * (featureRadius - 10)
+                // 2. 適切なファイル名を使ってテクスチャIdentifierを取得
+                val chunkIdentifier =
+                    MapTextureManager.getChunkTextureIdentifier(
+                        chunkX,
+                        chunkZ,
+                        dimensionKey,
+                        textureFileName,
+                    )
+
+                if (chunkIdentifier != null) {
+                    if (distanceToChunkCenter2 > featureRange2) {
+                        val texture =
+                            client.textureManager.getTexture(chunkIdentifier) as? NativeImageBackedTexture ?: continue
+                        val image = texture.image ?: continue
+                        val imageWidth = image.width
+                        val imageHeight = image.height
+                        val chunkBlockStartX = chunkX * 16
+                        val chunkBlockStartZ = chunkZ * 16
+                        for (x in 0 until imageWidth) {
+                            for (z in 0 until imageHeight) {
+                                if (drawnPixels >= maxPixelsPerFrame) break
+                                val blockWorldX = chunkBlockStartX + x + 0.5
+                                val blockWorldZ = chunkBlockStartZ + z + 0.5
+
+                                val relativeX = blockWorldX - player.x
+                                val relativeZ = blockWorldZ - player.z
+
+                                val distance2 = relativeX * relativeX + relativeZ * relativeZ
+                                val range2 = (featureRadius - 1) * (featureRadius - 1)
+                                // 円形クリッピング判定: レーダーの円の半径外ならスキップ
+                                if (distance2 > range2) {
+                                    continue
+                                }
+                                val distance = sqrt(distance2)
+                                val scaledDistance = (distance / featureRadius * halfSizePx.toDouble())
+                                val angleToBlock = atan2(relativeZ, relativeX) - yawRad.toDouble() - toRadians(90f)
+                                val renderX = centerX + (sin(angleToBlock) * scaledDistance)
+                                val renderY = centerY - (cos(angleToBlock) * scaledDistance)
+                                val pixelColor = image.getColorArgb(x, z)
+                                graphics2d.renderBlockDot(
+                                    renderX,
+                                    renderY,
+                                    blockRenderSize,
+                                    -yawRad,
+                                    pixelColor,
+                                )
+                                drawnPixels++
+                            }
+                            if (drawnPixels >= maxPixelsPerFrame) break
+                        }
+                    } else {
+                        val distanceToChunkCenter = sqrt(distanceToChunkCenter2)
+                        val scaledDistance =
+                            (distanceToChunkCenter / featureRadius * halfSizePx.toDouble()).coerceAtMost(halfSizePx.toDouble())
+                        val angleToChunk =
+                            atan2(dz, dx) - yawRad.toDouble() - toRadians(90f) // Adjust for radar orientation
+
+                        val renderX = centerX + (sin(angleToChunk) * scaledDistance)
+                        val renderY = centerY - (cos(angleToChunk) * scaledDistance)
+
+                        val chunkRenderSize = (16.0 * halfSizePx / featureRadius).coerceAtMost(sizePx.toDouble())
+
+                        graphics2d.drawRotatedTexture(
+                            chunkIdentifier,
+                            renderX - chunkRenderSize / 2,
+                            renderY - chunkRenderSize / 2,
+                            chunkRenderSize,
+                            chunkRenderSize,
+                            -yawRad + toRadians(180f),
+                        )
+                    }
+                }
+            }
         }
+
+        // 四角形クリッピングの解除
+        graphics2d.context.scissorStack.pop()
     }
 }
+
+// ... (renderBlockDot 拡張関数はそのまま)
 
 private fun Graphics2D.renderBlockDot(
     blockCenterX: Double,
@@ -293,20 +383,11 @@ private fun Graphics2D.renderBlockDot(
             toRadians(315f),
         )
 
-    // 【修正2: ドットの回転角】
-    // 進行方向が上になる座標系での描画に対応するため、マイクラのヨー角に90度のオフセットを加える
-    val rotation = direction
-
     val corners =
         baseAngles.map { baseAngle ->
-            // 頂点の角度 = (基準角度) + (回転角度)
-            val angle = baseAngle + rotation
-
-            // 回転された頂点座標を計算 (X: sin, Y: -cos)
-            // sin(angle) が X 座標の増減、-cos(angle) が Y 座標の増減に対応
+            val angle = baseAngle + direction
             val x = blockCenterX + r * sin(angle)
             val y = blockCenterY - r * cos(angle)
-
             x.toFloat() to y.toFloat()
         }
 

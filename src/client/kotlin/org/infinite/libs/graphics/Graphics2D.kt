@@ -153,8 +153,6 @@ class Graphics2D(
         height: Int,
         color: Int,
     ) {
-        // DrawContext.fill の引数は (x1, y1, x2, y2, color) の形式であるため、
-        // widthとheightを使用して x2 = x + width, y2 = y + height を計算します。
         context.fill(x, y, x + width, y + height, color)
     }
 
@@ -571,8 +569,117 @@ class Graphics2D(
         val x: Double,
         val y: Double,
     )
+    // ... (imports remain the same)
+
+// ... (class definition and properties remain the same)
+
+// ----------------------------------------------------------------------
+// MatrixState/Transform 状態管理 (Canvasの save/restore に相当)
+// ----------------------------------------------------------------------
+
+// ... (pushState, popState, translate, scale メソッドはそのまま)
+
+    /**
+     * テクスチャを指定した位置とサイズで描画します。
+     * * @param identifier 描画するテクスチャのIdentifier
+     * @param x 描画開始X座標 (ピクセル)
+     * @param y 描画開始Y座標 (ピクセル)
+     * @param width 描画幅 (ピクセル)
+     * @param height 描画高さ (ピクセル)
+     * @param u テクスチャのU座標（テクスチャピクセル単位） - **注: 0.0-1.0 ではなく、ピクセル単位での開始U座標に変更**
+     * @param v テクスチャのV座標（テクスチャピクセル単位） - **注: 0.0-1.0 ではなく、ピクセル単位での開始V座標に変更**
+     * @param uWidth テクスチャのU方向の幅 (ピクセル)
+     * @param vHeight テクスチャのV方向の高さ (ピクセル)
+     * @param textureWidth テクスチャの実際の幅 (ピクセル)
+     * @param textureHeight テクスチャの実際の高さ (ピクセル)
+     * @param rotation 回転角度 (ラジアン)
+     * @param color 適用する色 (0xAARRGGBB)。デフォルトは白 (0xFFFFFFFF)。
+     */
+    fun drawRotatedTexture(
+        identifier: Identifier,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        rotation: Float = 0f,
+        color: Int = -1,
+        u: Float = 0f,
+        v: Float = 0f,
+        uWidth: Float = 1f,
+        vHeight: Float = 1f,
+        textureWidth: Float = 1f,
+        textureHeight: Float = 1f,
+    ) {
+        // テクスチャが存在するかどうかを確認
+        if (client.textureManager.getTexture(identifier) == null) {
+            return
+        }
+
+        // UV座標を0.0-1.0の範囲に正規化
+        val uNormalized1 = u / textureWidth
+        val vNormalized1 = v / textureHeight
+        val uNormalized2 = (u + uWidth) / textureWidth
+        val vNormalized2 = (v + vHeight) / textureHeight
+
+        pushState()
+        // 回転が必要な場合、中心に移動して回転し、元に戻す
+        if (rotation != 0f) {
+            // 回転の中心を計算
+            val centerX = x + width / 2f
+            val centerY = y + height / 2f
+
+            // 1. 中心に移動
+            translate(centerX, centerY)
+            // 2. 回転
+            matrixStack.rotate(rotation)
+            // 3. 元の座標系に戻す
+            translate(-centerX, -centerY)
+        }
+
+        // 現在の変換行列を取得し、描画状態として登録
+        val pose = Matrix3x2f(context.matrices)
+        val scissor = context.scissorStack.peekLast()
+        val gpuTextureView =
+            this.client.textureManager
+                .getTexture(identifier)
+                .getGlTextureView()
+
+        // TexturedQuadRenderState を使用して描画要素を追加
+        context.state.addSimpleElement(
+            TexturedQuadRenderState(
+                RenderPipelines.GUI_TEXTURED,
+                TextureSetup.of(gpuTextureView),
+                pose,
+                x,
+                y,
+                x + width,
+                y + height,
+                uNormalized1,
+                uNormalized2,
+                vNormalized1,
+                vNormalized2,
+                color,
+                scissor,
+            ),
+        )
+
+        popState()
+    }
+
+// ... (fill, drawBorder, drawText, drawItem 以下のメソッドはそのまま)
 
     fun textWidth(text: String): Int = MinecraftClient.getInstance().textRenderer.getWidth(text)
 
     fun fontHeight(): Int = MinecraftClient.getInstance().textRenderer.fontHeight
+
+    fun drawRotatedTexture(
+        identifier: Identifier,
+        x: Double,
+        y: Double,
+        width: Double,
+        height: Double,
+        rotation: Float,
+    ) {
+        drawRotatedTexture(identifier, x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), rotation)
+    }
 }

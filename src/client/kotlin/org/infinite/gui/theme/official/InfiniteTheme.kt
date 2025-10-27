@@ -11,13 +11,14 @@ class InfiniteTheme : Theme("infinite", InfiniteColor(), ThemeIcon(Identifier.of
 
 class InfiniteColor : ThemeColors() {
     // 🎨 新しいカラーパレット
-    override val backgroundColor: Int = 0xFF000000.toInt()
+    override val backgroundColor: Int = 0x88000000.toInt()
 
     // 前景色: 白
     override val foregroundColor: Int = 0xFFFFFFFF.toInt()
 
     override val primaryColor: Int
         get() = getRainbowColor()
+    override val blueAccentColor: Int = 0xFF5555FF.toInt()
 
     // panelColorのロジックは変更せずそのまま残します
     override fun panelColor(
