@@ -1,4 +1,4 @@
-package org.infinite.features.fighting.noattack
+package org.infinite.features.utils.noattack
 
 import org.infinite.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
@@ -8,7 +8,7 @@ class NoAttack : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.EntityListSetting(
                 "ProtectedEntities",
-                "feature.fighting.noattack.protectedentities.description",
+                "feature.utils.noattack.protectedentities.description",
                 mutableListOf("minecraft:villager", "minecraft:wolf", "minecraft:cat"),
             ),
         )

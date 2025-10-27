@@ -9,10 +9,12 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.command.CommandSource
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.infinite.ConfigManager
-import org.infinite.InfiniteClient // Add this import
+import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient
 import org.infinite.InfiniteClient.error
 import org.infinite.InfiniteClient.info
 import org.infinite.InfiniteClient.log
@@ -24,7 +26,7 @@ import org.infinite.settings.FeatureSetting
 object InfiniteCommand {
     fun registerCommands(
         dispatcher: CommandDispatcher<FabricClientCommandSource>,
-        registryAccess: CommandRegistryAccess,
+        registry: CommandRegistryAccess,
     ) {
         val infiniteCommand =
             ClientCommandManager
@@ -33,7 +35,7 @@ object InfiniteCommand {
                 .then(
                     ClientCommandManager.literal("version").executes { _ -> getVersion() },
                 )
-                // 2. /infinite config save/load
+                // 2. /infinite config save/load/reset
                 .then(
                     ClientCommandManager
                         .literal("config")
@@ -45,7 +47,18 @@ object InfiniteCommand {
                             ClientCommandManager.literal("reset").executes { context -> resetConfig(context) }.then(
                                 getCategoryArgument().executes { context -> resetConfig(context) }.then(
                                     getFeatureNameArgument().executes { context -> resetConfig(context) }.then(
-                                        getSettingKeyArgument().executes { context -> resetConfig(context) },
+                                        getSettingKeyArgument(dynamicLookup = true)
+                                            .executes { context ->
+                                                resetConfig(
+                                                    context,
+                                                )
+                                            }.then(
+                                                getSettingValueArgument(dynamicLookup = true).executes { context ->
+                                                    resetConfig(
+                                                        context,
+                                                    )
+                                                },
+                                            ),
                                     ),
                                 ),
                             ),
@@ -53,11 +66,11 @@ object InfiniteCommand {
                 ).then(
                     ClientCommandManager
                         .literal("theme")
-                        .executes { context -> getTheme(context) } // /infinite theme
+                        .executes { _ -> getTheme() } // /infinite theme
                         .then(
                             ClientCommandManager
                                 .literal("list") // /infinite theme list
-                                .executes { context -> getTheme(context) },
+                                .executes { _ -> getTheme() },
                         ).then(
                             ClientCommandManager
                                 .literal("set") // /infinite theme set {name}
@@ -76,35 +89,38 @@ object InfiniteCommand {
 
             category.features.forEach { feature ->
                 val featureBuilder = ClientCommandManager.literal(feature.name)
+
                 if (feature.instance.preRegisterCommands.contains("enable")) {
                     featureBuilder.then(
-                        ClientCommandManager.literal("enable").executes { context ->
-                            toggleFeature(context, category.name, feature.name, true)
+                        ClientCommandManager.literal("enable").executes { _ ->
+                            toggleFeature(category.name, feature.name, true)
                         },
                     )
                 }
                 if (feature.instance.preRegisterCommands.contains("disable")) {
                     featureBuilder.then(
-                        ClientCommandManager.literal("disable").executes { context ->
-                            toggleFeature(context, category.name, feature.name, false)
+                        ClientCommandManager.literal("disable").executes { _ ->
+                            toggleFeature(category.name, feature.name, false)
                         },
                     )
                 }
                 if (feature.instance.preRegisterCommands.contains("toggle")) {
                     featureBuilder.then(
-                        ClientCommandManager.literal("toggle").executes { context ->
-                            toggleFeatureState(context, category.name, feature.name)
+                        ClientCommandManager.literal("toggle").executes { _ ->
+                            toggleFeatureState(category.name, feature.name)
                         },
                     )
                 }
+
+                // --- セッティング操作: set ---
                 if (feature.instance.preRegisterCommands.contains("set")) {
                     featureBuilder.then(
                         ClientCommandManager
                             .literal("set")
                             .then(
-                                getSettingKeyArgument()
+                                getSettingKeyArgument(feature.instance)
                                     .then(
-                                        getSettingValueArgument()
+                                        getSettingValueArgument(feature.instance)
                                             .executes { context ->
                                                 setFeatureSetting(
                                                     context,
@@ -116,24 +132,30 @@ object InfiniteCommand {
                             ),
                     )
                 }
+
+                // --- セッティング操作: get (status) ---
                 if (feature.instance.preRegisterCommands.contains("get")) {
                     featureBuilder.then(
                         ClientCommandManager
                             .literal("get")
                             .then(
-                                getSettingKeyArgument()
-                                    .executes { context -> getFeatureStatus(context, category.name, feature.name) },
+                                getSettingKeyArgument(feature.instance)
+                                    .executes { _ ->
+                                        getFeatureStatus(category.name, feature.name)
+                                    },
                             ),
                     )
                 }
+
+                // --- セッティング操作: add ---
                 if (feature.instance.preRegisterCommands.contains("add")) {
                     featureBuilder.then(
                         ClientCommandManager
                             .literal("add")
                             .then(
-                                getSettingKeyArgument()
+                                getSettingKeyArgument(feature.instance)
                                     .then(
-                                        getSettingValueArgument()
+                                        getSettingValueArgument(feature.instance)
                                             .executes { context ->
                                                 addRemoveFeatureSetting(
                                                     context,
@@ -146,14 +168,16 @@ object InfiniteCommand {
                             ),
                     )
                 }
+
+                // --- セッティング操作: del ---
                 if (feature.instance.preRegisterCommands.contains("del")) {
                     featureBuilder.then(
                         ClientCommandManager
                             .literal("del")
                             .then(
-                                getSettingKeyArgument()
+                                getSettingKeyArgument(feature.instance)
                                     .then(
-                                        getSettingValueArgument()
+                                        getSettingValueArgument(feature.instance)
                                             .executes { context ->
                                                 addRemoveFeatureSetting(
                                                     context,
@@ -167,7 +191,6 @@ object InfiniteCommand {
                     )
                 }
 
-                // Allow the feature to register its custom commands as subcommands to its own feature literal
                 feature.instance.registerCommands(featureBuilder)
 
                 categoryLiteral.then(featureBuilder)
@@ -178,7 +201,7 @@ object InfiniteCommand {
         dispatcher.register(infiniteCommand)
     }
 
-    private fun getTheme(context: CommandContext<FabricClientCommandSource>): Int {
+    private fun getTheme(): Int {
         val currentThemeName = InfiniteClient.currentTheme
         info(Text.translatable("command.infinite.theme.current", currentThemeName).string)
         val availableThemes = InfiniteClient.themes.joinToString(", ") { it.name }
@@ -202,13 +225,13 @@ object InfiniteCommand {
             return 0
         }
         InfiniteClient.currentTheme = theme.name
-        ConfigManager.saveConfig() // Save the updated theme
+        ConfigManager.saveConfig()
         info(Text.translatable("command.infinite.theme.changed", theme.name).string)
         return 1
     }
 
     /*
-     * 既存の引数定義関数 (変更なし)
+     * 引数定義関数
      */
 
     private fun resetConfig(context: CommandContext<*>): Int {
@@ -233,11 +256,10 @@ object InfiniteCommand {
 
         when {
             categoryName == null -> {
-                // Reset all settings
                 featureCategories.forEach { category ->
                     category.features.forEach { feature ->
                         feature.instance.let { configurableFeature ->
-                            configurableFeature.reset() // Reset the feature's enabled state
+                            configurableFeature.reset()
                             configurableFeature.settings.forEach { setting ->
                                 setting.reset()
                             }
@@ -248,7 +270,6 @@ object InfiniteCommand {
             }
 
             featureName == null -> {
-                // Reset all settings in a category
                 val category = featureCategories.firstOrNull { it.name.equals(categoryName, ignoreCase = true) }
                 if (category == null) {
                     error(Text.translatable("command.infinite.category.notfound", categoryName).string)
@@ -256,7 +277,7 @@ object InfiniteCommand {
                 }
                 category.features.forEach { feature ->
                     feature.instance.let { configurableFeature ->
-                        configurableFeature.reset() // Reset the feature's enabled state
+                        configurableFeature.reset()
                         configurableFeature.settings.forEach { setting ->
                             setting.reset()
                         }
@@ -266,13 +287,12 @@ object InfiniteCommand {
             }
 
             settingKey == null -> {
-                // Reset all settings in a feature
                 val feature = searchFeature(categoryName, featureName)
                 if (feature == null) {
                     error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
                     return 0
                 }
-                feature.reset() // Reset the feature's enabled state
+                feature.reset()
                 feature.settings.forEach { setting ->
                     setting.reset()
                 }
@@ -280,7 +300,6 @@ object InfiniteCommand {
             }
 
             else -> {
-                // Reset a specific setting
                 val feature = searchFeature(categoryName, featureName)
                 if (feature == null) {
                     error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
@@ -317,7 +336,6 @@ object InfiniteCommand {
     }
 
     private fun toggleFeatureState(
-        context: CommandContext<FabricClientCommandSource>,
         categoryName: String,
         featureName: String,
     ): Int {
@@ -327,7 +345,6 @@ object InfiniteCommand {
             return 0
         }
         val enable = !feature.isEnabled()
-        // 現在の状態を反転させる
         val action =
             if (enable) {
                 Text
@@ -337,18 +354,13 @@ object InfiniteCommand {
             } else {
                 Text.translatable("command.infinite.action.disabled").string
             }
-
-        if (enable) {
-            feature.enable()
-        } else {
-            feature.disable()
-        }
+        feature.toggle()
         info(Text.translatable("command.infinite.feature.toggled", featureName, action).string)
         return 1
     }
 
     /*
-     * 既存の引数定義関数 (変更なし)
+     * 引数定義関数
      */
 
     private fun getCategoryArgument() =
@@ -357,13 +369,22 @@ object InfiniteCommand {
     private fun getFeatureNameArgument() =
         ClientCommandManager.argument("name", StringArgumentType.word()).suggests(getFeatureNameSuggestions())
 
-    private fun getSettingKeyArgument() =
-        ClientCommandManager.argument("key", StringArgumentType.word()).suggests(getSettingKeySuggestions())
+    private fun getSettingKeyArgument(
+        feature: ConfigurableFeature? = null,
+        dynamicLookup: Boolean = false,
+    ) = ClientCommandManager
+        .argument("key", StringArgumentType.word())
+        .suggests(getSettingKeySuggestions(feature, dynamicLookup))
 
-    private fun getSettingValueArgument() = ClientCommandManager.argument("value", StringArgumentType.greedyString())
+    private fun getSettingValueArgument(
+        feature: ConfigurableFeature? = null,
+        dynamicLookup: Boolean = false,
+    ) = ClientCommandManager
+        .argument("value", StringArgumentType.greedyString())
+        .suggests(getSettingValueSuggestions(feature, dynamicLookup))
 
     /*
-     * 既存のサジェスト関数 (変更なし)
+     * サジェスト関数
      */
 
     private fun getCategorySuggestions(): SuggestionProvider<FabricClientCommandSource> =
@@ -390,29 +411,295 @@ object InfiniteCommand {
             builder.buildFuture()
         }
 
-    private fun getSettingKeySuggestions(): SuggestionProvider<FabricClientCommandSource> =
+    private fun getSettingKeySuggestions(
+        feature: ConfigurableFeature? = null,
+        dynamicLookup: Boolean = false,
+    ): SuggestionProvider<FabricClientCommandSource> =
         SuggestionProvider { context, builder ->
             try {
-                val categoryName = StringArgumentType.getString(context, "category")
-                val featureName = StringArgumentType.getString(context, "name")
-                val feature = searchFeature(categoryName, featureName)
-                if (feature != null) {
+                val targetFeature =
+                    when {
+                        feature != null -> feature
+                        dynamicLookup -> {
+                            val categoryName = StringArgumentType.getString(context, "category")
+                            val featureName = StringArgumentType.getString(context, "name")
+                            searchFeature(categoryName, featureName)
+                        }
+
+                        else -> null
+                    }
+
+                if (targetFeature != null) {
+                    // コマンドパスから add/del/set を判定
+                    val commandNodeNames = context.nodes.map { it.node.name }
+                    val isAddCommand = commandNodeNames.contains("add")
+                    val isDelCommand = commandNodeNames.contains("del")
+                    val isSetCommand = commandNodeNames.contains("set")
+                    val isListCommand = isAddCommand || isDelCommand
+
+                    // サジェストする設定キーのリストをフィルタリング
+                    val filteredSettings =
+                        targetFeature.settings.filter { setting ->
+                            val isListSetting =
+                                when (setting) {
+                                    is FeatureSetting.StringListSetting,
+                                    is FeatureSetting.BlockListSetting,
+                                    is FeatureSetting.EntityListSetting,
+                                    is FeatureSetting.PlayerListSetting,
+                                    -> true
+
+                                    else -> false
+                                }
+
+                            when {
+                                isListCommand -> {
+                                    // add/del の場合: リスト設定のみを表示
+                                    isListSetting
+                                }
+
+                                isSetCommand -> {
+                                    // set の場合: 非リスト設定のみを表示
+                                    !isListSetting
+                                }
+
+                                else -> {
+                                    // get/reset の場合: 全ての設定を表示
+                                    true
+                                }
+                            }
+                        }
+
                     CommandSource.suggestMatching(
-                        feature.settings.map { it.name },
+                        filteredSettings.map { it.name },
                         builder,
                     )
                 }
-            } catch (_: IllegalArgumentException) {
+            } catch (_: Exception) {
+                // Ignore if arguments are not fully present yet
             }
             builder.buildFuture()
         }
 
+    private fun getSettingValueSuggestions(
+        feature: ConfigurableFeature? = null,
+        dynamicLookup: Boolean = false,
+    ): SuggestionProvider<FabricClientCommandSource> =
+        SuggestionProvider { context, builder ->
+            try {
+                val targetFeature =
+                    when {
+                        feature != null -> feature
+                        dynamicLookup -> {
+                            val categoryName = StringArgumentType.getString(context, "category")
+                            val featureName = StringArgumentType.getString(context, "name")
+                            searchFeature(categoryName, featureName)
+                        }
+
+                        else -> null
+                    }
+
+                if (targetFeature != null) {
+                    val settingKey = StringArgumentType.getString(context, "key")
+                    val setting = targetFeature.getSetting(settingKey)
+                    val rawInput = builder.input.substring(builder.start) // ユーザーの入力プレフィックス
+
+                    if (setting != null) {
+                        // コマンドパスから add/del を判定
+                        val commandNodeNames = context.nodes.map { it.node.name }
+                        val isAddCommand = commandNodeNames.contains("add")
+                        val isDelCommand = commandNodeNames.contains("del")
+                        val isListCommand = isAddCommand || isDelCommand
+
+                        val suggestions =
+                            when (setting) {
+                                // リスト設定: ADD/DELの時のみサジェストを生成
+                                is FeatureSetting.BlockListSetting -> {
+                                    when {
+                                        isDelCommand -> {
+                                            @Suppress("UNCHECKED_CAST")
+                                            (setting.value as? List<String>) ?: emptyList()
+                                        }
+
+                                        isAddCommand -> {
+                                            Registries.BLOCK.ids.map { it.toString() }
+                                        }
+
+                                        else -> emptyList() // set/get/resetの場合は非表示
+                                    }
+                                }
+
+                                is FeatureSetting.EntityListSetting -> {
+                                    when {
+                                        isDelCommand -> {
+                                            @Suppress("UNCHECKED_CAST")
+                                            (setting.value as? List<String>) ?: emptyList()
+                                        }
+
+                                        isAddCommand -> {
+                                            Registries.ENTITY_TYPE.ids.map { it.toString() }
+                                        }
+
+                                        else -> emptyList() // set/get/resetの場合は非表示
+                                    }
+                                }
+
+                                is FeatureSetting.PlayerListSetting -> {
+                                    when {
+                                        isDelCommand -> {
+                                            @Suppress("UNCHECKED_CAST")
+                                            (setting.value as? List<String>) ?: emptyList()
+                                        }
+
+                                        isAddCommand -> {
+                                            context.source.client.networkHandler
+                                                ?.playerList
+                                                ?.map { it.profile.name }
+                                                ?: emptyList()
+                                        }
+
+                                        else -> emptyList() // set/get/resetの場合は非表示
+                                    }
+                                }
+
+                                is FeatureSetting.StringListSetting -> {
+                                    when {
+                                        isDelCommand -> {
+                                            @Suppress("UNCHECKED_CAST")
+                                            (setting.value)
+                                        }
+
+                                        isAddCommand -> {
+                                            // 自由な文字列リストのため、追加時のサジェストは提供しない
+                                            emptyList()
+                                        }
+
+                                        else -> emptyList() // set/get/resetの場合は非表示
+                                    }
+                                }
+
+                                // 非リスト設定: SET/RESETの時のみサジェストを生成
+                                is FeatureSetting.BooleanSetting -> {
+                                    if (isListCommand) emptyList() else listOf("true", "false")
+                                }
+
+                                is FeatureSetting.EnumSetting<*> -> {
+                                    if (isListCommand) emptyList() else setting.options.map { it.toString() }
+                                }
+
+                                // 数値設定: 範囲サジェスト
+                                is FeatureSetting.IntSetting -> {
+                                    if (isListCommand) {
+                                        emptyList()
+                                    } else {
+                                        getNumericSuggestions(
+                                            setting.min,
+                                            setting.max,
+                                            setting.defaultValue,
+                                            rawInput,
+                                        )
+                                    }
+                                }
+
+                                is FeatureSetting.FloatSetting -> {
+                                    if (isListCommand) {
+                                        emptyList()
+                                    } else {
+                                        getNumericSuggestions(
+                                            setting.min,
+                                            setting.max,
+                                            setting.defaultValue,
+                                            rawInput,
+                                        )
+                                    }
+                                }
+
+                                is FeatureSetting.DoubleSetting -> {
+                                    if (isListCommand) {
+                                        emptyList()
+                                    } else {
+                                        getNumericSuggestions(
+                                            setting.min,
+                                            setting.max,
+                                            setting.defaultValue,
+                                            rawInput,
+                                        )
+                                    }
+                                }
+                                // その他 (Stringなど): 常にサジェストなし
+                                else -> emptyList()
+                            }
+
+                        CommandSource.suggestMatching(suggestions, builder)
+                    }
+                }
+            } catch (_: Exception) {
+            }
+            builder.buildFuture()
+        }
+
+    // ヘルパー関数: 数値設定のサジェストを生成
+    private fun getNumericSuggestions(
+        min: Number,
+        max: Number,
+        default: Number,
+        rawInput: String,
+    ): List<String> {
+        val suggestions = mutableSetOf<String>()
+
+        // 1. 境界値とデフォルト値を追加
+        suggestions.add(min.toString())
+        suggestions.add(max.toString())
+        suggestions.add(default.toString())
+
+        // 2. プレフィックスが数値の場合、その周辺の値をサジェスト
+        if (rawInput.isNotEmpty()) {
+            val isInt = min is Int
+            try {
+                // プレフィックスを数値として解析
+                val parsedPrefix: Double = rawInput.toDoubleOrNull() ?: return suggestions.toList()
+                val maxDouble = max.toDouble()
+                val minDouble = min.toDouble()
+
+                // プレフィックスが範囲内かチェック
+                if (parsedPrefix in minDouble..maxDouble) {
+                    if (isInt) {
+                        // Intの場合: プレフィックスと±1, ±5の整数値をサジェスト
+                        val parsedInt = parsedPrefix.toInt()
+                        suggestions.add(parsedInt.toString())
+                        suggestions.add((parsedInt + 1).coerceAtMost(max.toInt()).toString())
+                        suggestions.add((parsedInt - 1).coerceAtLeast(min).toString())
+                        suggestions.add((parsedInt + 5).coerceAtMost(max.toInt()).toString())
+                        suggestions.add((parsedInt - 5).coerceAtLeast(min).toString())
+                    } else {
+                        // Float/Doubleの場合: プレフィックスそのものをサジェスト
+                        suggestions.add(String.format("%.2f", parsedPrefix).removeSuffix(".00").removeSuffix(".0"))
+                        // さらに、0.5刻みの周辺の値をサジェスト
+                        val nearUp = (parsedPrefix + 0.5).coerceAtMost(maxDouble)
+                        val nearDown = (parsedPrefix - 0.5).coerceAtLeast(minDouble)
+                        suggestions.add(String.format("%.2f", nearUp).removeSuffix(".00").removeSuffix(".0"))
+                        suggestions.add(String.format("%.2f", nearDown).removeSuffix(".00").removeSuffix(".0"))
+                    }
+                }
+            } catch (_: Exception) {
+                // Ignore (already handled by toDoubleOrNull)
+            }
+        }
+
+        // 3. ユーザーの入力 (rawInput) に合致する、ユニークな値のみを返す
+        return suggestions
+            .map {
+                // IntSettingの場合に .0 を削除 (既にヘルパー関数内で .0 の削除処理をしていますが、念のため)
+                if (min is Int) it.removeSuffix(".0") else it
+            }.filter { it.startsWith(rawInput, ignoreCase = true) }
+            .distinct()
+            .toList()
+    }
+
     /*
-     * 既存の機能操作関数 (一部変更/再利用)
+     * 既存の機能操作関数
      */
 
     private fun toggleFeature(
-        context: CommandContext<FabricClientCommandSource>,
         categoryName: String,
         featureName: String,
         enable: Boolean,
@@ -476,8 +763,19 @@ object InfiniteCommand {
                         rawValue.toFloatOrNull()
                             ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.float").string)
 
+                    is Double ->
+                        rawValue.toDoubleOrNull()
+                            ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.double").string)
+
                     is String -> rawValue
                     is List<*> -> rawValue.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                    is Enum<*> -> {
+                        @Suppress("UNCHECKED_CAST")
+                        val enumClass = setting.value!!::class.java as Class<out Enum<*>>
+                        enumClass.enumConstants.firstOrNull { it.name.equals(rawValue, ignoreCase = true) }
+                            ?: throw IllegalArgumentException(Text.translatable("command.infinite.setting.type.enum.notfound").string)
+                    }
+
                     else -> throw IllegalStateException(
                         Text
                             .translatable(
@@ -519,7 +817,11 @@ object InfiniteCommand {
             return 0
         }
 
-        if (setting is FeatureSetting.StringListSetting || setting is FeatureSetting.BlockListSetting) {
+        if (setting is FeatureSetting.StringListSetting ||
+            setting is FeatureSetting.BlockListSetting ||
+            setting is FeatureSetting.EntityListSetting ||
+            setting is FeatureSetting.PlayerListSetting
+        ) {
             @Suppress("UNCHECKED_CAST")
             val listSetting = setting as FeatureSetting<MutableList<String>>
             val currentList = listSetting.value
@@ -547,7 +849,6 @@ object InfiniteCommand {
     }
 
     private fun getFeatureStatus(
-        context: CommandContext<FabricClientCommandSource>,
         categoryName: String,
         featureName: String,
     ): Int {

@@ -1,6 +1,5 @@
 package org.infinite.features.movement.water
 
-import net.minecraft.client.MinecraftClient
 import org.infinite.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
@@ -10,9 +9,6 @@ enum class WaterHoverMethod {
 }
 
 class WaterHover : ConfigurableFeature(initialEnabled = false) {
-    private val client: MinecraftClient
-        get() = MinecraftClient.getInstance()
-
     override val settings: List<FeatureSetting<*>> =
         listOf(
             FeatureSetting.EnumSetting(

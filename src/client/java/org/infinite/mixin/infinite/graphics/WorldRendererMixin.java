@@ -10,21 +10,17 @@ import org.infinite.libs.client.player.fighting.AimInterface;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WorldRenderer.class)
 public abstract class WorldRendererMixin {
-  @Shadow
-  public abstract void tick(Camera camera);
-
   @Inject(
       at = @At("RETURN"),
       method =
           "render(Lnet/minecraft/client/util/ObjectAllocator;Lnet/minecraft/client/render/RenderTickCounter;ZLnet/minecraft/client/render/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V")
-  private void onRender(
+  private void onRenderReturn(
       ObjectAllocator allocator,
       RenderTickCounter tickCounter,
       boolean renderBlockOutline,

@@ -2,7 +2,7 @@ package org.infinite.utils.rendering
 
 import net.minecraft.util.math.ColorHelper
 
-fun getRainbowColor(): Int {
+fun getRainbowColor(value: Float? = null): Int {
     val rainbowDuration = 6000L
     val colors =
         intArrayOf(
@@ -16,7 +16,7 @@ fun getRainbowColor(): Int {
         )
     val currentTime = System.currentTimeMillis()
     val elapsedTime = currentTime % rainbowDuration
-    val progress = elapsedTime.toFloat() / rainbowDuration.toFloat()
+    val progress = value ?: (elapsedTime.toFloat() / rainbowDuration.toFloat())
     val numSegments = colors.size - 1
     val segmentLength = 1.0f / numSegments
     val currentSegmentIndex = (progress / segmentLength).toInt().coerceAtMost(numSegments - 1)

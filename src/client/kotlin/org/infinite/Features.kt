@@ -5,6 +5,7 @@ import org.infinite.features.fighting
 import org.infinite.features.movement
 import org.infinite.features.rendering
 import org.infinite.features.server
+import org.infinite.features.utils
 
 data class Feature(
     val name: String,
@@ -30,4 +31,5 @@ val featureCategories =
         FeatureCategory("Fighting", fighting),
         FeatureCategory("Automatic", automatic),
         FeatureCategory("Server", server),
+        FeatureCategory("Utils", utils),
     )
