@@ -102,6 +102,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
     /**
      * RGBカラー値を明るさレベルに基づいて調整します。
      * 最大: 1.25倍 (元の色 + 25%)、最小: 0.75倍 (元の色 - 25%黒を混ぜる)
+     * ★修正: ARGB形式で分解・再構築します。
      */
     private fun applyLighting(
         color: Int,
@@ -110,7 +111,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         val alpha = color ushr 24 and 0xFF
         var red = color ushr 16 and 0xFF
         var green = color ushr 8 and 0xFF
-        var blue = color and 0xFF
+        var blue = color and 0xFF // ARGB形式
 
         // 調整範囲: [0.75, 1.25]
         val minFactor = 0.75f
@@ -123,21 +124,26 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         green = (green * finalFactor).toInt().coerceIn(0, 255)
         blue = (blue * finalFactor).toInt().coerceIn(0, 255)
 
+        // ★修正: ARGB形式で再構築
         return (alpha shl 24) or (red shl 16) or (green shl 8) or blue
     }
 
     /**
      * RGBカラー値を彩度調整します (最大50%増加)。
+     * ★修正: java.awt.Colorは**通常**RGBA形式ですが、HSBtoRGB/RGBtoHSBは内部でRGBを扱うため、ここではalpha値を分離して処理します。
      */
     private fun adjustSaturation(
         color: Int,
         saturationFactor: Float,
     ): Int {
         val alpha = color ushr 24 and 0xFF
-        val javaColor = Color(color, true)
+        // R, G, Bを抽出
+        val red = color ushr 16 and 0xFF
+        val green = color ushr 8 and 0xFF
+        val blue = color and 0xFF
 
         // HSBモデルに変換
-        val hsb = Color.RGBtoHSB(javaColor.red, javaColor.green, javaColor.blue, null)
+        val hsb = Color.RGBtoHSB(red, green, blue, null)
         val hue = hsb[0]
         var saturation = hsb[1]
         val brightness = hsb[2]
@@ -148,14 +154,16 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         saturation = saturation.coerceIn(0.0f, 1.0f) // 1.0fにクランプ
 
         // HSBからRGBに戻す
-        val newRgb = Color.HSBtoRGB(hue, saturation, brightness)
-        val newColor = Color(newRgb)
+        val newRgb = Color.HSBtoRGB(hue, saturation, brightness) // この値は0xRRGGBB形式
+        val newColor = newRgb and 0xFFFFFF // RRGGBB部分のみ抽出
 
-        return (alpha shl 24) or (newColor.red shl 16) or (newColor.green shl 8) or newColor.blue
+        // ★修正: ARGB形式で再構築
+        return (alpha shl 24) or newColor
     }
 
     /**
      * Solidモード専用: Y座標に基づきシェーディング（高さ）補正します。
+     * ★修正: ARGB形式で分解・再構築します。
      */
     private fun applyShadingByHeight(
         color: Int,
@@ -166,9 +174,12 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         if (yMax <= yMin) return color
 
         val alpha = color ushr 24 and 0xFF
-        val javaColor = Color(color, true)
+        val red = color ushr 16 and 0xFF
+        val green = color ushr 8 and 0xFF
+        val blue = color and 0xFF
 
-        val hsb = Color.RGBtoHSB(javaColor.red, javaColor.green, javaColor.blue, null)
+        // HSBモデルに変換
+        val hsb = Color.RGBtoHSB(red, green, blue, null)
         val hue = hsb[0]
         val saturation = hsb[1]
         var brightness = hsb[2]
@@ -183,15 +194,18 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         brightness *= factor
         brightness = brightness.coerceIn(0.0f, 1.0f)
 
+        // HSBからRGBに戻す
         val newRgb = Color.HSBtoRGB(hue, saturation, brightness)
-        val newColor = Color(newRgb)
+        val newColor = newRgb and 0xFFFFFF // RRGGBB部分のみ抽出
 
-        return (alpha shl 24) or (newColor.red shl 16) or (newColor.green shl 8) or newColor.blue
+        // ★修正: ARGB形式で再構築
+        return (alpha shl 24) or newColor
     }
 
     /**
      * 周囲との高低差（勾配）に基づき明るさを調整します。
      * 光源は北西 (-X, -Z) から当たると仮定します。
+     * ★修正: ARGB形式で分解・再構築します。
      */
     private fun applySlopeShading(
         x: Int,
@@ -206,8 +220,11 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         if (currentY <= world.bottomY) return color
 
         val alpha = color ushr 24 and 0xFF
-        val javaColor = Color(color, true)
-        val hsb = Color.RGBtoHSB(javaColor.red, javaColor.green, javaColor.blue, null)
+        val red = color ushr 16 and 0xFF
+        val green = color ushr 8 and 0xFF
+        val blue = color and 0xFF
+
+        val hsb = Color.RGBtoHSB(red, green, blue, null)
         val hue = hsb[0]
         val saturation = hsb[1]
         var brightness = hsb[2]
@@ -246,9 +263,19 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
             brightnessAdjustment -= min(maxShade, diffNorth / slopeScale * maxShade)
         }
         // 西側の確認
-        if (x > 0 && heightMap[x - 1][z] > currentY) {
+        val westY =
+            if (x > 0) {
+                heightMap[x - 1][z]
+            } else {
+                world
+                    .getChunk(chunkX - 1, chunkZ)
+                    ?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)
+                    ?.get(15, z) ?: currentY
+            }
+        val diffWest = westY - currentY
+        if (diffWest > 0) {
             // 西側が高い（影になる） -> 暗くする
-            brightnessAdjustment -= min(maxShade, (heightMap[x - 1][z] - currentY) / slopeScale * maxShade)
+            brightnessAdjustment -= min(maxShade, diffWest / slopeScale * maxShade)
         }
 
         // 光の処理 (東側、南側が低い場合)
@@ -257,9 +284,19 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
             brightnessAdjustment += min(maxShade, (currentY - eastY) / slopeScale * maxShade)
         }
         // 南側の確認
-        if (z < 15 && heightMap[x][z + 1] < currentY) {
+        val southY =
+            if (z < 15) {
+                heightMap[x][z + 1]
+            } else {
+                world
+                    .getChunk(chunkX, chunkZ + 1)
+                    ?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)
+                    ?.get(x, 0) ?: currentY
+            }
+        val diffSouth = currentY - southY
+        if (diffSouth > 0) {
             // 南側が低い（光が当たる） -> 明るくする
-            brightnessAdjustment += min(maxShade, (currentY - heightMap[x][z + 1]) / slopeScale * maxShade)
+            brightnessAdjustment += min(maxShade, diffSouth / slopeScale * maxShade)
         }
 
         // 最終的な明るさを適用
@@ -267,9 +304,10 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         brightness = brightness.coerceIn(0.0f, 1.0f)
 
         val newRgb = Color.HSBtoRGB(hue, saturation, brightness)
-        val newColor = Color(newRgb)
+        val newColor = newRgb and 0xFFFFFF // RRGGBB部分のみ抽出
 
-        return (alpha shl 24) or (newColor.red shl 16) or (newColor.green shl 8) or newColor.blue
+        // ★修正: ARGB形式で再構築
+        return (alpha shl 24) or newColor
     }
 
     // 地下判定ヘルパー
@@ -336,13 +374,35 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                     // ------------------------------------------------
                     // A. テクスチャの読み込みチェック (ファイルからメモリへ)
                     // ------------------------------------------------
-                    if (MapTextureManager.getChunkTextureIdentifier(currentChunkX, currentChunkZ, dimensionKey, surfaceFileName) == null) {
-                        MapTextureManager.loadAndRegisterTextureFromFile(currentChunkX, currentChunkZ, dimensionKey, surfaceFileName)
+                    if (MapTextureManager.getChunkTextureIdentifier(
+                            currentChunkX,
+                            currentChunkZ,
+                            dimensionKey,
+                            surfaceFileName,
+                        ) == null
+                    ) {
+                        MapTextureManager.loadAndRegisterTextureFromFile(
+                            currentChunkX,
+                            currentChunkZ,
+                            dimensionKey,
+                            surfaceFileName,
+                        )
                     }
                     texturesInRenderRange.add(surfaceCacheKey)
 
-                    if (MapTextureManager.getChunkTextureIdentifier(currentChunkX, currentChunkZ, dimensionKey, sectionFileName) == null) {
-                        MapTextureManager.loadAndRegisterTextureFromFile(currentChunkX, currentChunkZ, dimensionKey, sectionFileName)
+                    if (MapTextureManager.getChunkTextureIdentifier(
+                            currentChunkX,
+                            currentChunkZ,
+                            dimensionKey,
+                            sectionFileName,
+                        ) == null
+                    ) {
+                        MapTextureManager.loadAndRegisterTextureFromFile(
+                            currentChunkX,
+                            currentChunkZ,
+                            dimensionKey,
+                            sectionFileName,
+                        )
                     }
                     texturesInRenderRange.add(sectionCacheKey)
 
@@ -357,14 +417,14 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
 
                             // チャンク内の地表Y座標と元の色を保持する一時マップ
                             val heightMap = Array(16) { IntArray(16) { scanMinY - 1 } } // Y座標を保存
-                            val rawBlockDataMap = mutableMapOf<Pair<Int, Int>, Pair<BlockPos, Int>>() // BlockPosとベースカラーを保存
+                            val rawBlockDataMap =
+                                mutableMapOf<Pair<Int, Int>, Pair<BlockPos, Int>>() // BlockPosとベースカラーを保存
                             var maxBlockY = world.bottomY
 
                             // 1. チャンクデータ収集 (パス1: Y座標とベースカラーの取得)
                             for (x in 0 until 16) {
                                 for (z in 0 until 16) {
                                     var closestBlockPos: BlockPos? = null
-
                                     // a) Flatデータ収集 (空気ブロックではない最上部のブロック)
                                     for (y in scanMaxY downTo scanMinY) {
                                         val blockPos = BlockPos(currentChunkX * 16 + x, y, currentChunkZ * 16 + z)
@@ -380,7 +440,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
 
                                     if (closestBlockPos != null) {
                                         val blockState = world.getBlockState(closestBlockPos)
-                                        val baseBlockColor = blockState.mapColor.color
+                                        val baseBlockColor = blockState.mapColor.color.transparent(255)
                                         rawBlockDataMap[x to z] = Pair(closestBlockPos, baseBlockColor)
                                     }
                                 }
@@ -396,9 +456,10 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                                     if (rawData != null) {
                                         val (closestBlockPos, initialColor) = rawData
                                         val blockState = world.getBlockState(closestBlockPos)
+                                        blockState.block
+
                                         var finalColor = initialColor
                                         val blockAlpha = if (!blockState.fluidState.isEmpty) 128 else 255
-
                                         // 【シェーディング/ライティングの適用】
                                         if (useShading.value) {
                                             if (currentMode == Mode.Flat) {
@@ -482,6 +543,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                                                     )
                                             }
 
+                                            // Solidモードは通常、不透明なブロックのみを描画
                                             val blockColor = baseBlockColor.transparent(255)
 
                                             sectionDataList.add(
@@ -525,9 +587,9 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                     if (cacheKey !in texturesInRenderRange) {
                         val parts = cacheKey.split("_")
                         if (parts.size >= 5) {
-                            val dimension = parts[0]
-                            val chunkX = parts[1].toInt()
-                            val chunkZ = parts[2].toInt()
+                            val dimension = parts[1]
+                            val chunkX = parts[2].toInt()
+                            val chunkZ = parts[3].toInt()
                             val fileName = parts.subList(3, parts.size).joinToString("_")
                             MapTextureManager.unloadTexture(chunkX, chunkZ, dimension, fileName)
                         }

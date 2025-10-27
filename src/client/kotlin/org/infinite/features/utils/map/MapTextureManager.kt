@@ -45,7 +45,6 @@ object MapTextureManager {
         for (data in blockData) {
             val relativeX = (data.x % CHUNK_SIZE + CHUNK_SIZE) % CHUNK_SIZE
             val relativeZ = (data.z % CHUNK_SIZE + CHUNK_SIZE) % CHUNK_SIZE
-            // 既存のテクスチャを上書きするため、色を設定
             image.setRGB(relativeX, relativeZ, data.color)
         }
 
@@ -58,7 +57,6 @@ object MapTextureManager {
             ImageIO.write(image, "PNG", outputFile)
         } catch (e: Exception) {
             System.err.println("Failed to save chunk texture ($fileName) for chunk ($chunkX, $chunkZ): ${e.message}")
-            // ファイル保存に失敗した場合でも、メモリにロードされている可能性のある古いテクスチャを更新
         }
 
         // 3. NativeImageBackedTextureの管理と更新
