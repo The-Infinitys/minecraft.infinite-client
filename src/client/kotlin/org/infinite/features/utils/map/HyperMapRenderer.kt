@@ -95,7 +95,7 @@ object HyperMapRenderer {
         if (hyperMapFeature.renderTerrain.value) {
             renderTerrain(graphics2d, hyperMapFeature, mode) // mode を渡す
         }
-        graphics2d.drawCircle(centerX, centerY, halfSizePx, rainbowColor, 4)
+        graphics2d.drawCircle(centerX, centerY, halfSizePx, rainbowColor, 6)
 
         val playerYaw = player.headYaw
 
@@ -280,7 +280,7 @@ object HyperMapRenderer {
                 val dz = (chunkWorldCenterZ - player.z)
 
                 val distanceToChunkCenter2 = dx * dx + dz * dz
-                val featureRange2 = (featureRadius - 10) * (featureRadius - 10)
+                val featureRange2 = (featureRadius - 8) * (featureRadius - 8)
                 // 2. 適切なファイル名を使ってテクスチャIdentifierを取得
                 val chunkIdentifier =
                     MapTextureManager.getChunkTextureIdentifier(

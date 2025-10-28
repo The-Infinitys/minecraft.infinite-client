@@ -9,9 +9,11 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
+import org.infinite.utils.average
 import org.infinite.utils.rendering.drawBorder
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
+import org.joml.Vector2d
 import kotlin.math.roundToInt
 
 /**
@@ -275,69 +277,6 @@ class Graphics2D(
     }
 
     /**
-     * 2点間に太さを持つ線分を四角形として描画します。
-     * このメソッドは、drawTriangleやdrawCircleの辺描画に使用されます。
-     *
-     * @param x1 始点 X座標
-     * @param y1 始点 Y座標
-     * @param x2 終点 X座標
-     * @param y2 終点 Y座標
-     * @param color ARGB形式の色
-     * @param size 枠線の太さ (ピクセル)
-     */
-    private fun drawThickLineSegment(
-        x1: Float,
-        y1: Float,
-        x2: Float,
-        y2: Float,
-        color: Int,
-        size: Int,
-    ) {
-        val halfSize = size / 2.0f
-
-        // 線分のベクトル
-        val dx = x2 - x1
-        val dy = y2 - y1
-        val length = MathHelper.sqrt(dx * dx + dy * dy)
-
-        if (length < 1e-6) return // 長さが0に近い場合は描画しない
-
-        // 単位法線ベクトル (線分に対して垂直)
-        val nx = -dy / length
-        val ny = dx / length
-
-        // 太さの半分をかけたオフセットベクトル
-        val offsetX = nx * halfSize
-        val offsetY = ny * halfSize
-
-        // 太さを持つ線分（四角形）の4つの頂点
-        val p1x = x1 + offsetX
-        val p1y = y1 + offsetY
-
-        val p2x = x2 + offsetX
-        val p2y = y2 + offsetY
-
-        val p3x = x2 - offsetX
-        val p3y = y2 - offsetY
-
-        val p4x = x1 - offsetX
-        val p4y = y1 - offsetY
-
-        // fillQuad で太さを持った四角形を描画
-        fillQuad(
-            p1x,
-            p1y,
-            p2x,
-            p2y,
-            p3x,
-            p3y,
-            p4x,
-            p4y,
-            color,
-        )
-    }
-
-    /**
      * 三角形の枠を指定した太さで描画します。
      * 各辺を太さを持った線分（四角形）として描画することで、角が重なり合って結合されます。
      *
@@ -360,10 +299,50 @@ class Graphics2D(
         color: Int,
         size: Int = 1,
     ) {
-        // 各辺を太さを持った線分（四角形）として描画
-        drawThickLineSegment(x1, y1, x2, y2, color, size)
-        drawThickLineSegment(x2, y2, x3, y3, color, size)
-        drawThickLineSegment(x3, y3, x1, y1, color, size)
+        val gx = average(x1, x2, x3)
+        val gy = average(y1, y2, y3)
+        val vec1 = Vector2d(x1 - gx, y1 - gy).normalize()
+        val vec2 = Vector2d(x2 - gx, y2 - gy).normalize()
+        val vec3 = Vector2d(x3 - gx, y3 - gy).normalize()
+        val outerX1 = x1 + vec1.x * size / 2
+        val outerY1 = y1 + vec1.y * size / 2
+        val outerX2 = x2 + vec2.x * size / 2
+        val outerY2 = y2 + vec2.y * size / 2
+        val outerX3 = x3 + vec3.x * size / 2
+        val outerY3 = y3 + vec3.y * size / 2
+        val innerX1 = x1 - vec1.x * size / 2
+        val innerY1 = y1 - vec1.y * size / 2
+        val innerX2 = x2 - vec2.x * size / 2
+        val innerY2 = y2 - vec2.y * size / 2
+        val innerX3 = x3 - vec3.x * size / 2
+        val innerY3 = y3 - vec3.y * size / 2
+        fillQuad(outerX1, outerY1, innerX1, innerY1, innerX2, innerY2, outerX2, outerY2, color)
+        fillQuad(outerX2, outerY2, innerX2, innerY2, innerX3, innerY3, outerX3, outerY3, color)
+        fillQuad(outerX3, outerY3, innerX3, innerY3, innerX1, innerY1, outerX1, outerY1, color)
+    }
+
+    private fun fillQuad(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        x3: Double,
+        y3: Double,
+        x4: Double,
+        y4: Double,
+        color: Int,
+    ) {
+        fillQuad(
+            x1.toFloat(),
+            y1.toFloat(),
+            x2.toFloat(),
+            y2.toFloat(),
+            x3.toFloat(),
+            y3.toFloat(),
+            x4.toFloat(),
+            y4.toFloat(),
+            color,
+        )
     }
 
     /**
@@ -463,27 +442,36 @@ class Graphics2D(
         color: Int,
         size: Int = 1,
     ) {
-        // 半径に基づいてセグメント数を動的に決定
         val segments = calculateSegments(radius)
         val twoPi = 2.0 * Math.PI
-
-        var prevX = cx + radius
-        var prevY = cy
-
-        // 円周上の点を結んで太い線分を描画
+        val halfSize = size / 2.0f
+        val outerRadius = radius + halfSize
+        val innerRadius = radius - halfSize
+        var prevOuterX = cx + outerRadius
+        var prevOuterY = cy
+        var prevInnerX = cx + innerRadius
+        var prevInnerY = cy
         for (i in 1..segments) {
             val angle = (i.toFloat() / segments.toFloat() * twoPi).toFloat()
-
-            // 円周上の現在の点
-            val currentX = cx + MathHelper.cos(angle) * radius
-            val currentY = cy + MathHelper.sin(angle) * radius
-
-            // 前の点と現在の点を結んで太い線分を描画
-            drawThickLineSegment(prevX, prevY, currentX, currentY, color, size)
-
-            // 現在の点を次の線の始点として保存
-            prevX = currentX
-            prevY = currentY
+            val outerX = cx + MathHelper.cos(angle) * outerRadius
+            val outerY = cy + MathHelper.sin(angle) * outerRadius
+            val innerX = cx + MathHelper.cos(angle) * innerRadius
+            val innerY = cy + MathHelper.sin(angle) * innerRadius
+            fillQuad(
+                prevOuterX,
+                prevOuterY,
+                prevInnerX,
+                prevInnerY,
+                innerX,
+                innerY,
+                outerX,
+                outerY,
+                color,
+            )
+            prevOuterX = outerX
+            prevOuterY = outerY
+            prevInnerX = innerX
+            prevInnerY = innerY
         }
     }
 
@@ -665,8 +653,6 @@ class Graphics2D(
 
         popState()
     }
-
-// ... (fill, drawBorder, drawText, drawItem 以下のメソッドはそのまま)
 
     fun textWidth(text: String): Int = MinecraftClient.getInstance().textRenderer.getWidth(text)
 
