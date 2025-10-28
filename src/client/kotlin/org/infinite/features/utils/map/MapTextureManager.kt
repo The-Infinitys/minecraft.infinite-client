@@ -32,9 +32,7 @@ object MapTextureManager {
         fileName: String,
         blockData: List<ChunkBlockData>,
     ): Identifier? {
-        // 1. 画像生成
         val image = BufferedImage(CHUNK_SIZE, CHUNK_SIZE, BufferedImage.TYPE_INT_ARGB)
-
         // すべてのピクセルを透明で初期化
         for (y in 0 until CHUNK_SIZE) {
             for (x in 0 until CHUNK_SIZE) {
@@ -47,8 +45,6 @@ object MapTextureManager {
             val relativeZ = (data.z % CHUNK_SIZE + CHUNK_SIZE) % CHUNK_SIZE
             image.setRGB(relativeX, relativeZ, data.color)
         }
-
-        // 2. ファイル保存
         val chunkDir = getChunkDirectory(chunkX, chunkZ, dimensionKey)
         chunkDir.createDirectories() // ディレクトリが存在しない場合は作成
         val outputFile = chunkDir.resolve(fileName).toFile()
@@ -68,7 +64,7 @@ object MapTextureManager {
         val nativeImage = NativeImage(image.width, image.height, true) // true = ARGB
         for (imgY in 0 until image.height) {
             for (imgX in 0 until image.width) {
-                nativeImage.setColor(imgX, imgY, image.getRGB(imgX, imgY))
+                nativeImage.setColorArgb(imgX, imgY, image.getRGB(imgX, imgY))
             }
         }
 
@@ -101,34 +97,26 @@ object MapTextureManager {
         if (textureCache.containsKey(cacheKey)) {
             return Identifier.of("infinite", "map_chunk_$cacheKey")
         }
-
         val chunkDir = getChunkDirectory(chunkX, chunkZ, dimensionKey)
         val inputFile = chunkDir.resolve(fileName).toFile()
-
         if (!inputFile.exists()) {
             return null // ファイルが存在しない場合はスキップ
         }
-
         val identifier = Identifier.of("infinite", "map_chunk_$cacheKey")
         val client = MinecraftClient.getInstance()
         val textureManager = client.textureManager
-
         try {
             val image = ImageIO.read(inputFile) ?: throw IllegalStateException("ImageIO failed to read file: $fileName")
-
-            // NativeImageに変換
             val nativeImage = NativeImage(image.width, image.height, true)
             for (imgY in 0 until image.height) {
                 for (imgX in 0 until image.width) {
-                    nativeImage.setColor(imgX, imgY, image.getRGB(imgX, imgY))
+                    nativeImage.setColorArgb(imgX, imgY, image.getRGB(imgX, imgY))
                 }
             }
-
             // テクスチャを登録・キャッシュ
             val newTexture = NativeImageBackedTexture({ "map_chunk_$cacheKey" }, nativeImage)
             textureManager.registerTexture(identifier, newTexture)
             textureCache[cacheKey] = newTexture
-
             return identifier
         } catch (e: Exception) {
             System.err.println("Failed to load and register chunk texture ($fileName) from file for chunk ($chunkX, $chunkZ): ${e.message}")
@@ -150,7 +138,6 @@ object MapTextureManager {
         val identifier = Identifier.of("infinite", "map_chunk_$cacheKey")
         val client = MinecraftClient.getInstance()
         val textureManager = client.textureManager
-
         val texture = textureCache.remove(cacheKey)
         if (texture != null) {
             // 1. Minecraftのテクスチャマネージャーから登録を解除（GPU/GLメモリの解放）
@@ -172,7 +159,6 @@ object MapTextureManager {
         val chunkDir = getChunkDirectory(chunkX, chunkZ, dimensionKey)
         chunkDir.createDirectories()
         val outputFile = chunkDir.resolve("info.json").toFile()
-
         try {
             outputFile.writeText(gson.toJson(info))
         } catch (e: Exception) {
@@ -257,6 +243,6 @@ object MapTextureManager {
         get() {
             val world = MinecraftClient.getInstance().world ?: return "minecraft_overworld"
             val dimensionId = world.registryKey.value
-            return dimensionId?.toString()?.replace(":", "_") ?: "minecraft_overworld"
+            return dimensionId?.toString()?.replace("_", "-")?.replace(":", "_") ?: "minecraft_overworld"
         }
 }

@@ -337,12 +337,9 @@ object HyperMapRenderer {
                             (distanceToChunkCenter / featureRadius * halfSizePx.toDouble()).coerceAtMost(halfSizePx.toDouble())
                         val angleToChunk =
                             atan2(dz, dx) - yawRad.toDouble() - toRadians(90f) // Adjust for radar orientation
-
                         val renderX = centerX + (sin(angleToChunk) * scaledDistance)
                         val renderY = centerY - (cos(angleToChunk) * scaledDistance)
-
                         val chunkRenderSize = (16.0 * halfSizePx / featureRadius).coerceAtMost(sizePx.toDouble())
-
                         graphics2d.drawRotatedTexture(
                             chunkIdentifier,
                             renderX - chunkRenderSize / 2,
@@ -360,8 +357,6 @@ object HyperMapRenderer {
         graphics2d.context.scissorStack.pop()
     }
 }
-
-// ... (renderBlockDot 拡張関数はそのまま)
 
 private fun Graphics2D.renderBlockDot(
     blockCenterX: Double,
