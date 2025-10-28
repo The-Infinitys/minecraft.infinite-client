@@ -16,14 +16,6 @@ import java.awt.Color
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.min
 
-// MapTextureManagerが使用するデータクラス（仮定：ローカル座標と色を保持）
-// ※このクラスの実装が不明ですが、ここではローカル座標(0-15)を受け取ることを前提とします。
-// data class ChunkBlockData(val x: Int, val y: Int, val z: Int, val color: Int)
-
-// =================================================================================================
-// 1. Feature Class: HyperMap
-// =================================================================================================
-
 class HyperMap : ConfigurableFeature(initialEnabled = false) {
     enum class Mode {
         Flat, // 平面図 (地表ビュー)
@@ -45,7 +37,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         )
     val sizePercent = FeatureSetting.IntSetting("Size", "feature.utils.hypermapsize.description", 40, 5, 100)
     val renderTerrain =
-        FeatureSetting.BooleanSetting("Render Terrain", "feature.utils.hypermaprender_terrain.description", true)
+        FeatureSetting.BooleanSetting("RenderTerrain", "feature.utils.hypermaprender_terrain.description", true)
 
     val useShading = FeatureSetting.BooleanSetting("Use Shading", "feature.utils.hypermapuseshading.description", true)
 
@@ -64,10 +56,8 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         val client = MinecraftClient.getInstance()
         val world = client.world ?: return emptyList()
         val player = client.player ?: return emptyList()
-
         val radius = radiusSetting.value
         val height = heightSetting.value
-
         val playerX = player.x
         val playerY = player.y
         val playerZ = player.z
@@ -123,39 +113,14 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
         val biome = world.getBiome(pos)?.value() ?: return 0x00000000
         val x = pos.x.toDouble()
         val z = pos.z.toDouble()
-        val color: Int =
-            when (block) {
-                Blocks.WATER, Blocks.WATER_CAULDRON -> {
-                    Blocks.LAVA.defaultMapColor.color
-                        .transparent(255)
-                }
-                Blocks.LAVA, Blocks.LAVA_CAULDRON ->
-                    Blocks.WATER.defaultMapColor.color
-                        .transparent(255)
-
-                Blocks.ICE, Blocks.PACKED_ICE, Blocks.BLUE_ICE -> {
-                    0xFF00FFFF.toInt()
-                }
-                // 草ブロックや草 (Grass)
-                Blocks.GRASS_BLOCK, Blocks.SHORT_GRASS, Blocks.TALL_GRASS -> {
-                    val biomeColor = BiomeColors.GRASS_COLOR.getColor(biome, x, z)
-                    0xFF000000.toInt() or (biomeColor and 0x00FFFFFF)
-                }
-                // 葉ブロック (LeavesBlock)
-                is LeavesBlock -> {
-                    val biomeColor = BiomeColors.FOLIAGE_COLOR.getColor(biome, x, z)
-                    0xFF000000.toInt() or (biomeColor and 0x00FFFFFF)
-                }
-                // 海草、シダ
-                Blocks.SEAGRASS, Blocks.TALL_SEAGRASS -> {
-                    state.getMapColor(world, pos).color.transparent(255)
-                }
-
-                else -> {
-                    state.getMapColor(world, pos).color.transparent(255)
-                }
-            }
-        return color
+        return when (block) {
+            Blocks.GRASS_BLOCK, Blocks.SHORT_GRASS, Blocks.TALL_GRASS ->
+                BiomeColors.GRASS_COLOR.getColor(biome, x, z)
+            is LeavesBlock -> BiomeColors.FOLIAGE_COLOR.getColor(biome, x, z)
+            Blocks.WATER -> BiomeColors.WATER_COLOR.getColor(biome, x, z)
+            else ->
+                state.getMapColor(world, pos).color.transparent(255)
+        }
     }
 
     /**
@@ -283,10 +248,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
             if (z > 0) {
                 heightMap[x][z - 1]
             } else {
-                world
-                    .getChunk(chunkX, chunkZ - 1)
-                    ?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)
-                    ?.get(x, 15) ?: currentY
+                world.getChunk(chunkX, chunkZ - 1)?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)?.get(x, 15) ?: currentY
             }
         val diffNorth = northY - currentY
 
@@ -294,10 +256,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
             if (x < 15) {
                 heightMap[x + 1][z]
             } else {
-                world
-                    .getChunk(chunkX + 1, chunkZ)
-                    ?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)
-                    ?.get(0, z) ?: currentY
+                world.getChunk(chunkX + 1, chunkZ)?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)?.get(0, z) ?: currentY
             }
         val diffEast = eastY - currentY
 
@@ -305,10 +264,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
             if (x > 0) {
                 heightMap[x - 1][z]
             } else {
-                world
-                    .getChunk(chunkX - 1, chunkZ)
-                    ?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)
-                    ?.get(15, z) ?: currentY
+                world.getChunk(chunkX - 1, chunkZ)?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)?.get(15, z) ?: currentY
             }
         val diffWest = westY - currentY
 
@@ -316,10 +272,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
             if (z < 15) {
                 heightMap[x][z + 1]
             } else {
-                world
-                    .getChunk(chunkX, chunkZ + 1)
-                    ?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)
-                    ?.get(x, 0) ?: currentY
+                world.getChunk(chunkX, chunkZ + 1)?.getHeightmap(Heightmap.Type.MOTION_BLOCKING)?.get(x, 0) ?: currentY
             }
         val diffSouth = currentY - southY
 
@@ -482,8 +435,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                             val scanMaxY = world.bottomY + world.height
 
                             val heightMap = Array(16) { IntArray(16) { scanMinY - 1 } }
-                            val rawBlockDataMap =
-                                mutableMapOf<Pair<Int, Int>, Pair<BlockPos, Int>>()
+                            val rawBlockDataMap = mutableMapOf<Pair<Int, Int>, Pair<BlockPos, Int>>()
                             var maxBlockY = world.bottomY
 
                             // 1. チャンクデータ収集 (パス1: Y座標とベースカラーの取得)
@@ -497,14 +449,12 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                                         val blockState = world.getBlockState(blockPos)
                                         val block = blockState.block
                                         if (!blockState.isAir) {
-                                            val isLiquidBlock =
-                                                block == Blocks.WATER || block == Blocks.LAVA
+                                            val isLiquidBlock = block == Blocks.WATER || block == Blocks.LAVA
                                             if (isLiquidBlock) {
                                                 // 液体の場合、下のブロックをスキャンして色を混ぜる
                                                 var underBlockY = y - 1
                                                 var underBlockPos: BlockPos? = null
                                                 var underBlockBaseColor: Int? = null
-
                                                 // 液体ではないブロックを探す
                                                 while (underBlockY >= scanMinY) {
                                                     val checkPos =
@@ -520,8 +470,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                                                         if (checkState.block != Blocks.WATER && checkState.block != Blocks.LAVA) {
                                                             underBlockPos = checkPos
                                                             // 下のブロックのベースカラーを取得
-                                                            underBlockBaseColor =
-                                                                getActualBlockColor(checkPos)
+                                                            underBlockBaseColor = getActualBlockColor(checkPos)
                                                             break
                                                         }
                                                     }
@@ -529,8 +478,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                                                 }
 
                                                 // Liquidブロックの色を取得
-                                                val liquidColor =
-                                                    getActualBlockColor(blockPos)
+                                                val liquidColor = getActualBlockColor(blockPos)
 
                                                 // 下のブロックが見つかった場合、色をブレンド
                                                 if (underBlockPos != null && underBlockBaseColor != null) {
