@@ -2,9 +2,12 @@ package org.infinite
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.option.GameOptions
+import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.util.InputUtil
 import net.minecraft.client.world.ClientWorld
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
@@ -176,7 +179,41 @@ abstract class ConfigurableFeature(
 
     open fun handleChunk(worldChunk: WorldManager.Chunk) {}
 
+    class ActionKeybind(
+        val name: String,
+        private val key: Int,
+        val action: () -> Unit,
+    ) {
+        lateinit var keyBinding: KeyBinding
+
+        fun register(
+            categoryName: String,
+            featureName: String,
+            keyBindingCategory: KeyBinding.Category,
+        ): ActionKeybind {
+            keyBinding =
+                KeyBinding(
+                    "key.infinite-client.action.$categoryName.$featureName.$name",
+                    InputUtil.Type.KEYSYM,
+                    key,
+                    keyBindingCategory,
+                )
+            KeyBindingHelper.registerKeyBinding(
+                keyBinding,
+            )
+            return this
+        }
+    }
+
+    open val actionKeybinds: List<ActionKeybind> = listOf()
+
     fun toggle() {
         if (isEnabled()) disable() else enable()
     }
+
+    fun registerKeybinds(
+        categoryName: String,
+        featureName: String,
+        keyBindingCategory: KeyBinding.Category,
+    ): List<ActionKeybind> = actionKeybinds.map { it.register(categoryName, featureName, keyBindingCategory) }
 }

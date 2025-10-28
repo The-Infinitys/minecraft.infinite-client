@@ -21,6 +21,7 @@ object InfiniteKeyBind {
 
     // 初期化時にリストを空にする必要はないので、valでもOKですが、MutableListであることは維持します
     private val toggleKeyBindings: MutableList<ToggleKeyBindingHandler> = mutableListOf()
+    private val actionKeyBindings: MutableList<ConfigurableFeature.ActionKeybind> = mutableListOf()
 
     fun registerKeybindings() {
         val keyBindingCategory = KeyBinding.Category.create(Identifier.of("gameplay", "infinite"))
@@ -37,7 +38,6 @@ object InfiniteKeyBind {
         for (category in featureCategories) {
             for (feature in category.features) {
                 val configurableFeature = feature.instance
-                // 修正 1: plus()を+=に変更して、リストに要素を追加します
                 toggleKeyBindings +=
                     ToggleKeyBindingHandler(
                         KeyBindingHelper.registerKeyBinding(
@@ -50,6 +50,7 @@ object InfiniteKeyBind {
                         ),
                         configurableFeature,
                     )
+                actionKeyBindings += configurableFeature.registerKeybinds(category.name, feature.name, keyBindingCategory)
             }
         }
 
@@ -58,8 +59,6 @@ object InfiniteKeyBind {
             while (menuKeyBinding!!.wasPressed()) {
                 client.setScreen(InfiniteScreen(Text.literal("Infinite Client Menu")))
             }
-
-            // トグルキーバインドの処理
             for (toggleKeyBind in toggleKeyBindings) {
                 while (toggleKeyBind.keyBinding.wasPressed()) {
                     // 修正 2: enabled.valueをトグル（否定を代入）します
@@ -68,6 +67,11 @@ object InfiniteKeyBind {
                     } else {
                         toggleKeyBind.feature.enable()
                     }
+                }
+            }
+            for (actionKeyBind in actionKeyBindings) {
+                while (actionKeyBind.keyBinding.wasPressed()) {
+                    actionKeyBind.action()
                 }
             }
 

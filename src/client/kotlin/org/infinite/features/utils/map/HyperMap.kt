@@ -555,7 +555,8 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                                             var initialColor: Int? = null
 
                                             for (y in sectionEndY downTo scanMinY) {
-                                                val blockPos = BlockPos(currentChunkX * 16 + x, y, currentChunkZ * 16 + z)
+                                                val blockPos =
+                                                    BlockPos(currentChunkX * 16 + x, y, currentChunkZ * 16 + z)
                                                 val blockState = world.getBlockState(blockPos)
 
                                                 if (!blockState.isAir) {
