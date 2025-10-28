@@ -13,15 +13,15 @@ import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
 import org.lwjgl.glfw.GLFW
 
-enum class FeatureLevel {
-    UTILS, // ユーリティ。基本どこで使ってても問題ない。
-    EXTEND, // 実際には不可能なので、見られると気づかれる可能性がある
-    CHEAT, // サーバー側で簡単に検知される
-}
-
 abstract class ConfigurableFeature(
     private val initialEnabled: Boolean = false,
 ) {
+    enum class FeatureLevel {
+        UTILS, // ユーリティ。基本どこで使ってても問題ない。
+        EXTEND, // 実際には不可能なので、見られると気づかれる可能性がある
+        CHEAT, // サーバー側で簡単に検知される
+    }
+
     internal val client: MinecraftClient
         get() = MinecraftClient.getInstance()
     internal val player: ClientPlayerEntity?

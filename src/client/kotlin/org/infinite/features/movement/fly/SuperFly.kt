@@ -4,7 +4,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
+import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.libs.client.player.fighting.aim.CameraRoll
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.toRadians

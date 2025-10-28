@@ -5,7 +5,7 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.text.Text
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
+import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 

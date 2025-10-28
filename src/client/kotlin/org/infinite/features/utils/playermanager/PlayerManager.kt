@@ -1,7 +1,7 @@
 package org.infinite.features.utils.playermanager
 
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
+import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class PlayerManager : ConfigurableFeature(initialEnabled = false) {

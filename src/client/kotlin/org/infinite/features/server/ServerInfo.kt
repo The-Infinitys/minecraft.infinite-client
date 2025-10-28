@@ -6,7 +6,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ServerInfo
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
+import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 

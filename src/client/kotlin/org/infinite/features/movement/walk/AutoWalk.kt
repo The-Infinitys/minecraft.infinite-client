@@ -1,7 +1,7 @@
 package org.infinite.features.movement.walk
 
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
+import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class AutoWalk : ConfigurableFeature(initialEnabled = false) {

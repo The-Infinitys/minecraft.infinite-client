@@ -9,7 +9,7 @@ import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.ColorHelper
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
+import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting

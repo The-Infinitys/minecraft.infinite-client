@@ -5,7 +5,6 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.fighting.AimInterface
 import org.infinite.libs.client.player.fighting.aim.AimCalculateMethod

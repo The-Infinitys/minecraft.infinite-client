@@ -9,7 +9,7 @@ import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.registry.Registries
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
+import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.inventory.InventoryManager
 import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
