@@ -16,7 +16,7 @@ import java.awt.Color
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.min
 
-class HyperMap : ConfigurableFeature(initialEnabled = false) {
+class HyperMap : ConfigurableFeature(initialEnabled = true) {
     enum class Mode {
         Flat, // 平面図 (地表ビュー)
         Solid, // 断面図 (スライスビュー)
@@ -72,7 +72,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                 val dz = entity.z - playerZ
                 val distanceSq = dx * dx + dz * dz
 
-                if (distanceSq <= radius * radius) {
+                if (distanceSq <= radius * radius * 2) {
                     val dy = entity.y - playerY
 
                     if (dy >= -height && dy <= height) {
@@ -308,7 +308,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
 // =================================================================================================
 
     // 地下判定ヘルパー
-    private fun isUnderground(playerY: Int): Boolean {
+    fun isUnderground(playerY: Int): Boolean {
         val client = MinecraftClient.getInstance()
         val world = client.world ?: return false
         val player = client.player ?: return false
@@ -340,10 +340,10 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
             // SolidモードではプレイヤーのY座標を上限に、Flatモードではワールドの最大Y座標を上限にする
             val globalScanMaxY =
                 if (currentMode == Mode.Solid) playerY.coerceAtMost(world.bottomY + world.height) else world.bottomY + world.height
-
+            val searchRange = 2 * radius / 16
             // プレイヤーを中心とした半径内のチャンクをスキャン
-            for (chunkXOffset in -radius / 16..radius / 16) {
-                for (chunkZOffset in -radius / 16..radius / 16) {
+            for (chunkXOffset in -searchRange..searchRange) {
+                for (chunkZOffset in -searchRange..searchRange) {
                     val currentChunkX = playerChunkX + chunkXOffset
                     val currentChunkZ = playerChunkZ + chunkZOffset
                     val chunkKey = "${currentChunkX}_$currentChunkZ"
@@ -626,10 +626,10 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                 currentLoadedKeys.forEach { cacheKey ->
                     val parts = cacheKey.split("_")
                     if (parts.size >= 5) {
-                        val dimension = parts[0]
-                        val chunkX = parts[1].toInt()
-                        val chunkZ = parts[2].toInt()
-                        val fileName = parts.subList(3, parts.size).joinToString("_")
+                        val dimension = parts[1]
+                        val chunkX = parts[2].toInt()
+                        val chunkZ = parts[3].toInt()
+                        val fileName = parts.subList(4, parts.size).joinToString("_")
                         // 描画範囲外のテクスチャをアンロード
                         if (cacheKey !in texturesInRenderRange) {
                             MapTextureManager.unloadTexture(chunkX, chunkZ, dimension, fileName)
