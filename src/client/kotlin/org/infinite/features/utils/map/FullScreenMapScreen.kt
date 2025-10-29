@@ -3,18 +3,15 @@ package org.infinite.features.utils.map
 import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
 import org.infinite.InfiniteClient
+import org.infinite.gui.widget.InfiniteButton
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.transparent
+import org.infinite.utils.toRadians
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.PI
-import kotlin.math.roundToInt
 
 class FullScreenMapScreen(
     val mapFeature: MapFeature,
@@ -33,13 +30,12 @@ class FullScreenMapScreen(
     private var dragStartMouseY: Double = 0.0
 
     // --- 定数 ---
-    private val ZOOM_STEP = 0.1
-    private val MIN_ZOOM = 0.5
-    private val MAX_ZOOM = 5.0
-    private val BUTTON_WIDTH = 40
-    private val BUTTON_HEIGHT = 20
+    private val zoomStep = 0.1
+    private val minZoom = 0.1
+    private val maxZoom = 5.0
+    private val buttonWidth = 40
+    private val buttonHeight = 20
 
-    // 💡 プレイヤーの現在地をマップの中心として初期化 (コンストラクタ init ブロック)
     init {
         val player = client?.player
         if (player != null) {
@@ -53,27 +49,44 @@ class FullScreenMapScreen(
         super.init()
 
         val buttonSpacing = 5
-        var currentX = width - (BUTTON_WIDTH * 3 + buttonSpacing * 3)
+        var currentX = width - (buttonWidth * 3 + buttonSpacing * 3)
 
         // 1. ズームアウト (-) ボタン
         val zoomOutButton =
-            ButtonWidget.builder(Text.of("-")) {
-                zoom = max(MIN_ZOOM, zoom - ZOOM_STEP)
-            }.dimensions(currentX, buttonSpacing, BUTTON_WIDTH, BUTTON_HEIGHT).build()
+            InfiniteButton(
+                currentX,
+                buttonSpacing,
+                buttonWidth,
+                buttonHeight,
+                Text.of("-"),
+            ) {
+                zoom = max(minZoom, zoom - zoomStep)
+            }
         addDrawableChild(zoomOutButton)
-        currentX += BUTTON_WIDTH + buttonSpacing
-
+        currentX += buttonWidth + buttonSpacing
         // 2. ズームイン (+) ボタン
         val zoomInButton =
-            ButtonWidget.builder(Text.of("+")) {
-                zoom = min(MAX_ZOOM, zoom + ZOOM_STEP)
-            }.dimensions(currentX, buttonSpacing, BUTTON_WIDTH, BUTTON_HEIGHT).build()
+            InfiniteButton(
+                currentX,
+                buttonSpacing,
+                buttonWidth,
+                buttonHeight,
+                Text.of("+"),
+            ) {
+                zoom = min(maxZoom, zoom + zoomStep)
+            }
         addDrawableChild(zoomInButton)
-        currentX += BUTTON_WIDTH + buttonSpacing
+        currentX += buttonWidth + buttonSpacing
 
         // 3. 現在地へリセット (⌖) ボタン
         val centerButton =
-            ButtonWidget.builder(Text.of("⌖")) {
+            InfiniteButton(
+                currentX,
+                buttonSpacing,
+                buttonWidth,
+                buttonHeight,
+                Text.of("⌖"),
+            ) {
                 val p = client?.player
                 if (p != null) {
                     // マップの中心をプレイヤーの現在地に戻す
@@ -81,12 +94,15 @@ class FullScreenMapScreen(
                     centerZ = p.z
                     zoom = 1.0
                 }
-            }.dimensions(currentX, buttonSpacing, BUTTON_WIDTH, BUTTON_HEIGHT).build()
+            }
         addDrawableChild(centerButton)
     }
 
-    // --- mouseClicked / mouseDragged / mouseScrolled のロジックは変更なし ---
-    override fun mouseClicked(click: Click, doubled: Boolean): Boolean {
+    // --- mouseClicked / mouseScrolled のロジックは変更なし ---
+    override fun mouseClicked(
+        click: Click,
+        doubled: Boolean,
+    ): Boolean {
         if (click.button() == 0) { // 左クリック
             dragStartX = centerX
             dragStartZ = centerZ
@@ -96,6 +112,7 @@ class FullScreenMapScreen(
         return super.mouseClicked(click, doubled)
     }
 
+    // --- mouseDragged の修正: アスペクト比を考慮したワールド移動量に修正 ---
     override fun mouseDragged(
         click: Click,
         offsetX: Double,
@@ -108,14 +125,16 @@ class FullScreenMapScreen(
             val totalMoveX = click.x() - dragStartMouseX
             val totalMoveY = click.y() - dragStartMouseY
 
-            val mapBaseSize = max(screenWidth, screenHeight).toDouble()
-            val mapSize = mapBaseSize * zoom
-            val halfMapSize = mapSize / 2.0
+            val baseMapWorldRadius = hyperMap.radiusSetting.value.toDouble()
+            val effectiveWorldRadius = baseMapWorldRadius / zoom
 
-            val featureRadius = hyperMap.radiusSetting.value.toDouble() * zoom
+            // 画面のアスペクト比を考慮したワールドの幅と高さ
+            val mapWorldWidth = effectiveWorldRadius * (screenWidth.toDouble() / screenHeight.toDouble())
 
-            val worldMoveX = (totalMoveX / halfMapSize) * featureRadius
-            val worldMoveZ = (totalMoveY / halfMapSize) * featureRadius
+            // 画面移動量 (ピクセル) をワールド座標の移動量に変換
+            // (移動量 / 画面の半分) * 対応するワールド半径
+            val worldMoveX = (totalMoveX / (screenWidth / 2.0)) * mapWorldWidth
+            val worldMoveZ = (totalMoveY / (screenHeight / 2.0)) * effectiveWorldRadius
 
             centerX = dragStartX - worldMoveX
             centerZ = dragStartZ - worldMoveZ
@@ -132,14 +151,14 @@ class FullScreenMapScreen(
         verticalAmount: Double,
     ): Boolean {
         if (verticalAmount > 0) {
-            zoom = min(MAX_ZOOM, zoom + ZOOM_STEP)
+            zoom = min(maxZoom, zoom + zoomStep)
         } else if (verticalAmount < 0) {
-            zoom = max(MIN_ZOOM, zoom - ZOOM_STEP)
+            zoom = max(minZoom, zoom - zoomStep)
         }
         return true
     }
 
-    // --- render 関数の修正: コンパスをプレイヤーの向きに合わせて表示 ---
+    // --- render 関数の修正: 画面全体を描画し、アスペクト比を考慮した座標計算に修正 ---
     override fun render(
         context: DrawContext,
         mouseX: Int,
@@ -152,57 +171,82 @@ class FullScreenMapScreen(
         val screenWidth = width
         val screenHeight = height
 
-        val mapBaseSize = max(screenWidth, screenHeight).toFloat()
-        val mapSize = mapBaseSize * zoom
-        val halfMapSize = mapSize / 2.0f
+        // 1. ワールド表示範囲の計算
+        val baseMapWorldRadius = hyperMap.radiusSetting.value.toDouble()
+        val effectiveWorldRadius = baseMapWorldRadius / zoom // Z/Y方向のワールド表示半径
 
-        val renderX = (screenWidth / 2.0f - halfMapSize).toInt()
-        val renderY = (screenHeight / 2.0f - halfMapSize).toInt()
+        // 画面のアスペクト比を考慮したX/Z方向のワールド表示半径
+        val mapWorldWidth = effectiveWorldRadius * (screenWidth.toDouble() / screenHeight.toDouble()) // X方向のワールド表示半径
+        val mapWorldHeight = effectiveWorldRadius // Z方向のワールド表示半径
+
+        // 2. 描画設定（画面全体）
+        val renderWidth = screenWidth
 
         // Render terrain
-        renderTerrainFullScreen(graphics2D, renderX, renderY, mapSize.toInt())
+        renderTerrainFullScreen(graphics2D, renderWidth, screenHeight, mapWorldWidth, mapWorldHeight)
 
         // Render entities
-        renderEntitiesFullScreen(graphics2D, renderX, renderY, mapSize.toInt())
+        renderEntitiesFullScreen(graphics2D, renderWidth, screenHeight, mapWorldWidth, mapWorldHeight)
 
-        // Draw player dot
-        val featureRadius = hyperMap.radiusSetting.value.toDouble() * zoom
+        // Draw player dot (画面中央を基準) を三角形で置き換える
         val playerDx = player.x - centerX
         val playerDz = player.z - centerZ
 
-        val scaledPlayerDx = playerDx / featureRadius * halfMapSize
-        val scaledPlayerDz = playerDz / featureRadius * halfMapSize
+        // プレイヤーの位置を画面座標に変換
+        val scaledPlayerDx = playerDx / mapWorldWidth * (renderWidth / 2.0)
+        val scaledPlayerDz = playerDz / mapWorldHeight * (screenHeight / 2.0)
 
-        val playerDotRadius = 2
         val playerDotColor =
             InfiniteClient
                 .theme()
                 .colors.infoColor
                 .transparent(255)
 
-        graphics2D.fill(
-            (screenWidth / 2.0 + scaledPlayerDx - playerDotRadius).toInt(),
-            (screenHeight / 2.0 + scaledPlayerDz - playerDotRadius).toInt(),
-            playerDotRadius * 2,
-            playerDotRadius * 2,
+        // プレイヤーの位置 (画面中央を基準としたオフセット)
+        val playerScreenX = (screenWidth / 2.0 + scaledPlayerDx).toFloat()
+        val playerScreenY = (screenHeight / 2.0 + scaledPlayerDz).toFloat()
+
+        // プレイヤーの向き (yaw) を取得し、ラジアンに変換
+        // Minecraftの yaw は Y軸周りの回転で、-180から180度。北が-90、東が0、南が90、西が180/-180。
+        // 右がX+、下がZ+と仮定して、時計回りの角度に変換
+        val playerYawRadians = -toRadians(player.yaw + 90) // 北が上 (-Z) になるように調整
+
+        val triangleSize = 8f // 三角形のサイズ (適宜調整)
+        val halfSize = triangleSize / 2f
+
+        // 三角形の頂点座標をプレイヤーを中心に計算
+        // 回転の中心が playerScreenX, playerScreenY となるように translate/rotate/translate を使う
+        graphics2D.pushState()
+        graphics2D.translate(playerScreenX, playerScreenY)
+        graphics2D.matrixStack.rotate(playerYawRadians) // Z軸周りの回転
+
+        // (0,0) を中心とした三角形の頂点
+        val tipX = 0f
+        val tipY = -halfSize * 1.5f // プレイヤーの向いている方向
+        val leftBaseX = -halfSize
+
+        graphics2D.fillTriangle(
+            tipX,
+            tipY,
+            leftBaseX,
+            halfSize,
+            halfSize,
+            halfSize,
             playerDotColor,
         )
-
+        graphics2D.popState()
 
         // 💡 方角表示 (左上にコンパクトに表示)
-        val font = textRenderer
         val margin = 10
-        val compassRadius = 20f // コンパスのサイズを縮小
-        val arrowLength = compassRadius * 0.7f
-        val arrowHeadSize = 4
+        val compassRadius = 20f
+        compassRadius * 0.7f
 
-        val northColor = InfiniteClient.theme().colors.errorColor
+        InfiniteClient.theme().colors.errorColor
         val otherColor = InfiniteClient.theme().colors.foregroundColor
-
         // 1. プレイヤー座標の表示 (左上)
-        var currentY = margin
+        val currentY = margin
         if (mapFeature.showPlayerCoordinates.value) {
-            val p = client!!.player?:return
+            val p = client!!.player ?: return
             val coordsText = Text.of("X: %.1f Y: %.1f Z: %.1f".format(p.x, p.y, p.z))
             graphics2D.drawText(
                 coordsText.string,
@@ -211,67 +255,17 @@ class FullScreenMapScreen(
                 otherColor,
                 true,
             )
-            currentY += font.fontHeight + 5
         }
-
-        // 2. コンパスの描画
-        val compassX = margin + compassRadius.toInt()
-        val compassY = currentY + compassRadius.toInt()
-        val compassSize = compassRadius.toInt() * 2
-
-        // 背景円
-        graphics2D.fill(
-            compassX - compassRadius.toInt(),
-            compassY - compassRadius.toInt(),
-            compassSize,
-            compassSize,
-            0x55000000
-        )
-
-        // 中心点
-        graphics2D.fill(
-            compassX - 1,
-            compassY - 1,
-            2,
-            2,
-            otherColor
-        )
-
-        // 💡 プレイヤーの向きを取得し、コンパスを回転させて描画
-        // Y軸の回転をラジアンに変換 (マイナスはMinecraftの座標系に合わせるため)
-        val yawRad = -(player.yaw + 90) * (PI / 180.0)
-
-        // 北 (N) の矢印の終点計算 (Z軸負方向)
-        val endX = (compassX + sin(yawRad) * arrowLength).roundToInt()
-        val endY = (compassY - cos(yawRad) * arrowLength).roundToInt()
-
-        // 北 (N) の矢印
-        graphics2D.drawLine(
-            compassX,
-            compassY,
-            endX,
-            endY,
-            northColor,
-            arrowHeadSize
-        )
-        // 文字の描画 (Nは常に上側)
-        graphics2D.drawText(
-            "N",
-            (compassX - font.getWidth("N") / 2),
-            compassY - compassRadius.toInt() - font.fontHeight - 2,
-            northColor,
-            true,
-        )
-
         super.render(context, mouseX, mouseY, delta)
     }
 
-    // --- renderTerrainFullScreen のロジック (テクスチャロード含む) ---
+    // --- renderTerrainFullScreen の修正: 画面サイズとワールド半径を引数として受け取り描画 ---
     private fun renderTerrainFullScreen(
         graphics2D: Graphics2D,
-        renderX: Int,
-        renderY: Int,
-        mapSize: Int,
+        renderWidth: Int,
+        renderHeight: Int,
+        mapWorldWidth: Double, // X方向のワールド表示半径 (アスペクト比考慮済)
+        mapWorldHeight: Double, // Z方向のワールド表示半径
     ) {
         val client = graphics2D.client
         val player = client.player ?: return
@@ -281,13 +275,14 @@ class FullScreenMapScreen(
         val centerChunkX = centerBlockX shr 4
         val centerChunkZ = centerBlockZ shr 4
 
-        val featureRadius = hyperMap.radiusSetting.value.toDouble() * zoom
-        val renderDistanceChunks = (featureRadius / 16.0).toInt() + 1
+        // 描画するチャンクの範囲を、画面がカバーするワールドの幅と高さから計算
+        val horizontalRenderDistanceChunks = (mapWorldWidth / 16.0).toInt() + 1
+        val verticalRenderDistanceChunks = (mapWorldHeight / 16.0).toInt() + 1
 
-        val minChunkX = centerChunkX - renderDistanceChunks
-        val maxChunkX = centerChunkX + renderDistanceChunks
-        val minChunkZ = centerChunkZ - renderDistanceChunks
-        val maxChunkZ = centerChunkZ + renderDistanceChunks
+        val minChunkX = centerChunkX - horizontalRenderDistanceChunks
+        val maxChunkX = centerChunkX + horizontalRenderDistanceChunks
+        val minChunkZ = centerChunkZ - verticalRenderDistanceChunks
+        val maxChunkZ = centerChunkZ + verticalRenderDistanceChunks
         val dimensionKey = MapTextureManager.dimensionKey
 
         val isUnderground = player.let { hyperMap.isUnderground(it.blockY) }
@@ -302,7 +297,9 @@ class FullScreenMapScreen(
                 }
             }
 
-        val halfMapSize = mapSize / 2.0
+        // 画面の中心から端までのピクセル距離 (X, Zそれぞれ)
+        val halfRenderWidth = renderWidth / 2.0
+        val halfRenderHeight = renderHeight / 2.0
 
         for (chunkX in minChunkX..maxChunkX) {
             for (chunkZ in minChunkZ..maxChunkZ) {
@@ -312,27 +309,29 @@ class FullScreenMapScreen(
                 val dx = (chunkWorldCenterX - centerX)
                 val dz = (chunkWorldCenterZ - centerZ)
 
-                val scaledDx = dx / featureRadius * halfMapSize
-                val scaledDz = dz / featureRadius * halfMapSize
+                // ワールド座標を画面座標にスケール (X/Z方向で異なるスケールを使用)
+                val scaledDx = dx / mapWorldWidth * halfRenderWidth
+                val scaledDz = dz / mapWorldHeight * halfRenderHeight
 
-                val chunkRenderSize = (16.0 / featureRadius * halfMapSize).toFloat()
+                // チャンクの描画サイズも、ワールドの幅・高さと対応する画面の幅・高さで計算
+                val chunkRenderWidth = (16.0 / mapWorldWidth * halfRenderWidth).toFloat()
+                val chunkRenderHeight = (16.0 / mapWorldHeight * halfRenderHeight).toFloat()
 
-                val drawX = (renderX + halfMapSize + scaledDx - chunkRenderSize / 2.0).toFloat()
-                val drawY = (renderY + halfMapSize + scaledDz - chunkRenderSize / 2.0).toFloat()
+                // 描画位置は画面の中心 + スケールされたオフセット - チャンクサイズの半分
+                val drawX = (halfRenderWidth + scaledDx - chunkRenderWidth / 2.0).toFloat()
+                val drawY = (halfRenderHeight + scaledDz - chunkRenderHeight / 2.0).toFloat()
 
                 var chunkIdentifier =
                     MapTextureManager.getChunkTextureIdentifier(chunkX, chunkZ, dimensionKey, textureFileName)
 
-                // テクスチャが存在しない場合はディスクからロードを試みる
                 if (chunkIdentifier == null) {
-                    // ⚠️ 注意: I/O (ロード) をメインスレッドで実行しています。
-                    // チャンクが大量にある場合、一時的にゲームがフリーズする可能性があります。
-                    chunkIdentifier = MapTextureManager.loadAndRegisterTextureFromFile(
-                        chunkX,
-                        chunkZ,
-                        dimensionKey,
-                        textureFileName
-                    )
+                    chunkIdentifier =
+                        MapTextureManager.loadAndRegisterTextureFromFile(
+                            chunkX,
+                            chunkZ,
+                            dimensionKey,
+                            textureFileName,
+                        )
                 }
 
                 if (chunkIdentifier != null) {
@@ -340,47 +339,46 @@ class FullScreenMapScreen(
                         chunkIdentifier,
                         drawX,
                         drawY,
-                        chunkRenderSize,
-                        chunkRenderSize,
+                        chunkRenderWidth,
+                        chunkRenderHeight,
                         0f,
                     )
                 } else {
-                    // テクスチャがファイルにも存在しない場合、未描画エリアとして仮の四角を描画
                     graphics2D.fill(
                         drawX.toInt(),
                         drawY.toInt(),
-                        chunkRenderSize.toInt(),
-                        chunkRenderSize.toInt(),
-                        0xAA333333.toInt() // 濃い灰色
+                        chunkRenderWidth.toInt(),
+                        chunkRenderHeight.toInt(),
+                        0xAA333333.toInt(), // 濃い灰色
                     )
                 }
             }
         }
     }
 
-    // ... (renderEntitiesFullScreenのロジックは変更なし) ...
-
+    // --- renderEntitiesFullScreen の修正: 画面サイズとワールド半径を引数として受け取り描画 ---
     private fun renderEntitiesFullScreen(
         graphics2D: Graphics2D,
-        renderX: Int,
-        renderY: Int,
-        mapSize: Int,
+        renderWidth: Int,
+        renderHeight: Int,
+        mapWorldWidth: Double, // X方向のワールド表示半径
+        mapWorldHeight: Double, // Z方向のワールド表示半径
     ) {
         val client = graphics2D.client
         val player = client.player ?: return
 
-        val featureRadius = hyperMap.radiusSetting.value.toDouble() * zoom
         val mobDotRadius = 2
 
-        val screenCenterX = renderX + mapSize / 2
-        val screenCenterY = renderY + mapSize / 2
+        val screenCenterX = renderWidth / 2
+        val screenCenterY = renderHeight / 2
 
         for (mob in hyperMap.nearbyMobs) {
             val dx = (mob.x - centerX)
             val dz = (mob.z - centerZ)
 
-            val scaledDx = dx / featureRadius * (mapSize / 2.0)
-            val scaledDz = dz / featureRadius * (mapSize / 2.0)
+            // ワールド座標を画面座標にスケール
+            val scaledDx = dx / mapWorldWidth * (renderWidth / 2.0)
+            val scaledDz = dz / mapWorldHeight * (renderHeight / 2.0)
 
             val mobRenderX = (screenCenterX + scaledDx).toInt()
             val mobRenderY = (screenCenterY + scaledDz).toInt()
