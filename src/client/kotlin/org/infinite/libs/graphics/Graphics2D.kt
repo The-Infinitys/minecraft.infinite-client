@@ -668,4 +668,22 @@ class Graphics2D(
     ) {
         drawRotatedTexture(identifier, x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), rotation)
     }
+
+    fun drawLine(
+        x1: Int,
+        y1: Int,
+        x2: Int,
+        y2: Int,
+        color: Int,
+        size: Int = 1,
+    ): Unit = drawLine(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), color, size)
+
+    fun drawLine(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        color: Int,
+        size: Int = 1,
+    ): Unit = drawLine(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), color, size)
 }

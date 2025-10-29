@@ -621,7 +621,7 @@ class HyperMap : ConfigurableFeature(initialEnabled = true) {
             // ------------------------------------------------
             // 4. テクスチャのアンロード (範囲外に出たテクスチャのメモリ解放)
             // ------------------------------------------------
-            if (tickCounter % textureUnloadInterval == 0) {
+            if (tickCounter % textureUnloadInterval == 0 && client.currentScreen !is FullScreenMapScreen) {
                 val currentLoadedKeys = loadedChunkKeys.keys().toList()
                 currentLoadedKeys.forEach { cacheKey ->
                     val parts = cacheKey.split("_")
