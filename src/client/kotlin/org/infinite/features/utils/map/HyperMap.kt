@@ -626,10 +626,10 @@ class HyperMap : ConfigurableFeature(initialEnabled = false) {
                 currentLoadedKeys.forEach { cacheKey ->
                     val parts = cacheKey.split("_")
                     if (parts.size >= 5) {
-                        val dimension = parts[1]
-                        val chunkX = parts[2].toInt()
-                        val chunkZ = parts[3].toInt()
-                        val fileName = parts.subList(4, parts.size).joinToString("_")
+                        val dimension = parts[0]
+                        val chunkX = parts[1].toInt()
+                        val chunkZ = parts[2].toInt()
+                        val fileName = parts.subList(3, parts.size).joinToString("_")
                         // 描画範囲外のテクスチャをアンロード
                         if (cacheKey !in texturesInRenderRange) {
                             MapTextureManager.unloadTexture(chunkX, chunkZ, dimension, fileName)
