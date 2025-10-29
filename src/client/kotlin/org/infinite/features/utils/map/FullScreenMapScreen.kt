@@ -44,7 +44,6 @@ class FullScreenMapScreen(
         }
     }
 
-    // --- ウィジェットの追加 ---
     override fun init() {
         super.init()
 

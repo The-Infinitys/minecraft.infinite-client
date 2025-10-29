@@ -379,7 +379,7 @@ class Graphics2D(
 
     /**
      * 円（真円）を指定した色で塗りつぶし描画します。
-     * 半径に応じて動的に決定された多数の三角形（トライアングルファン）で円を近似して描画します。
+     * 半径に応じて動的に決定された多数の四角形（Quad）で円を近似して描画します。
      *
      * @param cx 円の中心X座標 (ピクセル)
      * @param cy 円の中心Y座標 (ピクセル)
@@ -393,7 +393,11 @@ class Graphics2D(
         color: Int,
     ) {
         // 半径に基づいてセグメント数を動的に決定
-        val segments = calculateSegments(radius)
+        var segments = calculateSegments(radius)
+        // fillQuadを使用するため、セグメント数を偶数に調整 (常に2セグメントを1つの四角形として処理)
+        if (segments % 2 != 0) {
+            segments++
+        }
         val twoPi = 2.0 * Math.PI
 
         // 現在の行列を保存
@@ -402,23 +406,36 @@ class Graphics2D(
         // 描画の中心を (cx, cy) に移動
         translate(cx, cy)
 
-        // 中心点 (0, 0) と円周上の2点を使って三角形を順次描画
-        for (i in 0 until segments) {
+        // 中心点 (0, 0) を基準に計算
+        val center = DisplayPos(0.0, 0.0)
+
+        // 2セグメントごとに1つの四角形を順次描画
+        for (i in 0 until segments step 2) {
             val angle1 = (i.toFloat() / segments.toFloat() * twoPi).toFloat()
             val angle2 = ((i.toFloat() + 1f) / segments.toFloat() * twoPi).toFloat()
+            val angle3 = ((i.toFloat() + 2f) / segments.toFloat() * twoPi).toFloat()
 
-            // 頂点1 (中心 - 変換後)
-            val x1 = 0f
-            val y1 = 0f
+            // 頂点1 (円周上)
+            val p1X = MathHelper.cos(angle1) * radius
+            val p1Y = MathHelper.sin(angle1) * radius
             // 頂点2 (円周上)
-            val x2 = MathHelper.cos(angle1) * radius
-            val y2 = MathHelper.sin(angle1) * radius
+            val p2X = MathHelper.cos(angle2) * radius
+            val p2Y = MathHelper.sin(angle2) * radius
             // 頂点3 (円周上)
-            val x3 = MathHelper.cos(angle2) * radius
-            val y3 = MathHelper.sin(angle2) * radius
+            val p3X = MathHelper.cos(angle3) * radius
+            val p3Y = MathHelper.sin(angle3) * radius
 
-            // 頂点座標は既に中心 (0, 0) を基準に計算されている
-            fillTriangle(x1, y1, x2, y2, x3, y3, color)
+            fillQuad(
+                p1X,
+                p1Y,
+                p2X,
+                p2Y,
+                p3X,
+                p3Y,
+                center.x.toFloat(),
+                center.y.toFloat(),
+                color,
+            )
         }
 
         // 行列を復元
