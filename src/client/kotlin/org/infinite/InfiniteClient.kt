@@ -1,5 +1,6 @@
 package org.infinite
 
+import com.google.gson.Gson
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
@@ -18,6 +19,7 @@ import org.infinite.gui.theme.official.InfiniteTheme
 import org.infinite.gui.theme.official.MinecraftTheme
 import org.infinite.gui.theme.official.PastelTheme
 import org.infinite.gui.theme.official.SmeClanTheme
+import org.infinite.libs.InfiniteAddon
 import org.infinite.libs.InfiniteCommand
 import org.infinite.libs.InfiniteKeyBind
 import org.infinite.libs.client.PlayerInterface
@@ -26,6 +28,8 @@ import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.world.WorldManager
 import org.infinite.utils.LogQueue
 import org.slf4j.LoggerFactory
+import java.io.InputStreamReader
+import java.nio.file.Files
 
 object InfiniteClient : ClientModInitializer {
     private val LOGGER = LoggerFactory.getLogger("InfiniteClient")
@@ -33,6 +37,13 @@ object InfiniteClient : ClientModInitializer {
     lateinit var worldManager: WorldManager
     var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"
+    var loadedAddons: MutableList<InfiniteAddon> = mutableListOf()
+
+    // Added for addon loading
+    private data class ModMetadataPlaceholder(
+        val id: String,
+        val version: String,
+    )
 
     fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: InfiniteTheme()
 
@@ -58,6 +69,48 @@ object InfiniteClient : ClientModInitializer {
     override fun onInitializeClient() {
         LogQueue.registerTickEvent()
 
+        // Addon loading
+        val addonsDir =
+            FabricLoader
+                .getInstance()
+                .gameDir
+                .resolve("infinite")
+                .resolve("addons")
+        if (!Files.exists(addonsDir)) {
+            Files.createDirectories(addonsDir)
+            log("Created addons directory: $addonsDir")
+        }
+
+        Files
+            .list(addonsDir)
+            .filter { it.toString().endsWith(".jar") }
+            .forEach { jarPath ->
+                log("Found addon JAR: $jarPath")
+                try {
+                    val classLoader = java.net.URLClassLoader(arrayOf(jarPath.toUri().toURL()), this.javaClass.classLoader)
+                    val serviceLoader = java.util.ServiceLoader.load(InfiniteAddon::class.java, classLoader)
+
+                    // Get mod metadata from fabric.mod.json inside the JAR
+                    val zipFile = java.util.zip.ZipFile(jarPath.toFile())
+                    val entry = zipFile.getEntry("fabric.mod.json")
+                    if (entry == null) {
+                        warn("Skipping addon $jarPath: fabric.mod.json not found.")
+                        return@forEach
+                    }
+                    val metadataReader = InputStreamReader(zipFile.getInputStream(entry))
+                    val gson = Gson()
+                    val modMetadata = gson.fromJson(metadataReader, ModMetadataPlaceholder::class.java)
+                    metadataReader.close()
+
+                    for (addon in serviceLoader) {
+                        log("Loading addon: ${addon.name} v${modMetadata.version}")
+                        loadedAddons.add(addon)
+                    }
+                } catch (e: Exception) {
+                    error("Failed to load addon from $jarPath: ${e.message}")
+                }
+            }
+
         InfiniteKeyBind.registerKeybindings()
         // --- Event: when player joins a world ---
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
@@ -71,6 +124,9 @@ object InfiniteClient : ClientModInitializer {
                     CyberTheme(),
                 )
             ConfigManager.loadConfig()
+            for (addon in loadedAddons) { // Addon initialize
+                addon.onInitialize()
+            }
             for (category in featureCategories) {
                 for (features in category.features) {
                     features.instance.start()
@@ -92,6 +148,9 @@ object InfiniteClient : ClientModInitializer {
         // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             ConfigManager.saveConfig()
+            for (addon in loadedAddons) { // Addon shutdown
+                addon.onShutdown()
+            }
             for (category in featureCategories) {
                 for (features in category.features) {
                     features.instance.stop()

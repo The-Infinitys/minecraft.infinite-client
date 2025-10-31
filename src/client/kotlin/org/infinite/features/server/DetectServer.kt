@@ -23,8 +23,7 @@ class DetectServer : ConfigurableFeature(initialEnabled = true) {
         featureCategories.forEach { category ->
             category.features.forEach { feature ->
                 val configurableFeature = feature.instance
-                if (configurableFeature.isEnabled() && configurableFeature.level.ordinal > maxAllowedLevel.ordinal
-                ) {
+                if (configurableFeature.isEnabled() && configurableFeature.level.ordinal > maxAllowedLevel.ordinal) {
                     configurableFeature.disable()
                     InfiniteClient.warn(
                         "DetectServer: Disabled feature ${

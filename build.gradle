@@ -1,9 +1,9 @@
 plugins {
 	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
-	id "org.jetbrains.kotlin.jvm" version "2.2.10"
-	id "org.jetbrains.kotlin.plugin.serialization" version "2.2.10"
-	id "com.diffplug.spotless" version "7.0.2"
+	id "org.jetbrains.kotlin.jvm" version "2.3.0-Beta2"
+	id "org.jetbrains.kotlin.plugin.serialization" version "2.3.0-Beta2"
+	id "com.diffplug.spotless" version "8.0.0"
 }
 apply plugin: "com.diffplug.spotless"
 version = project.mod_version
@@ -119,7 +119,7 @@ spotless {
 		// ソースコードの場所を指定
 		target 'src/**/*.kt'
 		// ktlintを適用 (バージョン指定は推奨される `ktlint()` 関数内で)
-		ktlint("1.3.0") // 最新バージョンを確認して指定してください
+		ktlint("1.7.1") // 最新バージョンを確認して指定してください
 		// ktlintのカスタム設定が必要な場合は、ここに追加できます
 	}
 	// Gradleスクリプト自体をフォーマットします
