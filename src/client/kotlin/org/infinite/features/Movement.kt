@@ -1,7 +1,7 @@
 package org.infinite.features
 
 import org.infinite.feature
-import org.infinite.features.movement.boat.HoverBoat
+import org.infinite.features.movement.boat.HoverVehicle
 import org.infinite.features.movement.braek.FastBreak
 import org.infinite.features.movement.fall.AntiFall
 import org.infinite.features.movement.feather.FeatherWalk
@@ -17,9 +17,9 @@ import org.infinite.features.movement.water.WaterHover
 val movement =
     listOf(
         feature(
-            "HoverBoat",
-            HoverBoat(),
-            "feature.movement.hoverboat.description",
+            "HoverVehicle",
+            HoverVehicle(),
+            "feature.movement.hovervehicle.description",
         ),
         feature(
             "AntiHunger",

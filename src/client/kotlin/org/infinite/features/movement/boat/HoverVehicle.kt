@@ -14,7 +14,7 @@ import org.infinite.utils.toRadians
 import kotlin.math.cos
 import kotlin.math.sin
 
-class HoverBoat : ConfigurableFeature(initialEnabled = false) {
+class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
     override val level = FeatureLevel.CHEAT
 
     // 新しい設定: 最高速度 (m/s)

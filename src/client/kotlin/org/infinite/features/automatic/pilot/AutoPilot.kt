@@ -20,7 +20,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Heightmap
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.features.movement.boat.HoverBoat
+import org.infinite.features.movement.boat.HoverVehicle
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.camera.CameraRoll
 import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
@@ -291,7 +291,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
             return
         }
         if (jetFlightMode.value) {
-            if (!InfiniteClient.isFeatureEnabled(HoverBoat::class.java)) {
+            if (!InfiniteClient.isFeatureEnabled(HoverVehicle::class.java)) {
                 InfiniteClient.error(Text.translatable("autopilot.error.hoverboat").string)
                 disable()
                 return

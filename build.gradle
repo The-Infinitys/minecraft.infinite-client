@@ -53,10 +53,12 @@ dependencies {
 }
 
 processResources {
-	inputs.property "version", project.version
+	def modVersion = project.version
+	inputs.property "version", modVersion
 
 	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
+		// ローカル変数を参照することで、スコープの問題を回避し、安全に展開します
+		expand "version": modVersion
 	}
 }
 
