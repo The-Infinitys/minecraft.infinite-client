@@ -4,9 +4,9 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.screen.slot.SlotActionType
-import org.infinite.libs.client.player.PlayerInterface
+import org.infinite.libs.client.player.ClientInterface
 
-object InventoryManager : PlayerInterface() {
+object InventoryManager : ClientInterface() {
     private val isCreative: Boolean
         get() = player?.isCreative ?: false // nullの場合falseを返す
 

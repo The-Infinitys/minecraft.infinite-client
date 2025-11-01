@@ -1,11 +1,11 @@
-package org.infinite.mixin.infinite.graphics;
+package org.infinite.mixin.infinite.interfaces;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.ObjectAllocator;
-import org.infinite.InfiniteClient;
+import org.infinite.libs.client.aim.AimInterface;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,16 +31,6 @@ public abstract class WorldRendererMixin {
       Vector4f vector4f,
       boolean bl,
       CallbackInfo ci) {
-    InfiniteClient.INSTANCE.handle3dGraphics(
-        allocator,
-        tickCounter,
-        renderBlockOutline,
-        camera,
-        positionMatrix,
-        projectionMatrix,
-        matrix4f2,
-        gpuBufferSlice,
-        vector4f,
-        bl);
+    AimInterface.INSTANCE.process();
   }
 }

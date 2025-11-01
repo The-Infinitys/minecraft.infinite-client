@@ -3,7 +3,6 @@
   "package": "org.infinite.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "features.automatic.aimode.AIModeHudMixin",
     "features.fighting.gunner.GunnerHudMixin",
     "features.fighting.gunner.GunnerNetworkMixin",
     "features.fighting.killaura.KillAuraMixin",
@@ -43,6 +42,7 @@
     "features.utils.afk.WorldRendererMixin",
     "infinite.graphics.InGameHudMixin",
     "infinite.graphics.WorldRendererMixin",
+    "infinite.interfaces.WorldRendererMixin",
     "infinite.world.ClientPlayNetworkHandlerMixin"
   ],
   "injectors": {

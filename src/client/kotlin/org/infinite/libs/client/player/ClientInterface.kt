@@ -7,7 +7,7 @@ import net.minecraft.client.option.GameOptions
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.player.PlayerInventory
 
-open class PlayerInterface {
+open class ClientInterface {
     protected val client: MinecraftClient
         get() = MinecraftClient.getInstance()
     protected val player: ClientPlayerEntity?

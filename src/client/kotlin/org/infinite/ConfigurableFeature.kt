@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
-import org.infinite.libs.client.player.PlayerInterface
+import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.world.WorldManager
@@ -15,7 +15,7 @@ import org.lwjgl.glfw.GLFW
 
 abstract class ConfigurableFeature(
     private val initialEnabled: Boolean = false,
-) : PlayerInterface() {
+) : ClientInterface() {
     enum class FeatureLevel {
         UTILS, // ユーリティ。基本どこで使ってても問題ない。
         EXTEND, // 実際には不可能なので、見られると気づかれる可能性がある
