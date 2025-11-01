@@ -19,11 +19,11 @@ import org.infinite.gui.theme.official.InfiniteTheme
 import org.infinite.gui.theme.official.MinecraftTheme
 import org.infinite.gui.theme.official.PastelTheme
 import org.infinite.gui.theme.official.SmeClanTheme
-import org.infinite.libs.InfiniteAddon
-import org.infinite.libs.InfiniteCommand
-import org.infinite.libs.InfiniteKeyBind
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
+import org.infinite.libs.infinite.InfiniteAddon
+import org.infinite.libs.infinite.InfiniteCommand
+import org.infinite.libs.infinite.InfiniteKeyBind
 import org.infinite.libs.world.WorldManager
 import org.infinite.utils.LogQueue
 import org.slf4j.LoggerFactory

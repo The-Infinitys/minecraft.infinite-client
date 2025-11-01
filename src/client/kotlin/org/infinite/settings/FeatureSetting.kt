@@ -57,7 +57,11 @@ sealed class FeatureSetting<T>(
         descriptionKey: String,
         defaultValue: E,
         val options: List<E>,
-    ) : FeatureSetting<E>(name, descriptionKey, defaultValue, defaultValue)
+    ) : FeatureSetting<E>(name, descriptionKey, defaultValue, defaultValue) {
+        fun set(enumName: String) {
+            this.value = options.find { it.name == enumName } ?: return
+        }
+    }
 
     class BlockIDSetting(
         name: String,

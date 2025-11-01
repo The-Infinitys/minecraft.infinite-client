@@ -1,4 +1,4 @@
-package org.infinite.libs
+package org.infinite.libs.infinite
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
@@ -11,13 +11,13 @@ import org.infinite.featureCategories
 import org.infinite.gui.screen.InfiniteScreen
 import org.lwjgl.glfw.GLFW
 
-data class ToggleKeyBindingHandler(
-    val keyBinding: KeyBinding,
-    val feature: ConfigurableFeature,
-)
-
 object InfiniteKeyBind {
     private var menuKeyBinding: KeyBinding? = null
+
+    data class ToggleKeyBindingHandler(
+        val keyBinding: KeyBinding,
+        val feature: ConfigurableFeature,
+    )
 
     // 初期化時にリストを空にする必要はないので、valでもOKですが、MutableListであることは維持します
     private val toggleKeyBindings: MutableList<ToggleKeyBindingHandler> = mutableListOf()
@@ -50,7 +50,12 @@ object InfiniteKeyBind {
                         ),
                         configurableFeature,
                     )
-                actionKeyBindings += configurableFeature.registerKeybinds(category.name, feature.name, keyBindingCategory)
+                actionKeyBindings +=
+                    configurableFeature.registerKeybinds(
+                        category.name,
+                        feature.name,
+                        keyBindingCategory,
+                    )
             }
         }
 

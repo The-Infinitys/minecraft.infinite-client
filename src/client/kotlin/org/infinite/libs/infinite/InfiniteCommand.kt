@@ -1,4 +1,4 @@
-package org.infinite.libs
+package org.infinite.libs.infinite
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
@@ -15,11 +15,6 @@ import net.minecraft.util.Formatting
 import org.infinite.ConfigManager
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.InfiniteClient.error
-import org.infinite.InfiniteClient.info
-import org.infinite.InfiniteClient.log
-import org.infinite.InfiniteClient.searchFeature
-import org.infinite.InfiniteClient.warn
 import org.infinite.featureCategories
 import org.infinite.settings.FeatureSetting
 
@@ -203,9 +198,9 @@ object InfiniteCommand {
 
     private fun getTheme(): Int {
         val currentThemeName = InfiniteClient.currentTheme
-        info(Text.translatable("command.infinite.theme.current", currentThemeName).string)
+        InfiniteClient.info(Text.translatable("command.infinite.theme.current", currentThemeName).string)
         val availableThemes = InfiniteClient.themes.joinToString(", ") { it.name }
-        info(Text.translatable("command.infinite.theme.available", availableThemes).string)
+        InfiniteClient.info(Text.translatable("command.infinite.theme.available", availableThemes).string)
         return 1
     }
 
@@ -221,12 +216,12 @@ object InfiniteCommand {
         val themeName = StringArgumentType.getString(context, "name")
         val theme = InfiniteClient.themes.find { it.name.equals(themeName, ignoreCase = true) }
         if (theme == null) {
-            error(Text.translatable("command.infinite.theme.notfound", themeName).string)
+            InfiniteClient.error(Text.translatable("command.infinite.theme.notfound", themeName).string)
             return 0
         }
         InfiniteClient.currentTheme = theme.name
         ConfigManager.saveConfig()
-        info(Text.translatable("command.infinite.theme.changed", theme.name).string)
+        InfiniteClient.info(Text.translatable("command.infinite.theme.changed", theme.name).string)
         return 1
     }
 
@@ -266,13 +261,13 @@ object InfiniteCommand {
                         }
                     }
                 }
-                info(Text.translatable("command.infinite.config.reset.all").string)
+                InfiniteClient.info(Text.translatable("command.infinite.config.reset.all").string)
             }
 
             featureName == null -> {
                 val category = featureCategories.firstOrNull { it.name.equals(categoryName, ignoreCase = true) }
                 if (category == null) {
-                    error(Text.translatable("command.infinite.category.notfound", categoryName).string)
+                    InfiniteClient.error(Text.translatable("command.infinite.category.notfound", categoryName).string)
                     return 0
                 }
                 category.features.forEach { feature ->
@@ -283,35 +278,63 @@ object InfiniteCommand {
                         }
                     }
                 }
-                info(Text.translatable("command.infinite.config.reset.category", categoryName).string)
+                InfiniteClient.info(Text.translatable("command.infinite.config.reset.category", categoryName).string)
             }
 
             settingKey == null -> {
-                val feature = searchFeature(categoryName, featureName)
+                val feature = InfiniteClient.searchFeature(categoryName, featureName)
                 if (feature == null) {
-                    error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
+                    InfiniteClient.error(
+                        Text
+                            .translatable(
+                                "command.infinite.feature.notfound",
+                                categoryName,
+                                featureName,
+                            ).string,
+                    )
                     return 0
                 }
                 feature.reset()
                 feature.settings.forEach { setting ->
                     setting.reset()
                 }
-                info(Text.translatable("command.infinite.config.reset.feature", featureName).string)
+                InfiniteClient.info(Text.translatable("command.infinite.config.reset.feature", featureName).string)
             }
 
             else -> {
-                val feature = searchFeature(categoryName, featureName)
+                val feature = InfiniteClient.searchFeature(categoryName, featureName)
                 if (feature == null) {
-                    error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
+                    InfiniteClient.error(
+                        Text
+                            .translatable(
+                                "command.infinite.feature.notfound",
+                                categoryName,
+                                featureName,
+                            ).string,
+                    )
                     return 0
                 }
                 val setting = feature.getSetting(settingKey)
                 if (setting == null) {
-                    error(Text.translatable("command.infinite.setting.notfound", featureName, settingKey).string)
+                    InfiniteClient.error(
+                        Text
+                            .translatable(
+                                "command.infinite.setting.notfound",
+                                featureName,
+                                settingKey,
+                            ).string,
+                    )
                     return 0
                 }
                 setting.reset()
-                info(Text.translatable("command.infinite.config.reset.setting", featureName, settingKey).string)
+                InfiniteClient.info(
+                    Text
+                        .translatable(
+                            "command.infinite.config.reset.setting",
+                            featureName,
+                            settingKey,
+                        ).string,
+                )
             }
         }
         return 1
@@ -320,18 +343,18 @@ object InfiniteCommand {
     private fun getVersion(): Int {
         val modContainer = FabricLoader.getInstance().getModContainer("infinite")
         val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
-        log("version $modVersion")
+        InfiniteClient.log("version $modVersion")
         return 1
     }
 
     private fun saveConfig(): Int {
         ConfigManager.saveConfig()
-        log(Text.translatable("command.infinite.config.save").string)
+        InfiniteClient.log(Text.translatable("command.infinite.config.save").string)
         return 1
     }
 
     private fun loadConfig(): Int {
-        log(Text.translatable("command.infinite.config.load").string)
+        InfiniteClient.log(Text.translatable("command.infinite.config.load").string)
         return 1
     }
 
@@ -339,9 +362,9 @@ object InfiniteCommand {
         categoryName: String,
         featureName: String,
     ): Int {
-        val feature = searchFeature(categoryName, featureName)
+        val feature = InfiniteClient.searchFeature(categoryName, featureName)
         if (feature == null) {
-            error("${Text.translatable("command.infinite.nofeature")}: $categoryName / $featureName")
+            InfiniteClient.error("${Text.translatable("command.infinite.nofeature")}: $categoryName / $featureName")
             return 0
         }
         val enable = !feature.isEnabled()
@@ -355,7 +378,7 @@ object InfiniteCommand {
                 Text.translatable("command.infinite.action.disabled").string
             }
         feature.toggle()
-        info(Text.translatable("command.infinite.feature.toggled", featureName, action).string)
+        InfiniteClient.info(Text.translatable("command.infinite.feature.toggled", featureName, action).string)
         return 1
     }
 
@@ -423,7 +446,7 @@ object InfiniteCommand {
                         dynamicLookup -> {
                             val categoryName = StringArgumentType.getString(context, "category")
                             val featureName = StringArgumentType.getString(context, "name")
-                            searchFeature(categoryName, featureName)
+                            InfiniteClient.searchFeature(categoryName, featureName)
                         }
 
                         else -> null
@@ -492,7 +515,7 @@ object InfiniteCommand {
                         dynamicLookup -> {
                             val categoryName = StringArgumentType.getString(context, "category")
                             val featureName = StringArgumentType.getString(context, "name")
-                            searchFeature(categoryName, featureName)
+                            InfiniteClient.searchFeature(categoryName, featureName)
                         }
 
                         else -> null
@@ -713,13 +736,20 @@ object InfiniteCommand {
             } else {
                 Text.translatable("command.infinite.action.disabled").string
             }
-        val feature = searchFeature(categoryName, featureName)
+        val feature = InfiniteClient.searchFeature(categoryName, featureName)
         if (feature == null) {
-            error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
+            InfiniteClient.error(
+                Text
+                    .translatable(
+                        "command.infinite.feature.notfound",
+                        categoryName,
+                        featureName,
+                    ).string,
+            )
             return 0
         }
         if (feature.isEnabled() == enable) {
-            warn(Text.translatable("command.infinite.feature.already", featureName, action).string)
+            InfiniteClient.warn(Text.translatable("command.infinite.feature.already", featureName, action).string)
             return 0
         }
         if (enable) {
@@ -727,7 +757,7 @@ object InfiniteCommand {
         } else {
             feature.disable()
         }
-        info(Text.translatable("command.infinite.feature.toggled", featureName, action).string)
+        InfiniteClient.info(Text.translatable("command.infinite.feature.toggled", featureName, action).string)
         return 1
     }
 
@@ -738,14 +768,21 @@ object InfiniteCommand {
     ): Int {
         val settingKey = StringArgumentType.getString(context, "key")
         val rawValue = StringArgumentType.getString(context, "value")
-        val feature = searchFeature(categoryName, featureName)
+        val feature = InfiniteClient.searchFeature(categoryName, featureName)
         if (feature == null) {
-            error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
+            InfiniteClient.error(
+                Text
+                    .translatable(
+                        "command.infinite.feature.notfound",
+                        categoryName,
+                        featureName,
+                    ).string,
+            )
             return 0
         }
         val setting = feature.getSetting(settingKey)
         if (setting == null) {
-            error(Text.translatable("command.infinite.setting.notfound", featureName, settingKey).string)
+            InfiniteClient.error(Text.translatable("command.infinite.setting.notfound", featureName, settingKey).string)
             return 0
         }
         try {
@@ -788,10 +825,18 @@ object InfiniteCommand {
             @Suppress("UNCHECKED_CAST")
             val mutableSetting = setting as FeatureSetting<Any>
             mutableSetting.value = processedValue
-            info(Text.translatable("command.infinite.setting.changed", featureName, settingKey, processedValue).string)
+            InfiniteClient.info(
+                Text
+                    .translatable(
+                        "command.infinite.setting.changed",
+                        featureName,
+                        settingKey,
+                        processedValue,
+                    ).string,
+            )
             return 1
         } catch (e: Exception) {
-            error(Text.translatable("command.infinite.setting.parseerror", e.message).string)
+            InfiniteClient.error(Text.translatable("command.infinite.setting.parseerror", e.message).string)
             return 0
         }
     }
@@ -805,15 +850,22 @@ object InfiniteCommand {
         val settingKey = StringArgumentType.getString(context, "key")
         val value = StringArgumentType.getString(context, "value")
 
-        val feature = searchFeature(categoryName, featureName)
+        val feature = InfiniteClient.searchFeature(categoryName, featureName)
         if (feature == null) {
-            error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
+            InfiniteClient.error(
+                Text
+                    .translatable(
+                        "command.infinite.feature.notfound",
+                        categoryName,
+                        featureName,
+                    ).string,
+            )
             return 0
         }
 
         val setting = feature.getSetting(settingKey)
         if (setting == null) {
-            error(Text.translatable("command.infinite.setting.notfound", featureName, settingKey).string)
+            InfiniteClient.error(Text.translatable("command.infinite.setting.notfound", featureName, settingKey).string)
             return 0
         }
 
@@ -828,22 +880,43 @@ object InfiniteCommand {
 
             if (isAdd) {
                 if (currentList.contains(value)) {
-                    warn(Text.translatable("command.infinite.setting.list.alreadyadded", value, settingKey).string)
+                    InfiniteClient.warn(
+                        Text
+                            .translatable(
+                                "command.infinite.setting.list.alreadyadded",
+                                value,
+                                settingKey,
+                            ).string,
+                    )
                     return 0
                 }
                 currentList.add(value)
-                info(Text.translatable("command.infinite.setting.list.added", value, settingKey).string)
+                InfiniteClient.info(Text.translatable("command.infinite.setting.list.added", value, settingKey).string)
             } else {
                 if (!currentList.contains(value)) {
-                    warn(Text.translatable("command.infinite.setting.list.notexist", value, settingKey).string)
+                    InfiniteClient.warn(
+                        Text
+                            .translatable(
+                                "command.infinite.setting.list.notexist",
+                                value,
+                                settingKey,
+                            ).string,
+                    )
                     return 0
                 }
                 currentList.remove(value)
-                info(Text.translatable("command.infinite.setting.list.removed", value, settingKey).string)
+                InfiniteClient.info(
+                    Text
+                        .translatable(
+                            "command.infinite.setting.list.removed",
+                            value,
+                            settingKey,
+                        ).string,
+                )
             }
             return 1
         } else {
-            error(Text.translatable("command.infinite.setting.list.notlist", settingKey).string)
+            InfiniteClient.error(Text.translatable("command.infinite.setting.list.notlist", settingKey).string)
             return 0
         }
     }
@@ -852,9 +925,16 @@ object InfiniteCommand {
         categoryName: String,
         featureName: String,
     ): Int {
-        val feature = searchFeature(categoryName, featureName)
+        val feature = InfiniteClient.searchFeature(categoryName, featureName)
         if (feature == null) {
-            error(Text.translatable("command.infinite.feature.notfound", categoryName, featureName).string)
+            InfiniteClient.error(
+                Text
+                    .translatable(
+                        "command.infinite.feature.notfound",
+                        categoryName,
+                        featureName,
+                    ).string,
+            )
             return 0
         }
         val status =
@@ -864,16 +944,16 @@ object InfiniteCommand {
                 "${Formatting.RED}" +
                     Text.translatable("command.infinite.action.disabled").string
             }
-        info(Text.translatable("command.infinite.feature.status", featureName, status).string)
+        InfiniteClient.info(Text.translatable("command.infinite.feature.status", featureName, status).string)
         val settingCount = feature.settings.size
         if (settingCount > 0) {
-            log(Text.translatable("command.infinite.setting.list.header", settingCount).string)
+            InfiniteClient.log(Text.translatable("command.infinite.setting.list.header", settingCount).string)
             feature.settings.forEach { setting ->
                 val valueStr = setting.value.toString()
                 val typeStr = setting.value::class.simpleName
-                log(" - ${setting.name}: $valueStr ($typeStr)")
+                InfiniteClient.log(" - ${setting.name}: $valueStr ($typeStr)")
             }
-            log(Text.translatable("command.infinite.setting.list.footer").string)
+            InfiniteClient.log(Text.translatable("command.infinite.setting.list.footer").string)
         }
         return 1
     }

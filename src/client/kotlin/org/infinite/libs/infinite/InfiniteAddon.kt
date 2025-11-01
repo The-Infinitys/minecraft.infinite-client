@@ -1,4 +1,4 @@
-package org.infinite.libs
+package org.infinite.libs.infinite
 
 import org.infinite.ConfigurableFeature
 
