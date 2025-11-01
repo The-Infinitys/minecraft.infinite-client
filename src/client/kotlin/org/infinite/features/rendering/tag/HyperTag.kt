@@ -9,13 +9,12 @@ import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.ColorHelper
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.rendering.getRainbowColor
 import org.infinite.utils.rendering.transparent
-import kotlin.math.sqrt // 平方根を計算するためにインポート
+import kotlin.math.sqrt
 
 class HyperTag : ConfigurableFeature(initialEnabled = false) {
     override val level = FeatureLevel.UTILS

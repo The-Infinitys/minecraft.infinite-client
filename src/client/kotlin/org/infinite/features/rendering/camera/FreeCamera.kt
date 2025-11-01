@@ -3,7 +3,6 @@ package org.infinite.features.rendering.camera
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.freeze.Freeze
 import org.infinite.libs.graphics.Graphics3D

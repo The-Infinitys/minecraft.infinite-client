@@ -6,10 +6,9 @@ import net.minecraft.util.Hand
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.features.automatic.pilot.AutoPilot
-import org.infinite.libs.client.player.fighting.aim.CameraRoll
+import org.infinite.libs.client.player.aim.CameraRoll
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.toRadians
 import kotlin.math.cos

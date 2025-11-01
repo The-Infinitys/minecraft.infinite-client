@@ -22,7 +22,6 @@ import org.infinite.gui.theme.official.SmeClanTheme
 import org.infinite.libs.InfiniteAddon
 import org.infinite.libs.InfiniteCommand
 import org.infinite.libs.InfiniteKeyBind
-import org.infinite.libs.client.PlayerInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.world.WorldManager
@@ -33,7 +32,6 @@ import java.nio.file.Files
 
 object InfiniteClient : ClientModInitializer {
     private val LOGGER = LoggerFactory.getLogger("InfiniteClient")
-    lateinit var playerInterface: PlayerInterface
     lateinit var worldManager: WorldManager
     var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"
@@ -159,7 +157,6 @@ object InfiniteClient : ClientModInitializer {
         }
         ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }
         ClientCommandRegistrationCallback.EVENT.register(InfiniteCommand::registerCommands)
-        playerInterface = PlayerInterface()
         worldManager = WorldManager()
     }
 

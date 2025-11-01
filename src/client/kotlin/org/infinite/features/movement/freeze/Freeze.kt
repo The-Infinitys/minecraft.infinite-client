@@ -3,12 +3,10 @@ package org.infinite.features.movement.freeze
 import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.features.rendering.camera.FreeCamera
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.FakePlayerEntity
-import java.util.ArrayDeque
 
 /**
  * Freeze Feature (Blink Hack implementation)
@@ -118,22 +116,16 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
      * Mixinから呼び出され、パケットを処理（キューに追加）する
      */
     fun processMovePacket(packet: PlayerMoveC2SPacket) {
-        val prevPacket = packets.peekLast()
+        val prevPacket = packets.last()
 
         // パケットの内容が前のパケットと全て同一であれば、冗長なパケットとして無視
         // BlinkHackの冗長パケットチェックロジックを再現
-        if (prevPacket != null &&
-            packet.isOnGround == prevPacket.isOnGround &&
-            packet.getYaw(-1f) ==
+        if (packet.isOnGround == prevPacket.isOnGround && packet.getYaw(-1f) ==
             prevPacket.getYaw(
                 -1f,
-            ) &&
-            packet.getPitch(-1f) == prevPacket.getPitch(-1f) &&
-            packet.getX(-1.0) == prevPacket.getX(-1.0) &&
-            packet.getY(
+            ) && packet.getPitch(-1f) == prevPacket.getPitch(-1f) && packet.getX(-1.0) == prevPacket.getX(-1.0) && packet.getY(
                 -1.0,
-            ) == prevPacket.getY(-1.0) &&
-            packet.getZ(-1.0) == prevPacket.getZ(-1.0)
+            ) == prevPacket.getY(-1.0) && packet.getZ(-1.0) == prevPacket.getZ(-1.0)
         ) {
             return
         }

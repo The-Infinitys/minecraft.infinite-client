@@ -1,7 +1,6 @@
 package org.infinite.features.movement.mine
 
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class AutoMine : ConfigurableFeature(initialEnabled = false) {

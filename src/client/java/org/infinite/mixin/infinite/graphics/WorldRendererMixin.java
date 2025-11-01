@@ -6,7 +6,7 @@ import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.ObjectAllocator;
 import org.infinite.InfiniteClient;
-import org.infinite.libs.client.player.fighting.AimInterface;
+import org.infinite.libs.client.player.aim.AimInterface;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;

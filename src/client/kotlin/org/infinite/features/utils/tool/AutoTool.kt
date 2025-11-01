@@ -5,7 +5,6 @@ import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.features.rendering.detailinfo.ToolChecker
 import org.infinite.libs.client.player.inventory.InventoryManager
 import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex

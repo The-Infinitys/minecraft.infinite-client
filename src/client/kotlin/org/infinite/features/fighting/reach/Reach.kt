@@ -1,7 +1,6 @@
 package org.infinite.features.fighting.reach
 
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class Reach : ConfigurableFeature(initialEnabled = false) {

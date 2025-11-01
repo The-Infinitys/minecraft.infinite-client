@@ -5,10 +5,9 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.option.GameOptions
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.util.math.Vec3d
-import org.infinite.libs.client.player.ai.AISystem
 import org.infinite.libs.client.player.movement.MovementInterface
 
-class PlayerInterface {
+object PlayerInterface {
     val client: MinecraftClient
         get() = MinecraftClient.getInstance()
     val player: ClientPlayerEntity?
@@ -24,8 +23,5 @@ class PlayerInterface {
             val z = player?.z ?: return null
             return Vec3d(x, y, z)
         }
-    val velocity: Vec3d?
-        get() = player?.velocity
     val movement: MovementInterface = MovementInterface(client)
-    val ai: AISystem = AISystem(client)
 }

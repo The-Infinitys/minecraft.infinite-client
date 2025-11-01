@@ -1,7 +1,6 @@
 package org.infinite.features.server
 
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.featureCategories
 import org.infinite.settings.FeatureSetting

@@ -203,7 +203,7 @@ object EntityContentRenderer {
                 val stack = entity.getEquippedStack(it)
                 if (!stack.isEmpty) {
                     graphics2d.drawText(
-                        "${it.name.lowercase().replaceFirstChar { it.uppercase() }}: ${stack.name.string}",
+                        "${it.name.lowercase().replaceFirstChar { it -> it.uppercase() }}: ${stack.name.string}",
                         x,
                         currentY,
                         org.infinite.InfiniteClient

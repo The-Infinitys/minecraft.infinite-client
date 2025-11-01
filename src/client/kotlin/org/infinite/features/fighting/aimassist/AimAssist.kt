@@ -6,13 +6,13 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.libs.client.player.fighting.AimInterface
-import org.infinite.libs.client.player.fighting.aim.AimCalculateMethod
-import org.infinite.libs.client.player.fighting.aim.AimPriority
-import org.infinite.libs.client.player.fighting.aim.AimTarget
-import org.infinite.libs.client.player.fighting.aim.AimTask
-import org.infinite.libs.client.player.fighting.aim.AimTaskCondition
-import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
+import org.infinite.libs.client.player.aim.AimCalculateMethod
+import org.infinite.libs.client.player.aim.AimInterface
+import org.infinite.libs.client.player.aim.AimPriority
+import org.infinite.libs.client.player.aim.AimTarget
+import org.infinite.libs.client.player.aim.AimTask
+import org.infinite.libs.client.player.aim.AimTaskCondition
+import org.infinite.libs.client.player.aim.AimTaskConditionReturn
 import org.infinite.settings.FeatureSetting
 import kotlin.math.acos
 

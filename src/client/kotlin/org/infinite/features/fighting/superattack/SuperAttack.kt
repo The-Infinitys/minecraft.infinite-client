@@ -1,7 +1,6 @@
 package org.infinite.features.fighting.superattack
 
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class SuperAttack : ConfigurableFeature(initialEnabled = false) {

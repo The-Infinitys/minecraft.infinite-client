@@ -1,7 +1,6 @@
 package org.infinite.features.movement.braek
 
 import org.infinite.ConfigurableFeature
-import org.infinite.ConfigurableFeature.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class FastBreak : ConfigurableFeature(initialEnabled = false) {
