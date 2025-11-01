@@ -19,13 +19,13 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
 
     // 新しい設定: 最高速度 (m/s)
     private val speed: FeatureSetting.FloatSetting =
-        FeatureSetting.FloatSetting("MaxSpeed", "feature.movement.hoverboat.speed.description", 20.0f, 1.0f, 200.0f)
+        FeatureSetting.FloatSetting("MaxSpeed", "feature.movement.hovervehicle.speed.description", 20.0f, 1.0f, 200.0f)
 
     // 新しい設定: 加速力 (毎ティック)
     private val acceleration: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Acceleration",
-            "feature.movement.hoverboat.acceleration.description",
+            "feature.movement.hovervehicle.acceleration.description",
             0.5f,
             0.05f,
             2.0f,
@@ -38,21 +38,21 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
         val player = client.player ?: return
         val vehicle = player.vehicle
         // --- 自動再搭乗ロジック (変更なし) ---
-        if (vehicle !is BoatEntity) {
+        if (vehicle == null) {
             val world = client.world ?: return
             val x = player.x
             val y = player.y
             val z = player.z
             val reach = player.entityInteractionRange
-            val nearbyBoat =
+            val nearbyVehicle =
                 world
                     .getOtherEntities(
                         player,
                         Box(x - reach, y - reach, z - reach, x + reach, y + reach, z + reach),
-                    ) { entity -> entity is BoatEntity } // 全てのボートエンティティ
-                    .minByOrNull { boat -> boat.squaredDistanceTo(player) }
-            if (nearbyBoat != null) {
-                player.interact(nearbyBoat, Hand.MAIN_HAND)
+                    ) { entity -> entity.isVehicle } // 全ての乗り物エンティティ
+                    .minByOrNull { it.squaredDistanceTo(player) }
+            if (nearbyVehicle != null) {
+                player.interact(nearbyVehicle, Hand.MAIN_HAND)
                 return
             }
 
@@ -69,7 +69,7 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
      */
     private fun controlBoatMovement(
         client: MinecraftClient,
-        boat: BoatEntity,
+        vehicle: net.minecraft.entity.Entity,
     ) {
         val options = client.options ?: return
         val player = client.player ?: return
@@ -79,9 +79,8 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
         var moving = false
         val yaw = player.yaw
         val pitch = player.pitch
-        boat.yaw = yaw // ボートの向きをプレイヤーの向きに合わせる
         val yawRadians = toRadians(yaw)
-        boat.setNoGravity(true)
+        vehicle.setNoGravity(true)
         // --- 望ましい移動方向ベクトルを計算 ---
 
         // 前後移動 (W/S) - 視線方向
@@ -124,7 +123,7 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
 
         // --- 速度制御ロジック ---
 
-        val currentVelocity = boat.velocity
+        val currentVelocity = vehicle.velocity
 
         if (moving) {
             // 望ましい移動方向を正規化
@@ -153,7 +152,7 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
                 newVelocity = newVelocity.normalize().multiply(maxSpeed)
             }
 
-            boat.velocity = newVelocity
+            vehicle.velocity = newVelocity
         } else {
             // 移動キーが押されていない場合、減速（摩擦）を適用して停止させる
             // AutoPilotとの整合性を確保
@@ -167,18 +166,18 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
 
                 if (stopDistance > currentSpeed) {
                     // 減速量が大きすぎて速度を反転させる場合、完全に停止させる
-                    boat.velocity = Vec3d.ZERO
+                    vehicle.velocity = Vec3d.ZERO
                 } else {
                     // 速度に摩擦係数を適用
                     if (InfiniteClient.isSettingEnabled(AutoPilot::class.java, "JeetFlight")) {
-                        boat.velocity = currentVelocity.multiply(1.0, friction, 1.0)
+                        vehicle.velocity = currentVelocity.multiply(1.0, friction, 1.0)
                     } else {
-                        boat.velocity = currentVelocity.multiply(friction)
+                        vehicle.velocity = currentVelocity.multiply(friction)
                     }
                 }
             } else {
                 // 完全に停止している場合
-                boat.velocity = Vec3d.ZERO
+                vehicle.velocity = Vec3d.ZERO
             }
         }
     }
@@ -191,7 +190,7 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
         val client = MinecraftClient.getInstance()
         val player = client.player
         val vehicle = player?.vehicle
-        if (vehicle is BoatEntity) {
+        if (vehicle != null) {
             vehicle.setNoGravity(false)
         }
     }
