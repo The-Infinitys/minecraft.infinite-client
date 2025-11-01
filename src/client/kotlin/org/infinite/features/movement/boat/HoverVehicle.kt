@@ -1,7 +1,7 @@
 package org.infinite.features.movement.boat
 
 import net.minecraft.client.MinecraftClient
-import net.minecraft.entity.vehicle.BoatEntity
+import net.minecraft.entity.vehicle.VehicleEntity
 import net.minecraft.util.Hand
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
@@ -49,7 +49,7 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
                     .getOtherEntities(
                         player,
                         Box(x - reach, y - reach, z - reach, x + reach, y + reach, z + reach),
-                    ) { entity -> entity.isVehicle } // 全ての乗り物エンティティ
+                    ) { entity -> entity is VehicleEntity } // 全ての乗り物エンティティ
                     .minByOrNull { it.squaredDistanceTo(player) }
             if (nearbyVehicle != null) {
                 player.interact(nearbyVehicle, Hand.MAIN_HAND)
@@ -190,8 +190,6 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
         val client = MinecraftClient.getInstance()
         val player = client.player
         val vehicle = player?.vehicle
-        if (vehicle != null) {
-            vehicle.setNoGravity(false)
-        }
+        vehicle?.setNoGravity(false)
     }
 }
