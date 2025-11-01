@@ -10,7 +10,7 @@ import net.minecraft.client.util.ObjectAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import org.infinite.libs.client.player.aim.CameraRoll
+import org.infinite.libs.client.aim.CameraRoll
 import org.infinite.libs.graphics.render.RenderResources
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.utils.rendering.Line

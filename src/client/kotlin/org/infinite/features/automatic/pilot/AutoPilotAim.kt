@@ -5,13 +5,13 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
-import org.infinite.libs.client.player.aim.AimCalculateMethod
-import org.infinite.libs.client.player.aim.AimPriority
-import org.infinite.libs.client.player.aim.AimTarget
-import org.infinite.libs.client.player.aim.AimTask
-import org.infinite.libs.client.player.aim.AimTaskCondition
-import org.infinite.libs.client.player.aim.AimTaskConditionReturn
-import org.infinite.libs.client.player.aim.CameraRoll
+import org.infinite.libs.client.aim.AimCalculateMethod
+import org.infinite.libs.client.aim.AimPriority
+import org.infinite.libs.client.aim.AimTarget
+import org.infinite.libs.client.aim.AimTask
+import org.infinite.libs.client.aim.AimTaskCondition
+import org.infinite.libs.client.aim.AimTaskConditionReturn
+import org.infinite.libs.client.aim.CameraRoll
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 

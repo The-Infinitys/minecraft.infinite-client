@@ -3,8 +3,8 @@ package org.infinite.features.utils.backpack
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.ItemStack
 import org.infinite.ConfigurableFeature
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 
 class BackPackManager : ConfigurableFeature() {

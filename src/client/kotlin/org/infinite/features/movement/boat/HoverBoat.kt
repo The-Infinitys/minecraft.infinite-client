@@ -8,7 +8,7 @@ import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.automatic.pilot.AutoPilot
-import org.infinite.libs.client.player.aim.CameraRoll
+import org.infinite.libs.client.aim.CameraRoll
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.toRadians
 import kotlin.math.cos

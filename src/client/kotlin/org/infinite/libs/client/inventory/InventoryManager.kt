@@ -1,4 +1,4 @@
-package org.infinite.libs.client.player.inventory
+package org.infinite.libs.client.inventory
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.Item

@@ -21,11 +21,11 @@ import net.minecraft.world.Heightmap
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.boat.HoverBoat
-import org.infinite.libs.client.player.aim.AimInterface
-import org.infinite.libs.client.player.aim.AimTaskConditionReturn
-import org.infinite.libs.client.player.aim.CameraRoll
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.aim.AimInterface
+import org.infinite.libs.client.aim.AimTaskConditionReturn
+import org.infinite.libs.client.aim.CameraRoll
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils

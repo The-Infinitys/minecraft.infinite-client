@@ -1,4 +1,4 @@
-package org.infinite.libs.client.player.movement
+package org.infinite.libs.client.movement
 
 import net.minecraft.client.MinecraftClient
 

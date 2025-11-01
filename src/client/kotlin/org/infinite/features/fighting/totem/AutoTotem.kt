@@ -2,8 +2,8 @@ package org.infinite.features.fighting.totem
 
 import net.minecraft.item.Items
 import org.infinite.ConfigurableFeature
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 
 class AutoTotem : ConfigurableFeature(initialEnabled = false) {

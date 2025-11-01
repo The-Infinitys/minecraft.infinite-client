@@ -9,9 +9,8 @@ import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.registry.Registries
 import org.infinite.ConfigurableFeature
-import org.infinite.libs.client.PlayerInterface
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.FeatureSetting.BooleanSetting
 import org.infinite.settings.FeatureSetting.IntSetting
@@ -83,9 +82,8 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         get() = FeatureLevel.EXTEND
 
     override fun tick() {
-        val player = PlayerInterface.player ?: return
+        val player = player ?: return
         val invManager = InventoryManager
-        val client = PlayerInterface.client
 
         // Skip if a screen is open (e.g., inventory GUI)
         if (client.currentScreen != null) return
@@ -172,7 +170,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         floatTick = if (player.isOnGround) 0 else floatTick + 1
 
         // Trigger elytra equip if jumping in mid-air
-        val jumpInput = PlayerInterface.client.options.jumpKey.isPressed
+        val jumpInput = options.jumpKey.isPressed
         val shouldAttemptElytra = jumpInput && !player.isOnGround && floatTick > 2 && !isCurrentElytra
 
         if (shouldAttemptElytra && !isElytraEquippedByHack) {

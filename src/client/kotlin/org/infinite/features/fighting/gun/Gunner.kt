@@ -8,9 +8,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import org.infinite.ConfigurableFeature
-import org.infinite.libs.client.PlayerInterface
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
@@ -112,7 +111,7 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
                     val loadedCrossbow = findFirstLoadedCrossbow()
                     val readyToSet =
                         (fireMode.value == FireMode.FULL_AUTO && intervalCount == 0) ||
-                            (fireMode.value == FireMode.SEMI_AUTO && !PlayerInterface.options.useKey.isPressed)
+                            (fireMode.value == FireMode.SEMI_AUTO && !options.useKey.isPressed)
                     if (loadedCrossbow != null && readyToSet) {
                         intervalCount = additionalInterval.value
                         manager.swap(InventoryIndex.MainHand(), loadedCrossbow)

@@ -1,4 +1,4 @@
-package org.infinite.libs.client.player.aim
+package org.infinite.libs.client.aim
 
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.client.MinecraftClient
