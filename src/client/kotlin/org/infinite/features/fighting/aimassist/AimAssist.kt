@@ -6,13 +6,13 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.libs.client.aim.AimCalculateMethod
 import org.infinite.libs.client.aim.AimInterface
-import org.infinite.libs.client.aim.AimPriority
-import org.infinite.libs.client.aim.AimTarget
-import org.infinite.libs.client.aim.AimTask
-import org.infinite.libs.client.aim.AimTaskCondition
-import org.infinite.libs.client.aim.AimTaskConditionReturn
+import org.infinite.libs.client.aim.task.AimTask
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
+import org.infinite.libs.client.aim.task.config.AimCalculateMethod
+import org.infinite.libs.client.aim.task.config.AimPriority
+import org.infinite.libs.client.aim.task.config.AimTarget
 import org.infinite.settings.FeatureSetting
 import kotlin.math.acos
 
@@ -133,7 +133,7 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     }
 }
 
-class AimAssistTaskCondition : AimTaskCondition {
+class AimAssistTaskCondition : AimTaskConditionInterface {
     override fun check(): AimTaskConditionReturn {
         val aimAssist = InfiniteClient.getFeature(AimAssist::class.java) ?: return AimTaskConditionReturn.Failure
         if (aimAssist.isDisabled()) {

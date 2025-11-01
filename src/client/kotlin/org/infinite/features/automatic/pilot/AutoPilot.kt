@@ -22,8 +22,8 @@ import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.boat.HoverBoat
 import org.infinite.libs.client.aim.AimInterface
-import org.infinite.libs.client.aim.AimTaskConditionReturn
-import org.infinite.libs.client.aim.CameraRoll
+import org.infinite.libs.client.aim.camera.CameraRoll
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.libs.graphics.Graphics2D

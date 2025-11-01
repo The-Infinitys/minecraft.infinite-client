@@ -1,20 +1,12 @@
 package org.infinite.libs.client.inventory
 
-import net.minecraft.client.MinecraftClient
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.screen.slot.SlotActionType
+import org.infinite.libs.client.player.PlayerInterface
 
-object InventoryManager {
-    private val client
-        get() = MinecraftClient.getInstance()
-    private val interactionManager
-        get() = client.interactionManager // null許容に変更
-    private val player
-        get() = client.player // null許容に変更、例外を投げない
-    private val inv
-        get() = player?.inventory // null許容に変更
+object InventoryManager : PlayerInterface() {
     private val isCreative: Boolean
         get() = player?.isCreative ?: false // nullの場合falseを返す
 
@@ -51,7 +43,7 @@ object InventoryManager {
     }
 
     fun get(index: InventoryIndex): ItemStack {
-        val playerInv = inv ?: return ItemStack.EMPTY // nullチェック
+        val playerInv = inventory ?: return ItemStack.EMPTY // nullチェック
         return when (index) {
             is InventoryIndex.Armor ->
                 playerInv.getStack(
@@ -78,7 +70,7 @@ object InventoryManager {
         stack: ItemStack,
     ): Boolean {
         val currentPlayer = player ?: return false // nullチェック
-        val playerInv = inv ?: return false
+        val playerInv = inventory ?: return false
         val internal = indexToSlot(index) ?: return false
         if (isCreative) {
             playerInv.setStack(internal, stack)
@@ -110,7 +102,7 @@ object InventoryManager {
     }
 
     fun count(item: Item): Int {
-        val playerInv = inv ?: return 0 // nullチェック
+        val playerInv = inventory ?: return 0 // nullチェック
         var total = 0
         for (i in 0 until playerInv.size()) {
             val stack = playerInv.getStack(i)
@@ -122,7 +114,7 @@ object InventoryManager {
     }
 
     fun sort() {
-        val playerInv = inv ?: return
+        val playerInv = inventory ?: return
         if (isCreative) {
             val stacks = mutableListOf<ItemStack>()
             // バックパックのスロット番号は 9 から 35 (27スロット)
@@ -161,7 +153,7 @@ object InventoryManager {
     }
 
     fun findFirst(item: Item): InventoryIndex? {
-        val playerInv = inv ?: return null // nullチェック
+        val playerInv = inventory ?: return null // nullチェック
         // ホットバー (0-8)
         for (i in 0 until 9) {
             if (playerInv.getStack(i).item == item) {
@@ -194,7 +186,7 @@ object InventoryManager {
     }
 
     fun findFirstFromBackPack(item: Item): InventoryIndex.Backpack? {
-        val playerInv = inv ?: return null // nullチェック
+        val playerInv = inventory ?: return null // nullチェック
         for (i in 0 until 27) {
             if (playerInv.getStack(9 + i).item == item) {
                 return InventoryIndex.Backpack(i)
@@ -275,7 +267,7 @@ object InventoryManager {
     }
 
     fun findFirstEmptyBackpackSlot(): InventoryIndex.Backpack? {
-        val playerInv = inv ?: return null // nullチェック
+        val playerInv = inventory ?: return null // nullチェック
         // バックパックの内部スロット 9 から 35
         for (i in 0 until 27) {
             if (playerInv.getStack(9 + i).isEmpty) {
@@ -305,7 +297,7 @@ object InventoryManager {
             is InventoryIndex.Hotbar -> index.index
             is InventoryIndex.Backpack -> 9 + index.index
             is InventoryIndex.OffHand -> 40
-            is InventoryIndex.MainHand -> inv?.selectedSlot // nullチェックを追加
+            is InventoryIndex.MainHand -> inventory?.selectedSlot // nullチェックを追加
         }
 
     /**
@@ -328,7 +320,7 @@ object InventoryManager {
      * 指定されたアイテムを持つ最初の内部スロットインデックス (0-40) を検索します。
      */
     private fun findSlotWithItem(item: Item): Int? {
-        val playerInv = inv ?: return null // nullチェック
+        val playerInv = inventory ?: return null // nullチェック
         for (i in 0 until playerInv.size()) {
             if (playerInv.getStack(i).item == item) {
                 return i

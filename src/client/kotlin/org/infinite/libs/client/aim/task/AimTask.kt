@@ -1,194 +1,22 @@
-package org.infinite.libs.client.aim
+package org.infinite.libs.client.aim.task
 
-import net.minecraft.block.entity.BlockEntity
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.entity.Entity
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
+import org.infinite.libs.client.aim.camera.CameraRoll
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
+import org.infinite.libs.client.aim.task.config.AimCalculateMethod
+import org.infinite.libs.client.aim.task.config.AimPriority
+import org.infinite.libs.client.aim.task.config.AimProcessResult
+import org.infinite.libs.client.aim.task.config.AimTarget
 import kotlin.math.sqrt
-
-sealed class AimTarget {
-    open class EntityTarget(
-        e: Entity,
-    ) : AimTarget() {
-        open val entity = e
-    }
-
-    open class BlockTarget(
-        b: BlockEntity,
-    ) : AimTarget() {
-        open val block = b
-    }
-
-    open class WaypointTarget(
-        p: Vec3d,
-    ) : AimTarget() {
-        open val pos = p
-    }
-
-    open class RollTarget(
-        r: CameraRoll,
-    ) : AimTarget() {
-        open val roll = r
-    }
-}
-
-enum class AimPriority {
-    Immediately,
-    Preferentially,
-    Normally,
-}
-
-enum class AimProcessResult {
-    Progress, // 進行中
-    Success, // 成功して完了
-    Failure, // 失敗（ターゲット消失など）
-}
-
-enum class AimCalculateMethod {
-    Linear, // 線形補間
-    EaseIn, // 加速
-    EaseOut, // 減速
-    EaseInOut, // 両端での加速・減速
-    Immediate, // 即時
-}
-
-class CameraRoll(
-    var yaw: Double,
-    var pitch: Double,
-) {
-    /**
-     * CameraRoll同士の足し算 (要素ごと)
-     * operator fun plus(other: CameraRoll): CameraRoll
-     */
-    operator fun plus(other: CameraRoll): CameraRoll =
-        CameraRoll(
-            yaw = this.yaw + other.yaw,
-            pitch = this.pitch + other.pitch,
-        )
-
-    /**
-     * CameraRoll同士の引き算 (要素ごと)
-     * operator fun minus(other: CameraRoll): CameraRoll
-     */
-    operator fun minus(other: CameraRoll): CameraRoll =
-        CameraRoll(
-            yaw = this.yaw - other.yaw,
-            pitch = this.pitch - other.pitch,
-        )
-
-    operator fun times(scalar: Number): CameraRoll {
-        val s = scalar.toDouble()
-        return CameraRoll(
-            yaw = this.yaw * s,
-            pitch = this.pitch * s,
-        )
-    }
-
-    operator fun div(scalar: Number): CameraRoll {
-        val s = scalar.toDouble()
-        if (s == 0.0) return CameraRoll(0.0, 0.0)
-        return CameraRoll(
-            yaw = this.yaw / s,
-            pitch = this.pitch / s,
-        )
-    }
-
-    fun magnitude(): Double = sqrt(this.yaw * this.yaw + this.pitch * this.pitch)
-
-    /**
-     * 最大回転速度 (maxSpeed) で移動量を制限したCameraRollを返します。
-     * @param maxSpeed 最大回転速度
-     * @return 制限後のCameraRoll
-     */
-    fun limitedBySpeed(maxSpeed: Double): CameraRoll {
-        // maxSpeedが非負であることを保証 (念のため)
-        require(maxSpeed >= 0.0) { "maxSpeed must be non-negative." }
-
-        // 現在の移動量 (ノルム) を計算
-        val magnitude = magnitude()
-        // ノルムがmaxSpeed以下であれば、そのまま返す
-        if (magnitude <= maxSpeed) {
-            return this
-        }
-
-        // ノルムが0、またはmaxSpeedが0の場合は、(0, 0)を返す
-        if (maxSpeed == 0.0) {
-            return CameraRoll(0.0, 0.0)
-        }
-
-        // maxSpeedで制限するためにスケーリング係数を計算し、適用
-        val scale = maxSpeed / magnitude
-        return this * scale // 'times' operator (this.times(scale)) を使用
-    }
-
-    fun vec(): Vec3d {
-        // 1. 角度をラジアンに変換 (度数で格納されていると仮定)
-        // 既にラジアンで格納されている場合は、この行をコメントアウトしてください。
-        val yawRad = this.yaw * PI / 180.0
-        val pitchRad = this.pitch * PI / 180.0
-
-        // 2. 角度から方向ベクトルを計算
-        // Y軸が上方向、X-Z平面が水平面、+Xが初期前方と仮定した一般的な計算式
-        val cosPitch = cos(pitchRad)
-        val x = -sin(yawRad) * cosPitch
-        val y = -sin(pitchRad) // Y軸は上下の回転(Pitch)のみに依存
-        val z = cos(yawRad) * cosPitch
-
-        // 結果は自動的に正規化されます (sin^2 + cos^2 = 1 のため)
-        return Vec3d(x, y, z)
-    }
-
-    fun diffNormalize(): CameraRoll = CameraRoll(MathHelper.wrapDegrees(yaw), MathHelper.wrapDegrees(pitch))
-}
-
-enum class AimTaskConditionReturn {
-    Suspend,
-    Exec,
-    Success,
-    Failure,
-    Force,
-}
-
-interface AimTaskCondition {
-    fun check(): AimTaskConditionReturn
-}
-
-class ImmediatelyAimCondition : AimTaskCondition {
-    override fun check(): AimTaskConditionReturn = AimTaskConditionReturn.Force
-}
-
-class AimConditionByFrame(
-    val reactFrame: Int = 6,
-    val totalFrame: Int = 9,
-    val force: Boolean,
-) : AimTaskCondition {
-    private var frame = -1
-
-    override fun check(): AimTaskConditionReturn {
-        frame++
-        return if (frame < reactFrame) {
-            AimTaskConditionReturn.Suspend
-        } else if (frame >= totalFrame) {
-            if (force) {
-                AimTaskConditionReturn.Force
-            } else {
-                AimTaskConditionReturn.Failure
-            }
-        } else {
-            AimTaskConditionReturn.Exec
-        }
-    }
-}
 
 open class AimTask(
     open val priority: AimPriority,
     open val target: AimTarget,
-    open val condition: AimTaskCondition,
+    open val condition: AimTaskConditionInterface,
     open val calcMethod: AimCalculateMethod,
     open val multiply: Double = 1.0,
 ) {
@@ -382,47 +210,5 @@ open class AimTask(
         val currentYaw = player.yaw
         val currentPitch = player.pitch
         setAim(player, CameraRoll(currentYaw + roll.yaw, currentPitch + roll.pitch))
-    }
-}
-
-object AimInterface {
-    private val client: MinecraftClient
-        get() = MinecraftClient.getInstance()
-    private var tasks: ArrayDeque<AimTask> = ArrayDeque(listOf())
-
-    fun addTask(task: AimTask) {
-        when (task.priority) {
-            AimPriority.Normally -> tasks.addLast(task) // 一番後ろに追加 (通常のタスク)
-            AimPriority.Immediately -> tasks.addFirst(task) // 一番前に追加 (即時実行タスク)
-            AimPriority.Preferentially -> {
-                val insertionIndex = tasks.indexOfFirst { it.priority == AimPriority.Normally }
-                if (insertionIndex != -1) {
-                    tasks.add(insertionIndex, task)
-                } else {
-                    tasks.addLast(task)
-                }
-            }
-        }
-    }
-
-    fun taskLength(): Int = tasks.size
-
-    fun currentTask(): AimTask? = tasks.firstOrNull()
-
-    fun process() {
-        val currentTask = currentTask() ?: return
-        when (currentTask.process(client)) {
-            AimProcessResult.Progress -> {}
-
-            AimProcessResult.Failure -> {
-                currentTask.atFailure()
-                tasks.removeFirst()
-            }
-
-            AimProcessResult.Success -> {
-                currentTask.atSuccess()
-                tasks.removeFirst()
-            }
-        }
     }
 }

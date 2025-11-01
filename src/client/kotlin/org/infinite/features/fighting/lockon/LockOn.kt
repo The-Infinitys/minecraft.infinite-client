@@ -6,13 +6,13 @@ import net.minecraft.entity.player.PlayerEntity
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.fighting.aimassist.AimAssist
-import org.infinite.libs.client.aim.AimCalculateMethod
 import org.infinite.libs.client.aim.AimInterface
-import org.infinite.libs.client.aim.AimPriority
-import org.infinite.libs.client.aim.AimTarget
-import org.infinite.libs.client.aim.AimTask
-import org.infinite.libs.client.aim.AimTaskCondition
-import org.infinite.libs.client.aim.AimTaskConditionReturn
+import org.infinite.libs.client.aim.task.AimTask
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
+import org.infinite.libs.client.aim.task.config.AimCalculateMethod
+import org.infinite.libs.client.aim.task.config.AimPriority
+import org.infinite.libs.client.aim.task.config.AimTarget
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
@@ -234,7 +234,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     }
 }
 
-class LockOnCondition : AimTaskCondition {
+class LockOnCondition : AimTaskConditionInterface {
     override fun check(): AimTaskConditionReturn {
         val lockOn = InfiniteClient.getFeature(LockOn::class.java) ?: return AimTaskConditionReturn.Failure
         return if (lockOn.isEnabled()) {
