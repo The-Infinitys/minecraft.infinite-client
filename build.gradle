@@ -24,10 +24,12 @@ repositories {
 loom {
 	splitEnvironmentSourceSets()
 	accessWidenerPath = file("src/main/resources/infinite.accesswidener")
+	SourceSet mainSourceSet = sourceSets.main
+	SourceSet clientSourceSet = sourceSets.client
 	mods {
 		"infinite" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
+			sourceSet(mainSourceSet)
+			sourceSet(clientSourceSet)
 		}
 	}
 }
@@ -62,12 +64,6 @@ tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-	kotlinOptions {
-		jvmTarget = 21
-	}
-}
-
 java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 	// if it is present.
@@ -78,14 +74,24 @@ java {
 	targetCompatibility = JavaVersion.VERSION_21
 }
 
+// 📌 JVM Toolchain設定: Java 21に統一 (非推奨警告を回避するためのモダンな方法)
+kotlin {
+	jvmToolchain(21)
+}
 jar {
 	inputs.property "archivesName", project.base.archivesName
+	// splitEnvironmentSourceSetsを使っている場合、クライアントのコンパイル結果を必ず含める
+	from(sourceSets.client.output)
+
+	// renameクロージャ内で使用するためにプロパティ値をローカル変数に格納します。
+	def archiveName = project.base.archivesName
 
 	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
+		// Groovyの型推論エラーを防ぐため、クロージャの引数を明示的に fileName とし、
+		// ローカル変数 archiveName を参照します。
+		rename { fileName -> "${fileName}_${archiveName}" }
 	}
 }
-
 // configure the maven publication
 publishing {
 	publications {
