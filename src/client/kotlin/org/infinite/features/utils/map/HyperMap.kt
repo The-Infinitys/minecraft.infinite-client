@@ -354,8 +354,10 @@ class HyperMap : ConfigurableFeature(initialEnabled = true) {
                     // Solidモードでスキャンするセクションリスト: プレイヤーのいるセクションの底からワールドの底まで
                     val sectionYList =
                         if (currentMode == Mode.Solid) {
-                            val playerSectionBottomY = (playerY.coerceIn(globalScanMinY, globalScanMaxY) / 16) * 16
-                            (playerSectionBottomY downTo globalScanMinY step 16).toList()
+                            val coercedPlayerY = playerY.coerceAtLeast(globalScanMinY).coerceAtMost(globalScanMaxY)
+                            val playerSectionBottomY = (coercedPlayerY / 16) * 16
+                            val effectiveMinY = globalScanMinY.coerceAtMost(playerSectionBottomY)
+                            (playerSectionBottomY downTo effectiveMinY step 16).toList()
                         } else {
                             emptyList()
                         }

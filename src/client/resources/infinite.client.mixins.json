@@ -28,6 +28,7 @@
     "features.rendering.freecamera.AbstractBlockStateMixin",
     "features.rendering.freecamera.ClientPlayerEntityMixin",
     "features.rendering.freecamera.ZeroHitBox",
+    "features.rendering.freecamera.ClientPlayerEntityMovementMixin",
     "features.rendering.hypertag.EntityRendererMixin",
     "features.rendering.hypertag.LivingEntityRendererMixin",
     "features.rendering.portalgui.PortalGuiMixin",

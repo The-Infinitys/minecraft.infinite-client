@@ -44,8 +44,7 @@ object RenderUtils {
         buffer.quad(entry, 1f, 0f, 0f, color, x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2)
 
         // Z+ face (South) - 法線: (0, 0, 1)
-        buffer.quad(entry, 0f, 0f, 1f, color, x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2)
-
+        buffer.quad(entry, 0f, 0f, 1f, color, x1, y1, z2, x1, y2, z2, x2, y2, z2, x2, y1, z2)
         // X- face (West) - 法線: (-1, 0, 0)
         buffer.quad(entry, -1f, 0f, 0f, color, x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1)
     }

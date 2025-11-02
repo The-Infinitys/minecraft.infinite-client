@@ -116,6 +116,11 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
      * Mixinから呼び出され、パケットを処理（キューに追加）する
      */
     fun processMovePacket(packet: PlayerMoveC2SPacket) {
+        if (packets.isEmpty()) {
+            packets.addLast(packet)
+            return
+        }
+
         val prevPacket = packets.last()
 
         // パケットの内容が前のパケットと全て同一であれば、冗長なパケットとして無視
@@ -141,6 +146,10 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
         fakePlayer?.despawn()
         fakePlayer = null
         packets.clear() // disabled()でも呼ばれているが、念のためここに集約
+    }
+
+    override fun start() {
+        disable()
     }
 
     override fun stop() {
