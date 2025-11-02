@@ -234,11 +234,10 @@ class QuickMove : ConfigurableFeature() {
             val predictedMoveSpeed =
                 sqrt((velocity.x + vel.x) * (velocity.x + vel.x) + (velocity.z + vel.z) * (velocity.z + vel.z))
             if (predictedMoveSpeed > tickSpeedLimit) {
-                velocity = velocity.normalize().multiply(tickSpeedLimit)
+                velocity = velocity.normalize().multiply(predictedMoveSpeed - tickSpeedLimit)
             } else {
                 velocity = velocity.add(vel)
             }
-            InfiniteClient.log("Speed: ${"%.1f".format(velocity.length() * 20)} m/s")
         }
         velocity = velocity.add(0.0, this.velocity!!.y, 0.0)
         this.velocity = velocity
