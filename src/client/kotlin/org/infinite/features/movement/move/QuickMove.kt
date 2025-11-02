@@ -29,7 +29,9 @@ class QuickMove : ConfigurableFeature() {
         // 1. 環境チェックと適用除外
         // 空中にいるとき (isFallFlyingは考慮外とする)、水中/溶岩中にいるときは処理を適用しない
         if (!player.isOnGround || player.isTouchingWater || player.isInLava) {
-            return
+            if (!player.isSwimming) {
+                return
+            }
         }
 
         var forward = 0.0 // 進行方向 (プレイヤーのローカルZ軸)
