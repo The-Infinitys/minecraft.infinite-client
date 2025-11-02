@@ -2,7 +2,6 @@ package org.infinite.features.movement.move
 
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
-import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 import kotlin.math.cos
 import kotlin.math.sin
@@ -234,7 +233,7 @@ class QuickMove : ConfigurableFeature() {
             val predictedMoveSpeed =
                 sqrt((velocity.x + vel.x) * (velocity.x + vel.x) + (velocity.z + vel.z) * (velocity.z + vel.z))
             if (predictedMoveSpeed > tickSpeedLimit) {
-                velocity = velocity.normalize().multiply(predictedMoveSpeed - tickSpeedLimit)
+                velocity = vel.normalize().multiply(tickSpeedLimit)
             } else {
                 velocity = velocity.add(vel)
             }
