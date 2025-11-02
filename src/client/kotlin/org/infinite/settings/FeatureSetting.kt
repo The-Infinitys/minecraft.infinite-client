@@ -6,6 +6,35 @@ sealed class FeatureSetting<T>(
     var value: T,
     val defaultValue: T,
 ) {
+    init {
+        // --- Name Validation ---
+        // 1. nameが空でないこと
+        if (name.isEmpty()) {
+            throw IllegalArgumentException("FeatureSetting name must not be empty.")
+        }
+        // 2. nameがアッパーキャメルケース (Upper Camel Case, PascalCase) に沿っていること
+        // 最初の文字が大文字で、空白や特殊文字を含まず、単語の区切りに大文字を使用しているか
+        if (!name.matches(Regex("^[a-zA-Z][a-zA-Z0-9_]*$"))) {
+            throw IllegalArgumentException(
+                "FeatureSetting name '$name' must follow a valid naming convention (alphanumeric or underscores, starting with a letter)." +
+                    " " +
+                    "Example: 'targetHunger', 'allow_rotten_flesh', or 'TargetHunger'.",
+            )
+        }
+
+        // --- Description Key Validation ---
+        // descriptionKeyが feature.(category).(name).(settingname).description の形式に沿っているか
+        // より具体的なチェック: feature. の後に3つ以上のピリオド区切りのセクションがあり、最後に .description で終わっていること
+        val keyPattern = Regex("^feature\\.[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+\\.description$")
+        if (!descriptionKey.matches(keyPattern)) {
+            throw IllegalArgumentException(
+                "FeatureSetting descriptionKey '$descriptionKey' must follow the format" +
+                    " 'feature.(category).(name).(settingname).description'. " +
+                    "Example: 'feature.utils.foodmanager.target_hunger.description'.",
+            )
+        }
+    }
+
     fun reset() {
         value = defaultValue
     }

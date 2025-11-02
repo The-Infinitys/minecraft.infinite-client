@@ -14,7 +14,7 @@ import org.infinite.settings.FeatureSetting
 class FoodManager : ConfigurableFeature() {
     private val targetHunger =
         FeatureSetting.DoubleSetting(
-            "Target Hunger",
+            "TargetHunger",
             "feature.utils.foodmanager.target_hunger.description",
             10.0,
             0.0,
@@ -22,7 +22,7 @@ class FoodManager : ConfigurableFeature() {
         )
     private val minHunger =
         FeatureSetting.DoubleSetting(
-            "Min Hunger",
+            "MinHunger",
             "feature.utils.foodmanager.min_hunger.description",
             6.5,
             0.0,
@@ -30,7 +30,7 @@ class FoodManager : ConfigurableFeature() {
         )
     private val injuredHunger =
         FeatureSetting.DoubleSetting(
-            "Injured Hunger",
+            "InjuredHunger",
             "feature.utils.foodmanager.injured_hunger.description",
             10.0,
             0.0,
@@ -38,27 +38,27 @@ class FoodManager : ConfigurableFeature() {
         )
     private val injuryThreshold =
         FeatureSetting.DoubleSetting(
-            "Injury Threshold",
+            "InjuryThreshold",
             "feature.utils.foodmanager.injury_threshold.description",
-            1.5,
+            5.0,
             0.5,
             10.0,
         )
     private val allowRottenFlesh =
         FeatureSetting.BooleanSetting(
-            "Allow Rotten Flesh",
+            "AllowRottenFlesh",
             "feature.utils.foodmanager.allow_rotten_flesh.description",
             false,
         )
     private val allowChorusFruit =
         FeatureSetting.BooleanSetting(
-            "Allow Chorus Fruit",
+            "AllowChorusFruit",
             "feature.utils.foodmanager.allow_chorus_fruit.description",
             false,
         )
     private val prioritizeHealth =
         FeatureSetting.BooleanSetting(
-            "Prioritize Health",
+            "PrioritizeHealth",
             "feature.utils.foodmanager.prioritize_health.description",
             false,
         )
@@ -75,6 +75,10 @@ class FoodManager : ConfigurableFeature() {
         )
 
     private var oldSlot = -1
+
+    // UseKeyがトグル（切り替え）モードかどうか
+    private val isUseKeyToggleMode: Boolean
+        get() = options.useToggled.value
 
     override fun enabled() {
         oldSlot = -1
@@ -100,8 +104,34 @@ class FoodManager : ConfigurableFeature() {
         val minHungerI = (minHunger.value * 2).toInt()
         val injuredHungerI = (injuredHunger.value * 2).toInt()
 
+        // --- 修正箇所 1: 満腹度MAXチェック ---
+        // 満腹度が最大値(20)の場合、処理を停止
+        if (foodLevel >= 20) {
+            if (isEating()) stopEating()
+            return
+        }
+        // --- 修正箇所 1 終了 ---
+
+        // --- 修正箇所 2: 食事継続のチェックとトグル/ホールド対応 ---
+        if (isEating()) {
+            // ホールドモードの場合、キーを押し続ける必要がある
+            if (!isUseKeyToggleMode) {
+                options.useKey.isPressed = true
+            }
+
+            // プレイヤーがアイテムの使用を終えたら（アニメーションが終了したら）、
+            // またはトグルモードの場合は一度押したら食事は続いているので、
+            // isUsingItemがfalseになったら完了と判断
+            if (!player.isUsingItem) {
+                stopEating()
+            }
+            return
+        }
+        // --- 修正箇所 2 終了 ---
+
         val isPlayerInjured = isInjured(player)
 
+        // 食事が必要な条件をチェック
         if (isPlayerInjured && foodLevel < injuredHungerI) {
             eat(-1) // Eat to full if injured
             return
@@ -118,12 +148,11 @@ class FoodManager : ConfigurableFeature() {
         } else if (prioritizeHealth.value && player.health < player.maxHealth) {
             eat(-1) // Eat to heal if health is not full and prioritizeHealth is true
         } else {
-            if (isEating()) stopEating()
+            // 食事の必要がない場合は何もしない
         }
     }
 
     private fun eat(maxPoints: Int) {
-        val player = player ?: return
         val inventory = inventory ?: return
         val foodSlot = findBestFoodSlot(maxPoints)
 
@@ -150,18 +179,29 @@ class FoodManager : ConfigurableFeature() {
             return // Wait for next tick to eat
         }
 
-        // Eat food
-        options.useKey.isPressed = true
-        interactionManager?.interactItem(player, player.activeHand)
+        // --- 修正箇所 3: トグル/ホールド対応 ---
+        // Eat food: トグル/ホールドモードに応じてキー操作を変更
+        if (isUseKeyToggleMode) {
+            // トグルモード: キーを一度押す (trueにしてすぐにfalseに戻す)
+            options.useKey.isPressed = true
+            // 仮想的な入力として、次のティックでfalseに戻すことが理想だが、
+            // tick()の同じサイクルでfalseにすると認識されない可能性があるため、
+            // isPressed=true の状態を維持し、stopEating()でfalseに戻す戦略を採用
+            // ただし、トグルモードの場合、isPressed=true は食事開始のシグナル
+        } else {
+            // ホールドモード: キーを押し続ける
+            options.useKey.isPressed = true
+        }
+        // --- 修正箇所 3 終了 ---
     }
+
+    // ... (findBestFoodSlot, slotToInventoryIndex, isAllowedFood, isInjured メソッドは省略) ...
 
     private fun findBestFoodSlot(maxPoints: Int): Int {
         var bestFood: FoodComponent? = null
         var bestSlot = -1
-        var bestHealingPotential = 0f // For prioritizing health
+        var bestHealingPotential = 0f
 
-        // Search all inventory slots (0-35 for main inventory, 36-39 for armor, 40 for off-hand)
-        // We are interested in 0-35 (main + hotbar) and 40 (off-hand)
         val slotsToSearch = (0..35).toMutableList()
         slotsToSearch.add(40)
 
@@ -177,21 +217,19 @@ class FoodManager : ConfigurableFeature() {
 
             if (maxPoints >= 0 && food.nutrition() > maxPoints) continue
 
-            // Calculate healing potential
             var currentHealingPotential = 0f
             if (consumable != null) {
                 for (effect in consumable.onConsumeEffects()) {
                     if (effect is ApplyEffectsConsumeEffect) {
                         for (statusEffectInstance in effect.effects()) {
                             if (statusEffectInstance.effectType.value() == StatusEffects.SATURATION) {
-                                currentHealingPotential += statusEffectInstance.amplifier + 1 // Healing amount
+                                currentHealingPotential += statusEffectInstance.amplifier + 1
                             }
                         }
                     }
                 }
             }
 
-            // Prioritize health if enabled and this food offers healing
             if (prioritizeHealth.value && currentHealingPotential > 0f) {
                 if (bestFood == null || currentHealingPotential > bestHealingPotential) {
                     bestFood = food
@@ -199,7 +237,6 @@ class FoodManager : ConfigurableFeature() {
                     bestHealingPotential = currentHealingPotential
                 }
             } else {
-                // Default: prioritize food with higher saturation
                 if (bestFood == null || food.saturation() > bestFood.saturation()) {
                     bestFood = food
                     bestSlot = slot
@@ -216,35 +253,6 @@ class FoodManager : ConfigurableFeature() {
             40 -> InventoryManager.InventoryIndex.OffHand()
             else -> null
         }
-
-    private fun shouldEat(): Boolean {
-        val player = player ?: return false
-        if (player.abilities.creativeMode || !player.canConsume(false)) return false
-        // Don't eat if already eating
-        if (isEating()) return true
-
-        val hungerManager = player.hungerManager
-        val foodLevel = hungerManager.foodLevel
-        val targetHungerI = (targetHunger.value * 2).toInt()
-        val minHungerI = (minHunger.value * 2).toInt()
-        val injuredHungerI = (injuredHunger.value * 2).toInt()
-
-        val isPlayerInjured = isInjured(player)
-
-        // If injured and below injuredHunger threshold, always eat
-        if (isPlayerInjured && foodLevel < injuredHungerI) return true
-
-        // If below minHunger threshold, always eat
-        if (foodLevel < minHungerI) return true
-
-        // If below targetHunger threshold, eat
-        if (foodLevel < targetHungerI) return true
-
-        // If prioritizeHealth is true and player is not at full health, eat
-        if (prioritizeHealth.value && player.health < player.maxHealth) return true
-
-        return false
-    }
 
     private fun stopEating() {
         options.useKey.isPressed = false
@@ -266,9 +274,6 @@ class FoodManager : ConfigurableFeature() {
                     if (!allowRottenFlesh.value && entry.value() == StatusEffects.HUNGER) {
                         return false
                     }
-                    // The original Java code had allowPoison, but rotten flesh gives hunger, not poison.
-                    // If there's a food that gives poison and we want to disallow it, we'd add a check here.
-                    // For now, I'll assume allowRottenFlesh covers the main "undesirable" effect.
                 }
             }
         }

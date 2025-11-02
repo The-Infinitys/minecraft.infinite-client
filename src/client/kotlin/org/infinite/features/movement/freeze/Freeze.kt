@@ -37,7 +37,7 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
 
     private val packetLimitSetting =
         FeatureSetting.IntSetting(
-            "Packet Limit",
+            "PacketLimit",
             "feature.movement.freeze.packetlimit.description",
             0,
             0,

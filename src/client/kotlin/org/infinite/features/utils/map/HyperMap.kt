@@ -24,22 +24,22 @@ class HyperMap : ConfigurableFeature(initialEnabled = true) {
 
     // 設定項目
     val mode =
-        FeatureSetting.EnumSetting<Mode>("Mode", "feature.utils.hypermapmode.description", Mode.Flat, Mode.entries)
-    val radiusSetting = FeatureSetting.IntSetting("Radius", "feature.utils.hypermapradius.description", 32, 5, 256)
-    val heightSetting = FeatureSetting.IntSetting("Height", "feature.utils.hypermapheight.description", 8, 1, 32)
+        FeatureSetting.EnumSetting<Mode>("Mode", "feature.utils.hypermap.mode.description", Mode.Flat, Mode.entries)
+    val radiusSetting = FeatureSetting.IntSetting("Radius", "feature.utils.hypermap.radius.description", 32, 5, 256)
+    val heightSetting = FeatureSetting.IntSetting("Height", "feature.utils.hypermap.height.description", 8, 1, 32)
     val marginPercent =
         FeatureSetting.IntSetting(
             "Margin",
-            "feature.utils.hypermapmargin.description",
+            "feature.utils.hypermap.margin.description",
             4,
             0,
             40,
         )
-    val sizePercent = FeatureSetting.IntSetting("Size", "feature.utils.hypermapsize.description", 40, 5, 100)
+    val sizePercent = FeatureSetting.IntSetting("Size", "feature.utils.hypermap.size.description", 40, 5, 100)
     val renderTerrain =
-        FeatureSetting.BooleanSetting("RenderTerrain", "feature.utils.hypermaprender_terrain.description", true)
+        FeatureSetting.BooleanSetting("RenderTerrain", "feature.utils.hypermap.render_terrain.description", true)
 
-    val useShading = FeatureSetting.BooleanSetting("Use Shading", "feature.utils.hypermapuseshading.description", true)
+    val useShading = FeatureSetting.BooleanSetting("UseShading", "feature.utils.hypermap.use_shading.description", true)
 
     override val settings: List<FeatureSetting<*>> =
         listOf(

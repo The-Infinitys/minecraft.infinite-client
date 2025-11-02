@@ -11,15 +11,15 @@ class QuickMove : ConfigurableFeature() {
     private val acceleration =
         FeatureSetting.DoubleSetting(
             "Acceleration",
-            "feature.movement.move.quickmove.acceleration.description",
+            "feature.movement.quickmove.acceleration.description",
             0.05,
             0.0,
             1.0,
         )
     private val speed =
-        FeatureSetting.DoubleSetting("Speed", "feature.movement.move.quickmove.speed.description", 8.0, 7.0, 15.0)
+        FeatureSetting.DoubleSetting("Speed", "feature.movement.quickmove.speed.description", 8.0, 7.0, 15.0)
     private val friction =
-        FeatureSetting.DoubleSetting("Friction", "feature.movement.move.quickmove.friction.description", 0.5, 0.0, 1.0)
+        FeatureSetting.DoubleSetting("Friction", "feature.movement.quickmove.friction.description", 0.5, 0.0, 1.0)
     override val settings: List<FeatureSetting<*>> = listOf(acceleration, speed, friction)
 
     override fun tick() {

@@ -14,21 +14,21 @@ class FeatherWalk : ConfigurableFeature(initialEnabled = false) {
     // フィーチャーのロジックで利用する設定
     private val blockList: FeatureSetting.BlockListSetting =
         FeatureSetting.BlockListSetting(
-            name = "Allowed Blocks",
+            name = "AllowedBlocks",
             descriptionKey = "feature.movement.featherwalk.allowedblocks.description",
             defaultValue = mutableListOf("minecraft:farmland", "minecraft:gravel"), // 例として砂と砂利を設定
         )
 
     private val disableJump: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
-            name = "Disable Jump",
+            name = "DisableJump",
             descriptionKey = "feature.movement.featherwalk.disablejump.description",
             defaultValue = true,
         )
 
     private val disableSprint: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
-            name = "Disable Sprint",
+            name = "DisableSprint",
             descriptionKey = "feature.movement.featherwalk.disablesprint.description",
             defaultValue = true,
         )

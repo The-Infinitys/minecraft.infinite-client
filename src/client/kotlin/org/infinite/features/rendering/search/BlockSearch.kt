@@ -10,7 +10,7 @@ class BlockSearch : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.BlockColorListSetting(
                 "blockSearchColors",
-                "feature.rendering.search.blocksearch.colors.description",
+                "feature.rendering.blocksearch.colors.description",
                 mutableMapOf(),
             ),
         )
