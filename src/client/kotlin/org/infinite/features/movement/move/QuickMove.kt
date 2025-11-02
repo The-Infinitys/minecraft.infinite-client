@@ -2,6 +2,7 @@ package org.infinite.features.movement.move
 
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 import kotlin.math.cos
 import kotlin.math.sin
@@ -222,20 +223,24 @@ class QuickMove : ConfigurableFeature() {
             val strafeMotionX = cosYaw * normalizedStrafe * acceleration.value
             val strafeMotionZ = sinYaw * normalizedStrafe * acceleration.value
 
-            vel = vel.add(forwardMotionX, 0.0, forwardMotionZ)
-            vel = vel.add(strafeMotionX, 0.0, strafeMotionZ)
-
+            vel =
+                vel.add(
+                    forwardMotionX + strafeMotionX,
+                    0.0,
+                    forwardMotionZ + strafeMotionZ,
+                )
             // 4. 速度制限の適用
             // 加速後の予測水平速度の大きさ
             val predictedMoveSpeed =
                 sqrt((velocity.x + vel.x) * (velocity.x + vel.x) + (velocity.z + vel.z) * (velocity.z + vel.z))
-
             if (predictedMoveSpeed > tickSpeedLimit) {
-                val remainingAcceleration = tickSpeedLimit - moveSpeed
-                vel = vel.normalize().multiply(remainingAcceleration)
+                velocity = velocity.normalize().multiply(tickSpeedLimit)
+            } else {
+                velocity = velocity.add(vel)
             }
-            velocity = velocity.add(vel)
+            InfiniteClient.log("Speed: ${"%.1f".format(velocity.length() * 20)} m/s")
         }
+        velocity = velocity.add(0.0, this.velocity!!.y, 0.0)
         this.velocity = velocity
     }
 }
