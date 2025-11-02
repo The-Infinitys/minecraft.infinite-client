@@ -4,84 +4,83 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.ConsumableComponent
 import net.minecraft.component.type.FoodComponent
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.entity.player.HungerManager
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
 import net.minecraft.item.consume.ApplyEffectsConsumeEffect
-import net.minecraft.item.consume.ConsumeEffect
 import net.minecraft.item.consume.TeleportRandomlyConsumeEffect
-import net.minecraft.registry.entry.RegistryEntry
 import org.infinite.ConfigurableFeature
+import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.settings.FeatureSetting
-import org.infinite.utils.InventoryUtils
 
 class FoodManager : ConfigurableFeature() {
-    private val targetHunger = FeatureSetting.DoubleSetting(
-        "Target Hunger",
-        "feature.utils.foodmanager.target_hunger.description",
-        10.0,
-        0.0,
-        10.0
-    )
-    private val minHunger = FeatureSetting.DoubleSetting(
-        "Min Hunger",
-        "feature.utils.foodmanager.min_hunger.description",
-        6.5,
-        0.0,
-        10.0
-    )
-    private val injuredHunger = FeatureSetting.DoubleSetting(
-        "Injured Hunger",
-        "feature.utils.foodmanager.injured_hunger.description",
-        10.0,
-        0.0,
-        10.0
-    )
-    private val injuryThreshold = FeatureSetting.DoubleSetting(
-        "Injury Threshold",
-        "feature.utils.foodmanager.injury_threshold.description",
-        1.5,
-        0.5,
-        10.0
-    )
-    private val allowRottenFlesh = FeatureSetting.BooleanSetting(
-        "Allow Rotten Flesh",
-        "feature.utils.foodmanager.allow_rotten_flesh.description",
-        false
-    )
-    private val allowChorusFruit = FeatureSetting.BooleanSetting(
-        "Allow Chorus Fruit",
-        "feature.utils.foodmanager.allow_chorus_fruit.description",
-        false
-    )
-    private val prioritizeHealth = FeatureSetting.BooleanSetting(
-        "Prioritize Health",
-        "feature.utils.foodmanager.prioritize_health.description",
-        false
-    )
+    private val targetHunger =
+        FeatureSetting.DoubleSetting(
+            "Target Hunger",
+            "feature.utils.foodmanager.target_hunger.description",
+            10.0,
+            0.0,
+            10.0,
+        )
+    private val minHunger =
+        FeatureSetting.DoubleSetting(
+            "Min Hunger",
+            "feature.utils.foodmanager.min_hunger.description",
+            6.5,
+            0.0,
+            10.0,
+        )
+    private val injuredHunger =
+        FeatureSetting.DoubleSetting(
+            "Injured Hunger",
+            "feature.utils.foodmanager.injured_hunger.description",
+            10.0,
+            0.0,
+            10.0,
+        )
+    private val injuryThreshold =
+        FeatureSetting.DoubleSetting(
+            "Injury Threshold",
+            "feature.utils.foodmanager.injury_threshold.description",
+            1.5,
+            0.5,
+            10.0,
+        )
+    private val allowRottenFlesh =
+        FeatureSetting.BooleanSetting(
+            "Allow Rotten Flesh",
+            "feature.utils.foodmanager.allow_rotten_flesh.description",
+            false,
+        )
+    private val allowChorusFruit =
+        FeatureSetting.BooleanSetting(
+            "Allow Chorus Fruit",
+            "feature.utils.foodmanager.allow_chorus_fruit.description",
+            false,
+        )
+    private val prioritizeHealth =
+        FeatureSetting.BooleanSetting(
+            "Prioritize Health",
+            "feature.utils.foodmanager.prioritize_health.description",
+            false,
+        )
 
-    override val settings: List<FeatureSetting<*>> = listOf(
-        targetHunger,
-        minHunger,
-        injuredHunger,
-        injuryThreshold,
-        allowRottenFlesh,
-        allowChorusFruit,
-        prioritizeHealth
-    )
+    override val settings: List<FeatureSetting<*>> =
+        listOf(
+            targetHunger,
+            minHunger,
+            injuredHunger,
+            injuryThreshold,
+            allowRottenFlesh,
+            allowChorusFruit,
+            prioritizeHealth,
+        )
 
     private var oldSlot = -1
 
-    override fun onEnable() {
-        super.onEnable()
+    override fun enabled() {
         oldSlot = -1
     }
 
-    override fun onDisable() {
-        super.onDisable()
+    override fun disabled() {
         if (isEating()) {
             stopEating()
         }
@@ -89,7 +88,6 @@ class FoodManager : ConfigurableFeature() {
 
     override fun tick() {
         val player = player ?: return
-        val options = options
 
         if (player.abilities.creativeMode || !player.canConsume(false)) {
             if (isEating()) stopEating()
@@ -126,7 +124,7 @@ class FoodManager : ConfigurableFeature() {
 
     private fun eat(maxPoints: Int) {
         val player = player ?: return
-        val inventory = player.inventory
+        val inventory = inventory ?: return
         val foodSlot = findBestFoodSlot(maxPoints)
 
         if (foodSlot == -1) {
@@ -143,18 +141,21 @@ class FoodManager : ConfigurableFeature() {
         } else if (foodSlot == 40) { // Off-hand slot
             // No need to select anything, it's already in off-hand
         } else { // Inventory slot, move to hotbar
-            InventoryUtils.selectItem(foodSlot)
+            // Find an empty hotbar slot or swap with current selected slot
+            val currentHotbarSlot = inventory.selectedSlot
+            InventoryManager.swap(
+                InventoryManager.InventoryIndex.Backpack(foodSlot - 9),
+                InventoryManager.InventoryIndex.Hotbar(currentHotbarSlot),
+            )
             return // Wait for next tick to eat
         }
 
         // Eat food
-        mc.options.useKey.isPressed = true
-        mc.interactionManager?.rightClickItem(player, player.activeHand)
+        options.useKey.isPressed = true
+        interactionManager?.interactItem(player, player.activeHand)
     }
 
     private fun findBestFoodSlot(maxPoints: Int): Int {
-        val player = player ?: return -1
-        val inventory = player.inventory
         var bestFood: FoodComponent? = null
         var bestSlot = -1
         var bestHealingPotential = 0f // For prioritizing health
@@ -165,7 +166,7 @@ class FoodManager : ConfigurableFeature() {
         slotsToSearch.add(40)
 
         for (slot in slotsToSearch) {
-            val stack = inventory.getStack(slot)
+            val stack = InventoryManager.get(slotToInventoryIndex(slot) ?: continue)
 
             if (!stack.contains(DataComponentTypes.FOOD)) continue
 
@@ -182,7 +183,7 @@ class FoodManager : ConfigurableFeature() {
                 for (effect in consumable.onConsumeEffects()) {
                     if (effect is ApplyEffectsConsumeEffect) {
                         for (statusEffectInstance in effect.effects()) {
-                            if (statusEffectInstance.effectType.value() == StatusEffects.HEALING) {
+                            if (statusEffectInstance.effectType.value() == StatusEffects.SATURATION) {
                                 currentHealingPotential += statusEffectInstance.amplifier + 1 // Healing amount
                             }
                         }
@@ -208,10 +209,17 @@ class FoodManager : ConfigurableFeature() {
         return bestSlot
     }
 
+    private fun slotToInventoryIndex(slot: Int): InventoryManager.InventoryIndex? =
+        when (slot) {
+            in 0..8 -> InventoryManager.InventoryIndex.Hotbar(slot)
+            in 9..35 -> InventoryManager.InventoryIndex.Backpack(slot - 9)
+            40 -> InventoryManager.InventoryIndex.OffHand()
+            else -> null
+        }
+
     private fun shouldEat(): Boolean {
         val player = player ?: return false
         if (player.abilities.creativeMode || !player.canConsume(false)) return false
-
         // Don't eat if already eating
         if (isEating()) return true
 
@@ -239,8 +247,8 @@ class FoodManager : ConfigurableFeature() {
     }
 
     private fun stopEating() {
-        mc.options.useKey.isPressed = false
-        player?.inventory?.selectedSlot = oldSlot
+        options.useKey.isPressed = false
+        inventory?.selectedSlot = oldSlot
         oldSlot = -1
     }
 
@@ -267,9 +275,7 @@ class FoodManager : ConfigurableFeature() {
         return true
     }
 
-    private fun isEating(): Boolean {
-        return oldSlot != -1
-    }
+    private fun isEating(): Boolean = oldSlot != -1
 
     private fun isInjured(player: ClientPlayerEntity): Boolean {
         val injuryThresholdI = (injuryThreshold.value * 2).toInt()
