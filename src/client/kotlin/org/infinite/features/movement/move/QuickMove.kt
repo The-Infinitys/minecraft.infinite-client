@@ -232,10 +232,9 @@ class QuickMove : ConfigurableFeature() {
             // 加速後の予測水平速度の大きさ
             val predictedMoveSpeed =
                 sqrt((velocity.x + vel.x) * (velocity.x + vel.x) + (velocity.z + vel.z) * (velocity.z + vel.z))
+            velocity = velocity.add(vel)
             if (predictedMoveSpeed > tickSpeedLimit) {
-                velocity = vel.normalize().multiply(tickSpeedLimit)
-            } else {
-                velocity = velocity.add(vel)
+                velocity = velocity.normalize().multiply(tickSpeedLimit)
             }
         }
         velocity = velocity.add(0.0, this.velocity!!.y, 0.0)
