@@ -269,5 +269,12 @@
   "feature.movement.step.highstep.step_height": "Maximum step height.",
   "feature.movement.quickmove.description": "Quickly accelerate and decelerate movement.",
   "feature.movement.move.quickmove.speed": "Movement acceleration speed.",
-  "feature.movement.move.quickmove.friction": "Deceleration friction when not moving."
+  "feature.movement.move.quickmove.friction": "Deceleration friction when not moving.",
+  "feature.movement.highstep.maxstepheight.description": "Maximum height the player can step up.",
+  "feature.movement.move.quickmove.acceleration.description": "The rate at which movement speed increases.",
+  "feature.movement.move.quickmove.speed.description": "The maximum speed achievable with QuickMove.",
+  "feature.movement.move.quickmove.friction.description": "The rate at which movement speed decreases when no input is given.",
+  "feature.map.description": "Displays a mini-map on the screen.",
+  "feature.map.zoom_level.description": "Sets the zoom level of the mini-map.",
+  "feature.map.show_player_coordinates.description": "Shows player coordinates on the mini-map."
 }

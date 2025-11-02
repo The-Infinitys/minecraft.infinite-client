@@ -269,5 +269,12 @@
   "feature.movement.step.highstep.step_height": "最大段差の高さ。",
   "feature.movement.quickmove.description": "素早く移動を加速・減速します。",
   "feature.movement.move.quickmove.speed": "移動加速速度。",
-  "feature.movement.move.quickmove.friction": "移動していないときの減速摩擦。"
+  "feature.movement.move.quickmove.friction": "移動していないときの減速摩擦。",
+  "feature.movement.highstep.maxstepheight.description": "プレイヤーが乗り越えられる最大の高さ。",
+  "feature.movement.move.quickmove.acceleration.description": "移動速度が上昇する割合。",
+  "feature.movement.move.quickmove.speed.description": "QuickMoveで達成可能な最大速度。",
+  "feature.movement.move.quickmove.friction.description": "入力がない場合の移動速度が減少する割合。",
+  "feature.map.description": "ミニマップを画面に表示します。",
+  "feature.map.zoom_level.description": "ミニマップのズームレベルを設定します。",
+  "feature.map.show_player_coordinates.description": "ミニマップにプレイヤーの座標を表示します。"
 }
