@@ -293,11 +293,11 @@
   "feature.movement.quickmove.allowinair.description": "空中にいるときにQuickMoveを有効にします。",
   "feature.movement.quickmove.allowongliding.description": "滑空中（エリトラ飛行中）にQuickMoveを有効にします。",
   "feature.movement.quickmove.allowonswimming.description": "水泳中にQuickMoveを有効にします。",
-  "feature.movement.quickmove.speedonground.description": "地上での最大速度。",
-  "feature.movement.quickmove.speedinwater.description": "水中での最大速度。",
-  "feature.movement.quickmove.speedinlava.description": "溶岩中での最大速度。",
-  "feature.movement.quickmove.speedinair.description": "空中での最大速度。",
-  "feature.movement.quickmove.speedongliding.description": "滑空中での最大速度。",
-  "feature.movement.quickmove.speedonswimming.description": "水泳中の最大速度。",
-  "feature.movement.quickmove.speedwithvehicle.description": "乗り物搭乗中の最大速度。"
+  "feature.movement.quickmove.speedonground.description": "地上で加速を適用する最大速度。",
+  "feature.movement.quickmove.speedinwater.description": "水中で加速を適用する最大速度。",
+  "feature.movement.quickmove.speedinlava.description": "溶岩中で加速を適用する最大速度。",
+  "feature.movement.quickmove.speedinair.description": "空中で加速を適用する最大速度。",
+  "feature.movement.quickmove.speedongliding.description": "滑空中で加速を適用する最大速度。",
+  "feature.movement.quickmove.speedonswimming.description": "水泳中に加速を適用する最大速度。",
+  "feature.movement.quickmove.speedwithvehicle.description": "乗り物搭乗中に加速を適用する最大速度。"
 }
