@@ -161,7 +161,9 @@ open class AimTask(
     private fun targetPos(target: AimTarget): Vec3d? =
         when (target) {
             is AimTarget.EntityTarget -> {
-                target.entity.getLerpedPos(MinecraftClient.getInstance().renderTickCounter.getTickProgress(false))
+                target.entity
+                    .getLerpedPos(MinecraftClient.getInstance().renderTickCounter.getTickProgress(false))
+                    .add(0.0, target.entity.eyeY, 0.0)
             }
 
             is AimTarget.BlockTarget -> {
