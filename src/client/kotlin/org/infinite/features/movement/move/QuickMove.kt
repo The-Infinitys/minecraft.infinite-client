@@ -234,10 +234,9 @@ class QuickMove : ConfigurableFeature() {
                 sqrt((velocity.x + vel.x) * (velocity.x + vel.x) + (velocity.z + vel.z) * (velocity.z + vel.z))
             velocity = velocity.add(vel)
             if (predictedMoveSpeed > tickSpeedLimit) {
-                velocity = velocity.normalize().multiply(tickSpeedLimit)
+                velocity = vel.normalize().multiply(tickSpeedLimit).add(0.0, velocity.y, 0.0)
             }
         }
-        velocity = velocity.add(0.0, this.velocity!!.y, 0.0)
         this.velocity = velocity
     }
 }
