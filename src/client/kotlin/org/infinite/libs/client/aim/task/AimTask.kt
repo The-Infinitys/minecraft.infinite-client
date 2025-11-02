@@ -163,7 +163,7 @@ open class AimTask(
             is AimTarget.EntityTarget -> {
                 target.entity
                     .getLerpedPos(MinecraftClient.getInstance().renderTickCounter.getTickProgress(false))
-                    .add(0.0, target.entity.eyeY, 0.0)
+                    .add(0.0, target.entity.getEyeHeight(target.entity.pose).toDouble(), 0.0)
             }
 
             is AimTarget.BlockTarget -> {
