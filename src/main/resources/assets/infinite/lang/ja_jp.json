@@ -285,5 +285,19 @@
   "feature.utils.foodmanager.allow_rotten_flesh.description": "腐肉を食べることを許可します。",
   "feature.utils.foodmanager.allow_chorus_fruit.description": "コーラスフルーツを食べることを許可します。",
   "feature.utils.foodmanager.prioritize_health.description": "満腹度よりも体力回復を優先します。",
-  "feature.utils.foodmanager.eat_while_moving.description": "移動中に食べるかを設定します。"
+  "feature.utils.foodmanager.eat_while_moving.description": "移動中に食べるかを設定します。",
+  "feature.movement.quickmove.allowonground.description": "地上にいるときにQuickMoveを有効にします。",
+  "feature.movement.quickmove.allowinwater.description": "水中にいるときにQuickMoveを有効にします。",
+  "feature.movement.quickmove.allowinlava.description": "溶岩中にいるときにQuickMoveを有効にします。",
+  "feature.movement.quickmove.allowwithvehicle.description": "乗り物に乗っているときにQuickMoveを有効にします。",
+  "feature.movement.quickmove.allowinair.description": "空中にいるときにQuickMoveを有効にします。",
+  "feature.movement.quickmove.allowongliding.description": "滑空中（エリトラ飛行中）にQuickMoveを有効にします。",
+  "feature.movement.quickmove.allowonswimming.description": "水泳中にQuickMoveを有効にします。",
+  "feature.movement.quickmove.speedonground.description": "地上での最大速度。",
+  "feature.movement.quickmove.speedinwater.description": "水中での最大速度。",
+  "feature.movement.quickmove.speedinlava.description": "溶岩中での最大速度。",
+  "feature.movement.quickmove.speedinair.description": "空中での最大速度。",
+  "feature.movement.quickmove.speedongliding.description": "滑空中での最大速度。",
+  "feature.movement.quickmove.speedonswimming.description": "水泳中の最大速度。",
+  "feature.movement.quickmove.speedwithvehicle.description": "乗り物搭乗中の最大速度。"
 }

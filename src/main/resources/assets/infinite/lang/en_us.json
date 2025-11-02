@@ -285,5 +285,19 @@
   "feature.utils.foodmanager.allow_rotten_flesh.description": "Allows eating rotten flesh.",
   "feature.utils.foodmanager.allow_chorus_fruit.description": "Allows eating chorus fruit.",
   "feature.utils.foodmanager.prioritize_health.description": "Prioritizes health regeneration over hunger satisfaction.",
-  "feature.utils.foodmanager.eat_while_moving.description": "Eat while moving"
+  "feature.utils.foodmanager.eat_while_moving.description": "Eat while moving",
+  "feature.movement.quickmove.allowonground.description": "Allows QuickMove to be active when on the ground.",
+  "feature.movement.quickmove.allowinwater.description": "Allows QuickMove to be active when in water.",
+  "feature.movement.quickmove.allowinlava.description": "Allows QuickMove to be active when in lava.",
+  "feature.movement.quickmove.allowwithvehicle.description": "Allows QuickMove to be active when in a vehicle.",
+  "feature.movement.quickmove.allowinair.description": "Allows QuickMove to be active when in the air.",
+  "feature.movement.quickmove.allowongliding.description": "Allows QuickMove to be active when gliding.",
+  "feature.movement.quickmove.allowonswimming.description": "Allows QuickMove to be active when swimming.",
+  "feature.movement.quickmove.speedonground.description": "Maximum speed when on the ground.",
+  "feature.movement.quickmove.speedinwater.description": "Maximum speed when in water.",
+  "feature.movement.quickmove.speedinlava.description": "Maximum speed when in lava.",
+  "feature.movement.quickmove.speedinair.description": "Maximum speed when in the air.",
+  "feature.movement.quickmove.speedongliding.description": "Maximum speed when gliding.",
+  "feature.movement.quickmove.speedonswimming.description": "Maximum speed when swimming.",
+  "feature.movement.quickmove.speedwithvehicle.description": "Maximum speed when in a vehicle."
 }
