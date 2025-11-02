@@ -276,5 +276,13 @@
   "feature.movement.move.quickmove.friction.description": "入力がない場合の移動速度が減少する割合。",
   "feature.map.description": "ミニマップを画面に表示します。",
   "feature.map.zoom_level.description": "ミニマップのズームレベルを設定します。",
-  "feature.map.show_player_coordinates.description": "ミニマップにプレイヤーの座標を表示します。"
+  "feature.map.show_player_coordinates.description": "ミニマップにプレイヤーの座標を表示します。",
+  "feature.utils.foodmanager.description": "インベントリ内の最適な食料を自動的に食べます。",
+  "feature.utils.foodmanager.target_hunger.description": "維持する満腹度。",
+  "feature.utils.foodmanager.min_hunger.description": "食べる前の最小満腹度。",
+  "feature.utils.foodmanager.injured_hunger.description": "負傷時に維持する満腹度。",
+  "feature.utils.foodmanager.injury_threshold.description": "負傷とみなす体力閾値。",
+  "feature.utils.foodmanager.allow_rotten_flesh.description": "腐肉を食べることを許可します。",
+  "feature.utils.foodmanager.allow_chorus_fruit.description": "コーラスフルーツを食べることを許可します。",
+  "feature.utils.foodmanager.prioritize_health.description": "満腹度よりも体力回復を優先します。"
 }

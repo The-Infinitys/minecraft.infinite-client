@@ -276,5 +276,13 @@
   "feature.movement.move.quickmove.friction.description": "The rate at which movement speed decreases when no input is given.",
   "feature.map.description": "Displays a mini-map on the screen.",
   "feature.map.zoom_level.description": "Sets the zoom level of the mini-map.",
-  "feature.map.show_player_coordinates.description": "Shows player coordinates on the mini-map."
+  "feature.map.show_player_coordinates.description": "Shows player coordinates on the mini-map.",
+  "feature.utils.foodmanager.description": "Automatically eats the best food in your inventory.",
+  "feature.utils.foodmanager.target_hunger.description": "The hunger level to maintain.",
+  "feature.utils.foodmanager.min_hunger.description": "The minimum hunger level before eating.",
+  "feature.utils.foodmanager.injured_hunger.description": "The hunger level to maintain when injured.",
+  "feature.utils.foodmanager.injury_threshold.description": "The health threshold to consider yourself injured.",
+  "feature.utils.foodmanager.allow_rotten_flesh.description": "Allows eating rotten flesh.",
+  "feature.utils.foodmanager.allow_chorus_fruit.description": "Allows eating chorus fruit.",
+  "feature.utils.foodmanager.prioritize_health.description": "Prioritizes health regeneration over hunger satisfaction."
 }

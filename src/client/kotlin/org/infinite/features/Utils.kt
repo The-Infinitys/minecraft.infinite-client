@@ -3,6 +3,7 @@ package org.infinite.features
 import org.infinite.feature
 import org.infinite.features.utils.afk.AfkMode
 import org.infinite.features.utils.backpack.BackPackManager // 追加
+import org.infinite.features.utils.food.FoodManager
 import org.infinite.features.utils.map.HyperMap
 import org.infinite.features.utils.map.MapFeature
 import org.infinite.features.utils.noattack.NoAttack
@@ -35,4 +36,5 @@ val utils =
         ),
         feature("HyperMap", HyperMap(), "feature.utils.hypermap.description"),
         feature("MapFeature", MapFeature(), "feature.map.description"),
+        feature("FoodManager", FoodManager(), "feature.utils.foodmanager.description"),
     )
