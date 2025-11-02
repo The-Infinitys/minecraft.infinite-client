@@ -105,6 +105,7 @@ class QuickMove : ConfigurableFeature() {
         listOf(
             acceleration,
             friction,
+            allowOnGround,
             speedOnGround,
             allowOnSwimming,
             speedOnSwimming,
@@ -197,8 +198,8 @@ class QuickMove : ConfigurableFeature() {
             val tickSpeedLimit = currentSpeedLimit / 20
             val moveSpeed = sqrt((velocity!!.x * velocity!!.x) + (velocity!!.z * velocity!!.z))
             val speedResult = moveSpeed + vel.length()
-            vel = if (speedResult < tickSpeedLimit / 20) vel else vel.normalize().multiply(speedResult - tickSpeedLimit)
-            velocity!!.add(vel)
+            vel = if (speedResult < tickSpeedLimit / 20) vel else vel.normalize().multiply(tickSpeedLimit - moveSpeed)
+            velocity = velocity!!.add(vel)
         }
     }
 }
