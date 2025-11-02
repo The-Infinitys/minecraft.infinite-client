@@ -284,5 +284,6 @@
   "feature.utils.foodmanager.injury_threshold.description": "負傷とみなす体力閾値。",
   "feature.utils.foodmanager.allow_rotten_flesh.description": "腐肉を食べることを許可します。",
   "feature.utils.foodmanager.allow_chorus_fruit.description": "コーラスフルーツを食べることを許可します。",
-  "feature.utils.foodmanager.prioritize_health.description": "満腹度よりも体力回復を優先します。"
+  "feature.utils.foodmanager.prioritize_health.description": "満腹度よりも体力回復を優先します。",
+  "feature.utils.foodmanager.eat_while_moving.description": "移動中に食べるかを設定します。"
 }

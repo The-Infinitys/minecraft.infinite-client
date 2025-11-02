@@ -62,6 +62,12 @@ class FoodManager : ConfigurableFeature() {
             "feature.utils.foodmanager.prioritize_health.description",
             false,
         )
+    private val eatWhileMoving =
+        FeatureSetting.BooleanSetting(
+            "EatWhileMoving",
+            "feature.utils.foodmanager.eat_while_moving.description",
+            true, // デフォルトは移動中も食べる(true)にしておくと便利かもしれません
+        )
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
@@ -72,6 +78,7 @@ class FoodManager : ConfigurableFeature() {
             allowRottenFlesh,
             allowChorusFruit,
             prioritizeHealth,
+            eatWhileMoving,
         )
 
     private var oldSlot = -1
@@ -141,7 +148,20 @@ class FoodManager : ConfigurableFeature() {
             eat(-1) // Eat to min hunger
             return
         }
-
+        // 移動中に食べるか
+        if (!eatWhileMoving.value && (
+                options.forwardKey.isPressed ||
+                    options.backKey.isPressed ||
+                    options.leftKey.isPressed ||
+                    options.rightKey.isPressed
+            )
+        ) {
+            if (isEating()) {
+                stopEating()
+            }
+            return
+        }
+        if (client.currentScreen != null) return
         if (foodLevel < targetHungerI) {
             val maxPoints = targetHungerI - foodLevel
             eat(maxPoints)

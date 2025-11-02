@@ -284,5 +284,6 @@
   "feature.utils.foodmanager.injury_threshold.description": "The health threshold to consider yourself injured.",
   "feature.utils.foodmanager.allow_rotten_flesh.description": "Allows eating rotten flesh.",
   "feature.utils.foodmanager.allow_chorus_fruit.description": "Allows eating chorus fruit.",
-  "feature.utils.foodmanager.prioritize_health.description": "Prioritizes health regeneration over hunger satisfaction."
+  "feature.utils.foodmanager.prioritize_health.description": "Prioritizes health regeneration over hunger satisfaction.",
+  "feature.utils.foodmanager.eat_while_moving.description": "Eat while moving"
 }
