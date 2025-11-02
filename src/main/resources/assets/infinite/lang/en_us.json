@@ -264,5 +264,10 @@
   "feature.utils.hypermapsize.description": "Sets the size of the mini-map UI (% of screen short side).",
   "feature.utils.hypermapmode.description": "Sets the display mode for the mini-map (Flat or Solid).",
   "feature.utils.hypermaprender_terrain.description": "Renders terrain on the mini-map.",
-  "feature.utils.hypermapuseshading.description": "Applies shading effects to the terrain rendering on the mini-map."
+  "feature.utils.hypermapuseshading.description": "Applies shading effects to the terrain rendering on the mini-map.",
+  "feature.movement.highstep.description": "Allows stepping up blocks of a specified height.",
+  "feature.movement.step.highstep.step_height": "Maximum step height.",
+  "feature.movement.quickmove.description": "Quickly accelerate and decelerate movement.",
+  "feature.movement.move.quickmove.speed": "Movement acceleration speed.",
+  "feature.movement.move.quickmove.friction": "Deceleration friction when not moving."
 }

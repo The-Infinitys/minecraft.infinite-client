@@ -264,5 +264,10 @@
   "feature.utils.hypermapsize.description": "ミニマップUIのサイズを設定します（画面の短い辺に対する割合）。",
   "feature.utils.hypermapmode.description": "ミニマップの表示モードを設定します（平面または立体）。",
   "feature.utils.hypermaprender_terrain.description": "ミニマップに地形を描画します。",
-  "feature.utils.hypermapuseshading.description": "ミニマップの地形描画にシェーディング効果を適用します。"
+  "feature.utils.hypermapuseshading.description": "ミニマップの地形描画にシェーディング効果を適用します。",
+  "feature.movement.highstep.description": "指定された高さのブロックを乗り越えられるようにします。",
+  "feature.movement.step.highstep.step_height": "最大段差の高さ。",
+  "feature.movement.quickmove.description": "素早く移動を加速・減速します。",
+  "feature.movement.move.quickmove.speed": "移動加速速度。",
+  "feature.movement.move.quickmove.friction": "移動していないときの減速摩擦。"
 }

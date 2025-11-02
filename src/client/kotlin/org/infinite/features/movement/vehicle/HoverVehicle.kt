@@ -1,4 +1,4 @@
-package org.infinite.features.movement.boat
+package org.infinite.features.movement.vehicle
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.entity.vehicle.VehicleEntity

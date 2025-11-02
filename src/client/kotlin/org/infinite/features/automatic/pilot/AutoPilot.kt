@@ -20,7 +20,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Heightmap
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.features.movement.boat.HoverVehicle
+import org.infinite.features.movement.vehicle.HoverVehicle
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.camera.CameraRoll
 import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
