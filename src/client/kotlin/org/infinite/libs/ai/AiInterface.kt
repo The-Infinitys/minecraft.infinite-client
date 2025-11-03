@@ -11,9 +11,14 @@ object AiInterface : ClientInterface() {
         val state = currentAction.state()
         when (state) {
             AiAction.AiActionState.Progress -> currentAction.tick()
-            AiAction.AiActionState.Success -> currentAction.onSuccess()
-            AiAction.AiActionState.Failure -> currentAction.onFailure()
+            AiAction.AiActionState.Success -> {
+                currentAction.onSuccess()
+                actions.remove(currentAction)
+            }
+            AiAction.AiActionState.Failure -> {
+                currentAction.onFailure()
+                actions.clear() // Clear all actions on failure to allow re-evaluation
+            }
         }
-        if (state != AiAction.AiActionState.Progress) actions.remove(currentAction)
     }
 }
