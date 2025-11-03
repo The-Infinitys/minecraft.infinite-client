@@ -22,6 +22,7 @@
   "feature.movement.autowalk.description": "Automatically walks forward.",
   "feature.movement.automine.description": "Automatically mines blocks.",
   "feature.movement.fastbreak.description": "Increases block breaking speed.",
+  "feature.movement.linearbreak.description": "Remembers all blocks targeted by the crosshair and breaks them quickly using packet transmission.",
   "feature.movement.featherwalk.description": "Prevents jumping and sprinting on certain blocks.",
   "feature.movement.waterhover.description": "Allows hovering on water.",
   "feature.movement.superfly.description": "Enhances flight capabilities.",

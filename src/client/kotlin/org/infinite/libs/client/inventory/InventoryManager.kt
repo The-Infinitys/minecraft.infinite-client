@@ -60,8 +60,8 @@ object InventoryManager : ClientInterface() {
 
             is InventoryIndex.Hotbar -> playerInv.getStack(index.index) ?: ItemStack.EMPTY
             is InventoryIndex.Backpack -> playerInv.getStack(9 + index.index) ?: ItemStack.EMPTY
-            is InventoryIndex.MainHand -> playerInv.getStack(40) ?: ItemStack.EMPTY
-            is InventoryIndex.OffHand -> playerInv.getStack(playerInv.selectedSlot) ?: ItemStack.EMPTY
+            is InventoryIndex.MainHand -> playerInv.getStack(playerInv.selectedSlot) ?: ItemStack.EMPTY // 修正: メインハンドは選択されたホットバーのスロット
+            is InventoryIndex.OffHand -> playerInv.getStack(40) ?: ItemStack.EMPTY // 修正: オフハンドは内部スロット40
         }
     }
 
@@ -86,6 +86,7 @@ object InventoryManager : ClientInterface() {
                     return true
                 }
 
+                // setしたいアイテムがインベントリのどこかにあることが前提
                 val sourceInternal = findSlotWithItem(stack.item) ?: return false
                 if (sourceInternal == internal) return true
 
@@ -181,6 +182,29 @@ object InventoryManager : ClientInterface() {
         // オフハンド (40)
         if (playerInv.getStack(40).item == item) {
             return InventoryIndex.OffHand()
+        }
+        return null
+    }
+
+    /**
+     * ホットバー (0-8) とバックパック (9-35) のみからアイテムを検索します。
+     * 防具スロットとオフハンドは無視します。
+     * @param item 検索するアイテム
+     * @return 最初に見つかったインベントリインデックス、見つからなければ null
+     */
+    fun findFirstInMain(item: Item): InventoryIndex? {
+        val playerInv = inventory ?: return null // nullチェック
+        // ホットバー (0-8)
+        for (i in 0 until 9) {
+            if (playerInv.getStack(i).item == item) {
+                return InventoryIndex.Hotbar(i)
+            }
+        }
+        // バックパック (9-35, Backpack index 0-26)
+        for (i in 0 until 27) {
+            if (playerInv.getStack(9 + i).item == item) {
+                return InventoryIndex.Backpack(i)
+            }
         }
         return null
     }

@@ -135,11 +135,18 @@ object ToolChecker {
                 state.isIn(BlockTags.PICKAXE_MINEABLE) -> ToolKind.PickAxe
                 state.isIn(BlockTags.SHOVEL_MINEABLE) -> ToolKind.Shovel
                 state.isIn(BlockTags.HOE_MINEABLE) -> ToolKind.Hoe
-                state.isIn(BlockTags.LEAVES) || Registries.BLOCK.getId(block).toString() == "minecraft:cobweb" -> ToolKind.Sword
+                state.isIn(BlockTags.LEAVES) || Registries.BLOCK
+                    .getId(block)
+                    .toString() == "minecraft:cobweb" -> ToolKind.Sword
+
                 else -> null
             }
         val isSilkTouchRequired = isSilkTouchRequiredClient(block)
-        return CorrectTool(toolKind, toolLevel, isSilkTouchRequired)
+        return if (toolKind == null) {
+            CorrectTool(null, -1, false)
+        } else {
+            CorrectTool(toolKind, toolLevel, isSilkTouchRequired)
+        }
     }
 
     fun getItemStackFromId(id: String): ItemStack =

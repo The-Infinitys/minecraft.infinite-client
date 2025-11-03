@@ -22,6 +22,7 @@
   "feature.movement.autowalk.description": "自動的に前進します。",
   "feature.movement.automine.description": "自動的にブロックを採掘します。",
   "feature.movement.fastbreak.description": "ブロックの破壊速度を増加させます。",
+  "feature.movement.linearbreak.description": "視線を合わせたブロックをすべて記憶し、パケット送信を利用して高速に破壊します。",
   "feature.movement.featherwalk.description": "特定のブロック上でのジャンプとスプリントを防ぎます。",
   "feature.movement.waterhover.description": "水上でのホバリングを可能にします。",
   "feature.movement.superfly.description": "飛行能力を強化します。",

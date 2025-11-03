@@ -1,6 +1,7 @@
 package org.infinite.libs.client.player
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.network.ClientCommonNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.option.GameOptions
@@ -34,4 +35,6 @@ open class ClientInterface {
             val z = player?.z ?: return null
             return Vec3d(x, y, z)
         }
+    protected val networkHandler: ClientCommonNetworkHandler?
+        get() = client.networkHandler
 }
