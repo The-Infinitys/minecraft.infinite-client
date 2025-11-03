@@ -9,7 +9,7 @@ import org.infinite.libs.ai.interfaces.AiAction
 import org.infinite.libs.client.aim.task.config.AimTarget
 import org.infinite.libs.client.control.ControllerInterface
 
-class MineBlockAction(
+open class MineBlockAction(
     val targetBlockPos: BlockPos,
 ) : AiAction() {
     private var currentMiningFace: Direction? = null // Store the face being mined
