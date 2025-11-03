@@ -1,17 +1,19 @@
 package org.infinite.libs.ai.interfaces
 
-interface AiAction {
+import org.infinite.libs.client.player.ClientInterface
+
+open class AiAction : ClientInterface() {
     enum class AiActionState {
         Success,
         Progress,
         Failure,
     }
 
-    fun state(): AiActionState
+    open fun state(): AiActionState = AiActionState.Success
 
-    fun tick()
+    open fun tick() {}
 
-    fun onSuccess()
+    open fun onSuccess() {}
 
-    fun onFailure()
+    open fun onFailure() {}
 }

@@ -2,24 +2,27 @@ package org.infinite.libs.client.aim.task.config
 
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.client.MinecraftClient
+import net.minecraft.command.argument.EntityAnchorArgumentType
 import net.minecraft.entity.Entity
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import org.infinite.libs.client.aim.camera.CameraRoll
 
 /**
  * ブロックの狙う面を定義する
  */
-enum class BlockFace {
-    Top,
-    Bottom,
-    North,
-    East,
-    South,
-    West,
-    Center,
-}
 
 sealed class AimTarget {
+    enum class BlockFace {
+        Top,
+        Bottom,
+        North,
+        East,
+        South,
+        West,
+        Center,
+    }
+
     open class EntityTarget(
         e: Entity,
     ) : AimTarget() {
@@ -28,14 +31,13 @@ sealed class AimTarget {
 
     // ブロックを狙う面（face）を追加し、デフォルトをCENTERに設定
     open class BlockTarget(
-        b: BlockEntity,
+        val blockPos: BlockPos,
         val face: BlockFace = BlockFace.Center, // デフォルトを中央 (CENTER) に設定
     ) : AimTarget() {
-        open val block = b
+        constructor(b: BlockEntity, face: BlockFace = BlockFace.Center) : this(b.pos, face)
 
         fun pos(offset: Double = 0.5): Vec3d {
-            val pos = block.pos
-            val center = pos.toCenterPos()
+            val center = blockPos.toCenterPos()
             return when (this.face) {
                 BlockFace.Center -> center
                 BlockFace.Top -> center.add(0.0, 0.5 * (2 * offset - 1), 0.0) // Y+
@@ -58,6 +60,11 @@ sealed class AimTarget {
         r: CameraRoll,
     ) : AimTarget() {
         open val roll = r
+    }
+
+    fun lookAt() {
+        val pos = pos() ?: return
+        MinecraftClient.getInstance().player?.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, pos)
     }
 
     /**
