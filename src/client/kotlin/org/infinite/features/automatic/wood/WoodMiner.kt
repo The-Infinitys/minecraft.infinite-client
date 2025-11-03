@@ -15,7 +15,6 @@ class WoodMiner : ConfigurableFeature() {
     val searchRadius =
         FeatureSetting.DoubleSetting(
             name = "SearchRadius",
-            descriptionKey = "feature.automatic.woodminer.search_radius.description",
             defaultValue = 10.0,
             min = 1.0,
             max = 64.0,
@@ -24,7 +23,6 @@ class WoodMiner : ConfigurableFeature() {
     val woodTypes =
         FeatureSetting.BlockListSetting(
             name = "WoodTypes",
-            descriptionKey = "feature.automatic.woodminer.wood_types.description",
             defaultValue = mutableListOf("minecraft:oak_log", "minecraft:spruce_log"),
         )
     override val settings: List<FeatureSetting<*>> =

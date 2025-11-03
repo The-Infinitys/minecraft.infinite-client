@@ -13,7 +13,6 @@ class WaterHover : ConfigurableFeature(initialEnabled = false) {
     private val method =
         FeatureSetting.EnumSetting(
             "Method",
-            "feature.movement.waterhover.method.description",
             WaterHoverMethod.Jump,
             WaterHoverMethod.entries.toList(),
         )

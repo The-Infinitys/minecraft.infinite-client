@@ -21,18 +21,16 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
     private val method: FeatureSetting.EnumSetting<FlyMethod> =
         FeatureSetting.EnumSetting(
             "Method",
-            "feature.movement.superfly.method.description",
             FlyMethod.Acceleration,
             FlyMethod.entries,
         )
     private val keepFly: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "KeepFlying",
-            "feature.movement.superfly.keepflying.description",
             true,
         )
     private val power: FeatureSetting.FloatSetting =
-        FeatureSetting.FloatSetting("Power", "feature.movement.superfly.power.description", 1.0f, 0.5f, 5.0f)
+        FeatureSetting.FloatSetting("Power", 1.0f, 0.5f, 5.0f)
     override val settings: List<FeatureSetting<*>> =
         listOf(
             method,

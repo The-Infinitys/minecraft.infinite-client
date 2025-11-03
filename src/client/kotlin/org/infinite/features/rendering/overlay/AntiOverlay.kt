@@ -7,9 +7,9 @@ class AntiOverlay : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel = FeatureLevel.Utils
     override val settings: List<FeatureSetting<*>> =
         listOf(
-            FeatureSetting.BooleanSetting("NoPumpkinOverlay", "feature.rendering.antioverlay.nopumpkinoverlay.description", true),
-            FeatureSetting.BooleanSetting("NoDarknessOverlay", "feature.rendering.antioverlay.nodarknessoverlay.description", true),
-            FeatureSetting.BooleanSetting("NoLiquidOverlay", "feature.rendering.antioverlay.noliquidoverlay.description", true),
-            FeatureSetting.BooleanSetting("NoFogOverlay", "feature.rendering.antioverlay.nofogoverlay.description", true),
+            FeatureSetting.BooleanSetting("NoPumpkinOverlay", true),
+            FeatureSetting.BooleanSetting("NoDarknessOverlay", true),
+            FeatureSetting.BooleanSetting("NoLiquidOverlay", true),
+            FeatureSetting.BooleanSetting("NoFogOverlay", true),
         )
 }

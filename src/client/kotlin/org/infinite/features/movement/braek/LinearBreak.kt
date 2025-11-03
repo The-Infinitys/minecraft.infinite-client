@@ -18,7 +18,6 @@ class LinearBreak : ConfigurableFeature() {
     private val breakRange =
         FeatureSetting.DoubleSetting(
             name = "Range",
-            descriptionKey = "feature.movement.linearbreak.range.description",
             defaultValue = 5.0,
             min = 1.0,
             max = 6.0,
@@ -26,7 +25,6 @@ class LinearBreak : ConfigurableFeature() {
     private val maxBlocks =
         FeatureSetting.DoubleSetting(
             name = "MaxBlocks",
-            descriptionKey = "feature.movement.linearbreak.max_blocks.description",
             defaultValue = 64.0,
             min = 1.0,
             max = 500.0,
@@ -34,7 +32,6 @@ class LinearBreak : ConfigurableFeature() {
     private val swingHand =
         FeatureSetting.BooleanSetting(
             name = "SwingHand",
-            descriptionKey = "feature.movement.linearbreak.swing_hand.description",
             defaultValue = true,
         )
 
@@ -42,7 +39,6 @@ class LinearBreak : ConfigurableFeature() {
     private val ignoreHotbarChange =
         FeatureSetting.BooleanSetting(
             name = "IgnoreHotbarChange",
-            descriptionKey = "feature.movement.linearbreak.ignore_hotbar_change.description",
             defaultValue = false, // デフォルトは安全のため無効
         )
 

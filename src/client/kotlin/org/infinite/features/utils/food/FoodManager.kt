@@ -15,7 +15,6 @@ class FoodManager : ConfigurableFeature() {
     private val targetHunger =
         FeatureSetting.DoubleSetting(
             "TargetHunger",
-            "feature.utils.foodmanager.target_hunger.description",
             10.0,
             0.0,
             10.0,
@@ -23,7 +22,6 @@ class FoodManager : ConfigurableFeature() {
     private val minHunger =
         FeatureSetting.DoubleSetting(
             "MinHunger",
-            "feature.utils.foodmanager.min_hunger.description",
             6.5,
             0.0,
             10.0,
@@ -31,7 +29,6 @@ class FoodManager : ConfigurableFeature() {
     private val injuredHunger =
         FeatureSetting.DoubleSetting(
             "InjuredHunger",
-            "feature.utils.foodmanager.injured_hunger.description",
             10.0,
             0.0,
             10.0,
@@ -39,7 +36,6 @@ class FoodManager : ConfigurableFeature() {
     private val injuryThreshold =
         FeatureSetting.DoubleSetting(
             "InjuryThreshold",
-            "feature.utils.foodmanager.injury_threshold.description",
             5.0,
             0.5,
             10.0,
@@ -47,31 +43,26 @@ class FoodManager : ConfigurableFeature() {
     private val allowRottenFlesh =
         FeatureSetting.BooleanSetting(
             "AllowRottenFlesh",
-            "feature.utils.foodmanager.allow_rotten_flesh.description",
             false,
         )
     private val allowChorusFruit =
         FeatureSetting.BooleanSetting(
             "AllowChorusFruit",
-            "feature.utils.foodmanager.allow_chorus_fruit.description",
             false,
         )
     private val prioritizeHealth =
         FeatureSetting.BooleanSetting(
             "PrioritizeHealth",
-            "feature.utils.foodmanager.prioritize_health.description",
             false,
         )
     private val eatWhileMoving =
         FeatureSetting.BooleanSetting(
             "EatWhileMoving",
-            "feature.utils.foodmanager.eat_while_moving.description",
             true, // デフォルトは移動中も食べる(true)にしておくと便利かもしれません
         )
     private val eatWhileAttacking =
         FeatureSetting.BooleanSetting(
             "EatWhileAttacking",
-            "feature.utils.foodmanager.eat_while_attacking.description",
             true,
         )
 

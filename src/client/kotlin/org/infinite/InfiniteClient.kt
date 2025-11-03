@@ -51,12 +51,12 @@ object InfiniteClient : ClientModInitializer {
         val result = mutableListOf<String>()
         for (category in featureCategories) {
             for (feature in category.features) {
-                val key = feature.descriptionKey
+                val key = feature.generateKey(category.name)
                 if (Text.translatable(key).string == key) {
                     result.add(key)
                 }
                 for (setting in feature.instance.settings) {
-                    val key = setting.descriptionKey
+                    val key = setting.generateKey(category.name, feature.name, setting.name)
                     if (Text.translatable(key).string == key) {
                         result.add(key)
                     }

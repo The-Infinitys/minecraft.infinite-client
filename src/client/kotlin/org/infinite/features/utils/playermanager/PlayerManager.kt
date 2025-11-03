@@ -9,12 +9,10 @@ class PlayerManager : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.PlayerListSetting(
                 "Friends",
-                "feature.utils.playermanager.friends.description",
                 mutableListOf(),
             ),
             FeatureSetting.PlayerListSetting(
                 "Enemies",
-                "feature.utils.playermanager.enemies.description",
                 mutableListOf(),
             ),
         )

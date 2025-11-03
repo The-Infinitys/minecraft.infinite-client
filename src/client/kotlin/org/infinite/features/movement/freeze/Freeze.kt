@@ -29,7 +29,6 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
     private val durationSetting =
         FeatureSetting.FloatSetting(
             "Duration",
-            "feature.movement.freeze.duration.description",
             0.0f,
             0.0f,
             600.0f,
@@ -38,7 +37,6 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
     private val packetLimitSetting =
         FeatureSetting.IntSetting(
             "PacketLimit",
-            "feature.movement.freeze.packetlimit.description",
             0,
             0,
             500,

@@ -13,7 +13,6 @@ class BackPackManager : ConfigurableFeature() {
     private val sortEnabled =
         FeatureSetting.BooleanSetting(
             "SortEnabled",
-            "feature.utils.backpackmanager.sort_enabled.description",
             true,
         )
 
@@ -21,19 +20,16 @@ class BackPackManager : ConfigurableFeature() {
     private val autoMoveToBackpackEnabled =
         FeatureSetting.BooleanSetting(
             "AutoMoveToBackpack",
-            "feature.utils.backpackmanager.auto_move_to_backpack_enabled.description",
             true,
         )
     private val autoReplenishHotbarEnabled =
         FeatureSetting.BooleanSetting(
             "AutoReplenishHotbar",
-            "feature.utils.backpackmanager.auto_replenish_hotbar_enabled.description",
             true,
         )
     private val sortInterval =
         FeatureSetting.IntSetting(
             "SortInterval",
-            "feature.utils.backpackmanager.sort_interval.description",
             20 * 5,
             20,
             20 * 60,

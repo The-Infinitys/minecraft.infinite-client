@@ -24,13 +24,11 @@ class XRay : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.EnumSetting(
                 "Method",
-                "feature.rendering.xray.method.description",
                 XRayMode.Normal, // 初期値はNormal
                 XRayMode.entries.toList(), // すべてのオプションのリスト
             ),
             FeatureSetting.BlockListSetting(
                 "ThroughBlockList",
-                "feature.rendering.xray.throughblocklist.description",
                 mutableListOf(
                     "minecraft:water",
                     "minecraft:lava",
@@ -63,7 +61,6 @@ class XRay : ConfigurableFeature(initialEnabled = false) {
             ),
             FeatureSetting.BlockListSetting(
                 "ExposedBlockList",
-                "feature.rendering.xray.exposedblocklist.description",
                 mutableListOf(
                     "minecraft:ancient_debris",
                     "minecraft:anvil",

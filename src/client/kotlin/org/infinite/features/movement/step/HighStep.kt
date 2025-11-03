@@ -19,7 +19,6 @@ class HighStep : ConfigurableFeature() {
     private val maxStepHeight =
         FeatureSetting.DoubleSetting(
             "MaxStepHeight",
-            "feature.movement.highstep.maxstepheight.description",
             1.0,
             1.0,
             10.0,

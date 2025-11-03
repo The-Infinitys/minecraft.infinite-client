@@ -11,7 +11,6 @@ class DetectServer : ConfigurableFeature(initialEnabled = true) {
         listOf(
             FeatureSetting.EnumSetting(
                 "FeatureLevel",
-                "feature.server.detectserver.featurelevel.description",
                 FeatureLevel.Extend,
                 FeatureLevel.entries.toList(),
             ),

@@ -9,21 +9,21 @@ import org.infinite.utils.block.BlockUtils
 
 class FastBreak : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel = FeatureLevel.Utils
-    val safeMode = FeatureSetting.BooleanSetting("SafeMode", "feature.movement.fastbreak.safemode.description", true)
+    val safeMode = FeatureSetting.BooleanSetting("SafeMode", true)
+    val interval = FeatureSetting.IntSetting("Interval", 0, 0, 5)
     val thresholdPercentage =
         FeatureSetting.DoubleSetting(
             "ThresholdPercentage",
-            "feature.movement.fastbreak.safemode.description",
             20.0,
             0.0,
             100.0,
         )
     val thresholdTick =
-        FeatureSetting.IntSetting("ThresholdPercentage", "feature.movement.fastbreak.safemode.description", 5, 1, 100)
-    override val settings: List<FeatureSetting<*>> = listOf(safeMode, thresholdPercentage, thresholdTick)
+        FeatureSetting.IntSetting("ThresholdPercentage", 5, 1, 100)
+    override val settings: List<FeatureSetting<*>> = listOf(safeMode, thresholdPercentage, thresholdTick, interval)
 
     fun handle(manager: ClientPlayerInteractionManagerAccessor) {
-        manager.setBlockBreakingCooldown(0)
+        manager.setBlockBreakingCooldown(interval.value)
     }
 
     fun handle(blockPos: BlockPos) {

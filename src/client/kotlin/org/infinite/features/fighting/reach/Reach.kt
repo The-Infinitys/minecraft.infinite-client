@@ -9,7 +9,6 @@ class Reach : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.FloatSetting(
                 "ReachDistance",
-                "feature.fighting.reach.reachdistance.description",
                 4.5f,
                 3.0f,
                 7.0f,

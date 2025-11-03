@@ -136,12 +136,12 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
-            FeatureSetting.BooleanSetting("BlockInfo", "feature.rendering.detailinfo.blockinfo.description", true),
-            FeatureSetting.BooleanSetting("InnerChest", "feature.rendering.detailinfo.innerchest.description", true),
-            FeatureSetting.BooleanSetting("EntityInfo", "feature.rendering.detailinfo.entityinfo.description", true),
-            FeatureSetting.IntSetting("PaddingTop", "feature.rendering.detailinfo.paddingtop.description", 0, 0, 100),
-            FeatureSetting.FloatSetting("Reach", "feature.rendering.detailinfo.reach.description", 20f, 10f, 100f),
-            FeatureSetting.IntSetting("Width", "feature.rendering.detailinfo.width.description", 50, 25, 100),
+            FeatureSetting.BooleanSetting("BlockInfo", true),
+            FeatureSetting.BooleanSetting("InnerChest", true),
+            FeatureSetting.BooleanSetting("EntityInfo", true),
+            FeatureSetting.IntSetting("PaddingTop", 0, 0, 100),
+            FeatureSetting.FloatSetting("Reach", 20f, 10f, 100f),
+            FeatureSetting.IntSetting("Width", 50, 25, 100),
         )
 
     var shouldCancelScanScreen: Boolean = false

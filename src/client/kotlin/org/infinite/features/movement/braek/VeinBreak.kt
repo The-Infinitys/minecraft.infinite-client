@@ -27,7 +27,6 @@ class VeinBreak : ConfigurableFeature() {
     private val blockList =
         FeatureSetting.BlockListSetting(
             "BlockList",
-            "feature.movement.veinbreak.blocklist.description",
             mutableListOf(
                 "minecraft:ancient_debris",
                 "minecraft:coal_ore",
@@ -54,7 +53,6 @@ class VeinBreak : ConfigurableFeature() {
     private val breakRange =
         FeatureSetting.DoubleSetting(
             name = "Range",
-            descriptionKey = "feature.movement.veinbreak.range.description",
             defaultValue = 5.0,
             min = 1.0,
             max = 6.0,
@@ -62,7 +60,6 @@ class VeinBreak : ConfigurableFeature() {
     private val maxBlocks =
         FeatureSetting.DoubleSetting(
             name = "MaxBlocks",
-            descriptionKey = "feature.movement.veinbreak.max_blocks.description",
             defaultValue = 64.0,
             min = 1.0,
             max = 500.0,
@@ -70,14 +67,12 @@ class VeinBreak : ConfigurableFeature() {
     private val swingHand =
         FeatureSetting.BooleanSetting(
             name = "SwingHand",
-            descriptionKey = "feature.movement.veinbreak.swing_hand.description",
             defaultValue = true,
         )
 
     private val ignoreHotbarChange =
         FeatureSetting.BooleanSetting(
             name = "IgnoreHotbarChange",
-            descriptionKey = "feature.movement.veinbreak.ignore_hotbar_change.description",
             defaultValue = false,
         )
 

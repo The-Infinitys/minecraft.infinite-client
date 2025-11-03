@@ -31,20 +31,18 @@ class QuickMove : ConfigurableFeature() {
     private val acceleration =
         FeatureSetting.DoubleSetting(
             "Acceleration",
-            "feature.movement.quickmove.acceleration.description",
             0.05,
             0.0,
             1.0,
         )
 
     private val friction =
-        FeatureSetting.DoubleSetting("Friction", "feature.movement.quickmove.friction.description", 0.5, 0.0, 1.0)
+        FeatureSetting.DoubleSetting("Friction", 0.5, 0.0, 1.0)
 
     // --- 速度設定値 ---
     private val speedOnGround =
         FeatureSetting.DoubleSetting(
             "SpeedOnGround",
-            "feature.movement.quickmove.speedonground.description",
             baseGroundSpeed * 1.4,
             baseGroundSpeed,
             baseGroundSpeed * 2.0,
@@ -52,7 +50,6 @@ class QuickMove : ConfigurableFeature() {
     private val speedInWater =
         FeatureSetting.DoubleSetting(
             "SpeedInWater",
-            "feature.movement.quickmove.speedinwater.description",
             baseWaterWalkSpeed * 1.4,
             baseWaterWalkSpeed,
             baseWaterWalkSpeed * 2.0,
@@ -60,7 +57,6 @@ class QuickMove : ConfigurableFeature() {
     private val speedInLava =
         FeatureSetting.DoubleSetting(
             "SpeedInLava",
-            "feature.movement.quickmove.speedinlava.description",
             baseLavaWalkSpeed * 1.4,
             baseLavaWalkSpeed,
             baseLavaWalkSpeed * 2.0,
@@ -68,7 +64,6 @@ class QuickMove : ConfigurableFeature() {
     private val speedInAir =
         FeatureSetting.DoubleSetting(
             "SpeedInAir",
-            "feature.movement.quickmove.speedinair.description",
             baseFlightSpeed * 1.4,
             baseFlightSpeed,
             baseFlightSpeed * 2.0,
@@ -76,7 +71,6 @@ class QuickMove : ConfigurableFeature() {
     private val speedOnGliding =
         FeatureSetting.DoubleSetting(
             "SpeedOnGliding",
-            "feature.movement.quickmove.speedongliding.description",
             baseFlightSpeed * 1.4,
             baseFlightSpeed,
             baseFlightSpeed * 2.0,
@@ -84,7 +78,6 @@ class QuickMove : ConfigurableFeature() {
     private val speedOnSwimming =
         FeatureSetting.DoubleSetting(
             "SpeedOnSwimming",
-            "feature.movement.quickmove.speedonswimming.description",
             baseSwimmingSpeed * 1.4,
             baseSwimmingSpeed,
             baseSwimmingSpeed * 2.0,
@@ -92,7 +85,6 @@ class QuickMove : ConfigurableFeature() {
     private val speedWithVehicle =
         FeatureSetting.DoubleSetting(
             "SpeedWithVehicle",
-            "feature.movement.quickmove.speedwithvehicle.description",
             baseFlightSpeed * 1.4,
             baseFlightSpeed,
             baseFlightSpeed * 2.0,
@@ -100,34 +92,30 @@ class QuickMove : ConfigurableFeature() {
 
     // --- Allow設定値 ---
     private val allowOnGround =
-        FeatureSetting.BooleanSetting("AllowOnGround", "feature.movement.quickmove.allowonground.description", true)
+        FeatureSetting.BooleanSetting("AllowOnGround", true)
     private val allowInWater =
-        FeatureSetting.BooleanSetting("AllowInWater", "feature.movement.quickmove.allowinwater.description", false)
+        FeatureSetting.BooleanSetting("AllowInWater", false)
     private val allowInLava =
-        FeatureSetting.BooleanSetting("AllowInLava", "feature.movement.quickmove.allowinlava.description", false)
+        FeatureSetting.BooleanSetting("AllowInLava", false)
     private val allowWithVehicle =
         FeatureSetting.BooleanSetting(
             "AllowWithVehicle",
-            "feature.movement.quickmove.allowwithvehicle.description",
             false,
         )
 
     private val allowInAir =
         FeatureSetting.BooleanSetting(
             "AllowInAir",
-            "feature.movement.quickmove.allowinair.description",
             false,
         )
     private val allowOnGliding =
         FeatureSetting.BooleanSetting(
             "AllowOnGliding",
-            "feature.movement.quickmove.allowongliding.description",
             false,
         )
     private val allowOnSwimming =
         FeatureSetting.BooleanSetting(
             "AllowOnSwimming",
-            "feature.movement.quickmove.allowonswimming.description",
             false,
         )
 

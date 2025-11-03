@@ -22,14 +22,12 @@ class ImpactAttack : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.FloatSetting(
                 "Range",
-                "feature.fighting.impactattack.range.description",
                 4.2f,
                 3.0f,
                 7.0f,
             ),
             FeatureSetting.IntSetting(
                 "CPS",
-                "feature.fighting.impactattack.cps.description",
                 10,
                 1,
                 20,

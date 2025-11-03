@@ -10,7 +10,6 @@ class BlockSearch : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.BlockColorListSetting(
                 "blockSearchColors",
-                "feature.rendering.blocksearch.blockcolors.description",
                 mutableMapOf(
                     "minecraft:ancient_debris" to 0x808B4513.toInt(),
                     "minecraft:anvil" to 0x80FF00FF.toInt(),

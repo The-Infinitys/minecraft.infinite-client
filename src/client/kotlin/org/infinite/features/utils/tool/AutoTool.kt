@@ -31,7 +31,6 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
     private val method =
         FeatureSetting.EnumSetting<Method>(
             "Method",
-            "feature.utils.autotool.method.description",
             Method.HotBar,
             Method.entries,
         )
@@ -39,7 +38,6 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
     private val fineToolStrategy =
         FeatureSetting.EnumSetting<FineToolStrategy>(
             "FineToolStrategy",
-            "feature.utils.autotool.fine_tool_strategy.description",
             FineToolStrategy.SharpTool,
             FineToolStrategy.entries,
         )

@@ -19,13 +19,12 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
 
     // 新しい設定: 最高速度 (m/s)
     private val speed: FeatureSetting.FloatSetting =
-        FeatureSetting.FloatSetting("MaxSpeed", "feature.movement.hovervehicle.speed.description", 20.0f, 1.0f, 200.0f)
+        FeatureSetting.FloatSetting("MaxSpeed", 20.0f, 1.0f, 200.0f)
 
     // 新しい設定: 加速力 (毎ティック)
     private val acceleration: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Acceleration",
-            "feature.movement.hovervehicle.acceleration.description",
             0.5f,
             0.05f,
             2.0f,

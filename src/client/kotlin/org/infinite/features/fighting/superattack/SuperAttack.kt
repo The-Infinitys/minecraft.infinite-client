@@ -15,7 +15,6 @@ class SuperAttack : ConfigurableFeature(initialEnabled = false) {
     val method =
         FeatureSetting.EnumSetting(
             "Method",
-            "feature.fighting.superattack.method.description",
             AttackMethod.MINI_JUMP,
             AttackMethod.entries.toList(),
         )

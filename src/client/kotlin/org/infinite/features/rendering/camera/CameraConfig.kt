@@ -9,13 +9,12 @@ class CameraConfig : ConfigurableFeature(initialEnabled = false) {
         listOf(
             FeatureSetting.FloatSetting(
                 "CameraDistance",
-                "feature.rendering.cameraconfig.cameradistance.description",
                 8.0f,
                 -1.0f,
                 15.0f,
             ),
-            FeatureSetting.BooleanSetting("ClipBlock", "feature.rendering.cameraconfig.clipblock.description", true),
-            FeatureSetting.BooleanSetting("AntiHurtTilt", "feature.rendering.cameraconfig.antihurttilt.description", true),
-            FeatureSetting.BooleanSetting("ExtraCamera", "feature.rendering.cameraconfig.extracamera.description", false),
+            FeatureSetting.BooleanSetting("ClipBlock", true),
+            FeatureSetting.BooleanSetting("AntiHurtTilt", true),
+            FeatureSetting.BooleanSetting("ExtraCamera", false),
         )
 }

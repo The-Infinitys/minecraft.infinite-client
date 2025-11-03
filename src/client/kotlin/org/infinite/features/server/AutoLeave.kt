@@ -19,7 +19,6 @@ class AutoLeave : ConfigurableFeature(initialEnabled = false) {
     private val hpThreshold =
         FeatureSetting.IntSetting(
             "HpThreshold",
-            "feature.server.autoleave.hpthreshold.description",
             6,
             0,
             20,
@@ -27,7 +26,6 @@ class AutoLeave : ConfigurableFeature(initialEnabled = false) {
     private val totemThreshold =
         FeatureSetting.IntSetting(
             "TotemThreshold",
-            "feature.server.autoleave.totemthreshold.description",
             0,
             0,
             11,
@@ -35,7 +33,6 @@ class AutoLeave : ConfigurableFeature(initialEnabled = false) {
     private val method =
         FeatureSetting.EnumSetting<Method>(
             "Method",
-            "feature.server.autoleave.method.description",
             Method.Normal,
             Method.entries,
         )
