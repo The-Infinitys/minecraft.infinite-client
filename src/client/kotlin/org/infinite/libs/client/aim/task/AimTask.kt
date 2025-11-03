@@ -73,7 +73,7 @@ open class AimTask(
         time = currentTime
         val condition = condition.check()
         val player = client.player ?: return AimProcessResult.Failure
-        val targetPos = targetPos(target) ?: return AimProcessResult.Failure
+        val targetPos = target.pos() ?: return AimProcessResult.Failure
         when (condition) {
             AimTaskConditionReturn.Success -> {
                 return AimProcessResult.Success
@@ -154,30 +154,6 @@ open class AimTask(
             }
         return result.diffNormalize()
     }
-
-    /**
-     * ターゲットの種類に応じて目標座標（Vec3d）を取得します。
-     */
-    private fun targetPos(target: AimTarget): Vec3d? =
-        when (target) {
-            is AimTarget.EntityTarget -> {
-                target.entity
-                    .getLerpedPos(MinecraftClient.getInstance().renderTickCounter.getTickProgress(false))
-                    .add(0.0, target.entity.getEyeHeight(target.entity.pose).toDouble(), 0.0)
-            }
-
-            is AimTarget.BlockTarget -> {
-                target.block.pos.toCenterPos()
-            }
-
-            is AimTarget.WaypointTarget -> {
-                target.pos
-            }
-
-            else -> {
-                Vec3d.ZERO
-            }
-        }
 
     /**
      * プレイヤーの現在の視線と目標座標から必要な回転量を計算します。
