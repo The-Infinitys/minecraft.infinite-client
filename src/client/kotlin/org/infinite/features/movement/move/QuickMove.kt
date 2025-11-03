@@ -9,6 +9,7 @@ import kotlin.math.sqrt
 
 // 基準となる各環境の移動速度（ブロック/秒）を定義
 class QuickMove : ConfigurableFeature() {
+    override val tickTiming: TickTiming = TickTiming.End
     private val baseGroundSpeed = 4.3
     private val baseSwimmingSpeed = 5.45
     private val baseWaterWalkSpeed = 4.3 * 0.7 // 水中での歩行は地上速度の約70%

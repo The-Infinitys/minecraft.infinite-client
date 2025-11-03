@@ -8,7 +8,7 @@ import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 
 class BackPackManager : ConfigurableFeature() {
-    override val level: FeatureLevel = FeatureLevel.EXTEND
+    override val level: FeatureLevel = FeatureLevel.Extend
 
     private val sortEnabled =
         FeatureSetting.BooleanSetting(

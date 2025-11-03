@@ -13,7 +13,7 @@ import org.infinite.utils.FakePlayerEntity
  * Mixinを使用してPlayerMoveC2SPacketの送信を停止し、蓄積することで瞬間移動を可能にする。
  */
 class Freeze : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
 
     // 蓄積された移動パケットを保持するキュー
     val packets = ArrayDeque<PlayerMoveC2SPacket>() // Mixinからアクセスするためvalにしておく

@@ -28,7 +28,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             Method.HotBar,
             Method.entries,
         )
-    override val level: FeatureLevel = FeatureLevel.EXTEND
+    override val level: FeatureLevel = FeatureLevel.Extend
 
     override val settings: List<FeatureSetting<*>> =
         listOf(

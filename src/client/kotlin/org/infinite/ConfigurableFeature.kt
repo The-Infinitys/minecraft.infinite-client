@@ -17,17 +17,23 @@ abstract class ConfigurableFeature(
     private val initialEnabled: Boolean = false,
 ) : ClientInterface() {
     enum class FeatureLevel {
-        UTILS, // ユーリティ。基本どこで使ってても問題ない。
-        EXTEND, // 実際には不可能なので、見られると気づかれる可能性がある
-        CHEAT, // サーバー側で簡単に検知される
+        Utils, // ユーリティ。基本どこで使ってても問題ない。
+        Extend, // 実際には不可能なので、見られると気づかれる可能性がある
+        Cheat, // サーバー側で簡単に検知される
     }
 
+    enum class TickTiming {
+        Start,
+        End,
+    }
+
+    open val tickTiming: TickTiming = TickTiming.Start
     internal var enabled: Property<Boolean> = Property(initialEnabled)
     private val disabled: Property<Boolean> = Property(!initialEnabled)
     open val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_DONT_CARE)
     open val togglable = true
     open val preRegisterCommands: List<String> = listOf("enable", "disable", "toggle", "set", "get", "add", "del")
-    open val level: FeatureLevel = FeatureLevel.EXTEND
+    open val level: FeatureLevel = FeatureLevel.Extend
 
     // リスナーの同期に使用する専用のロックオブジェクト
     private val listenerLock = Any()

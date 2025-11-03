@@ -13,7 +13,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class FreeCamera : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.EXTEND
+    override val level: FeatureLevel = FeatureLevel.Extend
     override val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_KEY_U)
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(

@@ -6,19 +6,19 @@ import org.infinite.featureCategories
 import org.infinite.settings.FeatureSetting
 
 class DetectServer : ConfigurableFeature(initialEnabled = true) {
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
     override val settings: List<FeatureSetting<*>> =
         listOf(
             FeatureSetting.EnumSetting(
                 "FeatureLevel",
                 "feature.server.detectserver.featurelevel.description",
-                FeatureLevel.EXTEND,
+                FeatureLevel.Extend,
                 FeatureLevel.entries.toList(),
             ),
         )
 
     override fun tick() {
-        val maxAllowedLevel = getSetting("FeatureLevel")?.value as? FeatureLevel ?: FeatureLevel.EXTEND
+        val maxAllowedLevel = getSetting("FeatureLevel")?.value as? FeatureLevel ?: FeatureLevel.Extend
         featureCategories.forEach { category ->
             category.features.forEach { feature ->
                 val configurableFeature = feature.instance

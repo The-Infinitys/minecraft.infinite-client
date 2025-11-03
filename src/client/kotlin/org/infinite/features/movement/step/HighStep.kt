@@ -26,7 +26,7 @@ class HighStep : ConfigurableFeature() {
         )
     override val settings: List<FeatureSetting<*>> = listOf(maxStepHeight)
 
-    override val level: FeatureLevel = FeatureLevel.EXTEND
+    override val level: FeatureLevel = FeatureLevel.Extend
 
     override fun tick() {
         val player = this.player ?: return

@@ -4,7 +4,7 @@ import org.infinite.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class KillAura : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
     override val settings: List<FeatureSetting<*>> =
         listOf(
             FeatureSetting.FloatSetting(

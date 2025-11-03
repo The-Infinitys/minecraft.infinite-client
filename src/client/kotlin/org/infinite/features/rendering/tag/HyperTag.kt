@@ -17,7 +17,7 @@ import org.infinite.utils.rendering.transparent
 import kotlin.math.sqrt
 
 class HyperTag : ConfigurableFeature(initialEnabled = false) {
-    override val level = FeatureLevel.UTILS
+    override val level = FeatureLevel.Utils
     private val mobs = FeatureSetting.BooleanSetting("Mobs", "feature.rendering.hypertag.mobs.description", true)
     private val players =
         FeatureSetting.BooleanSetting("Players", "feature.rendering.hypertag.players.description", true)

@@ -19,6 +19,7 @@ import org.infinite.gui.theme.official.InfiniteTheme
 import org.infinite.gui.theme.official.MinecraftTheme
 import org.infinite.gui.theme.official.PastelTheme
 import org.infinite.gui.theme.official.SmeClanTheme
+import org.infinite.libs.client.control.ControlInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.infinite.InfiniteAddon
@@ -85,7 +86,8 @@ object InfiniteClient : ClientModInitializer {
             .forEach { jarPath ->
                 log("Found addon JAR: $jarPath")
                 try {
-                    val classLoader = java.net.URLClassLoader(arrayOf(jarPath.toUri().toURL()), this.javaClass.classLoader)
+                    val classLoader =
+                        java.net.URLClassLoader(arrayOf(jarPath.toUri().toURL()), this.javaClass.classLoader)
                     val serviceLoader = java.util.ServiceLoader.load(InfiniteAddon::class.java, classLoader)
 
                     // Get mod metadata from fabric.mod.json inside the JAR
@@ -156,8 +158,31 @@ object InfiniteClient : ClientModInitializer {
             }
         }
         ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }
+        ClientTickEvents.START_CLIENT_TICK.register { _ -> ControlInterface.tick() }
         ClientCommandRegistrationCallback.EVENT.register(InfiniteCommand::registerCommands)
         worldManager = WorldManager()
+        ClientTickEvents.START_CLIENT_TICK.register { _ ->
+            for (category in featureCategories) {
+                for (feature in category.features) {
+                    if (feature.instance.isEnabled() && feature.instance.tickTiming ==
+                        ConfigurableFeature.TickTiming.Start
+                    ) {
+                        feature.instance.tick()
+                    }
+                }
+            }
+        }
+        ClientTickEvents.END_CLIENT_TICK.register { _ ->
+            for (category in featureCategories) {
+                for (feature in category.features) {
+                    if (feature.instance.isEnabled() && feature.instance.tickTiming ==
+                        ConfigurableFeature.TickTiming.End
+                    ) {
+                        feature.instance.tick()
+                    }
+                }
+            }
+        }
     }
 
     fun rainbowText(text: String): MutableText {

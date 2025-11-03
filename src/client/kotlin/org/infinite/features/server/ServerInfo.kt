@@ -11,7 +11,7 @@ import org.infinite.settings.FeatureSetting
 
 class ServerInfo : ConfigurableFeature() {
     override val settings: List<FeatureSetting<*>> = emptyList()
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
     override val preRegisterCommands: List<String> = emptyList()
     override val togglable: Boolean = false
 

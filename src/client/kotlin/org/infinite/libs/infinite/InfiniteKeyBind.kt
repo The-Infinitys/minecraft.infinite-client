@@ -79,15 +79,6 @@ object InfiniteKeyBind {
                     actionKeyBind.action()
                 }
             }
-
-            // Tick all enabled features
-            for (category in featureCategories) {
-                for (feature in category.features) {
-                    if (feature.instance.isEnabled()) {
-                        feature.instance.tick()
-                    }
-                }
-            }
         }
     }
 }

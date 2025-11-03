@@ -9,7 +9,7 @@ import org.infinite.settings.FeatureSetting
 
 // FeatherWalk Featureの定義
 class FeatherWalk : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
 
     // フィーチャーのロジックで利用する設定
     private val blockList: FeatureSetting.BlockListSetting =

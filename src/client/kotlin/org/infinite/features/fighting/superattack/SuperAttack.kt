@@ -4,7 +4,7 @@ import org.infinite.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class SuperAttack : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
 
     enum class AttackMethod {
         PACKET,

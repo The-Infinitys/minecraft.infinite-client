@@ -19,7 +19,7 @@ enum class XRayMode {
 class XRay : ConfigurableFeature(initialEnabled = false) {
     override val toggleKeyBind: Property<Int>
         get() = Property(GLFW.GLFW_KEY_X)
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
     override val settings: List<FeatureSetting<*>> =
         listOf(
             FeatureSetting.EnumSetting(

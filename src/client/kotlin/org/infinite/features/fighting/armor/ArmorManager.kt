@@ -79,7 +79,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
     private var floatTick: Int = 0
 
     override val level: FeatureLevel
-        get() = FeatureLevel.EXTEND
+        get() = FeatureLevel.Extend
 
     override fun tick() {
         val player = player ?: return

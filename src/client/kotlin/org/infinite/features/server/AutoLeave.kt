@@ -15,7 +15,7 @@ class AutoLeave : ConfigurableFeature(initialEnabled = false) {
         SelfHurt,
     }
 
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
     private val hpThreshold =
         FeatureSetting.IntSetting(
             "HpThreshold",

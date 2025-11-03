@@ -68,7 +68,7 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> = listOf(fireMode, fastReload, changeMode, additionalInterval)
     var state: GunnerState = GunnerState.IDLE
     var mode: GunnerMode = GunnerMode.RELOAD
-    override val level = FeatureLevel.CHEAT
+    override val level = FeatureLevel.Cheat
 
     fun gunnerCount(): Int {
         // クロスボウで使用可能なアイテムのIdentifierを取得

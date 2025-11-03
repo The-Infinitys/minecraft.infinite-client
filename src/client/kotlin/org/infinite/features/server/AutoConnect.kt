@@ -42,5 +42,5 @@ class AutoConnect : ConfigurableFeature() {
             300,
         )
     override val settings: List<FeatureSetting<*>> = listOf(waitTicks)
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
 }

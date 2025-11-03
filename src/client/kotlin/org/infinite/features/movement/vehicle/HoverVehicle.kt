@@ -15,7 +15,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
-    override val level = FeatureLevel.CHEAT
+    override val level = FeatureLevel.Cheat
 
     // 新しい設定: 最高速度 (m/s)
     private val speed: FeatureSetting.FloatSetting =

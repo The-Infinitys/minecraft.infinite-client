@@ -17,7 +17,7 @@ enum class FlyMethod {
 }
 
 class SuperFly : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
     private val method: FeatureSetting.EnumSetting<FlyMethod> =
         FeatureSetting.EnumSetting(
             "Method",

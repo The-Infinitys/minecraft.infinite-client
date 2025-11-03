@@ -17,7 +17,7 @@ import org.infinite.settings.FeatureSetting
 import kotlin.math.acos
 
 class AimAssist : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
 
     private val range: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(

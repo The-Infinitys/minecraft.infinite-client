@@ -68,6 +68,12 @@ class FoodManager : ConfigurableFeature() {
             "feature.utils.foodmanager.eat_while_moving.description",
             true, // デフォルトは移動中も食べる(true)にしておくと便利かもしれません
         )
+    private val eatWhileAttacking =
+        FeatureSetting.BooleanSetting(
+            "EatWhileAttacking",
+            "feature.utils.foodmanager.eat_while_attacking.description",
+            true,
+        )
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
@@ -79,6 +85,7 @@ class FoodManager : ConfigurableFeature() {
             allowChorusFruit,
             prioritizeHealth,
             eatWhileMoving,
+            eatWhileAttacking,
         )
 
     private var oldSlot = -1
@@ -162,6 +169,13 @@ class FoodManager : ConfigurableFeature() {
             return
         }
         if (client.currentScreen != null) return
+        // 攻撃中に食べるか
+        if (!eatWhileAttacking.value && options.attackKey.isPressed) {
+            if (isEating()) {
+                stopEating()
+            }
+            return
+        }
         if (foodLevel < targetHungerI) {
             val maxPoints = targetHungerI - foodLevel
             eat(maxPoints)

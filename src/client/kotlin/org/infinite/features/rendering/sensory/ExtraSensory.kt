@@ -25,7 +25,7 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
         OutLine,
     }
 
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
     val method =
         FeatureSetting.EnumSetting<Method>(
             "Method",
