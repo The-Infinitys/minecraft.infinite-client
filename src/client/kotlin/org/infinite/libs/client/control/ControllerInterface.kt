@@ -1,9 +1,10 @@
 package org.infinite.libs.client.control
 
 import net.minecraft.client.option.KeyBinding
+import org.infinite.InfiniteClient
 import java.util.concurrent.ConcurrentLinkedDeque
 
-object ControlInterface {
+object ControllerInterface {
     enum class KeyActionKind {
         Press,
         Release,
@@ -13,11 +14,10 @@ object ControlInterface {
     class KeyAction(
         val key: KeyBinding,
         val kind: KeyActionKind,
-        private val initialTicks: Int,
+        initialTicks: Int,
         val condition: () -> Boolean,
     ) {
         var remainingTicks: Int = initialTicks
-            private set
 
         // KeyBindingとKeyActionKindに基づく一意のID
         val actionId: String = key.id
@@ -41,16 +41,15 @@ object ControlInterface {
                 KeyActionKind.Release -> key.isPressed = false
             }
 
-            remainingTicks--
-
             // ティック数が 0 になったら終了処理を行う
             if (remainingTicks <= 0) {
                 // Pressアクションの終了時、キーの状態をリセット
                 if (kind == KeyActionKind.Press) {
                     key.isPressed = false
                 }
-                return true // 削除
+                return true
             }
+            remainingTicks--
             return false // 継続
         }
     }
@@ -121,9 +120,8 @@ object ControlInterface {
         val iterator = keyActionList.iterator()
         while (iterator.hasNext()) {
             val action = iterator.next()
-            // action.tick() が true を返したら、そのアクションは終了または条件を満たさなかった
             if (action.tick()) {
-                iterator.remove() // ConcurrentLinkedDequeのIteratorで安全に要素を削除
+                iterator.remove()
             }
         }
     }

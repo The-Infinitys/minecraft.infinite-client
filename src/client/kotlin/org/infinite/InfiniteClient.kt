@@ -19,7 +19,7 @@ import org.infinite.gui.theme.official.InfiniteTheme
 import org.infinite.gui.theme.official.MinecraftTheme
 import org.infinite.gui.theme.official.PastelTheme
 import org.infinite.gui.theme.official.SmeClanTheme
-import org.infinite.libs.client.control.ControlInterface
+import org.infinite.libs.client.control.ControllerInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.infinite.InfiniteAddon
@@ -158,7 +158,7 @@ object InfiniteClient : ClientModInitializer {
             }
         }
         ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }
-        ClientTickEvents.START_CLIENT_TICK.register { _ -> ControlInterface.tick() }
+        ClientTickEvents.START_CLIENT_TICK.register { _ -> ControllerInterface.tick() }
         ClientCommandRegistrationCallback.EVENT.register(InfiniteCommand::registerCommands)
         worldManager = WorldManager()
         ClientTickEvents.START_CLIENT_TICK.register { _ ->

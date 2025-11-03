@@ -15,6 +15,19 @@ class QuickMove : ConfigurableFeature() {
     private val baseWaterWalkSpeed = 4.3 * 0.7 // 水中での歩行は地上速度の約70%
     private val baseLavaWalkSpeed = 4.3 * 0.5 // 溶岩中での歩行は地上速度の約50%
     private val baseFlightSpeed = baseGroundSpeed * 1.4
+
+    // 移動モードを定義し、処理の優先順位と状態を明確にする
+    private enum class MoveMode {
+        None,
+        Ground,
+        Swimming,
+        Water,
+        Lava,
+        Air,
+        Gliding,
+        Vehicle,
+    }
+
     private val acceleration =
         FeatureSetting.DoubleSetting(
             "Acceleration",
@@ -27,7 +40,7 @@ class QuickMove : ConfigurableFeature() {
     private val friction =
         FeatureSetting.DoubleSetting("Friction", "feature.movement.quickmove.friction.description", 0.5, 0.0, 1.0)
 
-    // --- 設定値は変更なし ---
+    // --- 速度設定値 ---
     private val speedOnGround =
         FeatureSetting.DoubleSetting(
             "SpeedOnGround",
@@ -85,7 +98,7 @@ class QuickMove : ConfigurableFeature() {
             baseFlightSpeed * 2.0,
         )
 
-    // --- Allow設定とSettingsリストは変更なし ---
+    // --- Allow設定値 ---
     private val allowOnGround =
         FeatureSetting.BooleanSetting("AllowOnGround", "feature.movement.quickmove.allowonground.description", true)
     private val allowInWater =
@@ -143,28 +156,34 @@ class QuickMove : ConfigurableFeature() {
         val options = options
         val vehicle = player.vehicle
 
-        // 1. 環境チェックと適用除外
-        if (player.hasVehicle() && !allowWithVehicle.value) {
-            return
-        }
-
-        val inAir = !player.isOnGround && !player.isInLava && !player.isTouchingWater
-
-        val shouldApply =
+        // 1. **現在のモードを決定するロジック (優先度順)**
+        val currentMode =
             when {
-                (player.isTouchingWater && allowInWater.value) || (player.isInLava && allowInLava.value) -> true
-                (player.isOnGround && allowOnGround.value) -> true
-                (player.hasVehicle() && allowWithVehicle.value) -> true
-                (allowOnSwimming.value && player.isSwimming) -> true
-                (allowOnGliding.value && player.isGliding) -> true
-                (inAir && allowInAir.value) -> true
-                else -> false
+                // 最も優先度の高い状態からチェック
+                player.hasVehicle() && allowWithVehicle.value -> MoveMode.Vehicle
+                allowOnSwimming.value && player.isSwimming -> MoveMode.Swimming // 泳ぎを水よりも優先
+                allowOnGliding.value && player.isGliding -> MoveMode.Gliding
+                player.isOnGround && allowOnGround.value -> MoveMode.Ground
+                player.isInLava && allowInLava.value -> MoveMode.Lava
+                player.isTouchingWater && allowInWater.value -> MoveMode.Water
+                !player.isOnGround && !player.isInLava && !player.isTouchingWater && allowInAir.value -> MoveMode.Air
+                else -> MoveMode.None
             }
 
-        if (!shouldApply) {
-            return
-        }
+        // 3. **モードに基づいて速度制限を決定**
+        val currentSpeedLimitPerSecond =
+            when (currentMode) {
+                MoveMode.Ground -> speedOnGround.value
+                MoveMode.Swimming -> speedOnSwimming.value
+                MoveMode.Water -> speedInWater.value
+                MoveMode.Lava -> speedInLava.value
+                MoveMode.Air -> speedInAir.value
+                MoveMode.Gliding -> speedOnGliding.value
+                MoveMode.Vehicle -> speedWithVehicle.value
+                MoveMode.None -> return // 除外
+            }
 
+        // 車両が有効な場合は、プレイヤーのYawを車両に適用
         vehicle?.yaw = player.yaw
 
         var forward = 0.0
@@ -179,40 +198,26 @@ class QuickMove : ConfigurableFeature() {
 
         if (forward == 0.0 && strafe == 0.0) {
             // 入力がない場合は摩擦を適用
-            velocity =
-                Vec3d(velocity.x * friction.value, velocity.y, velocity.z * friction.value)
+            velocity = Vec3d(velocity.x * friction.value, velocity.y, velocity.z * friction.value)
         } else {
-            // 2. 速度制限の決定
-            val currentSpeedLimitPerSecond =
-                when {
-                    player.isTouchingWater && allowInWater.value -> speedInWater.value
-                    player.isInLava && allowInLava.value -> speedInLava.value
-                    player.isOnGround && allowOnGround.value -> speedOnGround.value
-                    player.hasVehicle() && allowWithVehicle.value -> speedWithVehicle.value
-                    player.isSwimming && allowOnSwimming.value -> speedOnSwimming.value
-                    player.isGliding && allowOnGliding.value -> speedOnGliding.value
-                    !player.isOnGround && !player.isInLava && !player.isTouchingWater && allowInAir.value -> speedInAir.value
-                    else -> 0.0
-                }
-
             // ティックあたりの最大移動距離 (ブロック/ティック)
             val tickSpeedLimit = currentSpeedLimitPerSecond / 20
 
             // 現在の水平速度の大きさ
             val moveSpeed = sqrt((velocity.x * velocity.x) + (velocity.z * velocity.z))
 
-            // ***【追加したロジック】***
             // 現在の速度が既に制限を超えている場合、加速を適用せずに戻る
             if (moveSpeed >= tickSpeedLimit) {
                 return
             }
 
-            // 3. ローカル座標系での加速ベクトルの計算
+            // 4. ローカル座標系での加速ベクトルの計算
             val yaw = Math.toRadians(player.yaw.toDouble())
             val sinYaw = sin(yaw)
             val cosYaw = cos(yaw)
             var vel = Vec3d.ZERO
 
+            // 入力ベクトルを正規化
             val inputMagnitude = sqrt(forward * forward + strafe * strafe).coerceAtLeast(1.0)
             val normalizedForward = forward / inputMagnitude
             val normalizedStrafe = strafe / inputMagnitude
@@ -229,13 +234,18 @@ class QuickMove : ConfigurableFeature() {
                     0.0,
                     forwardMotionZ + strafeMotionZ,
                 )
-            // 4. 速度制限の適用
+
+            // 5. 速度制限の適用
             // 加速後の予測水平速度の大きさ
             val predictedMoveSpeed =
                 sqrt((velocity.x + vel.x) * (velocity.x + vel.x) + (velocity.z + vel.z) * (velocity.z + vel.z))
+
             velocity = velocity.add(vel)
+
             if (predictedMoveSpeed > tickSpeedLimit) {
-                velocity = vel.normalize().multiply(tickSpeedLimit).add(0.0, velocity.y, 0.0)
+                // 加速後の速度が制限を超えた場合、制限速度の大きさに正規化
+                velocity =
+                    Vec3d(velocity.x, 0.0, velocity.z).normalize().multiply(tickSpeedLimit).add(0.0, velocity.y, 0.0)
             }
         }
         this.velocity = velocity

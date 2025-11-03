@@ -1,7 +1,7 @@
 package org.infinite.features.movement.water
 
 import org.infinite.ConfigurableFeature
-import org.infinite.libs.client.control.ControlInterface
+import org.infinite.libs.client.control.ControllerInterface
 import org.infinite.settings.FeatureSetting
 
 enum class WaterHoverMethod {
@@ -35,7 +35,7 @@ class WaterHover : ConfigurableFeature(initialEnabled = false) {
                 // 浮遊状態であれば、ジャンプキーの状態を「押されている」に設定する
                 // これにより、ゲームの水中のジャンプロジック（+0.04のmotY追加）が呼び出され、浮力を得る
                 if (shouldHover) {
-                    ControlInterface.press(options.jumpKey)
+                    ControllerInterface.press(options.jumpKey, tick = 1)
                 }
             }
 
