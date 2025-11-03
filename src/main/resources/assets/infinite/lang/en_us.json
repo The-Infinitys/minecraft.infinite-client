@@ -228,6 +228,7 @@
   "feature.movement.superfly.keepflying.description": "Keeps flying even if force cancelled.",
   "feature.rendering.extrasensory.method.description": "Method for highlighting entities.",
   "feature.rendering.blocksearch.colors.description": "Colors for highlighting blocks.",
+  "feature.rendering.blocksearch.blockcolors.description": "Colors for highlighted blocks.",
   "feature.fighting.reach.reachdistance.description": "Sets the maximum reach distance.",
   "feature.fighting.armormanager.autoequip.description": "Automatically equips the best available armor.",
   "feature.fighting.armormanager.autoelytra.description": "Automatically switches to elytra when airborne.",

@@ -3,6 +3,7 @@ package org.infinite.features
 import org.infinite.feature
 import org.infinite.features.movement.braek.FastBreak
 import org.infinite.features.movement.braek.LinearBreak
+import org.infinite.features.movement.braek.VeinBreak
 import org.infinite.features.movement.fall.AntiFall
 import org.infinite.features.movement.feather.FeatherWalk
 import org.infinite.features.movement.fly.SuperFly
@@ -68,6 +69,11 @@ val movement =
             "LinearBreak",
             LinearBreak(),
             "feature.movement.linearbreak.description",
+        ),
+        feature(
+            "VeinBreak",
+            VeinBreak(),
+            "feature.movement.veinbreak.description",
         ),
         feature(
             "FeatherWalk",

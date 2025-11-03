@@ -6,6 +6,7 @@ import net.minecraft.registry.Registries
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.braek.LinearBreak
+import org.infinite.features.movement.braek.VeinBreak
 import org.infinite.features.rendering.detailinfo.ToolChecker
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
@@ -127,12 +128,18 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
     }
 
     override fun tick() {
-        val linearBreak = InfiniteClient.getFeature(LinearBreak::class.java) ?: return
-        val isLinearBreakWorking = linearBreak.isWorking
+        val linearBreak = InfiniteClient.getFeature(LinearBreak::class.java)
+        val veinBreak = InfiniteClient.getFeature(VeinBreak::class.java)
+        val isLinearBreakWorking = linearBreak?.isWorking ?: false
+        val isVeinBreakWorking = veinBreak?.isWorking ?: false
         val isInteractingToBlock = interactionManager?.isBreakingBlock ?: false
         val blockPos =
-            if (isLinearBreakWorking) linearBreak.currentBreakingPos else interactionManager?.currentBreakingPos
-        val isMining = isInteractingToBlock || isLinearBreakWorking
+            when {
+                isLinearBreakWorking -> linearBreak.currentBreakingPos
+                isVeinBreakWorking -> veinBreak.currentBreakingPos
+                else -> interactionManager?.currentBreakingPos
+            }
+        val isMining = isInteractingToBlock || isLinearBreakWorking || isVeinBreakWorking
         if (!isMining || blockPos == null) {
             resetTool()
             return
@@ -261,6 +268,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                 if (bestToolIndex is InventoryIndex.Hotbar) {
                     player.inventory.selectedSlot = bestToolIndex.index
                     InfiniteClient.getFeature(LinearBreak::class.java)?.autoToolCallBack = bestToolIndex.index
+                    InfiniteClient.getFeature(VeinBreak::class.java)?.autoToolCallBack = bestToolIndex.index
                 }
             }
         }
