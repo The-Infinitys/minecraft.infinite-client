@@ -5,6 +5,7 @@ import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderTickCounter
@@ -155,6 +156,15 @@ object InfiniteClient : ClientModInitializer {
             for (category in featureCategories) {
                 for (features in category.features) {
                     features.instance.stop()
+                }
+            }
+        }
+        ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
+            for (category in featureCategories) {
+                for (feature in category.features) {
+                    if (feature.instance.isEnabled()) {
+                        feature.instance.respawn()
+                    }
                 }
             }
         }

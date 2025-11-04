@@ -12,7 +12,7 @@ import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.braek.FastBreak
 import org.infinite.libs.ai.AiInterface
-import org.infinite.libs.ai.actions.movement.MovementAction
+import org.infinite.libs.ai.actions.movement.LinearMovementAction
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
@@ -244,7 +244,7 @@ class ShieldMachine : ConfigurableFeature() {
         if (walkingCallBack) {
             walkingCallBack = false
             val moveAction =
-                MovementAction(
+                LinearMovementAction(
                     pos = targetPos,
                     movementRange = 0.80, // 移動の成功判定を緩く
                     heightRange = 4,
@@ -259,7 +259,7 @@ class ShieldMachine : ConfigurableFeature() {
                     },
                 )
             // 既存のアクションがないか、MovementActionでない場合にのみ追加
-            if (AiInterface.actions.isEmpty() || AiInterface.actions.firstOrNull() !is MovementAction) {
+            if (AiInterface.actions.isEmpty() || AiInterface.actions.firstOrNull() !is LinearMovementAction) {
                 AiInterface.add(moveAction)
             } else {
                 walkingCallBack = true
@@ -525,7 +525,7 @@ class ShieldMachine : ConfigurableFeature() {
             )
 
         val moveAction =
-            MovementAction(
+            LinearMovementAction(
                 pos = retreatPos,
                 movementRange = 0.80,
                 heightRange = 4,

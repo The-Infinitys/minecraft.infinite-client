@@ -10,7 +10,7 @@ import org.infinite.libs.client.control.ControllerInterface
 import kotlin.math.abs
 import kotlin.math.atan2
 
-class MovementAction(
+class LinearMovementAction(
     val pos: Vec3d,
     val movementRange: Double = 1.0,
     val heightRange: Int? = null,

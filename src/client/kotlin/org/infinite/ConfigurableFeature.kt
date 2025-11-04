@@ -206,6 +206,8 @@ abstract class ConfigurableFeature(
         if (isEnabled()) disable() else enable()
     }
 
+    open fun respawn() {}
+
     fun registerKeybinds(
         categoryName: String,
         featureName: String,
