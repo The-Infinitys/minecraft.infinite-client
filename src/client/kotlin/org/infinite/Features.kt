@@ -47,7 +47,6 @@ data class FeatureCategory(
 fun <T : ConfigurableFeature> feature(
     name: String,
     instance: T,
-    descriptionKey: String,
 ): Feature = Feature(name, instance)
 
 val featureCategories =

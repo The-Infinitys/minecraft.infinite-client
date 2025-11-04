@@ -31,3 +31,6 @@ accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGro
 
 # --- 3D Radar ---
 accessible field net/minecraft/block/AbstractBlock$AbstractBlockState mapColor Lnet/minecraft/block/MapColor;
+
+# --- Navigator ---
+accessible method net/minecraft/entity/mob/MobEntity <init> (Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V

@@ -1,9 +1,14 @@
 package org.infinite.libs.client.movement
 
-import net.minecraft.client.MinecraftClient
+import org.infinite.libs.client.player.ClientInterface
 
-class MovementInterface(
-    private val client: MinecraftClient,
-) {
-    fun speed(): Double = client.player?.velocity?.length() ?: 0.0
+object MovementInterface : ClientInterface() {
+    fun speed(): Double = velocity?.length() ?: 0.0
+
+    fun moveTo(
+        x: Double,
+        adjustTargetY: Double,
+        z: Double,
+    ) {
+    }
 }

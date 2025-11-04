@@ -6,6 +6,8 @@ import org.infinite.libs.client.player.ClientInterface
 object AiInterface : ClientInterface() {
     var actions: ArrayDeque<AiAction> = ArrayDeque()
 
+    fun add(action: AiAction) = actions.add(action)
+
     fun tick() {
         val currentAction = actions.firstOrNull() ?: return
         val state = currentAction.state()
@@ -15,9 +17,10 @@ object AiInterface : ClientInterface() {
                 currentAction.onSuccess()
                 actions.remove(currentAction)
             }
+
             AiAction.AiActionState.Failure -> {
                 currentAction.onFailure()
-                actions.clear() // Clear all actions on failure to allow re-evaluation
+                actions.remove(currentAction)
             }
         }
     }

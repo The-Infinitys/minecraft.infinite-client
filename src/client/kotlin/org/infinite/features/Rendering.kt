@@ -17,47 +17,39 @@ val rendering =
         feature(
             "AntiOverlay",
             AntiOverlay(),
-            "feature.rendering.antioverlay.description",
         ),
         feature(
             "SuperSight",
             SuperSight(),
-            "feature.rendering.supersight.description",
         ),
         feature(
             "XRay",
             XRay(),
-            "feature.rendering.xray.description",
         ),
         feature(
             "CameraConfig",
             CameraConfig(),
-            "feature.rendering.cameraconfig.description",
         ),
         feature(
             "FreeCamera", // 追加
             FreeCamera(), // 追加
-            "feature.rendering.freecamera.description", // 追加
+            // 追加
         ),
         feature(
             "ExtraSensory",
             ExtraSensory(),
-            "feature.rendering.extrasensory.description",
         ),
         feature(
             "DetailInfo",
             DetailInfo(),
-            "feature.rendering.detailinfo.description",
         ),
         feature(
             "HyperTag",
             HyperTag(),
-            "feature.rendering.hypertag.description",
         ),
-        feature("PortalGui", PortalGui(), "feature.rendering.portalgui.description"),
+        feature("PortalGui", PortalGui()),
         feature(
             "BlockSearch",
             BlockSearch(),
-            "feature.rendering.search.blocksearch.description",
         ),
     )

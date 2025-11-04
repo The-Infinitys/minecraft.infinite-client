@@ -1,6 +1,9 @@
 package org.infinite.utils.block
 
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.item.BlockItem
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -42,7 +45,7 @@ object RotationManager {
         // ここでサーバーに回転パケットを送信するロジックが必要
         // (WurstClientの RotationFaker の onPreMotion/onPostMotion で行われる)
         // 今回は実装を省略
-        println("RotationManager: Faked rotation set to Yaw=$serverYaw, Pitch=$serverPitch")
+        // println("RotationManager: Faked rotation set to Yaw=$serverYaw, Pitch=$serverPitch")
     }
 }
 
@@ -183,5 +186,71 @@ object BlockUtils : ClientInterface() {
             distanceSq = distancesSq[bestIndex],
             lineOfSight = linesOfSight[bestIndex],
         )
+    }
+
+    // --- ブロック設置ユーティリティ ---
+
+    /**
+     * ブロックを設置するためのパケットを送信し、設置操作をシミュレートします。
+     *
+     * @param neighbor 設置したい場所の隣接ブロックの座標 (このブロックの面に設置する)
+     * @param side 設置先のブロック面 (neighborのどの面に設置するか)
+     * @param hitVec ブロックの当たり判定ボックス内の正確なクリック位置
+     * @param hotbarSlot 使用するホットバーのスロットインデックス (0-8)
+     * @return 設置パケット送信が試行された場合 true
+     */
+    fun placeBlock(
+        neighbor: BlockPos,
+        side: Direction,
+        hitVec: Vec3d,
+        hotbarSlot: Int,
+    ): Boolean {
+        val player = player ?: return false
+        val networkHandler = client.networkHandler ?: return false
+        val inventory = player.inventory ?: return false
+
+        // 1. 設置に使用するアイテムがホットバーにあり、それが BlockItem であることを確認
+        val hand = Hand.MAIN_HAND
+        val stack = inventory.getStack(hotbarSlot)
+        if (stack.isEmpty || stack.item !is BlockItem) {
+            return false // 設置できるアイテムがない
+        }
+
+        // 2. 視線合わせ
+        // 設置面に向けて視線を合わせる。これにより、サーバーが設置を許可しやすくなる。
+        // hitVecは隣接ブロック(neighbor)上でのヒット位置でなければならないが、
+        // 便宜上、設置先のブロック中心に向けて視線を合わせるロジックを使用
+
+        // 接触点 (hitVec) に合わせて正確に視線を合わせる（BlockUtilsの機能を利用）
+        faceVectorPacket(hitVec)
+
+        // 3. ブロック設置パケットの作成と送信
+        // ヒット位置 (Vec3d) を相対的な座標 (float x, y, z) に変換
+
+        (hitVec.y - neighbor.y).toFloat()
+
+        val hitResult =
+            BlockHitResult(
+                hitVec,
+                side, // 設置先のブロック面
+                neighbor,
+                false, // 内部ヒットのフラグ (通常false)
+            )
+// より汎用的な0または、クライアントのスクリーンハンドラのIDを使用します。
+        val sequence = player.currentScreenHandler.syncId
+
+        // 5. ブロック設置パケットの作成と送信 (int sequence を使用)
+        val interactPacket =
+            PlayerInteractBlockC2SPacket(
+                hand,
+                hitResult,
+                sequence, // 修正点: sequence を渡す
+            )
+        networkHandler.sendPacket(interactPacket)
+
+        // 4. クライアント側の手振りアニメーション
+        player.swingHand(hand)
+
+        return true
     }
 }
