@@ -1,7 +1,6 @@
 package org.infinite.libs.ai.actions.movement
 
 import baritone.api.BaritoneAPI
-import org.infinite.InfiniteClient
 import org.infinite.libs.ai.interfaces.AiAction
 
 class PathMovementAction(
@@ -19,9 +18,7 @@ class PathMovementAction(
 
     override fun tick() {
         if (!registered) {
-            InfiniteClient.log("Register!")
-            val pos = player?.blockPos ?: return
-            baritone.exploreProcess.explore(x - pos.x, z - pos.z)
+            baritone.exploreProcess.explore(x, z)
             registered = true
         }
     }
