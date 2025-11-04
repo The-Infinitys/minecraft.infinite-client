@@ -1,6 +1,7 @@
 package org.infinite.utils.block
 
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.inventory.Inventory
 import net.minecraft.item.BlockItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.Hand
@@ -10,6 +11,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
+import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.player.ClientInterface
 import kotlin.math.atan2
 
@@ -206,51 +208,62 @@ object BlockUtils : ClientInterface() {
         hotbarSlot: Int,
     ): Boolean {
         val player = player ?: return false
-        val networkHandler = client.networkHandler ?: return false
-        val inventory = player.inventory ?: return false
+        val interactionManager = client.interactionManager ?: return false
 
-        // 1. 設置に使用するアイテムがホットバーにあり、それが BlockItem であることを確認
-        val hand = Hand.MAIN_HAND
-        val stack = inventory.getStack(hotbarSlot)
+        // 1. ホットバーのスロット切り替え
+        val previousSlot = player.inventory.selectedSlot
+        player.inventory.selectedSlot = hotbarSlot
+
+        // 2. 設置に使用するアイテムが BlockItem であることを再確認 (念のため)
+        val stack = InventoryManager.get(InventoryManager.InventoryIndex.MainHand())
         if (stack.isEmpty || stack.item !is BlockItem) {
-            return false // 設置できるアイテムがない
+            // スロットを元に戻す
+            player.inventory.selectedSlot = previousSlot
+            return false
         }
 
-        // 2. 視線合わせ
-        // 設置面に向けて視線を合わせる。これにより、サーバーが設置を許可しやすくなる。
-        // hitVecは隣接ブロック(neighbor)上でのヒット位置でなければならないが、
-        // 便宜上、設置先のブロック中心に向けて視線を合わせるロジックを使用
-
-        // 接触点 (hitVec) に合わせて正確に視線を合わせる（BlockUtilsの機能を利用）
+        // 3. 視線合わせ
+        // 接触点 (hitVec) に合わせて正確に視線を合わせる
         faceVectorPacket(hitVec)
 
-        // 3. ブロック設置パケットの作成と送信
-        // ヒット位置 (Vec3d) を相対的な座標 (float x, y, z) に変換
+        // 4. ブロック設置パケットの作成
+        // hitVec はワールド絶対座標なので、neighbor の相対座標に変換する必要がある
+        // Vec3d hitRel = hitVec.subtract(neighbor.toCenterPos().subtract(0.5, 0.5, 0.5));
+        val hitRelX = (hitVec.x - neighbor.x).toFloat()
+        val hitRelY = (hitVec.y - neighbor.y).toFloat()
+        val hitRelZ = (hitVec.z - neighbor.z).toFloat()
 
-        (hitVec.y - neighbor.y).toFloat()
+        // 補正: Minecraftのブロック設置パケットは、隣接ブロックの角から0.0〜1.0の範囲でヒット位置を示す
+        val hitRel =
+            Vec3d(
+                hitRelX.coerceIn(0f, 1f).toDouble(),
+                hitRelY.coerceIn(0f, 1f).toDouble(),
+                hitRelZ.coerceIn(0f, 1f).toDouble(),
+            )
 
+        // 5. BlockHitResult の作成
         val hitResult =
             BlockHitResult(
-                hitVec,
+                hitRel, // 💡 修正点: 相対座標を使用
                 side, // 設置先のブロック面
                 neighbor,
                 false, // 内部ヒットのフラグ (通常false)
             )
-// より汎用的な0または、クライアントのスクリーンハンドラのIDを使用します。
-        val sequence = player.currentScreenHandler.syncId
+//        val world=world?:return
+        // 6. スニークパケットの処理 (サーバーがブロックと対話するのを防ぐため)
+        // ブロックに Interact (右クリック) がある場合、プレイヤーはスニークする必要がある
+//        val originalSneaking = player.isSneaking
+//        val shouldSneak = world.getBlockState(neighbor).hasBlockEntity() // 例としてエンティティを持つブロックの場合
 
-        // 5. ブロック設置パケットの作成と送信 (int sequence を使用)
-        val interactPacket =
-            PlayerInteractBlockC2SPacket(
-                hand,
-                hitResult,
-                sequence, // 修正点: sequence を渡す
-            )
-        networkHandler.sendPacket(interactPacket)
+        // 7. interactBlock を使用して設置パケットを送信
+        val result = interactionManager.interactBlock(player, Hand.MAIN_HAND, hitResult)
 
-        // 4. クライアント側の手振りアニメーション
-        player.swingHand(hand)
+        // 8. クライアント側の手振りアニメーション
+        player.swingHand(Hand.MAIN_HAND)
+        // 9. ホットバーのスロットを元に戻す
+        player.inventory.selectedSlot = previousSlot
 
-        return true
+        // 設置パケットの送信自体は true を返す (結果が成功したかどうかはワールドの状態を確認する必要がある)
+        return result.isAccepted
     }
 }

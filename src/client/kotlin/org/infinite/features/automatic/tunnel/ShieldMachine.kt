@@ -102,9 +102,11 @@ class ShieldMachine : ConfigurableFeature() {
         val player = player ?: return
         val blocksToPlace = placing.pos
 
+        // 設置リストが空なら次のステップへ (Mining完了後の場合は移動へ)
         val targetPos =
             blocksToPlace.firstOrNull() ?: run {
-                state = State.Idle()
+                // 💡 修正点: Placingが完了したら次の移動ステップへ
+                moveToNextChunk()
                 return
             }
 
@@ -117,7 +119,10 @@ class ShieldMachine : ConfigurableFeature() {
 
         val inventoryIndex = InventoryManager.findFirstInMain(item)
 
+        // ホットバーに設置ブロックがない場合は処理を中断
         if (inventoryIndex !is InventoryManager.InventoryIndex.Hotbar) {
+            // 💡 改善点: 設置ブロックがないため、Idleに戻すか無効化する
+            state = State.Idle()
             return
         }
 
@@ -125,19 +130,25 @@ class ShieldMachine : ConfigurableFeature() {
         player.inventory.selectedSlot = hotbarSlot
 
         val world = client.world ?: return
-        if (!world.getBlockState(targetPos).isReplaceable) {
+
+        // 既にブロックが設置されているか、置き換え不可能なブロックがあるかチェック
+        val targetState = world.getBlockState(targetPos)
+        if (!targetState.isAir && !targetState.isReplaceable) {
             blocksToPlace.remove(targetPos)
             return
         }
 
+        // 設置先の隣接ブロック (ここでは床を設置するため、下側を基準とする)
         val neighbor = targetPos.down()
         val side = net.minecraft.util.math.Direction.UP
         val hitVec = Vec3d(targetPos.x + 0.5, targetPos.y + 0.5, targetPos.z + 0.5)
 
-        // 設置成功判定ロジックを修正
-        val success = BlockUtils.placeBlock(neighbor, side, hitVec, hotbarSlot)
+        // BlockUtils.placeBlockがパケットを送信
+        val placementAttempt = BlockUtils.placeBlock(neighbor, side, hitVec, hotbarSlot)
 
-        if (success) {
+        if (placementAttempt) {
+            // 💡 改善点: 設置パケット送信後、次のtickでブロックが実際に設置されたかを確認するロジックが必要だが、
+            // フレームワークの制限上、ここではパケット送信と同時にリストから削除し、手振りを行う（成功したと見なす）
             blocksToPlace.remove(targetPos)
             player.swingHand(Hand.MAIN_HAND)
         }
@@ -156,8 +167,18 @@ class ShieldMachine : ConfigurableFeature() {
                 currentBreakingProgress = 0.0f
             }
 
-            // 掘削リストが空になったら、前方のエリアがクリアかチェックし、クリアなら移動
+            // 掘削リストが空になったら、前方のエリアがクリアかチェックし、クリアなら次のステップへ
             if (isAreaClearForMovement()) {
+                // 💡 修正点: 移動前に床設置が必要かチェックし、Placingへ遷移する
+                if (autoPlaceFloor.value) {
+                    val floorPositions = getFloorPlacingPositions()
+                    if (floorPositions.isNotEmpty()) {
+                        state = State.Placing(floorPositions.toMutableList())
+                        return
+                    }
+                }
+
+                // 床設置が不要、または床設置がなければ次の移動へ
                 moveToNextChunk()
             } else {
                 // まだクリアでない場合は再度初期化（次のtickでMiningリストが再計算されることを期待）
@@ -176,7 +197,7 @@ class ShieldMachine : ConfigurableFeature() {
             return
         }
 
-        // 液体チェックはinitializationで実施済みのため、ここでは採掘処理に専念
+        // 液体チェック
         if (isLiquid(targetPos)) {
             blocksToMine.remove(targetPos) // 液体は無視（または埋め立てを試みる）
             state = State.Idle()
@@ -333,7 +354,15 @@ class ShieldMachine : ConfigurableFeature() {
         if (preMineList.isNotEmpty()) {
             state = State.Mining(preMineList)
         } else {
+            // 掘削リストが空の場合、床設置と移動を試みる
             if (isAreaClearForMovement()) {
+                if (autoPlaceFloor.value) {
+                    val floorPositions = getFloorPlacingPositions()
+                    if (floorPositions.isNotEmpty()) {
+                        state = State.Placing(floorPositions.toMutableList())
+                        return
+                    }
+                }
                 moveToNextChunk()
             } else {
                 state = State.Idle()
@@ -372,6 +401,55 @@ class ShieldMachine : ConfigurableFeature() {
 
         // 理論上のプレイヤーの足元のブロック座標
         return BlockPos(initialBlockX + xOffset, fixedY, initialBlockZ + zOffset)
+    }
+
+    // 💡 新規追加: 床の設置が必要な座標リストを取得する関数
+    private fun getFloorPlacingPositions(): MutableList<BlockPos> {
+        val world = client.world ?: return mutableListOf()
+        val currentDirection = direction ?: return mutableListOf()
+        val width = tunnelWidth.value
+
+        // 掘削が完了したばかりのエリア（movedBlocksCountで示される位置）をチェック
+        val centerBlockPos = getTheoreticalPlayerPosBlock(movedBlocksCount) ?: return mutableListOf()
+
+        val blocksToPlace = mutableListOf<BlockPos>()
+        val forwardOffset = 0 // 現在のチャンク（移動前の足元）
+
+        for (w in 0 until width) {
+            val widthRelativeOffset = w - (width - 1) / 2
+
+            val xOffset: Int
+            val zOffset: Int
+
+            when (currentDirection) {
+                Direction.East -> {
+                    xOffset = forwardOffset
+                    zOffset = widthRelativeOffset
+                }
+                Direction.West -> {
+                    xOffset = 0
+                    zOffset = -widthRelativeOffset
+                }
+                Direction.North -> {
+                    xOffset = widthRelativeOffset
+                    zOffset = 0
+                }
+                Direction.South -> {
+                    xOffset = -widthRelativeOffset
+                    zOffset = forwardOffset
+                }
+            }
+
+            // 設置対象の絶対座標 (床の高さ)
+            val targetPos: BlockPos = centerBlockPos.add(xOffset, 0, zOffset) // Yオフセットは0 (fixedTunnelY)
+
+            val state = world.getBlockState(targetPos)
+            // 空気ブロックまたは置き換え可能なブロック（穴が空いている）であれば設置対象とする
+            if (state.isAir || state.isReplaceable) {
+                blocksToPlace.add(targetPos)
+            }
+        }
+        return blocksToPlace
     }
 
     private fun isLiquid(pos: BlockPos): Boolean {
