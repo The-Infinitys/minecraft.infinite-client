@@ -5,6 +5,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.block.MineBlockAction
 import org.infinite.libs.ai.actions.movement.PathMovementAction
@@ -130,7 +131,7 @@ class BranchMiner : ConfigurableFeature() {
     override fun enabled() {
         // Baritoneの存在確認
         if (!baritoneCheck()) {
-            player?.sendMessage(Text.literal("§c[BranchMiner] Baritone not found! Disabling..."), false)
+            InfiniteClient.log(Text.literal("§c[BranchMiner] Baritone not found! Disabling..."))
             disable()
             return
         }
@@ -190,9 +191,9 @@ class BranchMiner : ConfigurableFeature() {
         // チェストを検索
         nearestChest = findNearestChest(pos, chestSearchRadius.value)
 
-        player?.sendMessage(Text.literal("§a[BranchMiner] Initialized at ${pos.toShortString()}"), false)
+        InfiniteClient.log(Text.literal("§a[BranchMiner] Initialized at ${pos.toShortString()}"))
         if (nearestChest != null) {
-            player?.sendMessage(Text.literal("§a[BranchMiner] Chest found at ${nearestChest?.toShortString()}"), false)
+            InfiniteClient.log(Text.literal("§a[BranchMiner] Chest found at ${nearestChest?.toShortString()}"))
         }
 
         state = State.Scan
@@ -269,13 +270,12 @@ class BranchMiner : ConfigurableFeature() {
         }
 
         branchEndPosition = startPos.offset(direction, scanDistance)
-        player?.sendMessage(
+        InfiniteClient.log(
             Text.literal("§a[BranchMiner] Scanned branch: ${branchBlocksToMine.size} blocks, distance: $scanDistance"),
-            false,
         )
 
         if (scanDistance == 0) {
-            player?.sendMessage(Text.literal("§c[BranchMiner] Unable to find safe path for branch. Disabling..."), false)
+            InfiniteClient.log(Text.literal("§c[BranchMiner] Unable to find safe path for branch. Disabling..."))
             disable()
             return
         }
@@ -298,11 +298,11 @@ class BranchMiner : ConfigurableFeature() {
                 blockPosList = branchBlocksToMine,
                 stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                 onSuccessAction = {
-                    player?.sendMessage(Text.literal("§a[BranchMiner] Branch mining completed"), false)
+                    InfiniteClient.log(Text.literal("§a[BranchMiner] Branch mining completed"))
                     moveToBranchEnd()
                 },
                 onFailureAction = {
-                    player?.sendMessage(Text.literal("§c[BranchMiner] Branch mining failed"), false)
+                    InfiniteClient.log(Text.literal("§c[BranchMiner] Branch mining failed"))
                     handleEmergency()
                 },
             ),
@@ -339,14 +339,14 @@ class BranchMiner : ConfigurableFeature() {
         if (exposedOres.isEmpty() && currentOreIndex == 0) {
             scanWallsForOres()
             if (exposedOres.isEmpty()) {
-                player?.sendMessage(Text.literal("§a[BranchMiner] No ores found"), false)
+                InfiniteClient.log(Text.literal("§a[BranchMiner] No ores found"))
                 state = State.Check
                 return
             }
 
             // ブランチ終端から開始点へ向かう順にソート
             sortOresByDistance()
-            player?.sendMessage(Text.literal("§a[BranchMiner] Found ${exposedOres.size} ore blocks"), false)
+            InfiniteClient.log(Text.literal("§a[BranchMiner] Found ${exposedOres.size} ore blocks"))
         }
 
         // 全ての鉱石を採掘完了
@@ -466,7 +466,7 @@ class BranchMiner : ConfigurableFeature() {
                     performChestStorage()
                 },
                 onFailureAction = {
-                    player?.sendMessage(Text.literal("§c[BranchMiner] Failed to reach chest"), false)
+                    InfiniteClient.log(Text.literal("§c[BranchMiner] Failed to reach chest"))
                     state = State.Next
                 },
             ),
@@ -481,7 +481,7 @@ class BranchMiner : ConfigurableFeature() {
             10 -> ChestManager.storeMinedItems()
             20 -> ChestManager.closeChest()
             30 -> {
-                player?.sendMessage(Text.literal("§a[BranchMiner] Items stored in chest"), false)
+                InfiniteClient.log(Text.literal("§a[BranchMiner] Items stored in chest"))
                 returnToBranchStart()
             }
         }
@@ -609,7 +609,7 @@ class BranchMiner : ConfigurableFeature() {
 
         // ダメージチェック
         if (currentPlayer.health < currentPlayer.maxHealth * 0.5f) {
-            player?.sendMessage(Text.literal("§c[BranchMiner] Low health detected!"), false)
+            InfiniteClient.log(Text.literal("§c[BranchMiner] Low health detected!"))
             return false
         }
 
@@ -619,7 +619,7 @@ class BranchMiner : ConfigurableFeature() {
     }
 
     private fun handleEmergency() {
-        player?.sendMessage(Text.literal("§c[BranchMiner] Emergency! Returning to initial position..."), false)
+        InfiniteClient.log(Text.literal("§c[BranchMiner] Emergency! Returning to initial position..."))
         val initPos =
             initialPosition ?: run {
                 disable()
@@ -889,10 +889,10 @@ class BranchMiner : ConfigurableFeature() {
     }
 
     private fun reportCollectedItems() {
-        player?.sendMessage(Text.literal("§e[BranchMiner] === Collected Items ==="), false)
+        InfiniteClient.log(Text.literal("§e[BranchMiner] === Collected Items ==="))
         for ((item, count) in collectedItems) {
-            player?.sendMessage(Text.literal("§e  - $item: $count"), false)
+            InfiniteClient.log(Text.literal("§e  - $item: $count"))
         }
-        player?.sendMessage(Text.literal("§e[BranchMiner] Empty slots: ${ChestManager.getEmptySlotCount()}"), false)
+        InfiniteClient.log(Text.literal("§e[BranchMiner] Empty slots: ${ChestManager.getEmptySlotCount()}"))
     }
 }

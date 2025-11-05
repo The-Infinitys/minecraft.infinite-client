@@ -9,6 +9,7 @@ import org.infinite.libs.ai.interfaces.AiAction
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.camera.CameraRoll
 import org.infinite.libs.client.aim.task.AimTask
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionByFrame
 import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
 import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
 import org.infinite.libs.client.aim.task.config.AimCalculateMethod
@@ -58,28 +59,6 @@ class PathMovementAction(
                 // ピッチは基本的に0.0（水平）
                 return CameraRoll(targetYaw, 0.0)
             }
-    }
-
-    // --- 2. AimTaskの実行条件の定義 ---
-    inner class MovementCondition : AimTaskConditionInterface {
-        override fun check(): AimTaskConditionReturn {
-            // PathMovementActionの状態を取得
-            val state = actionInstance.state()
-            return when (state) {
-                // Baritoneによる移動がまだ進行中の場合
-                AiActionState.Progress -> {
-                    AimTaskConditionReturn.Exec // AimTaskを継続実行
-                }
-                // Baritoneによる移動が成功した場合
-                AiActionState.Success -> {
-                    AimTaskConditionReturn.Success // AimTaskを成功として終了
-                }
-                // Baritoneによる移動が失敗またはキャンセルされた場合
-                AiActionState.Failure -> {
-                    AimTaskConditionReturn.Failure // AimTaskを失敗として終了
-                }
-            }
-        }
     }
 
     private val api
@@ -132,16 +111,17 @@ class PathMovementAction(
     val goal = Vec3iGoal(x, y, z, radius, height)
 
     override fun tick() {
-        if (!registered) {
+        if (registered) {
+            handleAim()
+        } else {
             baritone.customGoalProcess.setGoalAndPath(goal)
             registered = true
-            handleAim()
         }
     }
 
     private fun handleAim() {
         val target = MovementRoll()
-        val condition = MovementCondition()
+        val condition = AimTaskConditionByFrame(0, 1, false)
         AimInterface.addTask(AimTask(AimPriority.Normally, target, condition, AimCalculateMethod.EaseInOut))
     }
 

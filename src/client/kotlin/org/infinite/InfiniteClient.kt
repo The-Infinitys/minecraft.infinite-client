@@ -254,16 +254,26 @@ object InfiniteClient : ClientModInitializer {
             .append(Text.literal(prefixType).styled { style -> style.withColor(textColor) })
             .append(Text.literal("]: ").formatted(Formatting.RESET))
 
+    private fun logger(text: String) = LOGGER.info(text)
+
     fun log(text: String) {
-        LOGGER.info("[Infinite Client]: $text")
+        logger("[Infinite Client]: $text")
         val message =
             createPrefixedMessage("", theme().colors.foregroundColor)
                 .append(Text.literal(text).styled { style -> style.withColor(theme().colors.foregroundColor) })
         LogQueue.enqueueMessage(message) // キューに追加
     }
 
+    fun log(text: Text) {
+        logger("[Infinite Client]: $text")
+        val message =
+            createPrefixedMessage("", theme().colors.foregroundColor)
+                .append(text)
+        LogQueue.enqueueMessage(message)
+    }
+
     fun info(text: String) {
-        LOGGER.info("[Infinite Client - Info]: $text")
+        logger("[Infinite Client - Info]: $text")
         val message =
             createPrefixedMessage(" - Info ", theme().colors.infoColor)
                 .append(Text.literal(text).styled { style -> style.withColor(theme().colors.infoColor) })
