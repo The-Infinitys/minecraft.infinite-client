@@ -327,5 +327,15 @@
   "infinite.feature.automatic.shield_machine.length.description": "シールドマシンの長さを設定します。",
   "infinite.feature.automatic.shield_machine.forward_offset.description": "シールドマシンの前方オフセットを設定します。",
   "infinite.feature.automatic.shield_machine.auto_place_floor.description": "シールドマシンの床ブロックを自動的に配置します。",
-  "infinite.feature.automatic.shield_machine.floor_block.description": "シールドマシンの床ブロックを設定します。"
+  "infinite.feature.automatic.shield_machine.floor_block.description": "シールドマシンの床ブロックを設定します。",
+  "infinite.feature.automatic.branch_miner.description": "ブランチマイナーを自動的に実行します。",
+  "infinite.feature.automatic.branch_miner.branch_length.description": "ブランチの長さを設定します。",
+  "infinite.feature.automatic.branch_miner.branch_interval.description": "ブランチ間の間隔を設定します。",
+  "infinite.feature.automatic.branch_miner.check_inventory_interval.description": "インベントリチェックの間隔を設定します。",
+  "infinite.feature.automatic.branch_miner.chest_search_radius.description": "チェスト検索の半径を設定します。",
+  "infinite.feature.automatic.branch_miner.min_empty_slots.description": "最小空きスロット数を設定します。",
+  "infinite.feature.automatic.branch_miner.mining_approach_distance.description": "採掘アプローチ距離を設定します。",
+  "infinite.feature.automatic.branch_miner.item_collection_radius.description": "アイテム収集の半径を設定します。",
+  "infinite.feature.automatic.branch_miner.item_collection_wait_ticks.description": "アイテム収集の待機ティック数を設定します。",
+  "infinite.feature.automatic.branch_miner.detect_space_threshold.description": "空間検出のしきい値を設定します。"
 }

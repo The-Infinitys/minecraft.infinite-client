@@ -5,7 +5,6 @@ import net.minecraft.util.math.BlockPos
 import org.infinite.libs.ai.interfaces.AiAction
 
 class MineBlockAction(
-    // MutableListに変更
     val blockPosList: MutableList<BlockPos>,
     val stateRegister: () -> AiActionState? = { null },
     val onFailureAction: () -> Unit = {},
@@ -15,6 +14,14 @@ class MineBlockAction(
         get() = BaritoneAPI.getProvider()
     private val baritone
         get() = api.getBaritoneForMinecraft(client)
+    private val baritoneSettings = BaritoneAPI.getSettings()
+
+    // --- 【追加】オリジナル設定値を保持するプロパティ ---
+    private var originalRandomLooking: Double? = null
+    private var originalRandomLooking113: Double? = null
+
+    // 設定が変更されたかどうかを追跡するフラグ
+    private var isSettingsModified: Boolean = false
 
     // 現在Baritoneに指示しているBlockPosを保持
     private var currentTarget: BlockPos? = null
@@ -26,6 +33,18 @@ class MineBlockAction(
             // リストが空であれば、特に何もせずに終了
             return
         }
+
+        // --- 【追加】タスク開始時に一度だけ設定を保存・変更 ---
+        if (!isSettingsModified) {
+            // オリジナル値を保存
+            originalRandomLooking = baritoneSettings.randomLooking.value
+            originalRandomLooking113 = baritoneSettings.randomLooking113.value
+            // 値を0.0に設定
+            baritoneSettings.randomLooking.value = 0.0
+            baritoneSettings.randomLooking113.value = 0.0
+            isSettingsModified = true
+        }
+        // --- 【削除】元のコードにあった毎ティック実行の設定変更は不要になりました ---
 
         // 現在Baritoneが何か処理中かを確認し、処理中であれば新しいタスクを与えない
         // (builderProcessのキャンセルは、意図しない中断を防ぐためここでは行わない)
@@ -75,13 +94,37 @@ class MineBlockAction(
         baritone.pathingBehavior.cancelEverything()
     }
 
+    // --- 【追加】設定を元に戻すメソッド ---
+
+    /**
+     * オリジナル値を復元し、設定変更フラグをリセットします。
+     */
+    private fun restoreSettings() {
+        if (isSettingsModified) {
+            // オリジナル値が存在すれば復元
+            originalRandomLooking?.let {
+                baritoneSettings.randomLooking.value = it
+            }
+            originalRandomLooking113?.let {
+                baritoneSettings.randomLooking113.value = it
+            }
+            // フラグと保存した値をリセット
+            isSettingsModified = false
+            originalRandomLooking = null
+            originalRandomLooking113 = null
+        }
+    }
+    // --- 【追加】設定を元に戻すメソッド ---
+
     override fun onFailure() {
         cancelActions()
+        restoreSettings() // 失敗時にも設定を元に戻す
         onFailureAction()
     }
 
     override fun onSuccess() {
         cancelActions()
+        restoreSettings() // 成功時にも設定を元に戻す
         onSuccessAction()
     }
 }

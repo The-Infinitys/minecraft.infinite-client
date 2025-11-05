@@ -327,5 +327,15 @@
   "infinite.feature.automatic.shield_machine.length.description": "Sets the length of the shield machine.",
   "infinite.feature.automatic.shield_machine.forward_offset.description": "Sets the forward offset of the shield machine.",
   "infinite.feature.automatic.shield_machine.auto_place_floor.description": "Automatically places floor blocks for the shield machine.",
-  "infinite.feature.automatic.shield_machine.floor_block.description": "Sets the floor block for the shield machine."
+  "infinite.feature.automatic.shield_machine.floor_block.description": "Sets the floor block for the shield machine.",
+  "infinite.feature.automatic.branch_miner.description": "Automatically performs branch mining.",
+  "infinite.feature.automatic.branch_miner.branch_length.description": "Sets the length of the branches.",
+  "infinite.feature.automatic.branch_miner.branch_interval.description": "Sets the interval between branches.",
+  "infinite.feature.automatic.branch_miner.check_inventory_interval.description": "Sets the inventory check interval.",
+  "infinite.feature.automatic.branch_miner.chest_search_radius.description": "Sets the chest search radius.",
+  "infinite.feature.automatic.branch_miner.min_empty_slots.description": "Sets the minimum number of empty slots.",
+  "infinite.feature.automatic.branch_miner.mining_approach_distance.description": "Sets the mining approach distance.",
+  "infinite.feature.automatic.branch_miner.item_collection_radius.description": "Sets the item collection radius.",
+  "infinite.feature.automatic.branch_miner.item_collection_wait_ticks.description": "Sets the item collection wait ticks.",
+  "infinite.feature.automatic.branch_miner.detect_space_threshold.description": "Sets the space detection threshold."
 }

@@ -74,10 +74,6 @@ class PlaceBlockAction(
             return
         }
 
-        // 🌟 build(String var1, ISchematic var2, Vec3i var3)を利用
-        // var1: ログ名（何でも良いが、ここでは "Scaffold"）
-        // var2: 作成したSingleBlockSchematic
-        // var3: スキマティックの原点（この場合、BlockPosをVec3iとして使用）
         baritone.builderProcess.build("Scaffold", schematic, nearestBlock)
         currentTarget = nearestBlock
     }

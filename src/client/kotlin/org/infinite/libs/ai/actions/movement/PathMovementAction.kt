@@ -55,7 +55,6 @@ class PathMovementAction(
                 // MinecraftのYawは-180°から180°で、+Z軸が0°、+X軸が-90°です。
                 // atan2は+X軸が0°、+Z軸が90°なので、変換が必要です。
                 val targetYaw = toRadians(atan2(-velocity.x, velocity.z))
-
                 // ピッチは基本的に0.0（水平）
                 return CameraRoll(targetYaw, 0.0)
             }
@@ -66,18 +65,15 @@ class PathMovementAction(
         override fun check(): AimTaskConditionReturn {
             // PathMovementActionの状態を取得
             val state = actionInstance.state()
-
             return when (state) {
                 // Baritoneによる移動がまだ進行中の場合
                 AiActionState.Progress -> {
                     AimTaskConditionReturn.Exec // AimTaskを継続実行
                 }
-
                 // Baritoneによる移動が成功した場合
                 AiActionState.Success -> {
                     AimTaskConditionReturn.Success // AimTaskを成功として終了
                 }
-
                 // Baritoneによる移動が失敗またはキャンセルされた場合
                 AiActionState.Failure -> {
                     AimTaskConditionReturn.Failure // AimTaskを失敗として終了
@@ -144,10 +140,8 @@ class PathMovementAction(
     }
 
     private fun handleAim() {
-        // inner classなので、外側のインスタンスを参照できます
         val target = MovementRoll()
         val condition = MovementCondition()
-        // AimTaskのconfigは、計算方法をEaseInOutで維持します
         AimInterface.addTask(AimTask(AimPriority.Normally, target, condition, AimCalculateMethod.EaseInOut))
     }
 
