@@ -328,7 +328,7 @@ object InventoryManager : ClientInterface() {
      * 内部スロットインデックスをネットワークパケットで使用されるスロットID (0-45) に変換します。
      * 通常のインベントリ画面 (ID 0) での使用を想定しています。
      */
-    private fun toNetworkSlot(internalSlot: Int): Int =
+    fun toNetworkSlot(internalSlot: Int): Int =
         when (internalSlot) {
             // ホットバー (内部 0-8 -> ネットワーク 36-44)
             in 0..8 -> internalSlot + 36
