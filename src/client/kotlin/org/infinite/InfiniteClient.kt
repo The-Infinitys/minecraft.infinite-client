@@ -158,6 +158,7 @@ object InfiniteClient : ClientModInitializer {
                     features.instance.stop()
                 }
             }
+            AiInterface.clear()
         }
         ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
             for (category in featureCategories) {

@@ -71,13 +71,17 @@ class MineBlockAction(
             return if (blockPosList.isEmpty()) AiActionState.Success else AiActionState.Progress
         }
 
+    private fun cancelActions() {
+        baritone.pathingBehavior.cancelEverything()
+    }
+
     override fun onFailure() {
-        // 現在のターゲットがまだリストに残っている場合、それをリストに残したままにする
+        cancelActions()
         onFailureAction()
     }
 
     override fun onSuccess() {
-        // 全てのブロックが正常に破壊された場合にのみ呼ばれる
+        cancelActions()
         onSuccessAction()
     }
 }

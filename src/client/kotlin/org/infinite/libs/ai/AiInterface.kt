@@ -24,4 +24,6 @@ object AiInterface : ClientInterface() {
             }
         }
     }
+
+    fun clear() = actions.clear()
 }

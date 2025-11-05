@@ -11,6 +11,10 @@ class CameraRoll(
     var yaw: Double,
     var pitch: Double,
 ) {
+    companion object {
+        val Zero = CameraRoll(0.0, 0.0)
+    }
+
     /**
      * CameraRoll同士の足し算 (要素ごと)
      * operator fun plus(other: CameraRoll): CameraRoll

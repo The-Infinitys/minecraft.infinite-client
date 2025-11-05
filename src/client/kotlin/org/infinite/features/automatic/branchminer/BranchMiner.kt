@@ -1,35 +1,40 @@
 package org.infinite.features.automatic.branchminer
 
 import net.minecraft.block.Blocks
-import net.minecraft.entity.ItemEntity
-import net.minecraft.screen.GenericContainerScreenHandler
-import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
-import org.infinite.InfiniteClient
-import org.infinite.features.movement.braek.VeinBreak
 import org.infinite.libs.ai.AiInterface
-import org.infinite.libs.ai.actions.movement.LinearMovementAction
+import org.infinite.libs.ai.actions.block.MineBlockAction
 import org.infinite.libs.ai.actions.movement.PathMovementAction
 import org.infinite.libs.ai.interfaces.AiAction
-import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.ChestManager
 import org.infinite.settings.FeatureSetting
-import org.infinite.utils.block.BlockUtils
+import kotlin.math.abs
+import kotlin.math.sqrt
 
-// ConfigurableFeature は ClientInterface を継承しているため、player, worldなどにアクセス可能
 class BranchMiner : ConfigurableFeature() {
-    fun baritoneCheck(): Boolean =
-        try {
-            Class.forName("baritone.api.BaritoneAPI")
-            true
-        } catch (_: ClassNotFoundException) {
-            false
-        }
+    enum class MiningState {
+        Initializing, // チェスト検索、開始点決定
+        Scanning, // ブランチのスキャン中
+        ApproachingMining, // 採掘位置に接近中
+        MiningBranch, // ブランチ掘削中
+        CollectingItems, // アイテム回収中
+        ScanningWalls, // 壁面を全スキャン
+        MovingToOre, // 鉱石採掘位置へ移動
+        MiningOre, // 鉱石採掘中
+        CollectingOreItems, // 鉱石採掘後のアイテム回収
+        MovingToNextBranch, // 次のブランチ位置へ移動
+        ApproachingNextBranch, // 次のブランチ掘削位置へ接近
+        MiningNextBranchPath, // 次のブランチへの道を掘削
+        CollectingPathItems, // 道掘削後のアイテム回収
+        ReturningToChest, // チェストへ戻る
+        StoringItems, // アイテム格納中
+        Error, // エラー発生、初期位置へ戻る
+        Idle, // 無効化後の状態
+    }
 
+    // 設定
     val branchLength =
         FeatureSetting.IntSetting(
             name = "BranchLength",
@@ -37,7 +42,6 @@ class BranchMiner : ConfigurableFeature() {
             min = 8,
             max = 128,
         )
-
     val branchInterval =
         FeatureSetting.IntSetting(
             name = "BranchInterval",
@@ -45,15 +49,13 @@ class BranchMiner : ConfigurableFeature() {
             min = 1,
             max = 5,
         )
-
     val checkInventoryInterval =
         FeatureSetting.IntSetting(
             name = "CheckInventoryInterval",
-            defaultValue = 20, // 20 tick = 1 second
+            defaultValue = 20,
             min = 1,
             max = 100,
         )
-
     val chestSearchRadius =
         FeatureSetting.IntSetting(
             name = "ChestSearchRadius",
@@ -61,420 +63,919 @@ class BranchMiner : ConfigurableFeature() {
             min = 8,
             max = 64,
         )
-
+    val minEmptySlots =
+        FeatureSetting.IntSetting(
+            name = "MinEmptySlots",
+            defaultValue = 5,
+            min = 1,
+            max = 27,
+        )
+    val itemCollectionRadius =
+        FeatureSetting.IntSetting(
+            name = "ItemCollectionRadius",
+            defaultValue = 16,
+            min = 8,
+            max = 32,
+        )
+    val itemCollectionWaitTicks =
+        FeatureSetting.IntSetting(
+            name = "ItemCollectionWaitTicks",
+            defaultValue = 40,
+            min = 20,
+            max = 100,
+        )
+    val miningApproachDistance = FeatureSetting.IntSetting("MiningApproachDistance", 0, 1, 2)
+    val detectSpaceThreshold = FeatureSetting.IntSetting("DetectSpaceThreshold", 64, 32, 128)
     override val settings: List<FeatureSetting<*>> =
         listOf(
             branchLength,
             branchInterval,
             checkInventoryInterval,
             chestSearchRadius,
+            minEmptySlots,
+            miningApproachDistance,
+            itemCollectionRadius,
+            itemCollectionWaitTicks,
+            detectSpaceThreshold,
         )
 
-    sealed class State {
-        class Idle : State()
-
-        class DiggingBranch(
-            val startPos: BlockPos,
-            val direction: Direction,
-            val currentBranchLength: Int,
-        ) : State()
-
-        class MiningVein(
-            val veinStartPos: BlockPos,
-        ) : State()
-
-        class CollectItem(
-            val itemPos: Vec3d,
-        ) : State()
-
-        class GoToChest(
-            val chestPos: BlockPos,
-        ) : State()
-
-        class OpenChest(
-            val chestPos: BlockPos,
-        ) : State()
-
-        class DepositItems(
-            val chestPos: BlockPos,
-        ) : State()
-    }
-
-    var state: State = State.Idle()
-    private var currentBranchStartPos: BlockPos? = null
-    private var currentBranchDirection: Direction? = null
-    private var currentBranchLengthCount: Int = 0
-    private var inventoryCheckTimer: Int = 0
-    private var foundChestPos: BlockPos? = null
-    private var chestOpenAttempted: Boolean = false
-
-    override fun start() = disable()
+    // 状態管理
+    private var currentState: MiningState = MiningState.Idle
+    private var initialPosition: BlockPos? = null
+    private var initialDirection: Direction? = null
+    private var branchStartPosition: BlockPos? = null
+    private var nearestChest: BlockPos? = null
+    private var currentBranchEndPos: BlockPos? = null
+    private var currentBranchBlocks: MutableList<BlockPos> = mutableListOf()
+    private var currentMiningGroup: MutableList<BlockPos> = mutableListOf() // 現在採掘中のグループ
+    private var miningGroups: MutableList<MutableList<BlockPos>> = mutableListOf() // 採掘グループのリスト
+    private var currentGroupIndex: Int = 0
+    private var scannedOres: MutableList<BlockPos> = mutableListOf() // スキャンした全鉱石
+    private var currentOreIndex: Int = 0
+    private var tickCounter = 0
+    private var branchesCompleted = 0
+    private var chestOperationTicks = 0
+    private var itemCollectionTicks = 0
+    private var lastMiningCenter: BlockPos? = null // 最後に採掘した場所の中心
 
     override fun enabled() {
-        state = State.Idle()
-        currentBranchStartPos = null
-        currentBranchDirection = null
-        currentBranchLengthCount = 0
-        inventoryCheckTimer = 0
-        foundChestPos = null
-        chestOpenAttempted = false
-        searchForChest()
+        currentState = MiningState.Initializing
+        tickCounter = 0
+        branchesCompleted = 0
+        currentGroupIndex = 0
+        currentOreIndex = 0
+        chestOperationTicks = 0
+        itemCollectionTicks = 0
+        lastMiningCenter = null
+        clearState()
+    }
+
+    override fun disabled() {
+        // 全てのアクションをクリア
+        AiInterface.actions.clear()
+        currentState = MiningState.Idle
+        clearState()
+    }
+
+    private fun clearState() {
+        initialPosition = null
+        initialDirection = null
+        branchStartPosition = null
+        nearestChest = null
+        currentBranchEndPos = null
+        currentBranchBlocks.clear()
+        currentMiningGroup.clear()
+        miningGroups.clear()
+        scannedOres.clear()
     }
 
     override fun tick() {
-        if (!baritoneCheck()) {
-            InfiniteClient.error("You have to import Baritone for this Feature!")
-            disable()
+        // Idle状態の場合は何もしない
+        if (currentState == MiningState.Idle) return
+
+        tickCounter++
+
+        // インベントリチェック（定期的に）
+        if (tickCounter % checkInventoryInterval.value == 0) {
+            if (shouldReturnToChest()) {
+                if (currentState != MiningState.ReturningToChest &&
+                    currentState != MiningState.StoringItems
+                ) {
+                    currentState = MiningState.ReturningToChest
+                    AiInterface.actions.clear()
+                }
+            }
+        }
+
+        when (currentState) {
+            MiningState.Initializing -> handleInitializing()
+            MiningState.Scanning -> handleScanning()
+            MiningState.ApproachingMining -> handleApproachingMining()
+            MiningState.MiningBranch -> handleMiningBranch()
+            MiningState.CollectingItems -> handleCollectingItems()
+            MiningState.ScanningWalls -> handleScanningWalls()
+            MiningState.MovingToOre -> handleMovingToOre()
+            MiningState.MiningOre -> handleMiningOre()
+            MiningState.CollectingOreItems -> handleCollectingOreItems()
+            MiningState.MovingToNextBranch -> handleMovingToNextBranch()
+            MiningState.ApproachingNextBranch -> handleApproachingNextBranch()
+            MiningState.MiningNextBranchPath -> handleMiningNextBranchPath()
+            MiningState.CollectingPathItems -> handleCollectingPathItems()
+            MiningState.ReturningToChest -> handleReturningToChest()
+            MiningState.StoringItems -> handleStoringItems()
+            MiningState.Error -> handleError()
+            MiningState.Idle -> {} // 何もしない
+        }
+    }
+
+    private fun handleInitializing() {
+        val pos = player?.blockPos ?: return
+        val yaw = player?.yaw ?: return
+
+        // 初期位置を記録
+        if (initialPosition == null) {
+            initialPosition = pos
+            initialDirection = getDirectionFromYaw(yaw)
+
+            // チェストを検索
+            nearestChest = findNearestChest(pos, chestSearchRadius.value)
+
+            // ブランチ開始点を決定（現在の位置から1ブロック前方）
+            branchStartPosition = pos.offset(initialDirection!!)
+
+            currentState = MiningState.Scanning
+        }
+    }
+
+    private fun handleScanning() {
+        val startPos = branchStartPosition ?: return
+        val direction = initialDirection ?: return
+        val currentWorld = world ?: return
+
+        // ブランチをスキャン
+        val blocksToMine = mutableListOf<BlockPos>()
+        val maxLength = branchLength.value
+        var scanDistance = 0
+
+        for (distance in 1..maxLength) {
+            val checkPos1 = startPos.offset(direction, distance)
+            val checkPos2 = checkPos1.up()
+
+            val state1 = currentWorld.getBlockState(checkPos1)
+            val state2 = currentWorld.getBlockState(checkPos2)
+
+            // 次のブロックをチェック（1歩先）
+            val nextPos1 = startPos.offset(direction, distance + 1)
+            val nextPos2 = nextPos1.up()
+            val nextState1 = currentWorld.getBlockState(nextPos1)
+            val nextState2 = currentWorld.getBlockState(nextPos2)
+
+            // 次が水・溶岩の場合、現在のブロックで停止
+            if (nextState1?.block == Blocks.WATER || nextState1?.block == Blocks.LAVA ||
+                nextState2?.block == Blocks.WATER || nextState2?.block == Blocks.LAVA
+            ) {
+                // 現在のブロックまで掘って終了
+                if (state1?.isAir == false) blocksToMine.add(checkPos1)
+                if (state2?.isAir == false) blocksToMine.add(checkPos2)
+                scanDistance = distance
+                break
+            }
+
+            // 次が洞窟（64ブロック以上の空気）の場合も停止
+            if (nextState1?.isAir == true || nextState2?.isAir == true) {
+                val airCount = countConnectedAir(nextPos1, detectSpaceThreshold.value)
+                if (airCount >= detectSpaceThreshold.value) {
+                    // 現在のブロックまで掘って終了
+                    if (state1?.isAir == false) blocksToMine.add(checkPos1)
+                    if (state2?.isAir == false) blocksToMine.add(checkPos2)
+                    scanDistance = distance
+                    break
+                }
+            }
+
+            // 掘るべきブロックを追加
+            if (state1?.isAir == false) {
+                blocksToMine.add(checkPos1)
+            }
+            if (state2?.isAir == false) {
+                blocksToMine.add(checkPos2)
+            }
+
+            scanDistance = distance
+        }
+
+        // スキャン結果を保存
+        currentBranchBlocks = blocksToMine
+        currentBranchEndPos = startPos.offset(direction, scanDistance)
+
+        // ブロックをグループ化（近い位置ごと）
+        miningGroups.clear()
+        groupBlocksByProximity(blocksToMine, miningGroups, miningApproachDistance.value)
+        currentGroupIndex = 0
+
+        currentState =
+            if (miningGroups.isNotEmpty()) {
+                MiningState.ApproachingMining
+            } else {
+                // 掘るブロックがない場合、壁面スキャンへ
+                MiningState.ScanningWalls
+            }
+    }
+
+    private fun handleApproachingMining() {
+        if (AiInterface.actions.isNotEmpty()) return
+
+        if (currentGroupIndex >= miningGroups.size) {
+            // 全グループの採掘完了
+            currentState = MiningState.ScanningWalls
             return
         }
 
-        inventoryCheckTimer++
-        if (inventoryCheckTimer >= checkInventoryInterval.value) {
-            inventoryCheckTimer = 0
-            if (shouldDepositItems()) {
-                if (foundChestPos != null) {
-                    state = State.GoToChest(foundChestPos!!)
+        val group = miningGroups[currentGroupIndex]
+        if (group.isEmpty()) {
+            currentGroupIndex++
+            return
+        }
+
+        // グループの中心位置を計算
+        val centerPos = calculateCenter(group)
+        val direction = initialDirection ?: return
+
+        // 接近位置を計算（採掘グループから少し離れた位置）
+        val approachPos = centerPos.offset(direction.opposite, miningApproachDistance.value)
+
+        // 接近位置に移動
+        AiInterface.add(
+            PathMovementAction(
+                x = approachPos.x,
+                y = approachPos.y,
+                z = approachPos.z,
+                radius = 1,
+                stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                onSuccessAction = {
+                    currentMiningGroup = group
+                    currentState = MiningState.MiningBranch
+                },
+                onFailureAction = {
+                    // 移動失敗した場合、より近い位置から採掘を試みる
+                    currentMiningGroup = group
+                    currentState = MiningState.MiningBranch
+                },
+            ),
+        )
+    }
+
+    private fun handleMiningBranch() {
+        if (AiInterface.actions.isNotEmpty()) return
+
+        if (currentMiningGroup.isEmpty()) {
+            currentGroupIndex++
+            currentState = MiningState.ApproachingMining
+            return
+        }
+
+        // 採掘の中心位置を記録
+        lastMiningCenter = calculateCenter(currentMiningGroup)
+
+        // MineBlockActionを追加
+        AiInterface.add(
+            MineBlockAction(
+                blockPosList = currentMiningGroup,
+                stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                onSuccessAction = {
+                    itemCollectionTicks = 0
+                    currentState = MiningState.CollectingItems
+                },
+                onFailureAction = {
+                    currentState = MiningState.Error
+                },
+            ),
+        )
+    }
+
+    private fun handleCollectingItems() {
+        itemCollectionTicks++
+
+        if (itemCollectionTicks >= itemCollectionWaitTicks.value) {
+            // アイテム回収完了、次のグループへ
+            val center =
+                lastMiningCenter ?: run {
+                    currentGroupIndex++
+                    currentState = MiningState.ApproachingMining
                     return
-                } else {
-                    InfiniteClient.warn("Inventory full, but no chest found to deposit items! Mining paused.")
-                    state = State.Idle()
-                    return
+                }
+
+            // アイテムを回収
+            collectNearbyItems(center, itemCollectionRadius.value)
+
+            currentGroupIndex++
+            currentState = MiningState.ApproachingMining
+        }
+    }
+
+    private fun handleScanningWalls() {
+        // ブランチ全体の壁面をスキャンして鉱石を抽出
+        val startPos = branchStartPosition ?: return
+        val endPos = currentBranchEndPos ?: return
+        val direction = initialDirection ?: return
+        val currentWorld = world ?: return
+
+        scannedOres.clear()
+        val allOrePositions = mutableSetOf<BlockPos>()
+
+        // ブランチの各位置で壁面をスキャン
+        val distance = calculateDistance(startPos, endPos, direction)
+
+        for (i in 0..distance) {
+            val centerPos = startPos.offset(direction, i)
+
+            // 周囲6方向をチェック
+            for (checkDirection in Direction.entries) {
+                val checkPos = centerPos.offset(checkDirection)
+                if (checkPos !in allOrePositions) {
+                    val state = currentWorld.getBlockState(checkPos)
+                    if (isOreBlock(state?.block)) {
+                        // 連結している鉱石を全て追加
+                        val connectedOres = mutableListOf<BlockPos>()
+                        findConnectedOres(checkPos, connectedOres, allOrePositions)
+                        scannedOres.addAll(connectedOres)
+                    }
+                }
+            }
+
+            // 上のブロックも同様にチェック
+            val upperPos = centerPos.up()
+            for (checkDirection in Direction.entries) {
+                val checkPos = upperPos.offset(checkDirection)
+                if (checkPos !in allOrePositions) {
+                    val state = currentWorld.getBlockState(checkPos)
+                    if (isOreBlock(state?.block)) {
+                        val connectedOres = mutableListOf<BlockPos>()
+                        findConnectedOres(checkPos, connectedOres, allOrePositions)
+                        scannedOres.addAll(connectedOres)
+                    }
                 }
             }
         }
 
-        when (state) {
-            is State.Idle -> handleIdle()
-            is State.DiggingBranch -> handleDiggingBranch(state as State.DiggingBranch)
-            is State.MiningVein -> handleMiningVein(state as State.MiningVein)
-            is State.CollectItem -> handleCollectItem(state as State.CollectItem)
-            is State.GoToChest -> handleGoToChest(state as State.GoToChest)
-            is State.OpenChest -> handleOpenChest(state as State.OpenChest)
-            is State.DepositItems -> handleDepositItems(state as State.DepositItems)
-        }
-    }
-
-    // プレイヤーの向きを基に初期のブランチ掘削方向を決定する
-    private fun getInitialBranchDirection(): Direction {
-        val yaw = player?.yaw ?: return Direction.NORTH
-        val direction = Direction.fromHorizontalDegrees(yaw.toDouble())
-        return if (direction.axis.isHorizontal) direction else Direction.NORTH
-    }
-
-    private fun isOre(pos: BlockPos): Boolean {
-        val block = world?.getBlockState(pos)?.block ?: return false
-        // チェック対象の鉱石ブロックを定義（一般的な鉱石）
-        return block == Blocks.DIAMOND_ORE || block == Blocks.IRON_ORE || block == Blocks.GOLD_ORE ||
-            block == Blocks.REDSTONE_ORE || block == Blocks.LAPIS_ORE || block == Blocks.EMERALD_ORE ||
-            block == Blocks.COAL_ORE || block == Blocks.NETHER_QUARTZ_ORE || block == Blocks.ANCIENT_DEBRIS
-    }
-
-    // 現在のブランチセグメントをスキップし、次のブランチの開始地点に移る
-    private fun skipCurrentBranch() {
-        val nextBranchStartPos =
-            currentBranchStartPos!!.offset(currentBranchDirection!!, branchLength.value + branchInterval.value)
-        currentBranchStartPos = nextBranchStartPos
-        currentBranchLengthCount = 0 // 新しいブランチなのでリセット
-        state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
-        InfiniteClient.info("Skipped current branch. Moving to next branch start pos: $currentBranchStartPos")
-    }
-
-    // ブランチを1セグメント進める (またはブランチの終わりに達した場合は次のブランチへ移行する)
-    private fun advanceBranchSegment() {
-        currentBranchLengthCount++
-        if (currentBranchLengthCount < branchLength.value) {
-            state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
-        } else {
-            // ブランチの終わりに達したため、次のブランチの開始地点に移る
-            val nextBranchStartPos =
-                currentBranchStartPos!!.offset(currentBranchDirection!!, branchLength.value + branchInterval.value)
-            currentBranchStartPos = nextBranchStartPos
-            currentBranchLengthCount = 0
-            state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
-        }
-    }
-
-    private fun handleIdle() {
-        val playerPos = player?.blockPos ?: return
-        if (currentBranchStartPos == null) {
-            currentBranchStartPos = playerPos.down()
-            // 変更点: プレイヤーの向きから方向を決定
-            currentBranchDirection = getInitialBranchDirection()
-            currentBranchLengthCount = 0
-        }
-        state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
-    }
-
-    private fun handleDiggingBranch(digging: State.DiggingBranch) {
-        val playerPos = player?.blockPos ?: return
-        val targetBlockPos = digging.startPos.offset(digging.direction, digging.currentBranchLength + 1)
-        val world = world ?: return
-
-        // --- 異常検出と回避ロジック ---
-        // 採掘目標の周囲をチェック (左右、上下、目標地点、目標地点の上)
-        val leftDir = digging.direction.rotateYCounterclockwise()
-        val rightDir = digging.direction.rotateYClockwise()
-
-        val blocksToCheckForDanger =
-            listOf(
-                targetBlockPos,
-                targetBlockPos.up(),
-                targetBlockPos.offset(Direction.UP, 2), // 2段目の上
-                targetBlockPos.offset(Direction.DOWN), // 1段目の下
-                targetBlockPos.offset(leftDir), // 1段目の左
-                targetBlockPos.offset(rightDir), // 1段目の右
-                targetBlockPos.up().offset(leftDir), // 2段目の左
-                targetBlockPos.up().offset(rightDir), // 2段目の右
-            )
-
-        for (pos in blocksToCheckForDanger) {
-            val block = world.getBlockState(pos).block
-            if (block == Blocks.LAVA || block == Blocks.WATER || block == Blocks.CAVE_AIR || block == Blocks.AIR) {
-                InfiniteClient.warn("Danger/Air detected (${block.name.string}) at $pos. Skipping current branch.")
-                skipCurrentBranch()
-                return
-            }
-        }
-        // -----------------------------
-
-        val blocksToMine = mutableListOf<BlockPos>()
-        blocksToMine.add(targetBlockPos)
-        blocksToMine.add(targetBlockPos.up())
-
-        // --- 側面鉱石チェックとVeinBreakへの追加 ---
-        val blocksToCheckForSideOre =
-            listOf(
-                targetBlockPos.offset(leftDir), // 1段目の左壁
-                targetBlockPos.offset(rightDir), // 1段目の右壁
-                targetBlockPos.offset(Direction.DOWN), // 1段目の床
-                targetBlockPos.up().offset(leftDir), // 2段目の左壁
-                targetBlockPos.up().offset(rightDir), // 2段目の右壁
-                targetBlockPos.up().offset(Direction.UP), // 2段目の天井
-            )
-        // -----------------------------
-
-        val veinBreak = InfiniteClient.getFeature(VeinBreak::class.java)
-        if (veinBreak != null && veinBreak.isEnabled()) {
-            // 採掘対象ブロックをVeinBreakに追加
-            blocksToMine.forEach { veinBreak.add(it) }
-
-            // 側面鉱石をチェックし、VeinBreakに追加
-            blocksToCheckForSideOre.forEach { pos ->
-                if (isOre(pos)) {
-                    InfiniteClient.info("Found side ore at $pos. Adding to VeinBreak.")
-                    veinBreak.add(pos)
-                }
-            }
-
-            if (playerPos.isWithinDistance(targetBlockPos, 4.0)) {
-                state = State.MiningVein(targetBlockPos)
+        // 鉱石採掘の準備
+        currentOreIndex = 0
+        currentState =
+            if (scannedOres.isNotEmpty()) {
+                MiningState.MovingToOre
             } else {
+                // 鉱石がない場合、次のブランチへ
+                MiningState.MovingToNextBranch
+            }
+    }
+
+    private fun handleMovingToOre() {
+        if (AiInterface.actions.isNotEmpty()) return
+
+        if (currentOreIndex >= scannedOres.size) {
+            // 全鉱石採掘完了
+            currentState = MiningState.MovingToNextBranch
+            return
+        }
+
+        val orePos = scannedOres[currentOreIndex]
+        val direction = initialDirection ?: return
+
+        // 鉱石の近くまで移動（2ブロック手前）
+        val approachPos = orePos.offset(direction.opposite, 2)
+
+        AiInterface.add(
+            PathMovementAction(
+                x = approachPos.x,
+                y = approachPos.y,
+                z = approachPos.z,
+                radius = 2,
+                stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                onSuccessAction = {
+                    currentState = MiningState.MiningOre
+                },
+                onFailureAction = {
+                    // 移動失敗しても採掘を試みる
+                    currentState = MiningState.MiningOre
+                },
+            ),
+        )
+    }
+
+    private fun handleMiningOre() {
+        if (AiInterface.actions.isNotEmpty()) return
+
+        if (currentOreIndex >= scannedOres.size) {
+            currentState = MiningState.MovingToNextBranch
+            return
+        }
+
+        val orePos = scannedOres[currentOreIndex]
+        lastMiningCenter = orePos
+
+        // 単一の鉱石を採掘
+        AiInterface.add(
+            MineBlockAction(
+                blockPosList = mutableListOf(orePos),
+                stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                onSuccessAction = {
+                    itemCollectionTicks = 0
+                    currentState = MiningState.CollectingOreItems
+                },
+                onFailureAction = {
+                    currentOreIndex++
+                    currentState = MiningState.MovingToOre
+                },
+            ),
+        )
+    }
+
+    private fun handleCollectingOreItems() {
+        itemCollectionTicks++
+
+        if (itemCollectionTicks >= itemCollectionWaitTicks.value) {
+            val center =
+                lastMiningCenter ?: run {
+                    currentOreIndex++
+                    currentState = MiningState.MovingToOre
+                    return
+                }
+
+            // アイテムを回収
+            collectNearbyItems(center, itemCollectionRadius.value)
+
+            // 採掘後、新たに露出した鉱石をチェック
+            checkNewlyExposedOres(center)
+
+            currentOreIndex++
+            currentState = MiningState.MovingToOre
+        }
+    }
+
+    private fun handleMovingToNextBranch() {
+        val startPos = branchStartPosition ?: return
+        val direction = initialDirection ?: return
+
+        if (AiInterface.actions.isEmpty()) {
+            // 左方向に移動（ブランチ間隔+1）
+            val leftDirection = direction.rotateYCounterclockwise()
+            val moveDistance = branchInterval.value + 1
+            val nextStartPos = startPos.offset(leftDirection, moveDistance)
+
+            // まず開始点に戻る
+            AiInterface.add(
+                PathMovementAction(
+                    x = startPos.x,
+                    y = startPos.y,
+                    z = startPos.z,
+                    radius = 1,
+                    stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                    onSuccessAction = {
+                        branchStartPosition = nextStartPos
+                        currentState = MiningState.ApproachingNextBranch
+                    },
+                    onFailureAction = {
+                        currentState = MiningState.Error
+                    },
+                ),
+            )
+        }
+    }
+
+    private fun handleApproachingNextBranch() {
+        val startPos = branchStartPosition ?: return
+        val direction = initialDirection ?: return
+        val leftDirection = direction.rotateYCounterclockwise()
+
+        if (AiInterface.actions.isEmpty()) {
+            // 次のブランチの直前まで移動（1ブロック手前）
+            val approachPos = startPos.offset(leftDirection.opposite, 1)
+
+            AiInterface.add(
+                PathMovementAction(
+                    x = approachPos.x,
+                    y = approachPos.y,
+                    z = approachPos.z,
+                    radius = 1,
+                    stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                    onSuccessAction = {
+                        currentState = MiningState.MiningNextBranchPath
+                    },
+                    onFailureAction = {
+                        // 移動失敗してもそのまま掘る
+                        currentState = MiningState.MiningNextBranchPath
+                    },
+                ),
+            )
+        }
+    }
+
+    private fun handleMiningNextBranchPath() {
+        val currentStartPos = branchStartPosition ?: return
+        val oldStartPos = currentStartPos.offset(initialDirection!!.rotateYClockwise(), branchInterval.value + 1)
+        val direction = initialDirection ?: return
+        val leftDirection = direction.rotateYCounterclockwise()
+        val moveDistance = branchInterval.value + 1
+
+        if (AiInterface.actions.isEmpty()) {
+            // 移動先のブロックをスキャン
+            val blocksToMine = mutableListOf<BlockPos>()
+            for (i in 1..moveDistance) {
+                val checkPos = oldStartPos.offset(leftDirection, i)
+                val checkPosUp = checkPos.up()
+
+                val state1 = world?.getBlockState(checkPos)
+                val state2 = world?.getBlockState(checkPosUp)
+
+                if (state1?.isAir == false) {
+                    blocksToMine.add(checkPos)
+                }
+                if (state2?.isAir == false) {
+                    blocksToMine.add(checkPosUp)
+                }
+            }
+
+            // 必要なら掘る
+            if (blocksToMine.isNotEmpty()) {
+                lastMiningCenter = calculateCenter(blocksToMine)
                 AiInterface.add(
-                    LinearMovementAction(
-                        targetBlockPos.toCenterPos(),
-                        2.0,
-                        1,
+                    MineBlockAction(
+                        blockPosList = blocksToMine,
                         stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                         onSuccessAction = {
-                            state =
-                                State.DiggingBranch(digging.startPos, digging.direction, digging.currentBranchLength)
+                            itemCollectionTicks = 0
+                            currentState = MiningState.CollectingPathItems
                         },
                         onFailureAction = {
-                            InfiniteClient.error("Failed to reach target block for digging. Skipping current branch.")
-                            // Path失敗時はブランチをスキップして次のブランチへ
-                            skipCurrentBranch()
+                            currentState = MiningState.Error
+                        },
+                    ),
+                )
+            } else {
+                // 掘る必要がない場合、直接次のスキャンへ
+                branchesCompleted++
+                currentState = MiningState.Scanning
+            }
+        }
+    }
+
+    private fun handleCollectingPathItems() {
+        itemCollectionTicks++
+
+        if (itemCollectionTicks >= itemCollectionWaitTicks.value) {
+            val center =
+                lastMiningCenter ?: run {
+                    branchesCompleted++
+                    currentState = MiningState.Scanning
+                    return
+                }
+
+            // アイテムを回収
+            collectNearbyItems(center, itemCollectionRadius.value)
+
+            branchesCompleted++
+            currentState = MiningState.Scanning
+        }
+    }
+
+    private fun handleReturningToChest() {
+        val chest =
+            nearestChest ?: run {
+                // チェストが見つからない場合、エラー状態へ
+                currentState = MiningState.Error
+                return
+            }
+
+        if (AiInterface.actions.isEmpty()) {
+            AiInterface.add(
+                PathMovementAction(
+                    x = chest.x,
+                    y = chest.y,
+                    z = chest.z,
+                    radius = 2,
+                    stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                    onSuccessAction = {
+                        chestOperationTicks = 0
+                        currentState = MiningState.StoringItems
+                    },
+                    onFailureAction = {
+                        currentState = MiningState.Error
+                    },
+                ),
+            )
+        }
+    }
+
+    private fun handleStoringItems() {
+        val chest = nearestChest ?: return
+
+        chestOperationTicks++
+
+        when (chestOperationTicks) {
+            1 -> {
+                // チェストを開く
+                ChestManager.openChest(chest)
+            }
+            10 -> {
+                // 10tick後にアイテムを格納
+                ChestManager.storeMinedItems()
+            }
+            20 -> {
+                // さらに10tick後にチェストを閉じる
+                ChestManager.closeChest()
+            }
+            30 -> {
+                // ブランチ開始位置に戻る
+                val startPos = branchStartPosition ?: initialPosition ?: return
+                AiInterface.add(
+                    PathMovementAction(
+                        x = startPos.x,
+                        y = startPos.y,
+                        z = startPos.z,
+                        radius = 1,
+                        stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                        onSuccessAction = {
+                            currentState = MiningState.Scanning
+                        },
+                        onFailureAction = {
+                            currentState = MiningState.Error
                         },
                     ),
                 )
             }
-        } else {
-            InfiniteClient.error("VeinBreak is not enabled or not found! Mining paused.")
-            disable()
         }
     }
 
-    private fun handleMiningVein(mining: State.MiningVein) {
-        val veinBreak =
-            InfiniteClient.getFeature(VeinBreak::class.java) ?: run {
-                InfiniteClient.error("VeinBreak is not enabled or not found! Mining paused.")
-                disable()
-                return
-            }
+    private fun handleError() {
+        val initPos = initialPosition ?: return
 
-        if (!veinBreak.isWorking) {
-            val itemEntities =
-                world?.entities?.filterIsInstance<ItemEntity>()?.filter {
-                    it.blockPos.isWithinDistance(playerPos, 10.0)
-                } ?: emptyList()
-
-            if (itemEntities.isNotEmpty()) {
-                val closestItem = itemEntities.minByOrNull { it.squaredDistanceTo(player) }
-                if (closestItem != null) {
-                    state = State.CollectItem(closestItem.getLerpedPos(1.0f))
-                    return
-                }
-            }
-            // アイテムがない場合、次のセグメントへ進む
-            advanceBranchSegment()
+        if (AiInterface.actions.isEmpty()) {
+            AiInterface.add(
+                PathMovementAction(
+                    x = initPos.x,
+                    y = initPos.y,
+                    z = initPos.z,
+                    radius = 2,
+                    stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                    onSuccessAction = {
+                        disable()
+                    },
+                    onFailureAction = {
+                        // エラーから復帰できない場合は強制無効化
+                        disable()
+                    },
+                ),
+            )
         }
     }
 
-    private fun handleCollectItem(collect: State.CollectItem) {
-        AiInterface.add(
-            LinearMovementAction(
-                pos = collect.itemPos,
-                movementRange = 1.5,
-                onSuccessAction = {
-                    // アイテム回収成功後、次のセグメントへ進む
-                    advanceBranchSegment()
-                },
-                onFailureAction = {
-                    InfiniteClient.warn("Failed to collect item at ${collect.itemPos}. Skipping to next branch segment.")
-                    // アイテム回収失敗後、次のセグメントへ進む
-                    advanceBranchSegment()
-                },
-            ),
-        )
-    }
+    // ユーティリティ関数
 
-    private fun shouldDepositItems(): Boolean {
-        val inventory = player?.inventory ?: return false
-        val totalSlots = 9 + 27
-        var filledSlots = 0
-        for (i in 0 until totalSlots) {
-            if (!inventory.getStack(i).isEmpty) {
-                filledSlots++
-            }
-        }
-        return (filledSlots.toDouble() / totalSlots.toDouble()) > 0.8
-    }
+    private fun getDirectionFromYaw(yaw: Float): Direction = Direction.fromHorizontalDegrees(yaw.toDouble())
 
-    private fun searchForChest() {
-        val playerPos = player?.blockPos ?: return
-        val r = chestSearchRadius.value
-        foundChestPos = null
+    private fun findNearestChest(
+        center: BlockPos,
+        radius: Int,
+    ): BlockPos? {
+        val currentWorld = world ?: return null
+        var nearest: BlockPos? = null
+        var minDistance = Double.MAX_VALUE
 
-        for (x in (playerPos.x - r)..(playerPos.x + r)) {
-            for (y in (playerPos.y - r)..(playerPos.y + r)) {
-                for (z in (playerPos.z - r)..(playerPos.z + r)) {
-                    val currentPos = BlockPos(x, y, z)
-                    val blockState = world?.getBlockState(currentPos)
-                    if (blockState?.block == Blocks.CHEST) {
-                        foundChestPos = currentPos
-                        InfiniteClient.info("Found chest at $currentPos")
-                        return
+        for (x in -radius..radius) {
+            for (y in -radius..radius) {
+                for (z in -radius..radius) {
+                    val checkPos = center.add(x, y, z)
+                    val state = currentWorld.getBlockState(checkPos)
+
+                    if (state?.block == Blocks.CHEST || state?.block == Blocks.TRAPPED_CHEST) {
+                        val distance = center.getSquaredDistance(checkPos)
+                        if (distance < minDistance) {
+                            minDistance = distance
+                            nearest = checkPos
+                        }
                     }
                 }
             }
         }
-        InfiniteClient.warn("No chest found within search radius.")
+
+        return nearest
     }
 
-    private fun handleGoToChest(goToChest: State.GoToChest) {
-        AiInterface.add(
-            PathMovementAction(
-                goToChest.chestPos.x,
-                goToChest.chestPos.y,
-                goToChest.chestPos.z,
-                1,
-                0,
-                onSuccessAction = {
-                    state = State.OpenChest(goToChest.chestPos)
-                },
-                onFailureAction = {
-                    InfiniteClient.error("Failed to reach chest at ${goToChest.chestPos}. Resuming mining.")
-                    state = State.Idle()
-                },
-            ),
-        )
+    private fun countConnectedAir(
+        startPos: BlockPos,
+        maxCount: Int,
+    ): Int {
+        val currentWorld = world ?: return 0
+        val visited = mutableSetOf<BlockPos>()
+        val queue = ArrayDeque<BlockPos>()
+
+        queue.add(startPos)
+        visited.add(startPos)
+
+        while (queue.isNotEmpty() && visited.size < maxCount) {
+            val current = queue.removeFirst()
+
+            for (direction in Direction.entries) {
+                val neighbor = current.offset(direction)
+                if (neighbor !in visited) {
+                    val state = currentWorld.getBlockState(neighbor)
+                    if (state?.isAir == true) {
+                        visited.add(neighbor)
+                        queue.add(neighbor)
+
+                        if (visited.size >= maxCount) {
+                            return visited.size
+                        }
+                    }
+                }
+            }
+        }
+
+        return visited.size
     }
 
-    private fun handleOpenChest(openChest: State.OpenChest) {
-        val player = player ?: return
-        val world = world ?: return
-        val interactionManager = interactionManager ?: return
+    private fun groupBlocksByProximity(
+        blocks: List<BlockPos>,
+        groups: MutableList<MutableList<BlockPos>>,
+        maxDistance: Int,
+    ) {
+        if (blocks.isEmpty()) return
 
-        if (!chestOpenAttempted) {
-            val chestBlockState = world.getBlockState(openChest.chestPos)
-            if (chestBlockState.block == Blocks.CHEST) {
-                // 視線合わせ
-                BlockUtils.faceVectorPacket(Vec3d.ofCenter(openChest.chestPos))
-                // BlockHitResult を作成して interactBlock に渡す
-                val hitResult =
-                    BlockHitResult(Vec3d.ofCenter(openChest.chestPos), Direction.UP, openChest.chestPos, false)
-                interactionManager.interactBlock(player, Hand.MAIN_HAND, hitResult)
-                chestOpenAttempted = true
+        val sorted = blocks.sortedBy { it.x + it.y * 1000 + it.z * 1000000 }
+        var currentGroup = mutableListOf<BlockPos>()
+        var lastPos: BlockPos? = null
+
+        for (pos in sorted) {
+            if (lastPos == null) {
+                currentGroup.add(pos)
+                lastPos = pos
             } else {
-                InfiniteClient.error("Block at ${openChest.chestPos} is no longer a chest. Resuming mining.")
-                state = State.Idle()
-                return
+                val distance = sqrt(lastPos.getSquaredDistance(pos))
+                if (distance <= maxDistance) {
+                    currentGroup.add(pos)
+                } else {
+                    groups.add(currentGroup)
+                    currentGroup = mutableListOf(pos)
+                }
+                lastPos = pos
             }
         }
 
-        // 画面が開かれたことを確認
-        if (player.currentScreenHandler is GenericContainerScreenHandler) {
-            state = State.DepositItems(openChest.chestPos)
-            chestOpenAttempted = false // リセット
-        } else {
-            // 画面が開かれるまで待機 (次のティックで再度チェック)
+        if (currentGroup.isNotEmpty()) {
+            groups.add(currentGroup)
         }
     }
 
-    private fun handleDepositItems(deposit: State.DepositItems) {
-        val player = player ?: return
-        val interactionManager = interactionManager ?: return
-        val screenHandler =
-            player.currentScreenHandler as? GenericContainerScreenHandler ?: run {
-                InfiniteClient.error("Chest screen is not open. Cannot deposit items. Resuming mining.")
-                state = State.Idle()
-                return
-            }
+    private fun calculateCenter(positions: List<BlockPos>): BlockPos {
+        if (positions.isEmpty()) return BlockPos.ORIGIN
 
-        // 経験値ボトルやトーチなど、預けたくないアイテムを除外するためのロジックが必要になる場合があるが、ここでは全アイテムを対象とする。
-        for (i in 0 until 27) {
-            val stack =
-                InventoryManager.get(
-                    if (i < 9) InventoryManager.InventoryIndex.Hotbar(i) else InventoryManager.InventoryIndex.Backpack(i - 9),
-                )
-            if (!stack.isEmpty) {
-                val playerNetworkSlot = InventoryManager.toNetworkSlot(i)
-                val chestEmptySlot = findFirstEmptyChestSlot(screenHandler)
-                if (chestEmptySlot != null) {
-                    interactionManager.clickSlot(
-                        screenHandler.syncId,
-                        playerNetworkSlot,
-                        0,
-                        SlotActionType.PICKUP,
-                        player,
-                    )
-                    interactionManager.clickSlot(screenHandler.syncId, chestEmptySlot, 0, SlotActionType.PICKUP, player)
-                    if (!player.currentScreenHandler.cursorStack.isEmpty) {
-                        interactionManager.clickSlot(
-                            screenHandler.syncId,
-                            playerNetworkSlot,
-                            0,
-                            SlotActionType.PICKUP,
-                            player,
-                        )
+        val avgX = positions.map { it.x }.average().toInt()
+        val avgY = positions.map { it.y }.average().toInt()
+        val avgZ = positions.map { it.z }.average().toInt()
+
+        return BlockPos(avgX, avgY, avgZ)
+    }
+
+    private fun calculateDistance(
+        start: BlockPos,
+        end: BlockPos,
+        direction: Direction,
+    ): Int =
+        when (direction) {
+            Direction.NORTH -> abs(start.z - end.z)
+            Direction.SOUTH -> abs(start.z - end.z)
+            Direction.EAST -> abs(start.x - end.x)
+            Direction.WEST -> abs(start.x - end.x)
+            else -> 0
+        }
+
+    private fun isOreBlock(block: net.minecraft.block.Block?): Boolean {
+        if (block == null) return false
+
+        val oreBlocks =
+            setOf(
+                Blocks.COAL_ORE,
+                Blocks.DEEPSLATE_COAL_ORE,
+                Blocks.IRON_ORE,
+                Blocks.DEEPSLATE_IRON_ORE,
+                Blocks.COPPER_ORE,
+                Blocks.DEEPSLATE_COPPER_ORE,
+                Blocks.GOLD_ORE,
+                Blocks.DEEPSLATE_GOLD_ORE,
+                Blocks.DIAMOND_ORE,
+                Blocks.DEEPSLATE_DIAMOND_ORE,
+                Blocks.EMERALD_ORE,
+                Blocks.DEEPSLATE_EMERALD_ORE,
+                Blocks.LAPIS_ORE,
+                Blocks.DEEPSLATE_LAPIS_ORE,
+                Blocks.REDSTONE_ORE,
+                Blocks.DEEPSLATE_REDSTONE_ORE,
+                Blocks.NETHER_QUARTZ_ORE,
+                Blocks.NETHER_GOLD_ORE,
+                Blocks.ANCIENT_DEBRIS,
+            )
+
+        return block in oreBlocks
+    }
+
+    private fun findConnectedOres(
+        startPos: BlockPos,
+        oreList: MutableList<BlockPos>,
+        globalVisited: MutableSet<BlockPos>,
+    ) {
+        val currentWorld = world ?: return
+        val visited = mutableSetOf<BlockPos>()
+        val queue = ArrayDeque<BlockPos>()
+
+        queue.add(startPos)
+        visited.add(startPos)
+        globalVisited.add(startPos)
+
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+            oreList.add(current)
+
+            for (direction in Direction.entries) {
+                val neighbor = current.offset(direction)
+                if (neighbor !in visited && neighbor !in globalVisited) {
+                    val state = currentWorld.getBlockState(neighbor)
+                    if (isOreBlock(state?.block)) {
+                        visited.add(neighbor)
+                        globalVisited.add(neighbor)
+                        queue.add(neighbor)
                     }
-                } else {
-                    InfiniteClient.warn("Chest is full. Cannot deposit all items.")
-                    break
                 }
             }
         }
-        player.closeHandledScreen()
-        InfiniteClient.info("Items deposited to chest at ${deposit.chestPos}. Resuming mining.")
-        state = State.Idle()
     }
 
-    private fun findFirstEmptyChestSlot(screenHandler: GenericContainerScreenHandler): Int? {
-        // チェストのスロットは、画面ハンドラーのインベントリスロット配列の最初の部分に位置する
-        for (i in 0 until screenHandler.slots.size - 36) {
-            if (screenHandler.getSlot(i).stack.isEmpty) {
-                return i
+    private fun checkNewlyExposedOres(minedPos: BlockPos) {
+        val currentWorld = world ?: return
+
+        // 採掘したブロックの周囲6方向をチェック
+        for (direction in Direction.entries) {
+            val checkPos = minedPos.offset(direction)
+            if (checkPos !in scannedOres) {
+                val state = currentWorld.getBlockState(checkPos)
+                if (isOreBlock(state?.block)) {
+                    // 新たに露出した鉱石を追加
+                    val connectedOres = mutableListOf<BlockPos>()
+                    val globalVisited = scannedOres.toMutableSet()
+                    findConnectedOres(checkPos, connectedOres, globalVisited)
+                    scannedOres.addAll(connectedOres)
+                }
             }
         }
-        return null
+    }
+
+    private fun shouldReturnToChest(): Boolean {
+        if (nearestChest == null) return false
+        return ChestManager.getEmptySlotCount() < minEmptySlots.value
+    }
+
+    private fun collectNearbyItems(
+        center: BlockPos,
+        radius: Int,
+    ) {
+        val currentWorld = world ?: return
+        val currentPlayer = player ?: return
+
+        // 周囲のアイテムエンティティを検索
+        val box =
+            net.minecraft.util.math.Box(
+                center.x - radius.toDouble(),
+                center.y - radius.toDouble(),
+                center.z - radius.toDouble(),
+                center.x + radius.toDouble(),
+                center.y + radius.toDouble(),
+                center.z + radius.toDouble(),
+            )
+
+        val itemEntities =
+            currentWorld.getEntitiesByClass(
+                net.minecraft.entity.ItemEntity::class.java,
+                box,
+            ) { true }
+
+        // 各アイテムに向かって移動（プレイヤーが近づくと自動で回収される）
+        for (itemEntity in itemEntities) {
+            val itemPos = itemEntity.blockPos
+            val distance = currentPlayer.blockPos.getSquaredDistance(itemPos)
+
+            if (distance > 1.0) {
+                // 少し離れている場合、近づく
+                val pathAction =
+                    PathMovementAction(
+                        x = itemPos.x,
+                        y = itemPos.y,
+                        z = itemPos.z,
+                        stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
+                        radius = 0,
+                        onSuccessAction = {},
+                        onFailureAction = {},
+                    )
+                AiInterface.add(pathAction)
+            }
+        }
     }
 }
