@@ -1,6 +1,7 @@
 package org.infinite.libs.client.inventory
 
 import net.minecraft.block.entity.ChestBlockEntity
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.screen.slot.SlotActionType
@@ -52,14 +53,14 @@ object ChestManager : ClientInterface() {
      * @return 格納した個数
      */
     fun storeItemInChest(item: Item): Int {
-        val currentPlayer = player ?: return 0
-        val screenHandler = currentPlayer.currentScreenHandler
+        val player = player ?: return 0
+        val screen = client.currentScreen
 
         // プレイヤーのインベントリ画面でない場合（チェストが開いている場合）
-        if (screenHandler.syncId == 0) return 0
+        if (screen !is GenericContainerScreen) return 0
 
         var totalStored = 0
-
+        val screenHandler = player.currentScreenHandler
         // プレイヤーのインベントリからアイテムを探す
         // ホットバー (ネットワークスロット 36-44)
         for (i in 36..44) {
@@ -71,7 +72,7 @@ object ChestManager : ClientInterface() {
                     i,
                     0,
                     SlotActionType.QUICK_MOVE,
-                    currentPlayer,
+                    player,
                 )
                 totalStored += stack.count
             }
@@ -86,7 +87,7 @@ object ChestManager : ClientInterface() {
                     i,
                     0,
                     SlotActionType.QUICK_MOVE,
-                    currentPlayer,
+                    player,
                 )
                 totalStored += stack.count
             }
