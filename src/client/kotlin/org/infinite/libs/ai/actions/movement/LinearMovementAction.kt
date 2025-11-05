@@ -14,6 +14,7 @@ class LinearMovementAction(
     val pos: Vec3d,
     val movementRange: Double = 1.0,
     val heightRange: Int? = null,
+    val stateRegister: () -> AiActionState? = { null },
     val onSuccessAction: () -> Unit = {},
     val onFailureAction: () -> Unit = {},
 ) : AiAction() {
@@ -42,33 +43,34 @@ class LinearMovementAction(
         onSuccessAction()
     }
 
-    override fun state(): AiActionState {
-        // スタック検知と終了時のAuto Jumpリセット
-        if (isStuck) {
-            options.autoJump.value = originalAutoJump
-            return AiActionState.Failure
-        }
-
-        val tPos = pos
-        val pPos =
-            playerPos ?: run {
-                options.autoJump.value = originalAutoJump // 失敗前にリセット
+    override fun state(): AiActionState =
+        stateRegister() ?: run {
+            // スタック検知と終了時のAuto Jumpリセット
+            if (isStuck) {
+                options.autoJump.value = originalAutoJump
                 return AiActionState.Failure
             }
-        val dx = abs(tPos.x - pPos.x)
-        val dz = abs(tPos.z - pPos.z)
-        val inRangeXZ = (dx <= movementRange) && (dz <= movementRange)
-        val dy = abs(tPos.y - pPos.y)
-        val inRangeY = heightRange == null || dy <= heightRange
 
-        return if (inRangeY && inRangeXZ) {
-            // 成功する直前にAuto Jumpを元の状態に戻す
-            options.autoJump.value = originalAutoJump
-            AiActionState.Success
-        } else {
-            AiActionState.Progress
+            val tPos = pos
+            val pPos =
+                playerPos ?: run {
+                    options.autoJump.value = originalAutoJump // 失敗前にリセット
+                    return AiActionState.Failure
+                }
+            val dx = abs(tPos.x - pPos.x)
+            val dz = abs(tPos.z - pPos.z)
+            val inRangeXZ = (dx <= movementRange) && (dz <= movementRange)
+            val dy = abs(tPos.y - pPos.y)
+            val inRangeY = heightRange == null || dy <= heightRange
+
+            return if (inRangeY && inRangeXZ) {
+                // 成功する直前にAuto Jumpを元の状態に戻す
+                options.autoJump.value = originalAutoJump
+                AiActionState.Success
+            } else {
+                AiActionState.Progress
+            }
         }
-    }
 
     override fun tick() {
         val pPos = playerPos ?: return

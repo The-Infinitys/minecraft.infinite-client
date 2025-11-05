@@ -15,10 +15,12 @@ import org.infinite.features.movement.braek.VeinBreak
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.movement.LinearMovementAction
 import org.infinite.libs.ai.actions.movement.PathMovementAction
+import org.infinite.libs.ai.interfaces.AiAction
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.block.BlockUtils
 
+// ConfigurableFeature は ClientInterface を継承しているため、player, worldなどにアクセス可能
 class BranchMiner : ConfigurableFeature() {
     fun baritoneCheck(): Boolean =
         try {
@@ -152,11 +154,52 @@ class BranchMiner : ConfigurableFeature() {
         }
     }
 
+    // プレイヤーの向きを基に初期のブランチ掘削方向を決定する
+    private fun getInitialBranchDirection(): Direction {
+        val yaw = player?.yaw ?: return Direction.NORTH
+        val direction = Direction.fromHorizontalDegrees(yaw.toDouble())
+        return if (direction.axis.isHorizontal) direction else Direction.NORTH
+    }
+
+    private fun isOre(pos: BlockPos): Boolean {
+        val block = world?.getBlockState(pos)?.block ?: return false
+        // チェック対象の鉱石ブロックを定義（一般的な鉱石）
+        return block == Blocks.DIAMOND_ORE || block == Blocks.IRON_ORE || block == Blocks.GOLD_ORE ||
+            block == Blocks.REDSTONE_ORE || block == Blocks.LAPIS_ORE || block == Blocks.EMERALD_ORE ||
+            block == Blocks.COAL_ORE || block == Blocks.NETHER_QUARTZ_ORE || block == Blocks.ANCIENT_DEBRIS
+    }
+
+    // 現在のブランチセグメントをスキップし、次のブランチの開始地点に移る
+    private fun skipCurrentBranch() {
+        val nextBranchStartPos =
+            currentBranchStartPos!!.offset(currentBranchDirection!!, branchLength.value + branchInterval.value)
+        currentBranchStartPos = nextBranchStartPos
+        currentBranchLengthCount = 0 // 新しいブランチなのでリセット
+        state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
+        InfiniteClient.info("Skipped current branch. Moving to next branch start pos: $currentBranchStartPos")
+    }
+
+    // ブランチを1セグメント進める (またはブランチの終わりに達した場合は次のブランチへ移行する)
+    private fun advanceBranchSegment() {
+        currentBranchLengthCount++
+        if (currentBranchLengthCount < branchLength.value) {
+            state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
+        } else {
+            // ブランチの終わりに達したため、次のブランチの開始地点に移る
+            val nextBranchStartPos =
+                currentBranchStartPos!!.offset(currentBranchDirection!!, branchLength.value + branchInterval.value)
+            currentBranchStartPos = nextBranchStartPos
+            currentBranchLengthCount = 0
+            state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
+        }
+    }
+
     private fun handleIdle() {
         val playerPos = player?.blockPos ?: return
         if (currentBranchStartPos == null) {
             currentBranchStartPos = playerPos.down()
-            currentBranchDirection = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST).random()
+            // 変更点: プレイヤーの向きから方向を決定
+            currentBranchDirection = getInitialBranchDirection()
             currentBranchLengthCount = 0
         }
         state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
@@ -165,31 +208,81 @@ class BranchMiner : ConfigurableFeature() {
     private fun handleDiggingBranch(digging: State.DiggingBranch) {
         val playerPos = player?.blockPos ?: return
         val targetBlockPos = digging.startPos.offset(digging.direction, digging.currentBranchLength + 1)
+        val world = world ?: return
+
+        // --- 異常検出と回避ロジック ---
+        // 採掘目標の周囲をチェック (左右、上下、目標地点、目標地点の上)
+        val leftDir = digging.direction.rotateYCounterclockwise()
+        val rightDir = digging.direction.rotateYClockwise()
+
+        val blocksToCheckForDanger =
+            listOf(
+                targetBlockPos,
+                targetBlockPos.up(),
+                targetBlockPos.offset(Direction.UP, 2), // 2段目の上
+                targetBlockPos.offset(Direction.DOWN), // 1段目の下
+                targetBlockPos.offset(leftDir), // 1段目の左
+                targetBlockPos.offset(rightDir), // 1段目の右
+                targetBlockPos.up().offset(leftDir), // 2段目の左
+                targetBlockPos.up().offset(rightDir), // 2段目の右
+            )
+
+        for (pos in blocksToCheckForDanger) {
+            val block = world.getBlockState(pos).block
+            if (block == Blocks.LAVA || block == Blocks.WATER || block == Blocks.CAVE_AIR || block == Blocks.AIR) {
+                InfiniteClient.warn("Danger/Air detected (${block.name.string}) at $pos. Skipping current branch.")
+                skipCurrentBranch()
+                return
+            }
+        }
+        // -----------------------------
 
         val blocksToMine = mutableListOf<BlockPos>()
         blocksToMine.add(targetBlockPos)
         blocksToMine.add(targetBlockPos.up())
 
+        // --- 側面鉱石チェックとVeinBreakへの追加 ---
+        val blocksToCheckForSideOre =
+            listOf(
+                targetBlockPos.offset(leftDir), // 1段目の左壁
+                targetBlockPos.offset(rightDir), // 1段目の右壁
+                targetBlockPos.offset(Direction.DOWN), // 1段目の床
+                targetBlockPos.up().offset(leftDir), // 2段目の左壁
+                targetBlockPos.up().offset(rightDir), // 2段目の右壁
+                targetBlockPos.up().offset(Direction.UP), // 2段目の天井
+            )
+        // -----------------------------
+
         val veinBreak = InfiniteClient.getFeature(VeinBreak::class.java)
         if (veinBreak != null && veinBreak.isEnabled()) {
+            // 採掘対象ブロックをVeinBreakに追加
+            blocksToMine.forEach { veinBreak.add(it) }
+
+            // 側面鉱石をチェックし、VeinBreakに追加
+            blocksToCheckForSideOre.forEach { pos ->
+                if (isOre(pos)) {
+                    InfiniteClient.info("Found side ore at $pos. Adding to VeinBreak.")
+                    veinBreak.add(pos)
+                }
+            }
+
             if (playerPos.isWithinDistance(targetBlockPos, 4.0)) {
-                blocksToMine.forEach { veinBreak.add(it) }
                 state = State.MiningVein(targetBlockPos)
             } else {
                 AiInterface.add(
-                    PathMovementAction(
-                        targetBlockPos.x,
-                        targetBlockPos.y,
-                        targetBlockPos.z,
+                    LinearMovementAction(
+                        targetBlockPos.toCenterPos(),
+                        2.0,
                         1,
-                        0,
+                        stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                         onSuccessAction = {
                             state =
                                 State.DiggingBranch(digging.startPos, digging.direction, digging.currentBranchLength)
                         },
                         onFailureAction = {
-                            InfiniteClient.error("Failed to reach target block for digging. Skipping branch segment.")
-                            moveToNextBranchSegment()
+                            InfiniteClient.error("Failed to reach target block for digging. Skipping current branch.")
+                            // Path失敗時はブランチをスキップして次のブランチへ
+                            skipCurrentBranch()
                         },
                     ),
                 )
@@ -221,7 +314,8 @@ class BranchMiner : ConfigurableFeature() {
                     return
                 }
             }
-            moveToNextBranchSegment()
+            // アイテムがない場合、次のセグメントへ進む
+            advanceBranchSegment()
         }
     }
 
@@ -231,27 +325,16 @@ class BranchMiner : ConfigurableFeature() {
                 pos = collect.itemPos,
                 movementRange = 1.5,
                 onSuccessAction = {
-                    moveToNextBranchSegment()
+                    // アイテム回収成功後、次のセグメントへ進む
+                    advanceBranchSegment()
                 },
                 onFailureAction = {
                     InfiniteClient.warn("Failed to collect item at ${collect.itemPos}. Skipping to next branch segment.")
-                    moveToNextBranchSegment()
+                    // アイテム回収失敗後、次のセグメントへ進む
+                    advanceBranchSegment()
                 },
             ),
         )
-    }
-
-    private fun moveToNextBranchSegment() {
-        currentBranchLengthCount++
-        if (currentBranchLengthCount < branchLength.value) {
-            state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
-        } else {
-            val nextBranchStartPos =
-                currentBranchStartPos!!.offset(currentBranchDirection!!, branchLength.value + branchInterval.value)
-            currentBranchStartPos = nextBranchStartPos
-            currentBranchLengthCount = 0
-            state = State.DiggingBranch(currentBranchStartPos!!, currentBranchDirection!!, currentBranchLengthCount)
-        }
     }
 
     private fun shouldDepositItems(): Boolean {
@@ -334,7 +417,6 @@ class BranchMiner : ConfigurableFeature() {
             chestOpenAttempted = false // リセット
         } else {
             // 画面が開かれるまで待機 (次のティックで再度チェック)
-            // タイムアウト処理も考慮すべきだが、ここでは簡易化
         }
     }
 
@@ -348,6 +430,7 @@ class BranchMiner : ConfigurableFeature() {
                 return
             }
 
+        // 経験値ボトルやトーチなど、預けたくないアイテムを除外するためのロジックが必要になる場合があるが、ここでは全アイテムを対象とする。
         for (i in 0 until 27) {
             val stack =
                 InventoryManager.get(
@@ -386,6 +469,7 @@ class BranchMiner : ConfigurableFeature() {
     }
 
     private fun findFirstEmptyChestSlot(screenHandler: GenericContainerScreenHandler): Int? {
+        // チェストのスロットは、画面ハンドラーのインベントリスロット配列の最初の部分に位置する
         for (i in 0 until screenHandler.slots.size - 36) {
             if (screenHandler.getSlot(i).stack.isEmpty) {
                 return i
