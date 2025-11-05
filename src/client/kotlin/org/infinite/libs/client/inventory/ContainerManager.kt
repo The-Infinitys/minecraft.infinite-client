@@ -11,7 +11,7 @@ import org.infinite.libs.client.player.ClientInterface
 /**
  * チェスト操作用のInventoryManager拡張
  */
-object ChestManager : ClientInterface() {
+object ContainerManager : ClientInterface() {
     /**
      * 指定された位置のチェストを開きます
      * @param pos チェストの位置

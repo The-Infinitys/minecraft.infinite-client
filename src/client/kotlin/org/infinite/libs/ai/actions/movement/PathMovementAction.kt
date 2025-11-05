@@ -10,8 +10,6 @@ import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.camera.CameraRoll
 import org.infinite.libs.client.aim.task.AimTask
 import org.infinite.libs.client.aim.task.condition.AimTaskConditionByFrame
-import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
-import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
 import org.infinite.libs.client.aim.task.config.AimCalculateMethod
 import org.infinite.libs.client.aim.task.config.AimPriority
 import org.infinite.libs.client.aim.task.config.AimTarget
@@ -24,16 +22,12 @@ class PathMovementAction(
     val x: Int,
     val y: Int? = null,
     val z: Int,
-    radius: Int = 2,
+    val radius: Int? = 2,
     height: Int = 2,
     val stateRegister: () -> AiActionState? = { null },
     val onFailureAction: () -> Unit = {},
     val onSuccessAction: () -> Unit = {},
 ) : AiAction() {
-    // PathMovementActionのインスタンスへの参照を保持
-    // MovementCondition内でこのアクションの状態を参照できるようにします。
-    private val actionInstance = this
-
     // --- 1. 目標角度の定義 (移動方向) ---
     class MovementRoll : AimTarget.RollTarget(CameraRoll.Zero) {
         val client: MinecraftClient
@@ -70,7 +64,7 @@ class PathMovementAction(
         val x: Int,
         val y: Int? = null,
         val z: Int,
-        val radius: Int = 2,
+        val radius: Int? = 2,
         val height: Int = 2,
     ) : Goal {
         override fun isInGoal(
@@ -78,9 +72,9 @@ class PathMovementAction(
             y: Int,
             z: Int,
         ): Boolean {
-            val inX = abs(this.x - x) <= this.radius
+            val inX = abs(this.x - x) <= (this.radius ?: 0)
             val inY = if (this.y == null) true else abs(this.y - y) <= this.height
-            val inZ = abs(this.z - z) <= this.radius
+            val inZ = abs(this.z - z) <= (this.radius ?: 0)
             return inX && inY && inZ
         }
 
@@ -131,7 +125,18 @@ class PathMovementAction(
     override fun state(): AiActionState =
         stateRegister() ?: when {
             !registered || baritone.pathingBehavior.goal == goal -> AiActionState.Progress // 既に何かしらのアクションが行われている
-            registered && goal.isInGoal(pos.x, pos.y, pos.z) -> AiActionState.Success
+            registered && (
+                if (radius == null) {
+                    baritone.pathingBehavior.goal != goal
+                } else {
+                    goal.isInGoal(
+                        pos.x,
+                        pos.y,
+                        pos.z,
+                    )
+                }
+            ) -> AiActionState.Success
+
             else -> AiActionState.Failure
         }
 

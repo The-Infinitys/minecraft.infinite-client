@@ -10,7 +10,7 @@ import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.block.MineBlockAction
 import org.infinite.libs.ai.actions.movement.PathMovementAction
 import org.infinite.libs.ai.interfaces.AiAction
-import org.infinite.libs.client.inventory.ChestManager
+import org.infinite.libs.client.inventory.ContainerManager
 import org.infinite.settings.FeatureSetting
 import kotlin.math.abs
 
@@ -320,7 +320,7 @@ class BranchMiner : ConfigurableFeature() {
                 x = endPos.x,
                 y = endPos.y,
                 z = endPos.z,
-                radius = 0,
+                radius = null,
                 stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                 onSuccessAction = {
                     state = State.Mining
@@ -364,7 +364,7 @@ class BranchMiner : ConfigurableFeature() {
                 x = orePos.x,
                 y = orePos.y,
                 z = orePos.z,
-                radius = 0,
+                radius = null,
                 stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                 onSuccessAction = {
                     mineCurrentOre()
@@ -423,7 +423,7 @@ class BranchMiner : ConfigurableFeature() {
                     x = itemPos.x,
                     y = itemPos.y,
                     z = itemPos.z,
-                    radius = 0,
+                    radius = null,
                     stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                     onSuccessAction = {},
                     onFailureAction = {},
@@ -440,7 +440,7 @@ class BranchMiner : ConfigurableFeature() {
         reportCollectedItems()
 
         // インベントリ容量チェック
-        if (ChestManager.getEmptySlotCount() < minEmptySlots.value && nearestChest != null) {
+        if (ContainerManager.getEmptySlotCount() < minEmptySlots.value && nearestChest != null) {
             storeItemsInChest()
         } else {
             state = State.Next
@@ -459,7 +459,7 @@ class BranchMiner : ConfigurableFeature() {
                 x = chest.x,
                 y = chest.y,
                 z = chest.z,
-                radius = 0,
+                radius = null,
                 stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                 onSuccessAction = {
                     waitTicks = 0
@@ -477,9 +477,9 @@ class BranchMiner : ConfigurableFeature() {
         waitTicks++
 
         when (waitTicks) {
-            1 -> ChestManager.openChest(nearestChest!!)
-            10 -> ChestManager.storeMinedItems()
-            20 -> ChestManager.closeChest()
+            1 -> ContainerManager.openChest(nearestChest!!)
+            10 -> ContainerManager.storeMinedItems()
+            20 -> ContainerManager.closeChest()
             30 -> {
                 InfiniteClient.log(Text.literal("§a[BranchMiner] Items stored in chest"))
                 returnToBranchStart()
@@ -495,7 +495,7 @@ class BranchMiner : ConfigurableFeature() {
                 x = startPos.x,
                 y = startPos.y,
                 z = startPos.z,
-                radius = 0,
+                radius = null,
                 stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                 onSuccessAction = {
                     state = State.Next
@@ -564,7 +564,7 @@ class BranchMiner : ConfigurableFeature() {
                     x = nextMainPos.x,
                     y = nextMainPos.y,
                     z = nextMainPos.z,
-                    radius = 0,
+                    radius = null,
                     stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                     onSuccessAction = {
                         branchStartPosition = nextMainPos
@@ -631,7 +631,7 @@ class BranchMiner : ConfigurableFeature() {
                 x = initPos.x,
                 y = initPos.y,
                 z = initPos.z,
-                radius = 0,
+                radius = null,
                 onSuccessAction = {
                     disable()
                 },
@@ -866,7 +866,7 @@ class BranchMiner : ConfigurableFeature() {
                     x = itemPos.x,
                     y = itemPos.y,
                     z = itemPos.z,
-                    radius = 0,
+                    radius = null,
                     stateRegister = { if (isEnabled()) null else AiAction.AiActionState.Failure },
                     onSuccessAction = {},
                     onFailureAction = {},
@@ -893,6 +893,6 @@ class BranchMiner : ConfigurableFeature() {
         for ((item, count) in collectedItems) {
             InfiniteClient.log(Text.literal("§e  - $item: $count"))
         }
-        InfiniteClient.log(Text.literal("§e[BranchMiner] Empty slots: ${ChestManager.getEmptySlotCount()}"))
+        InfiniteClient.log(Text.literal("§e[BranchMiner] Empty slots: ${ContainerManager.getEmptySlotCount()}"))
     }
 }

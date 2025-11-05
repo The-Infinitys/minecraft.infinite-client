@@ -337,5 +337,7 @@
   "infinite.feature.automatic.branch_miner.mining_approach_distance.description": "Sets the mining approach distance.",
   "infinite.feature.automatic.branch_miner.item_collection_radius.description": "Sets the item collection radius.",
   "infinite.feature.automatic.branch_miner.item_collection_wait_ticks.description": "Sets the item collection wait ticks.",
-  "infinite.feature.automatic.branch_miner.detect_space_threshold.description": "Sets the space detection threshold."
+  "infinite.feature.automatic.branch_miner.detect_space_threshold.description": "Sets the space detection threshold.",
+  "infinite.feature.automatic.branch_miner.enable_torch_placement.description": "Enables or disables torch placement during branch mining.",
+  "infinite.feature.automatic.branch_miner.torch_interval.description": "Sets the interval (in blocks) for placing torches during branch mining."
 }

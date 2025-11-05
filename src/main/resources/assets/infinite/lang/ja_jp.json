@@ -337,5 +337,7 @@
   "infinite.feature.automatic.branch_miner.mining_approach_distance.description": "採掘アプローチ距離を設定します。",
   "infinite.feature.automatic.branch_miner.item_collection_radius.description": "アイテム収集の半径を設定します。",
   "infinite.feature.automatic.branch_miner.item_collection_wait_ticks.description": "アイテム収集の待機ティック数を設定します。",
-  "infinite.feature.automatic.branch_miner.detect_space_threshold.description": "空間検出のしきい値を設定します。"
+  "infinite.feature.automatic.branch_miner.detect_space_threshold.description": "空間検出のしきい値を設定します。",
+  "infinite.feature.automatic.branch_miner.enable_torch_placement.description": "松明の設置を有効にします。",
+  "infinite.feature.automatic.branch_miner.torch_interval.description": "松明の設置間隔を設定します。"
 }
