@@ -5,32 +5,28 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 // FeatherWalk Featureの定義
 class FeatherWalk : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
 
     // フィーチャーのロジックで利用する設定
     private val blockList: FeatureSetting.BlockListSetting =
         FeatureSetting.BlockListSetting(
-            name = "Allowed Blocks",
-            descriptionKey = "feature.movement.featherwalk.allowedblocks.description",
+            name = "AllowedBlocks",
             defaultValue = mutableListOf("minecraft:farmland", "minecraft:gravel"), // 例として砂と砂利を設定
         )
 
     private val disableJump: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
-            name = "Disable Jump",
-            descriptionKey = "feature.movement.featherwalk.disablejump.description",
+            name = "DisableJump",
             defaultValue = true,
         )
 
     private val disableSprint: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
-            name = "Disable Sprint",
-            descriptionKey = "feature.movement.featherwalk.disablesprint.description",
+            name = "DisableSprint",
             defaultValue = true,
         )
     override val settings: List<FeatureSetting<*>> =

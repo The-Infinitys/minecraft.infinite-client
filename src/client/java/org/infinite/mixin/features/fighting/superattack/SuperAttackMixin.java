@@ -1,5 +1,6 @@
 package org.infinite.mixin.features.fighting.superattack;
 
+import java.util.Objects;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
@@ -24,33 +25,30 @@ public class SuperAttackMixin {
     SuperAttack superAttackFeature = InfiniteClient.INSTANCE.getFeature(SuperAttack.class);
 
     if (superAttackFeature != null && superAttackFeature.isEnabled()) {
-      FeatureSetting.EnumSetting<AttackMethod> methodSetting =
-          (FeatureSetting.EnumSetting<AttackMethod>) superAttackFeature.getSetting("Method");
-      if (methodSetting != null) {
-        AttackMethod method = methodSetting.getValue();
-        MinecraftClient client = MinecraftClient.getInstance();
+      FeatureSetting.EnumSetting<AttackMethod> methodSetting = superAttackFeature.getMethod();
+      AttackMethod method = methodSetting.getValue();
+      MinecraftClient client = MinecraftClient.getInstance();
 
-        if (client.player != null && client.player.equals(player)) {
-          // Conditions from CriticalsHack
-          if (!(target instanceof LivingEntity)) return;
-          if (!player.isOnGround()) return;
-          if (player.isTouchingWater() || player.isInLava()) return;
+      if (client.player != null && client.player.equals(player)) {
+        // Conditions from CriticalsHack
+        if (!(target instanceof LivingEntity)) return;
+        if (!player.isOnGround()) return;
+        if (player.isTouchingWater() || player.isInLava()) return;
 
-          if (method == AttackMethod.FULL_JUMP) {
-            // Full Jump (equivalent to CriticalsHack's FULL_JUMP)
-            player.jump();
-          } else if (method == AttackMethod.MINI_JUMP) {
-            // Mini Jump (equivalent to CriticalsHack's MINI_JUMP)
-            player.addVelocity(0.0, 0.1, 0.0);
-            player.fallDistance = 0.1F;
-            player.setOnGround(false);
-          } else if (method == AttackMethod.PACKET) {
-            // Packet method (equivalent to CriticalsHack's PACKET)
-            sendFakeY(player, 0.0625, true);
-            sendFakeY(player, 0, false);
-            sendFakeY(player, 1.1e-5, false);
-            sendFakeY(player, 0, false);
-          }
+        if (method == AttackMethod.FULL_JUMP) {
+          // Full Jump (equivalent to CriticalsHack's FULL_JUMP)
+          player.jump();
+        } else if (method == AttackMethod.MINI_JUMP) {
+          // Mini Jump (equivalent to CriticalsHack's MINI_JUMP)
+          player.addVelocity(0.0, 0.1, 0.0);
+          player.fallDistance = 0.1F;
+          player.setOnGround(false);
+        } else if (method == AttackMethod.PACKET) {
+          // Packet method (equivalent to CriticalsHack's PACKET)
+          sendFakeY(player, 0.0625, true);
+          sendFakeY(player, 0, false);
+          sendFakeY(player, 1.1e-5, false);
+          sendFakeY(player, 0, false);
         }
       }
     }
@@ -58,8 +56,7 @@ public class SuperAttackMixin {
 
   @Unique
   private void sendFakeY(PlayerEntity player, double offset, boolean onGround) {
-    MinecraftClient.getInstance()
-        .getNetworkHandler()
+    Objects.requireNonNull(MinecraftClient.getInstance().getNetworkHandler())
         .sendPacket(
             new PositionAndOnGround(
                 player.getX(),

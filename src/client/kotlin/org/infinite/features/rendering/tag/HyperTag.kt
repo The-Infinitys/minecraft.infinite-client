@@ -9,30 +9,28 @@ import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.ColorHelper
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.rendering.getRainbowColor
 import org.infinite.utils.rendering.transparent
-import kotlin.math.sqrt // 平方根を計算するためにインポート
+import kotlin.math.sqrt
 
 class HyperTag : ConfigurableFeature(initialEnabled = false) {
-    override val level = FeatureLevel.UTILS
-    private val mobs = FeatureSetting.BooleanSetting("Mobs", "feature.rendering.hypertag.mobs.description", true)
+    override val level = FeatureLevel.Utils
+    private val mobs = FeatureSetting.BooleanSetting("Mobs", true)
     private val players =
-        FeatureSetting.BooleanSetting("Players", "feature.rendering.hypertag.players.description", true)
+        FeatureSetting.BooleanSetting("Players", true)
     private val distance =
-        FeatureSetting.IntSetting("Distance", "feature.rendering.hypertag.distance.description", 64, 0, 256)
-    private val always = FeatureSetting.BooleanSetting("Always", "feature.rendering.hypertag.always.description", false)
+        FeatureSetting.IntSetting("Distance", 64, 0, 256)
+    private val always = FeatureSetting.BooleanSetting("Always", false)
     private val showItems =
-        FeatureSetting.BooleanSetting("ShowItems", "feature.rendering.hypertag.showitems.description", false)
+        FeatureSetting.BooleanSetting("ShowItems", false)
 
     // 🚀 新規追加: 最小スケールになる距離の閾値
     private val minScaleDistance =
         FeatureSetting.IntSetting(
             "MinScaleDistance",
-            "feature.rendering.hypertag.min_scale_distance.description",
             32,
             1,
             256,

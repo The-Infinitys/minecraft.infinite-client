@@ -13,8 +13,9 @@ public abstract class FastBreakMixin {
 
   @Inject(method = "tick", at = @At("TAIL"))
   private void resetBlockBreakingCooldown(CallbackInfo ci) {
-    if (InfiniteClient.INSTANCE.isFeatureEnabled(FastBreak.class)) {
-      ((ClientPlayerInteractionManagerAccessor) this).setBlockBreakingCooldown(0);
+    FastBreak fastBreak = InfiniteClient.INSTANCE.getFeature(FastBreak.class);
+    if (fastBreak != null && fastBreak.isEnabled()) {
+      fastBreak.handle((ClientPlayerInteractionManagerAccessor) this);
     }
   }
 }

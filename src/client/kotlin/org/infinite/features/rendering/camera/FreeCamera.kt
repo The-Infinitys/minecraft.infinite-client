@@ -1,11 +1,10 @@
 package org.infinite.features.rendering.camera
 
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
-import org.infinite.features.movement.freeze.Freeze
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
@@ -14,13 +13,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class FreeCamera : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.EXTEND
+    override val level: FeatureLevel = FeatureLevel.Extend
     override val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_KEY_U)
-    override val depends: List<Class<out ConfigurableFeature>> = listOf(Freeze::class.java)
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Speed",
-            "feature.rendering.freecamera.speed.description",
             1.0f,
             0.1f,
             5.0f,
@@ -32,13 +29,30 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
     private var currentMode: GameMode? = GameMode.SURVIVAL
 
     override fun disabled() {
-        InfiniteClient.getFeature(Freeze::class.java)?.forceCancel()
+        // Teleport player back to original position
+        client.player?.setPos(originalPos.x, originalPos.y, originalPos.z)
+        client.player?.yaw = originalYaw
+        client.player?.pitch = originalPitch
+    }
+
+    override fun start() {
+        disable()
     }
 
     private var originalPos = Vec3d.ZERO
+    private var originalYaw: Float = 0.0f
+    private var originalPitch: Float = 0.0f
+    private var originalIsOnGround: Boolean = false
+    private var originalHorizontalCollision: Boolean = false
+    private var lastHealth: Float = 0.0f // Store player's health from previous tick
 
     override fun enabled() {
-        originalPos = client.player?.eyePos
+        originalPos = player?.eyePos ?: Vec3d.ZERO
+        originalYaw = player?.yaw ?: 0.0f
+        originalPitch = player?.pitch ?: 0.0f
+        originalIsOnGround = player?.isOnGround ?: true
+        originalHorizontalCollision = player?.horizontalCollision ?: false
+        lastHealth = player?.health ?: 0.0f // Capture initial health
     }
 
     override fun tick() {
@@ -48,6 +62,30 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
         }
         val player = client.player ?: return
         val options = client.options ?: return
+
+        // Damage detection
+        val currentHealth = player.health
+        if (currentHealth < lastHealth) {
+            disable() // Disable FreeCamera if player takes damage
+            return
+        }
+        lastHealth = currentHealth // Update lastHealth for the next tick
+
+        // Send a "still" packet with original position and current rotation
+        if (player.networkHandler != null) {
+            player.networkHandler.sendPacket(
+                PlayerMoveC2SPacket.Full(
+                    originalPos.x,
+                    originalPos.y,
+                    originalPos.z,
+                    player.yaw, // Use current player yaw
+                    player.pitch, // Use current player pitch
+                    originalIsOnGround,
+                    originalHorizontalCollision,
+                ),
+            )
+        }
+
         player.velocity = Vec3d.ZERO
         player.abilities.flying = false
         player.isOnGround = false

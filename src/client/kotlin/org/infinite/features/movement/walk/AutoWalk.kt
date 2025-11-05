@@ -1,11 +1,10 @@
 package org.infinite.features.movement.walk
 
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class AutoWalk : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
 
     override val settings: List<FeatureSetting<*>> = emptyList()
 

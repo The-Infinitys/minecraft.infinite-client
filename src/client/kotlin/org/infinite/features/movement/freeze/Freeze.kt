@@ -3,19 +3,17 @@ package org.infinite.features.movement.freeze
 import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.features.rendering.camera.FreeCamera
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.FakePlayerEntity
-import java.util.ArrayDeque
 
 /**
  * Freeze Feature (Blink Hack implementation)
  * Mixinを使用してPlayerMoveC2SPacketの送信を停止し、蓄積することで瞬間移動を可能にする。
  */
 class Freeze : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
 
     // 蓄積された移動パケットを保持するキュー
     val packets = ArrayDeque<PlayerMoveC2SPacket>() // Mixinからアクセスするためvalにしておく
@@ -31,7 +29,6 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
     private val durationSetting =
         FeatureSetting.FloatSetting(
             "Duration",
-            "feature.movement.freeze.duration.description",
             0.0f,
             0.0f,
             600.0f,
@@ -39,8 +36,7 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
 
     private val packetLimitSetting =
         FeatureSetting.IntSetting(
-            "Packet Limit",
-            "feature.movement.freeze.packetlimit.description",
+            "PacketLimit",
             0,
             0,
             500,
@@ -118,22 +114,21 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
      * Mixinから呼び出され、パケットを処理（キューに追加）する
      */
     fun processMovePacket(packet: PlayerMoveC2SPacket) {
-        val prevPacket = packets.peekLast()
+        if (packets.isEmpty()) {
+            packets.addLast(packet)
+            return
+        }
+
+        val prevPacket = packets.last()
 
         // パケットの内容が前のパケットと全て同一であれば、冗長なパケットとして無視
         // BlinkHackの冗長パケットチェックロジックを再現
-        if (prevPacket != null &&
-            packet.isOnGround == prevPacket.isOnGround &&
-            packet.getYaw(-1f) ==
+        if (packet.isOnGround == prevPacket.isOnGround && packet.getYaw(-1f) ==
             prevPacket.getYaw(
                 -1f,
-            ) &&
-            packet.getPitch(-1f) == prevPacket.getPitch(-1f) &&
-            packet.getX(-1.0) == prevPacket.getX(-1.0) &&
-            packet.getY(
+            ) && packet.getPitch(-1f) == prevPacket.getPitch(-1f) && packet.getX(-1.0) == prevPacket.getX(-1.0) && packet.getY(
                 -1.0,
-            ) == prevPacket.getY(-1.0) &&
-            packet.getZ(-1.0) == prevPacket.getZ(-1.0)
+            ) == prevPacket.getY(-1.0) && packet.getZ(-1.0) == prevPacket.getZ(-1.0)
         ) {
             return
         }
@@ -149,6 +144,10 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
         fakePlayer?.despawn()
         fakePlayer = null
         packets.clear() // disabled()でも呼ばれているが、念のためここに集約
+    }
+
+    override fun start() {
+        disable()
     }
 
     override fun stop() {

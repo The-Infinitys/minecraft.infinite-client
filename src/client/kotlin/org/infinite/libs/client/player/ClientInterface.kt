@@ -1,0 +1,40 @@
+package org.infinite.libs.client.player
+
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.network.ClientCommonNetworkHandler
+import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.network.ClientPlayerInteractionManager
+import net.minecraft.client.option.GameOptions
+import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.entity.vehicle.VehicleEntity
+import net.minecraft.util.math.Vec3d
+
+open class ClientInterface {
+    protected val client: MinecraftClient
+        get() = MinecraftClient.getInstance()
+    protected val player: ClientPlayerEntity?
+        get() = client.player
+    protected val world: ClientWorld?
+        get() = client.world
+    protected val options: GameOptions
+        get() = client.options
+    protected val interactionManager: ClientPlayerInteractionManager?
+        get() = client.interactionManager
+    protected val inventory: PlayerInventory?
+        get() = client.player?.inventory
+    protected val vehicle: VehicleEntity?
+        get() = player?.vehicle as? VehicleEntity
+    protected var velocity: Vec3d?
+        get() = if (player?.vehicle != null) player?.vehicle?.velocity else player?.velocity
+        set(value) = if (player?.vehicle != null) player?.vehicle?.velocity = value else player?.velocity = value
+    protected val playerPos: Vec3d?
+        get() {
+            val x = player?.x ?: return null
+            val y = player?.y ?: return null
+            val z = player?.z ?: return null
+            return Vec3d(x, y, z)
+        }
+    protected val networkHandler: ClientCommonNetworkHandler?
+        get() = client.networkHandler
+}

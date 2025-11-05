@@ -1,6 +1,7 @@
 package org.infinite.features.movement.water
 
 import org.infinite.ConfigurableFeature
+import org.infinite.libs.client.control.ControllerInterface
 import org.infinite.settings.FeatureSetting
 
 enum class WaterHoverMethod {
@@ -9,21 +10,18 @@ enum class WaterHoverMethod {
 }
 
 class WaterHover : ConfigurableFeature(initialEnabled = false) {
-    override val settings: List<FeatureSetting<*>> =
-        listOf(
-            FeatureSetting.EnumSetting(
-                "Method",
-                "feature.movement.waterhover.method.description",
-                WaterHoverMethod.Jump,
-                WaterHoverMethod.entries.toList(),
-            ),
+    private val method =
+        FeatureSetting.EnumSetting(
+            "Method",
+            WaterHoverMethod.Jump,
+            WaterHoverMethod.entries.toList(),
         )
-    private var isFloatedBefore = false
+
+    override val settings: List<FeatureSetting<*>> = listOf(method)
 
     override fun tick() {
         val player = client.player ?: return
-        val method = (getSetting("Method") as? FeatureSetting.EnumSetting)?.value as? WaterHoverMethod ?: return
-        when (method) {
+        when (method.value) {
             WaterHoverMethod.Jump -> {
                 val waterAttenuationFactor = 0.8
                 val waterGravityVelocity = -0.02 * waterAttenuationFactor
@@ -31,17 +29,12 @@ class WaterHover : ConfigurableFeature(initialEnabled = false) {
                 val shouldHover =
                     player.isTouchingWater &&
                         !player.isSwimming &&
-                        !client.options.sneakKey.isPressed &&
+                        !options.sneakKey.isPressed &&
                         player.velocity.y < waterGravityVelocity
-
                 // 浮遊状態であれば、ジャンプキーの状態を「押されている」に設定する
                 // これにより、ゲームの水中のジャンプロジック（+0.04のmotY追加）が呼び出され、浮力を得る
                 if (shouldHover) {
-                    client.options.jumpKey.isPressed = true
-                    isFloatedBefore = true
-                } else if (isFloatedBefore) {
-                    client.options.jumpKey.isPressed = false
-                    isFloatedBefore = false
+                    ControllerInterface.press(options.jumpKey, tick = 1)
                 }
             }
 
@@ -53,12 +46,5 @@ class WaterHover : ConfigurableFeature(initialEnabled = false) {
                 }
             }
         }
-    }
-
-    override fun disabled() {
-        super.disabled()
-        // Featureが無効になったとき、ジャンプキーの状態を元の（押されていない）状態に戻す
-        // これを行わないと、プレイヤーはジャンプし続けてしまう
-        client.options.jumpKey.isPressed = false
     }
 }

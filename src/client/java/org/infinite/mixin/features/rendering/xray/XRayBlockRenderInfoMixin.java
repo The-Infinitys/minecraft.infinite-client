@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Pseudo
-@Mixin(value = BlockRenderInfo.class, remap = false)
+@Mixin(value = BlockRenderInfo.class, remap = true)
 public abstract class XRayBlockRenderInfoMixin {
   @Shadow public BlockPos blockPos;
   @Shadow public BlockState blockState;

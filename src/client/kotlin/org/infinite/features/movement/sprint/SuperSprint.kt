@@ -8,13 +8,11 @@ class SuperSprint : ConfigurableFeature(initialEnabled = false) {
     private val onlyWhenForward =
         FeatureSetting.BooleanSetting(
             "OnlyWhenForward",
-            "feature.movement.supersprint.onlywhenforward.description",
             true,
         )
     private val evenIfHungry =
         FeatureSetting.BooleanSetting(
             "EvenIfHungry",
-            "feature.movement.supersprint.evenifhungry.description",
             false,
         )
 

@@ -8,10 +8,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
-import org.infinite.InfiniteClient
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
@@ -42,27 +40,23 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
     private val fireMode: FeatureSetting.EnumSetting<FireMode> =
         FeatureSetting.EnumSetting(
             "FireMode",
-            "feature.fighting.gunner.firemode.description",
             FireMode.FULL_AUTO,
             FireMode.entries,
         )
     private val fastReload: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "FastReload",
-            "feature.fighting.gunner.fastreload.description",
             false,
         )
     private val changeMode: FeatureSetting.EnumSetting<ChangeMode> =
         FeatureSetting.EnumSetting(
             "ChangeMode",
-            "feature.fighting.gunner.changemode.description",
             ChangeMode.Fixed,
             ChangeMode.entries,
         )
     private val additionalInterval: FeatureSetting.IntSetting =
         FeatureSetting.IntSetting(
             "AdditionalInterval",
-            "feature.fighting.gunner.additionalinterval.description",
             3,
             0,
             10,
@@ -70,7 +64,7 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> = listOf(fireMode, fastReload, changeMode, additionalInterval)
     var state: GunnerState = GunnerState.IDLE
     var mode: GunnerMode = GunnerMode.RELOAD
-    override val level = FeatureLevel.CHEAT
+    override val level = FeatureLevel.Cheat
 
     fun gunnerCount(): Int {
         // クロスボウで使用可能なアイテムのIdentifierを取得
@@ -113,7 +107,7 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
                     val loadedCrossbow = findFirstLoadedCrossbow()
                     val readyToSet =
                         (fireMode.value == FireMode.FULL_AUTO && intervalCount == 0) ||
-                            (fireMode.value == FireMode.SEMI_AUTO && !InfiniteClient.playerInterface.options.useKey.isPressed)
+                            (fireMode.value == FireMode.SEMI_AUTO && !options.useKey.isPressed)
                     if (loadedCrossbow != null && readyToSet) {
                         intervalCount = additionalInterval.value
                         manager.swap(InventoryIndex.MainHand(), loadedCrossbow)

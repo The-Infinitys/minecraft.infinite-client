@@ -2,10 +2,10 @@ package org.infinite
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.option.GameOptions
-import net.minecraft.client.world.ClientWorld
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.util.InputUtil
+import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.world.WorldManager
@@ -13,29 +13,27 @@ import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
 import org.lwjgl.glfw.GLFW
 
-enum class FeatureLevel {
-    UTILS, // ユーリティ。基本どこで使ってても問題ない。
-    EXTEND, // 実際には不可能なので、見られると気づかれる可能性がある
-    CHEAT, // サーバー側で簡単に検知される
-}
-
 abstract class ConfigurableFeature(
     private val initialEnabled: Boolean = false,
-) {
-    internal val client: MinecraftClient
-        get() = MinecraftClient.getInstance()
-    internal val player: ClientPlayerEntity?
-        get() = client.player
-    internal val world: ClientWorld?
-        get() = client.world
-    internal val options: GameOptions
-        get() = client.options
+) : ClientInterface() {
+    enum class FeatureLevel {
+        Utils, // ユーリティ。基本どこで使ってても問題ない。
+        Extend, // 実際には不可能なので、見られると気づかれる可能性がある
+        Cheat, // サーバー側で簡単に検知される
+    }
+
+    enum class TickTiming {
+        Start,
+        End,
+    }
+
+    open val tickTiming: TickTiming = TickTiming.Start
     internal var enabled: Property<Boolean> = Property(initialEnabled)
     private val disabled: Property<Boolean> = Property(!initialEnabled)
     open val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_DONT_CARE)
     open val togglable = true
     open val preRegisterCommands: List<String> = listOf("enable", "disable", "toggle", "set", "get", "add", "del")
-    open val level: FeatureLevel = FeatureLevel.EXTEND
+    open val level: FeatureLevel = FeatureLevel.Extend
 
     // リスナーの同期に使用する専用のロックオブジェクト
     private val listenerLock = Any()
@@ -176,7 +174,43 @@ abstract class ConfigurableFeature(
 
     open fun handleChunk(worldChunk: WorldManager.Chunk) {}
 
+    class ActionKeybind(
+        val name: String,
+        private val key: Int,
+        val action: () -> Unit,
+    ) {
+        lateinit var keyBinding: KeyBinding
+
+        fun register(
+            categoryName: String,
+            featureName: String,
+            keyBindingCategory: KeyBinding.Category,
+        ): ActionKeybind {
+            keyBinding =
+                KeyBinding(
+                    "key.infinite-client.action.$categoryName.$featureName.$name",
+                    InputUtil.Type.KEYSYM,
+                    key,
+                    keyBindingCategory,
+                )
+            KeyBindingHelper.registerKeyBinding(
+                keyBinding,
+            )
+            return this
+        }
+    }
+
+    open val actionKeybinds: List<ActionKeybind> = listOf()
+
     fun toggle() {
         if (isEnabled()) disable() else enable()
     }
+
+    open fun respawn() {}
+
+    fun registerKeybinds(
+        categoryName: String,
+        featureName: String,
+        keyBindingCategory: KeyBinding.Category,
+    ): List<ActionKeybind> = actionKeybinds.map { it.register(categoryName, featureName, keyBindingCategory) }
 }

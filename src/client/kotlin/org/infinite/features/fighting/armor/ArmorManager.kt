@@ -9,10 +9,8 @@ import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.registry.Registries
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
-import org.infinite.InfiniteClient
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.FeatureSetting.BooleanSetting
 import org.infinite.settings.FeatureSetting.IntSetting
@@ -61,11 +59,11 @@ private val ARMOR_TOUGHNESS_VALUES =
 
 class ArmorManager : ConfigurableFeature(initialEnabled = false) {
     private val autoEquip: BooleanSetting =
-        BooleanSetting("AutoEquip", "feature.fighting.armormanager.autoequip.description", true)
+        BooleanSetting("AutoEquip", true)
     private val elytraSwitch: BooleanSetting =
-        BooleanSetting("ElytraSwitch", "feature.fighting.armormanager.autoelytra.description", true)
+        BooleanSetting("ElytraSwitch", true)
     private val durabilityThreshold: IntSetting =
-        IntSetting("DurabilityThreshold", "feature.fighting.armormanager.ignorebelow.description", 5, 0, 100)
+        IntSetting("DurabilityThreshold", 5, 0, 100)
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
@@ -81,12 +79,11 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
     private var floatTick: Int = 0
 
     override val level: FeatureLevel
-        get() = FeatureLevel.EXTEND
+        get() = FeatureLevel.Extend
 
     override fun tick() {
-        val player = InfiniteClient.playerInterface.player ?: return
+        val player = player ?: return
         val invManager = InventoryManager
-        val client = InfiniteClient.playerInterface.client
 
         // Skip if a screen is open (e.g., inventory GUI)
         if (client.currentScreen != null) return
@@ -173,7 +170,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         floatTick = if (player.isOnGround) 0 else floatTick + 1
 
         // Trigger elytra equip if jumping in mid-air
-        val jumpInput = InfiniteClient.playerInterface.client.options.jumpKey.isPressed
+        val jumpInput = options.jumpKey.isPressed
         val shouldAttemptElytra = jumpInput && !player.isOnGround && floatTick > 2 && !isCurrentElytra
 
         if (shouldAttemptElytra && !isElytraEquippedByHack) {

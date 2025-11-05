@@ -11,13 +11,11 @@ val server =
         feature(
             "ServerInfo",
             ServerInfo(),
-            "feature.server.serverinfo.description",
         ),
-        feature("AutoConnect", AutoConnect(), "feature.server.autoconnect.description"),
-        feature("DetectServer", DetectServer(), "feature.server.detectserver.description"),
+        feature("AutoConnect", AutoConnect()),
+        feature("DetectServer", DetectServer()),
         feature(
             "AutoLeave",
             AutoLeave(),
-            "feature.server.autoleave.description",
         ),
     )

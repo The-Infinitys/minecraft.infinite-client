@@ -88,7 +88,7 @@ object RenderResources {
             ).withVertexShader(Identifier.of("infinite:core/solid")) // Assuming a solid shader is available
             .withFragmentShader(Identifier.of("infinite:core/solid")) // Assuming a solid shader is available
             .withBlend(BlendFunction.TRANSLUCENT)
-            .withCull(true) // Solid faces usually cull the back face
+            .withCull(false) // Solid faces usually cull the back face
             // Using POSITION_COLOR_NORMAL and TRIANGLES to render quads, resolving the missing Normal error.
             .withVertexFormat(VertexFormats.POSITION_COLOR_NORMAL, VertexFormat.DrawMode.TRIANGLES)
             .buildSnippet()

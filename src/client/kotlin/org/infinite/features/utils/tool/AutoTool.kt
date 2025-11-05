@@ -1,14 +1,15 @@
 package org.infinite.features.utils.tool
 
-import net.minecraft.client.MinecraftClient
+import net.minecraft.block.Block
 import net.minecraft.item.Items
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
+import net.minecraft.registry.Registries
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
+import org.infinite.InfiniteClient
+import org.infinite.features.movement.braek.LinearBreak
+import org.infinite.features.movement.braek.VeinBreak
 import org.infinite.features.rendering.detailinfo.ToolChecker
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 
 /**
@@ -16,58 +17,65 @@ import org.infinite.settings.FeatureSetting
  * 最低限必要なツールレベル以上のグレードのツールを、最高グレードから優先的に選択します。
  */
 class AutoTool : ConfigurableFeature(initialEnabled = false) {
-    // AutoToolは、プレイヤーのインベントリを操作し、サーバーに特定の動作を行わせるため、EXTENDレベルに設定します。
     enum class Method {
         Swap,
         HotBar,
     }
 
+    enum class FineToolStrategy {
+        Shears,
+        SharpTool,
+        Hand,
+    }
+
     private val method =
         FeatureSetting.EnumSetting<Method>(
             "Method",
-            "feature.utils.autotool.method.description",
             Method.HotBar,
             Method.entries,
         )
-    override val level: FeatureLevel = FeatureLevel.EXTEND
+
+    private val fineToolStrategy =
+        FeatureSetting.EnumSetting<FineToolStrategy>(
+            "FineToolStrategy",
+            FineToolStrategy.SharpTool,
+            FineToolStrategy.entries,
+        )
+
+    override val level: FeatureLevel = FeatureLevel.Extend
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
             method,
+            fineToolStrategy,
         )
 
     private var previousSelectedSlot: Int = -1
 
-    // ツールのグレードとレベルの対応マップ。レベル順にソートして検索するために使用します。
     private val materialLevels =
         mapOf(
             "netherite" to 5,
             "diamond" to 4,
             "iron" to 3,
             "stone" to 2,
-            "wooden" to 0,
             "golden" to 1,
+            "wooden" to 0,
         )
 
-    /**
-     * 指定されたレベルと種類に対応する Minecraft のツールID (例: "minecraft:diamond_pickaxe") を生成します。
-     */
     private fun getToolIdForLevel(
         level: Int,
         kind: ToolChecker.ToolKind,
     ): String? {
-        // レベルに対応するマテリアル文字列を決定
         val material =
             when (level) {
-                4 -> "netherite"
-                3 -> "diamond"
-                2 -> "iron"
-                1 -> "stone"
-                0 -> "wooden" // レベル0の最低限は木製とする (Goldenもレベル0だが、ここでは検索リスト生成用にWoodenを使用)
+                5 -> "netherite"
+                4 -> "diamond"
+                3 -> "iron"
+                2 -> "stone"
+                1 -> "golden"
+                0 -> "wooden"
                 else -> return null
             }
-
-        // ツール種類に対応するIDサフィックスを決定
         val toolSuffix =
             when (kind) {
                 ToolChecker.ToolKind.PickAxe -> "pickaxe"
@@ -79,102 +87,188 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
         return "minecraft:${material}_$toolSuffix"
     }
 
-    override fun tick() {
-        val client = MinecraftClient.getInstance()
-        val player = client.player ?: return
-        val blockHitResult = client.crosshairTarget // プレイヤーが見ているエンティティやブロックを取得
+    /**
+     * 葉っぱ、蜘蛛の巣など、ハサミや剣が最適なブロックであるかを判定するヘルパー関数。
+     */
+    private fun isFineToolTarget(block: Block): Boolean {
+        val blockId = Registries.BLOCK.getId(block).toString()
+        return blockId.contains("leaves") ||
+            blockId.contains("cobweb") ||
+            blockId.contains("wool")
+    }
 
-        // ブロックのヒット結果でない場合は処理を中断
-        if (blockHitResult?.type != HitResult.Type.BLOCK) {
-            resetTool() // ターゲットがブロックでなくなった場合はツールを元に戻す
+    /**
+     * 指定されたツール種類と最低レベル以上のツールを最高グレードから検索します。
+     */
+    private fun findBestTool(
+        kind: ToolChecker.ToolKind,
+        minRequiredLevel: Int,
+    ): InventoryIndex? {
+        val searchLevels =
+            materialLevels.values
+                .filter { it >= minRequiredLevel }
+                .distinct()
+                .sortedDescending()
+
+        for (level in searchLevels) {
+            val toolId = getToolIdForLevel(level, kind) ?: continue
+            val toolItem = ToolChecker.getItemStackFromId(toolId).item
+
+            if (toolItem == Items.BARRIER || toolItem == Items.AIR) continue
+
+            val foundIndex = InventoryManager.findFirstInMain(toolItem)
+
+            if (foundIndex != null) {
+                return foundIndex
+            }
+        }
+        return null
+    }
+
+    override fun tick() {
+        val linearBreak = InfiniteClient.getFeature(LinearBreak::class.java)
+        val veinBreak = InfiniteClient.getFeature(VeinBreak::class.java)
+        val isLinearBreakWorking = linearBreak?.isWorking ?: false
+        val isVeinBreakWorking = veinBreak?.isWorking ?: false
+        val isInteractingToBlock = interactionManager?.isBreakingBlock ?: false
+        val blockPos =
+            when {
+                isLinearBreakWorking -> linearBreak.currentBreakingPos
+                isVeinBreakWorking -> veinBreak.currentBreakingPos
+                else -> interactionManager?.currentBreakingPos
+            }
+        val isMining = isInteractingToBlock || isLinearBreakWorking || isVeinBreakWorking
+        if (!isMining || blockPos == null) {
+            resetTool()
+            return
+        }
+        val blockState = world?.getBlockState(blockPos) ?: return
+        val block = blockState.block
+        val correctToolInfo = ToolChecker.getCorrectTool(block)
+        val toolKind = correctToolInfo.toolKind
+        val requiredToolLevel = correctToolInfo.toolLevel
+        var bestToolIndex: InventoryIndex?
+        var bestToolItem = Items.AIR
+
+        // ----------------------------------------------------
+        // 1. 特殊ブロック処理: 最低レベルが0以下 かつ 特殊ツールの対象ブロックの場合のみ
+        // ----------------------------------------------------
+        val isSpecialBlock = requiredToolLevel <= 0 && isFineToolTarget(block)
+
+        if (isSpecialBlock) {
+            when (fineToolStrategy.value) {
+                FineToolStrategy.Shears -> {
+                    bestToolIndex = InventoryManager.findFirstInMain(Items.SHEARS)
+                    if (bestToolIndex != null) {
+                        bestToolItem = Items.SHEARS
+                    }
+                }
+
+                FineToolStrategy.SharpTool -> {
+                    var bestSharpToolIndex: InventoryIndex? = null
+                    var highestLevel = -1
+
+                    for (kind in listOf(ToolChecker.ToolKind.Sword, ToolChecker.ToolKind.Hoe)) {
+                        val foundIndex = findBestTool(kind, 1)
+                        if (foundIndex != null) {
+                            val toolItem = InventoryManager.get(foundIndex).item
+                            val toolId = toolItem.toString()
+
+                            val currentLevel = materialLevels.entries.find { toolId.contains(it.key) }?.value ?: 0
+
+                            if (currentLevel > highestLevel) {
+                                highestLevel = currentLevel
+                                bestSharpToolIndex = foundIndex
+                            }
+                        }
+                    }
+
+                    bestToolIndex = bestSharpToolIndex
+                    if (bestToolIndex != null) {
+                        bestToolItem = InventoryManager.get(bestToolIndex).item
+                    }
+                }
+
+                FineToolStrategy.Hand -> {
+                    resetTool()
+                    return
+                }
+            }
+
+            // 特殊ツールが見つかった場合
+            if (bestToolIndex != null) {
+                val currentlyHeldItem = InventoryManager.get(InventoryIndex.MainHand())
+
+                if (currentlyHeldItem.item == bestToolItem) {
+                    return
+                }
+
+                handleToolSwitch(bestToolIndex)
+                return // 特殊ツールの切り替えが完了
+            }
+
+            // 特殊ブロックだが、特殊ツールがインベントリにない場合
+            resetTool()
             return
         }
 
-        // 現在ブロックを掘っているか（左クリックを長押ししているか）を確認
-        val isMining = client.options.attackKey.isPressed
+        // ----------------------------------------------------
+        // 2. メインのツール検索処理 (グレード付きのツール)
+        //    requiredToolLevel >= 0 に緩和し、レベル0のツルハシブロックも対象とする
+        // ----------------------------------------------------
 
-        if (isMining) {
-            val blockPos = (blockHitResult as BlockHitResult).blockPos
-            val blockState = client.world?.getBlockState(blockPos) ?: return
-            val block = blockState.block
-
-            // 破壊に必要な最適なツール情報を取得
-            val correctToolInfo = ToolChecker.getCorrectTool(block)
-            val toolKind = correctToolInfo.toolKind
-            val requiredToolLevel = correctToolInfo.toolLevel
-
-            // 最適なツールがない、またはツールが不要なブロックの場合は処理を中断
+        if (requiredToolLevel >= 0) { // レベル0も含め、ツール検索を行う
             if (toolKind == null) {
                 resetTool()
                 return
             }
 
-            // プレイヤーのインベントリマネージャーを取得
-            val currentlyHeldItem = InventoryManager.get(InventoryIndex.MainHand())
+            bestToolIndex = findBestTool(toolKind, requiredToolLevel)
 
-            // 必要なレベル以上のツールを最高グレードから検索するためのレベルリストを生成
-            // (例: requiredToolLevel=1(石)の場合, [4, 3, 2, 1] となる)
-            val searchLevels =
-                materialLevels.values
-                    .filter { it >= requiredToolLevel }
-                    .distinct() // 重複を削除 (wooden/golden=0)
-                    .sortedDescending() // ネザライトから順に検索
+            if (bestToolIndex != null) {
+                bestToolItem = InventoryManager.get(bestToolIndex).item
 
-            var bestToolIndex: InventoryIndex? = null
-            var bestToolId: String? = null
+                val currentlyHeldItem = InventoryManager.get(InventoryIndex.MainHand())
 
-            // 必要なレベル以上のツールを最高グレードから順に検索
-            for (level in searchLevels) {
-                // レベルに対応するツールIDを生成
-                val toolId = getToolIdForLevel(level, toolKind) ?: continue
-                val toolItem = ToolChecker.getItemStackFromId(toolId).item
-
-                // アイテムの取得に失敗した場合や空気の場合はスキップ
-                if (toolItem == Items.BARRIER || toolItem == Items.AIR) continue
-
-                // インベントリ内で該当アイテムを検索
-                val foundIndex = InventoryManager.findFirst(toolItem)
-
-                if (foundIndex != null) {
-                    // 最初に発見した最もグレードの高いツールを採用し、検索を終了
-                    bestToolIndex = foundIndex
-                    bestToolId = toolId
-                    break
-                }
-            }
-
-            if (bestToolIndex != null && bestToolId != null) {
-                // 既に最適なツールを持っているかチェック
-                // Silk Touch のチェックは複雑になるため、ここでは一旦無視して、ツールID（グレード）の一致のみを確認します。
-                if (currentlyHeldItem.item == ToolChecker.getItemStackFromId(bestToolId).item) {
-                    // 最適なグレードのツールを既に持っているため、切り替えは不要
+                if (currentlyHeldItem.item == bestToolItem) {
                     return
                 }
 
-                // ツール切り替え前のスロットを保存（まだ保存されていなければ）
-                if (previousSelectedSlot == -1) {
-                    previousSelectedSlot = player.inventory.selectedSlot
-                }
-
-                when (method.value) {
-                    Method.Swap -> {
-                        // 現在手に持っているアイテムと見つけたツールをスワップ
-                        // MainHandはHotbarのselectedSlotに対応
-                        InventoryManager.swap(InventoryIndex.Hotbar(player.inventory.selectedSlot), bestToolIndex)
-                    }
-                    Method.HotBar -> {
-                        // ホットバーモードの場合、ホットバー内の最適なツールを選択
-                        if (bestToolIndex is InventoryIndex.Hotbar) {
-                            player.inventory.selectedSlot = bestToolIndex.index
-                        }
-                    }
-                }
+                handleToolSwitch(bestToolIndex)
             } else {
-                // 最適なツールがインベントリに見つからなかった場合は、元のツールに戻す
+                // 最適なツールが見つからない
                 resetTool()
             }
         } else {
-            resetTool() // 掘るのをやめたらツールを元に戻す
+            // Special Blockではないが、requiredToolLevelが負の値のブロック（理論上はありえないが安全のため）
+            resetTool()
+        }
+    }
+
+    /**
+     * 実際にツールを切り替えるロジックを分離。
+     */
+    private fun handleToolSwitch(bestToolIndex: InventoryIndex) {
+        val player = player ?: return
+        val currentSlot = player.inventory.selectedSlot
+
+        // ツール切り替え前のスロットを保存（まだ保存されていなければ）
+        if (previousSelectedSlot == -1) {
+            previousSelectedSlot = currentSlot
+        }
+
+        when (method.value) {
+            Method.Swap -> {
+                InventoryManager.swap(InventoryIndex.Hotbar(currentSlot), bestToolIndex)
+            }
+
+            Method.HotBar -> {
+                if (bestToolIndex is InventoryIndex.Hotbar) {
+                    player.inventory.selectedSlot = bestToolIndex.index
+                    InfiniteClient.getFeature(LinearBreak::class.java)?.autoToolCallBack = bestToolIndex.index
+                    InfiniteClient.getFeature(VeinBreak::class.java)?.autoToolCallBack = bestToolIndex.index
+                }
+            }
         }
     }
 
@@ -182,9 +276,8 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
      * ツールを元のホットバーのスロットに戻す。
      */
     private fun resetTool() {
-        val client = MinecraftClient.getInstance()
-        val player = client.player ?: return
-        // ツールを切り替えていた場合のみ元のスロットに戻す
+        val player = player ?: return
+
         if (previousSelectedSlot != -1) {
             val currentSlot = player.inventory.selectedSlot
             val originalIndex = InventoryIndex.Hotbar(previousSelectedSlot)
@@ -194,14 +287,15 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                 Method.Swap -> {
                     try {
                         // 現在手に持っているアイテム（ツール）と、元のスロットにあるアイテムをスワップ
-                        // これにより、元のアイテムがCurrentSlotに戻り、ツールはOriginalIndex（以前のアイテムがあった場所）に移動する
                         InventoryManager.swap(currentIndex, originalIndex)
                         previousSelectedSlot = -1 // リセット完了
-                    } catch (_: Exception) {
-                        // スワップ失敗時 (例: クリエイティブモードで元のスロットが空になったなど)
+                    } catch (e: Exception) {
+                        // スワップ失敗時
+                        InfiniteClient.error("[AutoTool] Error: $e")
                         previousSelectedSlot = -1
                     }
                 }
+
                 Method.HotBar -> {
                     // ホットバーモードの場合、元のホットバーのスロットを選択
                     player.inventory.selectedSlot = previousSelectedSlot

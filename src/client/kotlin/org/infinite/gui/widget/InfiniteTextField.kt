@@ -61,7 +61,7 @@ class InfiniteTextField(
             }
             return false
         } else if (inputType == InputType.HEX_COLOR) {
-            if (chr.isDigit() || (chr.lowercaseChar() >= 'a' && chr.lowercaseChar() <= 'f')) {
+            if (chr.isDigit() || (chr.lowercaseChar() in 'a'..'f')) {
                 return super.charTyped(input)
             }
             return false

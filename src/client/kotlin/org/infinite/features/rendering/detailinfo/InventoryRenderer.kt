@@ -418,8 +418,6 @@ object InventoryRenderer {
                         maxItemsPerRow = (innerContentWidth / (SLOT_SIZE + ITEM_PADDING)).coerceAtLeast(1)
                         fixedRows = null
                     }
-
-                    else -> return drawingY + PADDING
                 }
 
                 val totalItems = inventoryData.items.size

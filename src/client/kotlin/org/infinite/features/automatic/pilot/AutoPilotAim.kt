@@ -5,13 +5,13 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
-import org.infinite.libs.client.player.fighting.aim.AimCalculateMethod
-import org.infinite.libs.client.player.fighting.aim.AimPriority
-import org.infinite.libs.client.player.fighting.aim.AimTarget
-import org.infinite.libs.client.player.fighting.aim.AimTask
-import org.infinite.libs.client.player.fighting.aim.AimTaskCondition
-import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
-import org.infinite.libs.client.player.fighting.aim.CameraRoll
+import org.infinite.libs.client.aim.camera.CameraRoll
+import org.infinite.libs.client.aim.task.AimTask
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
+import org.infinite.libs.client.aim.task.config.AimCalculateMethod
+import org.infinite.libs.client.aim.task.config.AimPriority
+import org.infinite.libs.client.aim.task.config.AimTarget
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -43,7 +43,7 @@ class AutoPilotAimTask(
  */
 class AutoPilotCondition(
     val state: PilotState,
-) : AimTaskCondition {
+) : AimTaskConditionInterface {
     private val autoPilot: AutoPilot
         get() = InfiniteClient.getFeature(AutoPilot::class.java)!!
     private val player: ClientPlayerEntity?

@@ -1,48 +1,48 @@
 {
-	"schemaVersion": 1,
-	"id": "infinite",
-	"version": "${version}",
-	"name": "Infinite",
-	"description": "This is a hacked client for anti anti-cheat",
-	"authors": [
-		"The Infinity's"
-	],
-	"contact": {
-		"homepage": "https://the-infinitys.f5.si/minecraft/",
-		"sources": "https://github.com/The-Infinitys/minecraft.infinite-client"
-	},
-	"license": "MIT",
-	"icon": "assets/infinite/icon.png",
-	"environment": "client",
-	"entrypoints": {
-		"client": [
-			{
-				"value": "org.infinite.InfiniteClient",
-				"adapter": "kotlin"
-			}
-		],
-		"fabric-datagen": [
-			{
-				"value": "org.infinite.InfiniteDataGenerator",
-				"adapter": "kotlin"
-			}
-		]
-	},
-	"mixins": [
-		{
-			"config": "infinite.client.mixins.json",
-			"environment": "client"
-		}
-	],
+  "schemaVersion": 1,
+  "id": "infinite",
+  "version": "${version}",
+  "name": "Infinite",
+  "description": "This is a hacked client for anti anti-cheat",
+  "authors": [
+    "The Infinity's"
+  ],
+  "contact": {
+    "homepage": "https://the-infinitys.f5.si/minecraft/",
+    "sources": "https://github.com/The-Infinitys/minecraft.infinite-client"
+  },
+  "license": "MIT",
+  "icon": "assets/infinite/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      {
+        "value": "org.infinite.InfiniteClient",
+        "adapter": "kotlin"
+      }
+    ],
+    "fabric-datagen": [
+      {
+        "value": "org.infinite.InfiniteDataGenerator",
+        "adapter": "kotlin"
+      }
+    ]
+  },
+  "mixins": [
+    {
+      "config": "infinite.client.mixins.json",
+      "environment": "client"
+    }
+  ],
   "accessWidener": "infinite.accesswidener",
   "depends": {
-		"fabricloader": ">=0.17.2",
-		"minecraft": "~1.21.8",
-		"java": ">=21",
-		"fabric-api": "*",
-		"fabric-language-kotlin": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
-	}
+    "fabricloader": ">=0.16",
+    "minecraft": "~1.21.8",
+    "java": ">=21",
+    "fabric-api": "*",
+    "fabric-language-kotlin": "*"
+  },
+  "suggests": {
+    "baritone": "~1.21.10"
+  }
 }

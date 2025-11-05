@@ -200,16 +200,9 @@ object ConfigManager {
                                             .decodeFromJsonElement<List<Map<String, JsonPrimitive>>>(jsonElement)
                                             .associate { it["blockId"]!!.content to it["color"]!!.content.toInt() }
                                             .toMutableMap()
-
-                                is FeatureSetting.EnumSetting<*> -> {
+                                is FeatureSetting.EnumSetting -> {
                                     val enumName = json.decodeFromJsonElement<String>(jsonElement)
-                                    val enumClass = setting.options.first().javaClass
-                                    val enumEntry =
-                                        enumClass.enumConstants.firstOrNull { (it as Enum<*>).name == enumName }
-                                    if (enumEntry != null) {
-                                        @Suppress("UNCHECKED_CAST")
-                                        (setting as FeatureSetting.EnumSetting<Enum<*>>).value = enumEntry
-                                    }
+                                    setting.set(enumName)
                                 }
                             }
                         }

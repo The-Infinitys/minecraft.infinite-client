@@ -10,7 +10,7 @@ import net.minecraft.client.util.ObjectAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import org.infinite.libs.client.player.fighting.aim.CameraRoll
+import org.infinite.libs.client.aim.camera.CameraRoll
 import org.infinite.libs.graphics.render.RenderResources
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.utils.rendering.Line
@@ -24,7 +24,7 @@ class Graphics3D(
     val tickCounter: RenderTickCounter,
     val renderBlockOutline: Boolean,
     val camera: Camera,
-    val positionMatrix: Matrix4f,
+    positionMatrix: Matrix4f,
     val projectionMatrix: Matrix4f,
     val matrix4f2: Matrix4f,
     val gpuBufferSlice: GpuBufferSlice,

@@ -7,7 +7,6 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
 import org.lwjgl.glfw.GLFW
@@ -20,18 +19,16 @@ enum class XRayMode {
 class XRay : ConfigurableFeature(initialEnabled = false) {
     override val toggleKeyBind: Property<Int>
         get() = Property(GLFW.GLFW_KEY_X)
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
     override val settings: List<FeatureSetting<*>> =
         listOf(
             FeatureSetting.EnumSetting(
                 "Method",
-                "feature.rendering.xray.method.description",
                 XRayMode.Normal, // 初期値はNormal
                 XRayMode.entries.toList(), // すべてのオプションのリスト
             ),
             FeatureSetting.BlockListSetting(
                 "ThroughBlockList",
-                "feature.rendering.xray.throughblocklist.description",
                 mutableListOf(
                     "minecraft:water",
                     "minecraft:lava",
@@ -64,7 +61,6 @@ class XRay : ConfigurableFeature(initialEnabled = false) {
             ),
             FeatureSetting.BlockListSetting(
                 "ExposedBlockList",
-                "feature.rendering.xray.exposedblocklist.description",
                 mutableListOf(
                     "minecraft:ancient_debris",
                     "minecraft:anvil",

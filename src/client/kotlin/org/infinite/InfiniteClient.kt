@@ -1,9 +1,11 @@
 package org.infinite
 
+import com.google.gson.Gson
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderTickCounter
@@ -18,21 +20,31 @@ import org.infinite.gui.theme.official.InfiniteTheme
 import org.infinite.gui.theme.official.MinecraftTheme
 import org.infinite.gui.theme.official.PastelTheme
 import org.infinite.gui.theme.official.SmeClanTheme
-import org.infinite.libs.InfiniteCommand
-import org.infinite.libs.InfiniteKeyBind
-import org.infinite.libs.client.PlayerInterface
+import org.infinite.libs.ai.AiInterface
+import org.infinite.libs.client.control.ControllerInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
+import org.infinite.libs.infinite.InfiniteAddon
+import org.infinite.libs.infinite.InfiniteCommand
+import org.infinite.libs.infinite.InfiniteKeyBind
 import org.infinite.libs.world.WorldManager
 import org.infinite.utils.LogQueue
 import org.slf4j.LoggerFactory
+import java.io.InputStreamReader
+import java.nio.file.Files
 
 object InfiniteClient : ClientModInitializer {
     private val LOGGER = LoggerFactory.getLogger("InfiniteClient")
-    lateinit var playerInterface: PlayerInterface
     lateinit var worldManager: WorldManager
     var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"
+    var loadedAddons: MutableList<InfiniteAddon> = mutableListOf()
+
+    // Added for addon loading
+    private data class ModMetadataPlaceholder(
+        val id: String,
+        val version: String,
+    )
 
     fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: InfiniteTheme()
 
@@ -40,12 +52,12 @@ object InfiniteClient : ClientModInitializer {
         val result = mutableListOf<String>()
         for (category in featureCategories) {
             for (feature in category.features) {
-                val key = feature.descriptionKey
+                val key = feature.generateKey(category.name)
                 if (Text.translatable(key).string == key) {
                     result.add(key)
                 }
                 for (setting in feature.instance.settings) {
-                    val key = setting.descriptionKey
+                    val key = setting.generateKey(category.name, feature.name, setting.name)
                     if (Text.translatable(key).string == key) {
                         result.add(key)
                     }
@@ -57,6 +69,49 @@ object InfiniteClient : ClientModInitializer {
 
     override fun onInitializeClient() {
         LogQueue.registerTickEvent()
+
+        // Addon loading
+        val addonsDir =
+            FabricLoader
+                .getInstance()
+                .gameDir
+                .resolve("infinite")
+                .resolve("addons")
+        if (!Files.exists(addonsDir)) {
+            Files.createDirectories(addonsDir)
+            log("Created addons directory: $addonsDir")
+        }
+
+        Files
+            .list(addonsDir)
+            .filter { it.toString().endsWith(".jar") }
+            .forEach { jarPath ->
+                log("Found addon JAR: $jarPath")
+                try {
+                    val classLoader =
+                        java.net.URLClassLoader(arrayOf(jarPath.toUri().toURL()), this.javaClass.classLoader)
+                    val serviceLoader = java.util.ServiceLoader.load(InfiniteAddon::class.java, classLoader)
+
+                    // Get mod metadata from fabric.mod.json inside the JAR
+                    val zipFile = java.util.zip.ZipFile(jarPath.toFile())
+                    val entry = zipFile.getEntry("fabric.mod.json")
+                    if (entry == null) {
+                        warn("Skipping addon $jarPath: fabric.mod.json not found.")
+                        return@forEach
+                    }
+                    val metadataReader = InputStreamReader(zipFile.getInputStream(entry))
+                    val gson = Gson()
+                    val modMetadata = gson.fromJson(metadataReader, ModMetadataPlaceholder::class.java)
+                    metadataReader.close()
+
+                    for (addon in serviceLoader) {
+                        log("Loading addon: ${addon.name} v${modMetadata.version}")
+                        loadedAddons.add(addon)
+                    }
+                } catch (e: Exception) {
+                    error("Failed to load addon from $jarPath: ${e.message}")
+                }
+            }
 
         InfiniteKeyBind.registerKeybindings()
         // --- Event: when player joins a world ---
@@ -71,6 +126,9 @@ object InfiniteClient : ClientModInitializer {
                     CyberTheme(),
                 )
             ConfigManager.loadConfig()
+            for (addon in loadedAddons) { // Addon initialize
+                addon.onInitialize()
+            }
             for (category in featureCategories) {
                 for (features in category.features) {
                     features.instance.start()
@@ -92,16 +150,52 @@ object InfiniteClient : ClientModInitializer {
         // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             ConfigManager.saveConfig()
+            for (addon in loadedAddons) { // Addon shutdown
+                addon.onShutdown()
+            }
             for (category in featureCategories) {
                 for (features in category.features) {
                     features.instance.stop()
                 }
             }
+            AiInterface.clear()
+        }
+        ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
+            for (category in featureCategories) {
+                for (feature in category.features) {
+                    if (feature.instance.isEnabled()) {
+                        feature.instance.respawn()
+                    }
+                }
+            }
         }
         ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }
+        ClientTickEvents.START_CLIENT_TICK.register { _ -> ControllerInterface.tick() }
+        ClientTickEvents.START_CLIENT_TICK.register { _ -> AiInterface.tick() }
         ClientCommandRegistrationCallback.EVENT.register(InfiniteCommand::registerCommands)
-        playerInterface = PlayerInterface()
         worldManager = WorldManager()
+        ClientTickEvents.START_CLIENT_TICK.register { _ ->
+            for (category in featureCategories) {
+                for (feature in category.features) {
+                    if (feature.instance.isEnabled() && feature.instance.tickTiming ==
+                        ConfigurableFeature.TickTiming.Start
+                    ) {
+                        feature.instance.tick()
+                    }
+                }
+            }
+        }
+        ClientTickEvents.END_CLIENT_TICK.register { _ ->
+            for (category in featureCategories) {
+                for (feature in category.features) {
+                    if (feature.instance.isEnabled() && feature.instance.tickTiming ==
+                        ConfigurableFeature.TickTiming.End
+                    ) {
+                        feature.instance.tick()
+                    }
+                }
+            }
+        }
     }
 
     fun rainbowText(text: String): MutableText {
@@ -160,16 +254,26 @@ object InfiniteClient : ClientModInitializer {
             .append(Text.literal(prefixType).styled { style -> style.withColor(textColor) })
             .append(Text.literal("]: ").formatted(Formatting.RESET))
 
+    private fun logger(text: String) = LOGGER.info(text)
+
     fun log(text: String) {
-        LOGGER.info("[Infinite Client]: $text")
+        logger("[Infinite Client]: $text")
         val message =
             createPrefixedMessage("", theme().colors.foregroundColor)
                 .append(Text.literal(text).styled { style -> style.withColor(theme().colors.foregroundColor) })
         LogQueue.enqueueMessage(message) // キューに追加
     }
 
+    fun log(text: Text) {
+        logger("[Infinite Client]: $text")
+        val message =
+            createPrefixedMessage("", theme().colors.foregroundColor)
+                .append(text)
+        LogQueue.enqueueMessage(message)
+    }
+
     fun info(text: String) {
-        LOGGER.info("[Infinite Client - Info]: $text")
+        logger("[Infinite Client - Info]: $text")
         val message =
             createPrefixedMessage(" - Info ", theme().colors.infoColor)
                 .append(Text.literal(text).styled { style -> style.withColor(theme().colors.infoColor) })

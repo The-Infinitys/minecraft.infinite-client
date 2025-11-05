@@ -1,25 +1,18 @@
 package org.infinite.features
 
 import org.infinite.feature
-import org.infinite.features.automatic.aimode.AIMode
+import org.infinite.features.automatic.branchminer.BranchMiner
 import org.infinite.features.automatic.pilot.AutoPilot
-import org.infinite.features.automatic.woodcutter.WoodCutter
+import org.infinite.features.automatic.tunnel.ShieldMachine
+import org.infinite.features.automatic.wood.WoodMiner
 
 val automatic =
     listOf(
         feature(
             "AutoPilot",
             AutoPilot(),
-            "feature.automatic.autopilot.description",
         ),
-        feature(
-            "AutoAim",
-            AIMode(),
-            "feature.automatic.aimode.description",
-        ),
-        feature(
-            "AutoWoodCutter",
-            WoodCutter(),
-            "feature.automatic.woodcutter.description",
-        ),
+        feature("WoodMiner", WoodMiner()),
+        feature("ShieldMachine", ShieldMachine()),
+        feature("BranchMiner", BranchMiner()),
     )

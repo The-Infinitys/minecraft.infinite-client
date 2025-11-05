@@ -4,16 +4,15 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.features.fighting.aimassist.AimAssist
-import org.infinite.libs.client.player.fighting.AimInterface
-import org.infinite.libs.client.player.fighting.aim.AimCalculateMethod
-import org.infinite.libs.client.player.fighting.aim.AimPriority
-import org.infinite.libs.client.player.fighting.aim.AimTarget
-import org.infinite.libs.client.player.fighting.aim.AimTask
-import org.infinite.libs.client.player.fighting.aim.AimTaskCondition
-import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
+import org.infinite.libs.client.aim.AimInterface
+import org.infinite.libs.client.aim.task.AimTask
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
+import org.infinite.libs.client.aim.task.config.AimCalculateMethod
+import org.infinite.libs.client.aim.task.config.AimPriority
+import org.infinite.libs.client.aim.task.config.AimTarget
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
@@ -24,13 +23,12 @@ import kotlin.math.acos
 
 // Graphics3D.kt で使用するため、ここで定義するか、適切なパッケージからインポート
 class LockOn : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
     override val toggleKeyBind: Property<Int>
         get() = Property(GLFW.GLFW_KEY_K)
     private val range: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Range",
-            "feature.fighting.lockon.range.description",
             7f,
             3.0f,
             25.0f,
@@ -38,19 +36,16 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     private val players: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Players",
-            "feature.fighting.lockon.players.description",
             true,
         )
     private val mobs: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Mobs",
-            "feature.fighting.lockon.mobs.description",
             true,
         )
     private val fov: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "FOV",
-            "feature.fighting.lockon.fov.description",
             90.0f,
             10.0f,
             180.0f,
@@ -58,7 +53,6 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Speed",
-            "feature.fighting.lockon.speed.description",
             1.0f,
             0.5f,
             10f,
@@ -66,7 +60,6 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     private val method: FeatureSetting.EnumSetting<AimCalculateMethod> =
         FeatureSetting.EnumSetting(
             "Method",
-            "feature.fighting.lockon.method.description",
             AimCalculateMethod.Linear,
             AimCalculateMethod.entries,
         )
@@ -235,7 +228,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     }
 }
 
-class LockOnCondition : AimTaskCondition {
+class LockOnCondition : AimTaskConditionInterface {
     override fun check(): AimTaskConditionReturn {
         val lockOn = InfiniteClient.getFeature(LockOn::class.java) ?: return AimTaskConditionReturn.Failure
         return if (lockOn.isEnabled()) {

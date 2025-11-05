@@ -17,51 +17,41 @@ val fighting =
         feature(
             "KillAura",
             KillAura(),
-            "feature.fighting.killaura.description",
         ),
         feature(
             "Reach",
             Reach(),
-            "feature.fighting.reach.description",
         ),
         feature(
             "SuperAttack",
             SuperAttack(),
-            "feature.fighting.superattack.description",
         ),
         feature(
             "CounterAttack",
             CounterAttack(),
-            "feature.fighting.counterattack.description",
         ),
         feature(
             "ImpactAttack",
             ImpactAttack(),
-            "feature.fighting.impactattack.description",
         ),
         feature(
             "ArmorManager",
             ArmorManager(),
-            "feature.fighting.armormanager.description",
         ),
         feature(
             "Gunner",
             Gunner(),
-            "feature.fighting.gunner.description",
         ),
         feature(
             "AutoTotem",
             AutoTotem(),
-            "feature.fighting.autototem.description",
         ),
         feature(
             "AimAssist",
             AimAssist(),
-            "feature.fighting.aimassist.description",
         ),
         feature(
             "LockOn",
             LockOn(),
-            "feature.fighting.lockon.description",
         ),
     )

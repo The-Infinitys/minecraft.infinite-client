@@ -3,18 +3,16 @@ package org.infinite.features.utils.backpack
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.ItemStack
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
-import org.infinite.libs.client.player.inventory.InventoryManager
-import org.infinite.libs.client.player.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
 
 class BackPackManager : ConfigurableFeature() {
-    override val level: FeatureLevel = FeatureLevel.EXTEND
+    override val level: FeatureLevel = FeatureLevel.Extend
 
     private val sortEnabled =
         FeatureSetting.BooleanSetting(
             "SortEnabled",
-            "feature.utils.backpackInventoryManager.sort_enabled.description",
             true,
         )
 
@@ -22,19 +20,16 @@ class BackPackManager : ConfigurableFeature() {
     private val autoMoveToBackpackEnabled =
         FeatureSetting.BooleanSetting(
             "AutoMoveToBackpack",
-            "feature.utils.backpackInventoryManager.auto_move_to_backpack_enabled.description",
             true,
         )
     private val autoReplenishHotbarEnabled =
         FeatureSetting.BooleanSetting(
             "AutoReplenishHotbar",
-            "feature.utils.backpackInventoryManager.auto_replenish_hotbar_enabled.description",
             true,
         )
     private val sortInterval =
         FeatureSetting.IntSetting(
             "SortInterval",
-            "feature.utils.backpackInventoryManager.sort_interval.description",
             20 * 5,
             20,
             20 * 60,

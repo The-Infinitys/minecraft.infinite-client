@@ -6,13 +6,12 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ServerInfo
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
 import org.infinite.settings.FeatureSetting
 
 class ServerInfo : ConfigurableFeature() {
     override val settings: List<FeatureSetting<*>> = emptyList()
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
     override val preRegisterCommands: List<String> = emptyList()
     override val togglable: Boolean = false
 

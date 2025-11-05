@@ -26,8 +26,7 @@ class InfiniteEntityListField(
 
     private val baseLabelHeight = textRenderer.fontHeight
     private val descriptionHeight =
-        if (setting.descriptionKey.isNotBlank()
-        ) {
+        if (setting.descriptionKey.isNotBlank()) {
             textRenderer.fontHeight + 2
         } else {
             0

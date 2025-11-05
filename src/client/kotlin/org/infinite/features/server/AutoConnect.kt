@@ -7,7 +7,6 @@ import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
 import net.minecraft.client.network.ServerAddress
 import net.minecraft.client.network.ServerInfo
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.settings.FeatureSetting
 
 class AutoConnect : ConfigurableFeature() {
@@ -37,11 +36,10 @@ class AutoConnect : ConfigurableFeature() {
     val waitTicks =
         FeatureSetting.IntSetting(
             "WaitTicks",
-            "feature.server.autoconnect.delay.description",
             40,
             10,
             300,
         )
     override val settings: List<FeatureSetting<*>> = listOf(waitTicks)
-    override val level: FeatureLevel = FeatureLevel.UTILS
+    override val level: FeatureLevel = FeatureLevel.Utils
 }

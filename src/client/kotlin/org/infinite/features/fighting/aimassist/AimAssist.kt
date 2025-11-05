@@ -5,25 +5,23 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.InfiniteClient
-import org.infinite.libs.client.player.fighting.AimInterface
-import org.infinite.libs.client.player.fighting.aim.AimCalculateMethod
-import org.infinite.libs.client.player.fighting.aim.AimPriority
-import org.infinite.libs.client.player.fighting.aim.AimTarget
-import org.infinite.libs.client.player.fighting.aim.AimTask
-import org.infinite.libs.client.player.fighting.aim.AimTaskCondition
-import org.infinite.libs.client.player.fighting.aim.AimTaskConditionReturn
+import org.infinite.libs.client.aim.AimInterface
+import org.infinite.libs.client.aim.task.AimTask
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
+import org.infinite.libs.client.aim.task.config.AimCalculateMethod
+import org.infinite.libs.client.aim.task.config.AimPriority
+import org.infinite.libs.client.aim.task.config.AimTarget
 import org.infinite.settings.FeatureSetting
 import kotlin.math.acos
 
 class AimAssist : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
 
     private val range: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Range",
-            "feature.fighting.aimassist.range.description",
             7f,
             3.0f,
             25.0f,
@@ -31,19 +29,16 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     private val players: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Players",
-            "feature.fighting.aimassist.players.description",
             true,
         )
     private val mobs: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Mobs",
-            "feature.fighting.aimassist.mobs.description",
             true,
         )
     private val fov: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "FOV",
-            "feature.fighting.aimassist.fov.description",
             90.0f,
             10.0f,
             180.0f,
@@ -51,7 +46,6 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Speed",
-            "feature.fighting.aimassist.speed.description",
             1.0f,
             0.5f,
             10f,
@@ -60,7 +54,6 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     private val method: FeatureSetting.EnumSetting<AimCalculateMethod> =
         FeatureSetting.EnumSetting(
             "Method",
-            "feature.fighting.aimassist.method.description",
             AimCalculateMethod.Linear,
             AimCalculateMethod.entries,
         )
@@ -134,7 +127,7 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
     }
 }
 
-class AimAssistTaskCondition : AimTaskCondition {
+class AimAssistTaskCondition : AimTaskConditionInterface {
     override fun check(): AimTaskConditionReturn {
         val aimAssist = InfiniteClient.getFeature(AimAssist::class.java) ?: return AimTaskConditionReturn.Failure
         if (aimAssist.isDisabled()) {

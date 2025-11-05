@@ -8,7 +8,6 @@ import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.player.PlayerEntity
 import org.infinite.ConfigurableFeature
-import org.infinite.FeatureLevel
 import org.infinite.features.rendering.sensory.esp.ContainerEsp
 import org.infinite.features.rendering.sensory.esp.ItemEsp
 import org.infinite.features.rendering.sensory.esp.MobEsp
@@ -26,29 +25,27 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
         OutLine,
     }
 
-    override val level: FeatureLevel = FeatureLevel.CHEAT
+    override val level: FeatureLevel = FeatureLevel.Cheat
     val method =
         FeatureSetting.EnumSetting<Method>(
             "Method",
-            "feature.rendering.extrasensory.method.description",
             Method.HitBox,
             Method.entries,
         )
     private val playerEsp =
-        FeatureSetting.BooleanSetting("PlayerEsp", "feature.rendering.extrasensory.playeresp.description", true)
+        FeatureSetting.BooleanSetting("PlayerEsp", true)
     private val mobEsp =
-        FeatureSetting.BooleanSetting("MobEsp", "feature.rendering.extrasensory.mobesp.description", true)
+        FeatureSetting.BooleanSetting("MobEsp", true)
 
     private val itemEsp =
-        FeatureSetting.BooleanSetting("ItemEsp", "feature.rendering.extrasensory.itemesp.description", true)
+        FeatureSetting.BooleanSetting("ItemEsp", true)
 
     private val portalEsp =
-        FeatureSetting.BooleanSetting("PortalEsp", "feature.rendering.extrasensory.portalesp.description", true)
+        FeatureSetting.BooleanSetting("PortalEsp", true)
 
     private val containerEsp =
         FeatureSetting.BooleanSetting(
             "ContainerEsp",
-            "feature.rendering.extrasensory.containeresp.description",
             true,
         )
 

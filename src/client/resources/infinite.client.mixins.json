@@ -3,7 +3,6 @@
   "package": "org.infinite.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "features.automatic.aimode.AIModeHudMixin",
     "features.fighting.gunner.GunnerHudMixin",
     "features.fighting.gunner.GunnerNetworkMixin",
     "features.fighting.killaura.KillAuraMixin",
@@ -15,6 +14,7 @@
     "features.movement.fastbreak.ClientPlayerInteractionManagerAccessor",
     "features.movement.fastbreak.FastBreakMixin",
     "features.movement.freeze.FreezeNetworkHandlerMixin",
+    "features.movement.linearbreak.CancelNormalAttackBlockMixin",
     "features.movement.safewalk.SafeWalkMixin",
     "features.movement.supersprint.SuperSprintMixin",
     "features.rendering.antioverlay.InGameHudMixin",
@@ -28,6 +28,7 @@
     "features.rendering.extrasensory.EntityRendererMixin",
     "features.rendering.freecamera.AbstractBlockStateMixin",
     "features.rendering.freecamera.ClientPlayerEntityMixin",
+    "features.rendering.freecamera.ClientPlayerEntityMovementMixin",
     "features.rendering.freecamera.ZeroHitBox",
     "features.rendering.hypertag.EntityRendererMixin",
     "features.rendering.hypertag.LivingEntityRendererMixin",
@@ -43,6 +44,7 @@
     "features.utils.afk.WorldRendererMixin",
     "infinite.graphics.InGameHudMixin",
     "infinite.graphics.WorldRendererMixin",
+    "infinite.interfaces.WorldRendererMixin",
     "infinite.world.ClientPlayNetworkHandlerMixin"
   ],
   "injectors": {

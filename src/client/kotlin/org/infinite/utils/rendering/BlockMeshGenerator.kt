@@ -125,13 +125,14 @@ object BlockMeshGenerator {
                     ),
                 )
             }
+            // Z+ face (South) - 修正後
             if (drawZPlusFace) {
                 quads.add(
                     Quad(
-                        Vec3d(x, y, z + 1),
-                        Vec3d(x + 1, y, z + 1),
-                        Vec3d(x + 1, y + 1, z + 1),
-                        Vec3d(x + 1, y + 1, z + 1),
+                        Vec3d(x, y, z + 1), // (x, y, z+1)
+                        Vec3d(x, y + 1, z + 1), // (x, y+1, z+1) ← 2番目の頂点を修正
+                        Vec3d(x + 1, y + 1, z + 1), // (x+1, y+1, z+1)
+                        Vec3d(x + 1, y, z + 1), // (x+1, y, z+1) ← 4番目の頂点を修正
                         color,
                         Vector3f(0f, 0f, 1f),
                     ),
