@@ -6,7 +6,7 @@ import org.infinite.libs.client.player.ClientInterface
 object AiInterface : ClientInterface() {
     var actions: ArrayDeque<AiAction> = ArrayDeque()
 
-    fun add(action: AiAction) = actions.add(action)
+    fun add(action: AiAction) = actions.addLast(action)
 
     fun tick() {
         val currentAction = actions.firstOrNull() ?: return

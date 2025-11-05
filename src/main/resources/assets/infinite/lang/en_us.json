@@ -319,5 +319,13 @@
   "infinite.feature.utils.auto_tool.fine_tool_strategy.description": "最適なツールを選択する際の詳細な戦略。",
   "infinite.feature.utils.food_manager.eat_while_attacking.description": "攻撃中に食事をするかどうかを設定します。",
   "infinite.feature.movement.fast_break.threshold_percentage.description": "FastBreakのしきい値の割合を設定します。",
-  "infinite.feature.movement.fast_break.interval.description": "FastBreakの実行間隔を設定します。"
+  "infinite.feature.movement.fast_break.interval.description": "FastBreakの実行間隔を設定します。",
+  "infinite.feature.automatic.wood_miner.search_height.description": "Sets the search height for wood mining.",
+  "infinite.feature.automatic.shield_machine.description": "Automatically builds a shield machine.",
+  "infinite.feature.automatic.shield_machine.width.description": "Sets the width of the shield machine.",
+  "infinite.feature.automatic.shield_machine.height.description": "Sets the height of the shield machine.",
+  "infinite.feature.automatic.shield_machine.length.description": "Sets the length of the shield machine.",
+  "infinite.feature.automatic.shield_machine.forward_offset.description": "Sets the forward offset of the shield machine.",
+  "infinite.feature.automatic.shield_machine.auto_place_floor.description": "Automatically places floor blocks for the shield machine.",
+  "infinite.feature.automatic.shield_machine.floor_block.description": "Sets the floor block for the shield machine."
 }
