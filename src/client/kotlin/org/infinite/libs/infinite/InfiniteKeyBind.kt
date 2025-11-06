@@ -21,7 +21,8 @@ object InfiniteKeyBind {
 
     // 初期化時にリストを空にする必要はないので、valでもOKですが、MutableListであることは維持します
     private val toggleKeyBindings: MutableList<ToggleKeyBindingHandler> = mutableListOf()
-    private val actionKeyBindings: MutableList<ConfigurableFeature.ActionKeybind> = mutableListOf()
+    private val actionKeyBindings: MutableList<Pair<ConfigurableFeature, List<ConfigurableFeature.ActionKeybind>>> =
+        mutableListOf()
 
     fun registerKeybindings() {
         val keyBindingCategory = KeyBinding.Category.create(Identifier.of("gameplay", "infinite"))
@@ -51,6 +52,7 @@ object InfiniteKeyBind {
                         configurableFeature,
                     )
                 actionKeyBindings +=
+                    configurableFeature to
                     configurableFeature.registerKeybinds(
                         category.name,
                         feature.name,
@@ -74,9 +76,13 @@ object InfiniteKeyBind {
                     }
                 }
             }
-            for (actionKeyBind in actionKeyBindings) {
-                while (actionKeyBind.keyBinding.wasPressed()) {
-                    actionKeyBind.action()
+            for ((feature, actionKeyBindList) in actionKeyBindings) {
+                if (feature.isEnabled()) {
+                    for (actionKeyBind in actionKeyBindList) {
+                        while (actionKeyBind.keyBinding.wasPressed()) {
+                            actionKeyBind.action()
+                        }
+                    }
                 }
             }
         }

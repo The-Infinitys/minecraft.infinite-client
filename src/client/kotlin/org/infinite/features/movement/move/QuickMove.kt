@@ -1,20 +1,67 @@
 package org.infinite.features.movement.move
 
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 import kotlin.math.cos
+import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
 
 // 基準となる各環境の移動速度（ブロック/秒）を定義
 class QuickMove : ConfigurableFeature() {
     override val tickTiming: TickTiming = TickTiming.End
-    private val baseGroundSpeed = 4.3
-    private val baseSwimmingSpeed = 5.45
-    private val baseWaterWalkSpeed = 4.3 * 0.7 // 水中での歩行は地上速度の約70%
-    private val baseLavaWalkSpeed = 4.3 * 0.5 // 溶岩中での歩行は地上速度の約50%
-    private val baseFlightSpeed = baseGroundSpeed * 1.4
+    private val currentMode: MoveMode
+        get() {
+            val player = player ?: return MoveMode.None
+            return when {
+                // 最も優先度の高い状態からチェック
+                player.hasVehicle() && allowWithVehicle.value -> MoveMode.Vehicle
+                allowOnSwimming.value && player.isSwimming -> MoveMode.Swimming // 泳ぎを水よりも優先
+                allowOnGliding.value && player.isGliding -> MoveMode.Gliding
+                player.isOnGround && allowOnGround.value -> MoveMode.Ground
+                player.isInLava && allowInLava.value -> MoveMode.Lava
+                player.isTouchingWater && allowInWater.value -> MoveMode.Water
+                !player.isOnGround && !player.isInLava && !player.isTouchingWater && allowInAir.value -> MoveMode.Air
+                else -> MoveMode.None
+            }
+        }
+    private val currentMaxSpeed: Double
+        get() {
+            val player = player ?: return 0.0
+            val world = world ?: return 0.0
+            val attributes = player.attributes
+            val acceleration =
+                when (currentMode) {
+                    MoveMode.Vehicle -> {
+                        val vehicle = player.vehicle ?: return 0.0
+                        when (vehicle) {
+                            is LivingEntity -> {
+                                vehicle.attributes.getValue(EntityAttributes.MOVEMENT_SPEED)
+                            }
+
+                            is BoatEntity -> {
+                                1.0
+                            }
+
+                            else -> {
+                                0.0
+                            }
+                        }
+                    }
+
+                    else ->
+                        attributes.getValue(
+                            EntityAttributes.MOVEMENT_SPEED,
+                        )
+                }
+            val entity = player.vehicle ?: player
+            val friction = world.getBlockState(entity.blockPos.add(0, -1, 0)).block.slipperiness
+            return acceleration / (1.0 - friction) * if (player.isSneaking) attributes.getValue(EntityAttributes.SNEAKING_SPEED) else 1.0
+        }
 
     // 移動モードを定義し、処理の優先順位と状態を明確にする
     private enum class MoveMode {
@@ -31,63 +78,21 @@ class QuickMove : ConfigurableFeature() {
     private val acceleration =
         FeatureSetting.DoubleSetting(
             "Acceleration",
-            0.05,
+            0.02,
             0.0,
             1.0,
         )
 
     private val friction =
-        FeatureSetting.DoubleSetting("Friction", 0.5, 0.0, 1.0)
+        FeatureSetting.DoubleSetting("Friction", 1.0, 0.0, 1.0)
 
     // --- 速度設定値 ---
-    private val speedOnGround =
+    private val speed =
         FeatureSetting.DoubleSetting(
-            "SpeedOnGround",
-            baseGroundSpeed * 1.4,
-            baseGroundSpeed,
-            baseGroundSpeed * 2.0,
-        )
-    private val speedInWater =
-        FeatureSetting.DoubleSetting(
-            "SpeedInWater",
-            baseWaterWalkSpeed * 1.4,
-            baseWaterWalkSpeed,
-            baseWaterWalkSpeed * 2.0,
-        )
-    private val speedInLava =
-        FeatureSetting.DoubleSetting(
-            "SpeedInLava",
-            baseLavaWalkSpeed * 1.4,
-            baseLavaWalkSpeed,
-            baseLavaWalkSpeed * 2.0,
-        )
-    private val speedInAir =
-        FeatureSetting.DoubleSetting(
-            "SpeedInAir",
-            baseFlightSpeed * 1.4,
-            baseFlightSpeed,
-            baseFlightSpeed * 2.0,
-        )
-    private val speedOnGliding =
-        FeatureSetting.DoubleSetting(
-            "SpeedOnGliding",
-            baseFlightSpeed * 1.4,
-            baseFlightSpeed,
-            baseFlightSpeed * 2.0,
-        )
-    private val speedOnSwimming =
-        FeatureSetting.DoubleSetting(
-            "SpeedOnSwimming",
-            baseSwimmingSpeed * 1.4,
-            baseSwimmingSpeed,
-            baseSwimmingSpeed * 2.0,
-        )
-    private val speedWithVehicle =
-        FeatureSetting.DoubleSetting(
-            "SpeedWithVehicle",
-            baseFlightSpeed * 1.4,
-            baseFlightSpeed,
-            baseFlightSpeed * 2.0,
+            "Speed",
+            0.75,
+            0.0,
+            2.0,
         )
 
     // --- Allow設定値 ---
@@ -123,20 +128,14 @@ class QuickMove : ConfigurableFeature() {
         listOf(
             acceleration,
             friction,
+            speed,
             allowOnGround,
-            speedOnGround,
             allowOnSwimming,
-            speedOnSwimming,
             allowInWater,
-            speedInWater,
             allowInLava,
-            speedInLava,
             allowInAir,
-            speedInAir,
             allowOnGliding,
-            speedOnGliding,
             allowWithVehicle,
-            speedWithVehicle,
         )
 
     override fun tick() {
@@ -144,97 +143,80 @@ class QuickMove : ConfigurableFeature() {
         val options = options
         val vehicle = player.vehicle
 
-        // 1. **現在のモードを決定するロジック (優先度順)**
-        val currentMode =
-            when {
-                // 最も優先度の高い状態からチェック
-                player.hasVehicle() && allowWithVehicle.value -> MoveMode.Vehicle
-                allowOnSwimming.value && player.isSwimming -> MoveMode.Swimming // 泳ぎを水よりも優先
-                allowOnGliding.value && player.isGliding -> MoveMode.Gliding
-                player.isOnGround && allowOnGround.value -> MoveMode.Ground
-                player.isInLava && allowInLava.value -> MoveMode.Lava
-                player.isTouchingWater && allowInWater.value -> MoveMode.Water
-                !player.isOnGround && !player.isInLava && !player.isTouchingWater && allowInAir.value -> MoveMode.Air
-                else -> MoveMode.None
-            }
-
-        // 3. **モードに基づいて速度制限を決定**
-        val currentSpeedLimitPerSecond =
-            when (currentMode) {
-                MoveMode.Ground -> speedOnGround.value
-                MoveMode.Swimming -> speedOnSwimming.value
-                MoveMode.Water -> speedInWater.value
-                MoveMode.Lava -> speedInLava.value
-                MoveMode.Air -> speedInAir.value
-                MoveMode.Gliding -> speedOnGliding.value
-                MoveMode.Vehicle -> speedWithVehicle.value
-                MoveMode.None -> return // 除外
-            }
-
         // 車両が有効な場合は、プレイヤーのYawを車両に適用
         vehicle?.yaw = player.yaw
 
-        var forward = 0.0
-        var strafe = 0.0
+        var forwardInput = 0.0
+        var strafeInput = 0.0
 
-        if (options.forwardKey.isPressed) forward++
-        if (options.backKey.isPressed) forward--
-        if (options.leftKey.isPressed) strafe++
-        if (options.rightKey.isPressed) strafe--
+        if (options.forwardKey.isPressed) forwardInput++
+        if (options.backKey.isPressed) forwardInput--
+        if (options.leftKey.isPressed) strafeInput++
+        if (options.rightKey.isPressed) strafeInput--
 
         var velocity = velocity ?: return
 
-        if (forward == 0.0 && strafe == 0.0) {
+        if (forwardInput == 0.0 && strafeInput == 0.0) {
             // 入力がない場合は摩擦を適用
             velocity = Vec3d(velocity.x * friction.value, velocity.y, velocity.z * friction.value)
         } else {
-            // ティックあたりの最大移動距離 (ブロック/ティック)
-            val tickSpeedLimit = currentSpeedLimitPerSecond / 20
+            val tickSpeedLimit = currentMaxSpeed * speed.value
 
-            // 現在の水平速度の大きさ
-            val moveSpeed = sqrt((velocity.x * velocity.x) + (velocity.z * velocity.z))
-
-            // 現在の速度が既に制限を超えている場合、加速を適用せずに戻る
-            if (moveSpeed >= tickSpeedLimit) {
-                return
-            }
-
-            // 4. ローカル座標系での加速ベクトルの計算
+            // 1. グローバル速度をプレイヤーのローカル座標系に変換
             val yaw = Math.toRadians(player.yaw.toDouble())
             val sinYaw = sin(yaw)
             val cosYaw = cos(yaw)
-            var vel = Vec3d.ZERO
 
-            // 入力ベクトルを正規化
-            val inputMagnitude = sqrt(forward * forward + strafe * strafe).coerceAtLeast(1.0)
-            val normalizedForward = forward / inputMagnitude
-            val normalizedStrafe = strafe / inputMagnitude
+            // 現在の水平ベロシティ
+            val currentVelX = velocity.x
+            val currentVelZ = velocity.z
 
-            val forwardMotionX = -sinYaw * normalizedForward * acceleration.value
-            val forwardMotionZ = cosYaw * normalizedForward * acceleration.value
+            // ローカル速度 (Forward, Strafe) への変換
+            var localVelForward = -sinYaw * currentVelX + cosYaw * currentVelZ
+            var localVelStrafe = cosYaw * currentVelX + sinYaw * currentVelZ
 
-            val strafeMotionX = cosYaw * normalizedStrafe * acceleration.value
-            val strafeMotionZ = sinYaw * normalizedStrafe * acceleration.value
+            // 2. 減速ロジックの適用 (キー入力とベロシティの符号が異なる場合に摩擦を適用)
 
-            vel =
-                vel.add(
-                    forwardMotionX + strafeMotionX,
-                    0.0,
-                    forwardMotionZ + strafeMotionZ,
-                )
-
-            // 5. 速度制限の適用
-            // 加速後の予測水平速度の大きさ
-            val predictedMoveSpeed =
-                sqrt((velocity.x + vel.x) * (velocity.x + vel.x) + (velocity.z + vel.z) * (velocity.z + vel.z))
-
-            velocity = velocity.add(vel)
-
-            if (predictedMoveSpeed > tickSpeedLimit) {
-                // 加速後の速度が制限を超えた場合、制限速度の大きさに正規化
-                velocity =
-                    Vec3d(velocity.x, 0.0, velocity.z).normalize().multiply(tickSpeedLimit).add(0.0, velocity.y, 0.0)
+            // Forward (前後方向) の減速
+            if (localVelForward != 0.0) {
+                // localVelForwardとforwardInputの符号が異なる場合
+                if (sign(localVelForward) != sign(forwardInput)) {
+                    localVelForward *= friction.value
+                }
             }
+
+            // Strafe (左右方向) の減速
+            if (localVelStrafe != 0.0) {
+                // localVelStrafeとstrafeInputの符号が異なる場合
+                if (sign(localVelStrafe) != sign(strafeInput)) {
+                    localVelStrafe *= friction.value
+                }
+            }
+
+            // 3. 入力に基づいた加速の適用
+            val inputMagnitude = sqrt(forwardInput * forwardInput + strafeInput * strafeInput).coerceAtLeast(1.0)
+            val normalizedForward = forwardInput / inputMagnitude
+            val normalizedStrafe = strafeInput / inputMagnitude
+
+            // ローカルベロシティに加速を加算
+            localVelForward += normalizedForward * acceleration.value
+            localVelStrafe += normalizedStrafe * acceleration.value
+
+            // 4. ローカル速度のクランプ (最大速度制限)
+            val currentMoveSpeed = sqrt(localVelForward * localVelForward + localVelStrafe * localVelStrafe)
+
+            if (currentMoveSpeed > tickSpeedLimit) {
+                // 制限速度の大きさに正規化
+                val scale = tickSpeedLimit / currentMoveSpeed
+                localVelForward *= scale
+                localVelStrafe *= scale
+            }
+
+            // 5. ローカル速度をグローバル座標系に戻す
+            val newVelX = -sinYaw * localVelForward + cosYaw * localVelStrafe
+            val newVelZ = cosYaw * localVelForward + sinYaw * localVelStrafe
+
+            velocity = Vec3d(newVelX, velocity.y, newVelZ)
         }
         this.velocity = velocity
     }

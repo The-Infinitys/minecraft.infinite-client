@@ -1,6 +1,7 @@
 package org.infinite.features.automatic.branchminer
 
 import net.minecraft.block.Blocks
+import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -11,6 +12,7 @@ import org.infinite.libs.ai.actions.block.MineBlockAction
 import org.infinite.libs.ai.actions.movement.PathMovementAction
 import org.infinite.libs.ai.interfaces.AiAction
 import org.infinite.libs.client.inventory.ContainerManager
+import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.settings.FeatureSetting
 import kotlin.math.abs
 
@@ -440,7 +442,7 @@ class BranchMiner : ConfigurableFeature() {
         reportCollectedItems()
 
         // インベントリ容量チェック
-        if (ContainerManager.getEmptySlotCount() < minEmptySlots.value && nearestChest != null) {
+        if (InventoryManager.emptySlots < minEmptySlots.value && nearestChest != null) {
             storeItemsInChest()
         } else {
             state = State.Next
@@ -475,15 +477,49 @@ class BranchMiner : ConfigurableFeature() {
 
     private fun performChestStorage() {
         waitTicks++
-
-        when (waitTicks) {
-            1 -> ContainerManager.openChest(nearestChest!!)
-            10 -> ContainerManager.storeMinedItems()
-            20 -> ContainerManager.closeChest()
-            30 -> {
+        when {
+            waitTicks == 1 -> ContainerManager.openContainer(nearestChest!!)
+            waitTicks == 10 -> storeMinedItems()
+            waitTicks == 30 -> ContainerManager.closeContainer()
+            waitTicks > 30 -> {
                 InfiniteClient.log(Text.literal("§a[BranchMiner] Items stored in chest"))
                 returnToBranchStart()
             }
+        }
+    }
+
+    private fun storeMinedItems() {
+        val containerType = ContainerManager.containerType() ?: return
+        if (listOf(
+                "generic_9x1",
+                "generic_9x2",
+                "generic_9x3",
+                "generic_9x4",
+                "generic_9x5",
+                "generic_9x6",
+            ).contains((containerType.id.path))
+        ) {
+            return
+        }
+        val interactionManager = interactionManager ?: return
+        val player = player ?: return
+        val size = containerType.containerSize
+        val invSize = 27
+        for (i in size until size + invSize) {
+            val stack = ContainerManager.get(i) ?: continue
+            // 1. 空のスタックはスキップ
+            if (stack.isEmpty) {
+                continue
+            }
+            val syncId = ContainerManager.handler?.syncId ?: break
+            val slotId = ContainerManager.firstEmptySlotId() ?: break
+            interactionManager.clickSlot(
+                syncId,
+                slotId,
+                0, // マウスボタン (左クリック)
+                SlotActionType.QUICK_MOVE,
+                player,
+            )
         }
     }
 
@@ -893,6 +929,6 @@ class BranchMiner : ConfigurableFeature() {
         for ((item, count) in collectedItems) {
             InfiniteClient.log(Text.literal("§e  - $item: $count"))
         }
-        InfiniteClient.log(Text.literal("§e[BranchMiner] Empty slots: ${ContainerManager.getEmptySlotCount()}"))
+        InfiniteClient.log(Text.literal("§e[BranchMiner] Empty slots: ${InventoryManager.emptySlots}"))
     }
 }

@@ -11,6 +11,11 @@ object InventoryManager : ClientInterface() {
         get() = player?.isCreative ?: false // nullの場合falseを返す
 
     sealed class InventoryIndex {
+        fun slotId(): Int? {
+            val innerSlotId = indexToSlot(this) ?: return null
+            return toNetworkSlot(innerSlotId)
+        }
+
         open class Armor : InventoryIndex() {
             class Head : Armor()
 
@@ -60,7 +65,9 @@ object InventoryManager : ClientInterface() {
 
             is InventoryIndex.Hotbar -> playerInv.getStack(index.index) ?: ItemStack.EMPTY
             is InventoryIndex.Backpack -> playerInv.getStack(9 + index.index) ?: ItemStack.EMPTY
-            is InventoryIndex.MainHand -> playerInv.getStack(playerInv.selectedSlot) ?: ItemStack.EMPTY // 修正: メインハンドは選択されたホットバーのスロット
+            is InventoryIndex.MainHand ->
+                playerInv.getStack(playerInv.selectedSlot)
+                    ?: ItemStack.EMPTY // 修正: メインハンドは選択されたホットバーのスロット
             is InventoryIndex.OffHand -> playerInv.getStack(40) ?: ItemStack.EMPTY // 修正: オフハンドは内部スロット40
         }
     }
@@ -466,4 +473,18 @@ object InventoryManager : ClientInterface() {
             }
         }
     }
+
+    val emptySlots: Int
+        get() {
+            var result = 0
+            for (i in 0 until 27) {
+                val index = InventoryIndex.Backpack(i)
+                result += if (get(index) == ItemStack.EMPTY) 1 else 0
+            }
+            for (i in 0 until 9) {
+                val index = InventoryIndex.Hotbar(i)
+                result += if (get(index) == ItemStack.EMPTY) 1 else 0
+            }
+            return result
+        }
 }
