@@ -16,7 +16,7 @@ import java.awt.Color
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.min
 
-class HyperMap : ConfigurableFeature(initialEnabled = true) {
+class HyperMap : ConfigurableFeature() {
     enum class Mode {
         Flat, // 平面図 (地表ビュー)
         Solid, // 断面図 (スライスビュー)

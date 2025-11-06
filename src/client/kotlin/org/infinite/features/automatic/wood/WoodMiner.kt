@@ -17,14 +17,6 @@ import org.infinite.libs.ai.interfaces.AiAction.AiActionState
 import org.infinite.settings.FeatureSetting
 
 class WoodMiner : ConfigurableFeature() {
-    fun baritoneCheck(): Boolean =
-        try {
-            Class.forName("baritone.api.BaritoneAPI")
-            true
-        } catch (_: ClassNotFoundException) {
-            false
-        }
-
     val searchRadius =
         FeatureSetting.IntSetting(
             name = "SearchRadius",
@@ -197,11 +189,6 @@ class WoodMiner : ConfigurableFeature() {
     }
 
     override fun tick() {
-        if (!baritoneCheck()) {
-            InfiniteClient.error("You have to import Baritone for this Feature!")
-            disable()
-            return
-        }
         when (state) {
             is State.Idle -> {
                 handleIdle()

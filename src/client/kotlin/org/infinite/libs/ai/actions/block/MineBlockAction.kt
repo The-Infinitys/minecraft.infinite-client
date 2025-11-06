@@ -2,6 +2,7 @@ package org.infinite.libs.ai.actions.block
 
 import baritone.api.BaritoneAPI
 import net.minecraft.util.math.BlockPos
+import org.infinite.InfiniteClient
 import org.infinite.libs.ai.interfaces.AiAction
 
 class MineBlockAction(
@@ -72,22 +73,35 @@ class MineBlockAction(
         // 既に破壊されたブロックをリストから削除する処理は、state()で行います
     }
 
-    override fun state(): AiActionState =
-        stateRegister() ?: run {
-            // Baritoneに指示したブロックが破壊されたか確認し、リストから削除
-            currentTarget?.let { target ->
-                // targetのブロックの状態を確認 (既に空気ブロックになっているか)
-                val isCleared = world?.getBlockState(target)?.isAir ?: false
-                if (isCleared) {
-                    // 破壊が完了したらリストから削除
-                    blockPosList.remove(target)
-                    // currentTargetをクリアし、次のtickで新しいターゲットが選ばれるようにする
-                    currentTarget = null
-                }
-            }
+    fun baritoneCheck(): Boolean =
+        try {
+            Class.forName("baritone.api.BaritoneAPI")
+            true
+        } catch (_: ClassNotFoundException) {
+            false
+        }
 
-            // 残りのブロックがあるかによって状態を決定
-            return if (blockPosList.isEmpty()) AiActionState.Success else AiActionState.Progress
+    override fun state(): AiActionState =
+        if (!baritoneCheck()) {
+            InfiniteClient.error("You have to import Baritone for this Feature!")
+            AiActionState.Failure
+        } else {
+            stateRegister() ?: run {
+                // Baritoneに指示したブロックが破壊されたか確認し、リストから削除
+                currentTarget?.let { target ->
+                    // targetのブロックの状態を確認 (既に空気ブロックになっているか)
+                    val isCleared = world?.getBlockState(target)?.isAir ?: false
+                    if (isCleared) {
+                        // 破壊が完了したらリストから削除
+                        blockPosList.remove(target)
+                        // currentTargetをクリアし、次のtickで新しいターゲットが選ばれるようにする
+                        currentTarget = null
+                    }
+                }
+
+                // 残りのブロックがあるかによって状態を決定
+                return if (blockPosList.isEmpty()) AiActionState.Success else AiActionState.Progress
+            }
         }
 
     private fun cancelActions() {

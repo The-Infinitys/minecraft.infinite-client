@@ -131,13 +131,6 @@ class BranchMiner : ConfigurableFeature() {
     private var waitTicks = 0
 
     override fun enabled() {
-        // Baritoneの存在確認
-        if (!baritoneCheck()) {
-            InfiniteClient.log(Text.literal("§c[BranchMiner] Baritone not found! Disabling..."))
-            disable()
-            return
-        }
-
         state = State.Initialize
         clearState()
     }
@@ -629,16 +622,6 @@ class BranchMiner : ConfigurableFeature() {
         val dz = currentPos.z - mainStart.z
         return dx * direction.stepX + dy * direction.stepY + dz * direction.stepZ
     }
-
-    // ユーティリティ関数
-
-    private fun baritoneCheck(): Boolean =
-        try {
-            Class.forName("baritone.api.BaritoneAPI")
-            true
-        } catch (_: ClassNotFoundException) {
-            false
-        }
 
     private fun safetyCheck(): Boolean {
         val currentPlayer = player ?: return false

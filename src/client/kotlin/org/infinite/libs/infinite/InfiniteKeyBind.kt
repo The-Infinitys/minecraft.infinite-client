@@ -2,13 +2,17 @@ package org.infinite.libs.infinite
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient.log
+import org.infinite.InfiniteClient.warn
 import org.infinite.featureCategories
 import org.infinite.gui.screen.InfiniteScreen
+import org.infinite.utils.toSnakeCase
 import org.lwjgl.glfw.GLFW
 
 object InfiniteKeyBind {
@@ -18,6 +22,8 @@ object InfiniteKeyBind {
         val keyBinding: KeyBinding,
         val feature: ConfigurableFeature,
     )
+
+    var translationKeyList: MutableList<String> = mutableListOf()
 
     // 初期化時にリストを空にする必要はないので、valでもOKですが、MutableListであることは維持します
     private val toggleKeyBindings: MutableList<ToggleKeyBindingHandler> = mutableListOf()
@@ -39,11 +45,14 @@ object InfiniteKeyBind {
         for (category in featureCategories) {
             for (feature in category.features) {
                 val configurableFeature = feature.instance
+                val translationKey =
+                    "key.infinite-client.toggle.${toSnakeCase(category.name)}.${toSnakeCase(feature.name)}"
+                translationKeyList += translationKey
                 toggleKeyBindings +=
                     ToggleKeyBindingHandler(
                         KeyBindingHelper.registerKeyBinding(
                             KeyBinding(
-                                "key.infinite-client.toggle.${category.name}.${feature.name}",
+                                translationKey,
                                 InputUtil.Type.KEYSYM,
                                 configurableFeature.toggleKeyBind.value,
                                 keyBindingCategory,
@@ -58,6 +67,7 @@ object InfiniteKeyBind {
                         feature.name,
                         keyBindingCategory,
                     )
+                translationKeyList += configurableFeature.registeredTranslations()
             }
         }
 
@@ -86,5 +96,24 @@ object InfiniteKeyBind {
                 }
             }
         }
+        ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
+            val lackedTranslations = checkTranslations()
+            if (lackedTranslations.isEmpty()) {
+                log("Mod Keybind initialized successfully.")
+            } else {
+                val translationList = lackedTranslations.joinToString(",") { "\"$it\":\"$it\"" }
+                warn("Missing Translations: [$translationList]")
+            }
+        }
+    }
+
+    private fun checkTranslations(): List<String> {
+        val result = mutableListOf<String>()
+        for (key in translationKeyList) {
+            if (Text.translatable(key).string == key) {
+                result.add(key)
+            }
+        }
+        return result
     }
 }

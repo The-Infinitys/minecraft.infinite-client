@@ -4,7 +4,9 @@ import baritone.api.BaritoneAPI
 import baritone.api.schematic.ISchematic
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
+import org.infinite.InfiniteClient
 import org.infinite.libs.ai.interfaces.AiAction
+
 // SingleBlockSchematicのimportが必要
 
 // 🌟 PlaceBlockActionのコンストラクタを変更し、placeBlockStateを受け取るようにする
@@ -65,7 +67,7 @@ class PlaceBlockAction(
         }
 
         val nearestBlock: BlockPos =
-            blockPosList.minByOrNull { it ->
+            blockPosList.minByOrNull {
                 val pos = it.toCenterPos()
                 playerPos?.squaredDistanceTo(pos.x, pos.y, pos.z) ?: Double.MAX_VALUE
             } ?: return
@@ -78,19 +80,32 @@ class PlaceBlockAction(
         currentTarget = nearestBlock
     }
 
+    fun baritoneCheck(): Boolean =
+        try {
+            Class.forName("baritone.api.BaritoneAPI")
+            true
+        } catch (_: ClassNotFoundException) {
+            false
+        }
+
     override fun state(): AiActionState =
-        stateRegister() ?: run {
-            currentTarget?.let { target ->
-                // 配置するBlockStateと同じ状態になったか確認
-                val isPlaced = world?.getBlockState(target) == placeBlockState
+        if (!baritoneCheck()) {
+            InfiniteClient.error("You have to import Baritone for this Feature!")
+            AiActionState.Failure
+        } else {
+            stateRegister() ?: run {
+                currentTarget?.let { target ->
+                    // 配置するBlockStateと同じ状態になったか確認
+                    val isPlaced = world?.getBlockState(target) == placeBlockState
 
-                if (isPlaced) {
-                    blockPosList.remove(target)
-                    currentTarget = null
+                    if (isPlaced) {
+                        blockPosList.remove(target)
+                        currentTarget = null
+                    }
                 }
-            }
 
-            return if (blockPosList.isEmpty()) AiActionState.Success else AiActionState.Progress
+                return if (blockPosList.isEmpty()) AiActionState.Success else AiActionState.Progress
+            }
         }
 
     override fun onFailure() = onFailureAction()

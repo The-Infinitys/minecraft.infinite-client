@@ -11,6 +11,7 @@ import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.world.WorldManager
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
+import org.infinite.utils.toSnakeCase
 import org.lwjgl.glfw.GLFW
 
 abstract class ConfigurableFeature(
@@ -180,15 +181,18 @@ abstract class ConfigurableFeature(
         val action: () -> Unit,
     ) {
         lateinit var keyBinding: KeyBinding
+        lateinit var translationKey: String
 
         fun register(
             categoryName: String,
             featureName: String,
             keyBindingCategory: KeyBinding.Category,
         ): ActionKeybind {
+            translationKey =
+                "key.infinite-client.action.${toSnakeCase(categoryName)}.${toSnakeCase(featureName)}.${toSnakeCase(name)}"
             keyBinding =
                 KeyBinding(
-                    "key.infinite-client.action.$categoryName.$featureName.$name",
+                    translationKey,
                     InputUtil.Type.KEYSYM,
                     key,
                     keyBindingCategory,
@@ -213,4 +217,6 @@ abstract class ConfigurableFeature(
         featureName: String,
         keyBindingCategory: KeyBinding.Category,
     ): List<ActionKeybind> = actionKeybinds.map { it.register(categoryName, featureName, keyBindingCategory) }
+
+    fun registeredTranslations(): List<String> = actionKeybinds.map { it.translationKey }
 }

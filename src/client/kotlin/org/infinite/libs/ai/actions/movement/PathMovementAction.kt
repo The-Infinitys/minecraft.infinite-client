@@ -5,6 +5,7 @@ import baritone.api.pathing.goals.Goal
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.BlockPos
+import org.infinite.InfiniteClient
 import org.infinite.libs.ai.interfaces.AiAction
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.camera.CameraRoll
@@ -122,22 +123,35 @@ class PathMovementAction(
     val pos: BlockPos
         get() = player!!.blockPos
 
-    override fun state(): AiActionState =
-        stateRegister() ?: when {
-            !registered || baritone.pathingBehavior.goal == goal -> AiActionState.Progress // 既に何かしらのアクションが行われている
-            registered && (
-                if (radius == null) {
-                    baritone.pathingBehavior.goal != goal
-                } else {
-                    goal.isInGoal(
-                        pos.x,
-                        pos.y,
-                        pos.z,
-                    )
-                }
-            ) -> AiActionState.Success
+    fun baritoneCheck(): Boolean =
+        try {
+            Class.forName("baritone.api.BaritoneAPI")
+            true
+        } catch (_: ClassNotFoundException) {
+            false
+        }
 
-            else -> AiActionState.Failure
+    override fun state(): AiActionState =
+        if (!baritoneCheck()) {
+            InfiniteClient.error("You have to import Baritone for this Feature!")
+            AiActionState.Failure
+        } else {
+            stateRegister() ?: when {
+                !registered || baritone.pathingBehavior.goal == goal -> AiActionState.Progress // 既に何かしらのアクションが行われている
+                registered && (
+                    if (radius == null) {
+                        baritone.pathingBehavior.goal != goal
+                    } else {
+                        goal.isInGoal(
+                            pos.x,
+                            pos.y,
+                            pos.z,
+                        )
+                    }
+                ) -> AiActionState.Success
+
+                else -> AiActionState.Failure
+            }
         }
 
     private fun cancelTask() {

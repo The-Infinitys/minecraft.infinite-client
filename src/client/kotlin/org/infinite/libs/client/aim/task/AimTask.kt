@@ -19,6 +19,8 @@ open class AimTask(
     open val condition: AimTaskConditionInterface,
     open val calcMethod: AimCalculateMethod,
     open val multiply: Double = 1.0,
+    val onSuccess: () -> Unit = {},
+    val onFailure: () -> Unit = {},
 ) {
     private fun mouseSensitivity(): Double =
         MinecraftClient
@@ -58,9 +60,13 @@ open class AimTask(
     private var duration = (1000 / 30).toLong()
     private var time = System.currentTimeMillis()
 
-    open fun atSuccess() {}
+    open fun atSuccess() {
+        onSuccess()
+    }
 
-    open fun atFailure() {}
+    open fun atFailure() {
+        onFailure()
+    }
 
     /**
      * AimTaskを1ティック（フレーム）処理します。

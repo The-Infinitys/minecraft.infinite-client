@@ -9,11 +9,13 @@ import org.infinite.features.fighting.impact.ImpactAttack
 import org.infinite.features.fighting.killaura.KillAura
 import org.infinite.features.fighting.lockon.LockOn
 import org.infinite.features.fighting.reach.Reach
+import org.infinite.features.fighting.shield.AutoShield
 import org.infinite.features.fighting.superattack.SuperAttack
 import org.infinite.features.fighting.totem.AutoTotem
 
 val fighting =
     listOf(
+        feature("AutoShield", AutoShield()),
         feature(
             "KillAura",
             KillAura(),
