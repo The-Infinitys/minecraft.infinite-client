@@ -1,4 +1,4 @@
-package org.infinite.features
+package org.infinite.features.utils
 
 import org.infinite.feature
 import org.infinite.features.utils.afk.AfkMode

@@ -1,4 +1,4 @@
-package org.infinite.features
+package org.infinite.features.fighting
 
 import org.infinite.feature
 import org.infinite.features.fighting.aimassist.AimAssist

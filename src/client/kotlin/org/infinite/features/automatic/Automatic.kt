@@ -1,4 +1,4 @@
-package org.infinite.features
+package org.infinite.features.automatic
 
 import org.infinite.feature
 import org.infinite.features.automatic.branchminer.BranchMiner

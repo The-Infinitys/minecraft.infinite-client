@@ -1,11 +1,11 @@
 package org.infinite
 
-import org.infinite.features.automatic
-import org.infinite.features.fighting
-import org.infinite.features.movement
-import org.infinite.features.rendering
-import org.infinite.features.server
-import org.infinite.features.utils
+import org.infinite.features.automatic.automatic
+import org.infinite.features.fighting.fighting
+import org.infinite.features.movement.movement
+import org.infinite.features.rendering.rendering
+import org.infinite.features.server.server
+import org.infinite.features.utils.utils
 import org.infinite.utils.toSnakeCase
 
 class Feature(

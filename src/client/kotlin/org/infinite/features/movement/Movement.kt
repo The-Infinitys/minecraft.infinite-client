@@ -1,10 +1,11 @@
-package org.infinite.features
+package org.infinite.features.movement
 
 import org.infinite.feature
 import org.infinite.features.movement.braek.FastBreak
 import org.infinite.features.movement.braek.LinearBreak
 import org.infinite.features.movement.braek.VeinBreak
 import org.infinite.features.movement.fall.AntiFall
+import org.infinite.features.movement.fall.QuickLand
 import org.infinite.features.movement.feather.FeatherWalk
 import org.infinite.features.movement.fly.SuperFly
 import org.infinite.features.movement.freeze.Freeze
@@ -31,6 +32,10 @@ internal val movement =
         feature(
             "AntiFall",
             AntiFall(),
+        ),
+        feature(
+            "QuickLand",
+            QuickLand(),
         ),
         feature(
             "SuperSprint",

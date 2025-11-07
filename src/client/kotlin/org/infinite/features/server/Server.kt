@@ -1,10 +1,6 @@
-package org.infinite.features
+package org.infinite.features.server
 
 import org.infinite.feature
-import org.infinite.features.server.AutoConnect
-import org.infinite.features.server.AutoLeave
-import org.infinite.features.server.DetectServer
-import org.infinite.features.server.ServerInfo
 
 internal val server =
     mutableListOf(

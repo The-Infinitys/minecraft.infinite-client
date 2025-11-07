@@ -30,7 +30,8 @@ class QuickMove : ConfigurableFeature() {
                 else -> MoveMode.None
             }
         }
-
+    private val reductionThreshold =
+        FeatureSetting.DoubleSetting("ReductionThreshold", 10.0, 0.0, 100.0)
     private val currentMaxSpeed: Double
         get() {
             val player = player ?: return 0.0
@@ -131,6 +132,7 @@ class QuickMove : ConfigurableFeature() {
             acceleration,
             friction,
             speed,
+            reductionThreshold,
             allowOnGround,
             allowOnSwimming,
             allowInWater,
@@ -159,6 +161,7 @@ class QuickMove : ConfigurableFeature() {
         var velocity = velocity ?: return
 
         val tickSpeedLimit = currentMaxSpeed * speed.value
+        val baseAcceleration = acceleration.value // 設定された基本の加速度
 
         // 1. グローバル速度をプレイヤーのローカル座標系に変換
         val yaw = Math.toRadians(player.yaw.toDouble())
@@ -189,25 +192,42 @@ class QuickMove : ConfigurableFeature() {
                 localVelStrafe *= friction.value
             }
         }
-
-        // --- 速度制限チェックと加速の条件付け (リクエストによる修正) ---
+        // --- 速度制限チェックと加速の条件付け (漸減ロジックの適用) ---
         val currentMoveSpeed = sqrt(localVelForward * localVelForward + localVelStrafe * localVelStrafe)
-        val allowAcceleration = currentMoveSpeed < tickSpeedLimit
+        val delta = reductionThreshold.value / 100.0
+        val startSpeed = tickSpeedLimit * (1 - delta) // 減速開始速度
+        val endSpeed = tickSpeedLimit // 加速0到達速度
 
-        // 3. 入力に基づいた加速の適用 (最大速度制限未満の場合のみ)
-        if (allowAcceleration) {
+        val accelerationFactor: Double =
+            when {
+                // 最高速度制限未満の場合はフル加速
+                currentMoveSpeed <= startSpeed -> 1.0
+                // 減速区間: 速度が startSpeed と endSpeed の間
+                currentMoveSpeed < endSpeed -> {
+                    // 線形補間: (1.0 - (現在速度 - 開始速度) / (終了速度 - 開始速度))
+                    val ratio = (currentMoveSpeed - startSpeed) / (endSpeed - startSpeed)
+                    1.0 - ratio
+                }
+                // 速度が endSpeed 以上になったら加速はゼロ
+                else -> 0.0
+            }
+
+        // 適用する加速度を計算 (基本加速度 × 加速倍率)
+        val currentAcceleration = baseAcceleration * accelerationFactor.coerceIn(0.0, 1.0)
+        // -----------------------------------------------------------
+
+        // 3. 入力に基づいた加速の適用 (計算された加速度を使用)
+        if (currentAcceleration > 0.0) {
             val inputMagnitude = sqrt(forwardInput * forwardInput + strafeInput * strafeInput).coerceAtLeast(1.0)
             val normalizedForward = forwardInput / inputMagnitude
             val normalizedStrafe = strafeInput / inputMagnitude
 
-            // ローカルベロシティに加速を加算
-            localVelForward += normalizedForward * acceleration.value
-            localVelStrafe += normalizedStrafe * acceleration.value
+            // ローカルベロシティに計算された加速度を加算
+            localVelForward += normalizedForward * currentAcceleration
+            localVelStrafe += normalizedStrafe * currentAcceleration
         }
-        // -----------------------------------------------------------
 
-        // 4. ローカル速度のクランプ (最大速度制限) - リクエストに基づき、**強制的な減速ロジックは削除**
-        // 速度が超過していても、加速を無効にしたことによる自然な減速（摩擦）に任せる。
+        // 4. ローカル速度のクランプ (最大速度制限) - 加速ロジックが速度超過を抑止しているため、ここでは**不要**
 
         // 5. ローカル速度をグローバル座標系に戻す
         val newVelX = -sinYaw * localVelForward + cosYaw * localVelStrafe

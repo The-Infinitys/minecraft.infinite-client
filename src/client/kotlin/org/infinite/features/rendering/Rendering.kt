@@ -1,4 +1,4 @@
-package org.infinite.features
+package org.infinite.features.rendering
 
 import org.infinite.feature
 import org.infinite.features.rendering.camera.CameraConfig

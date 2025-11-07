@@ -28,12 +28,16 @@ open class ClientInterface {
     protected var velocity: Vec3d?
         get() = if (player?.vehicle != null) player?.vehicle?.velocity else player?.velocity
         set(value) = if (player?.vehicle != null) player?.vehicle?.velocity = value else player?.velocity = value
-    protected val playerPos: Vec3d?
+    protected var playerPos: Vec3d?
         get() {
             val x = player?.x ?: return null
             val y = player?.y ?: return null
             val z = player?.z ?: return null
             return Vec3d(x, y, z)
+        }
+        set(value) {
+            val vec = value ?: return
+            player?.setPos(vec.x, vec.y, vec.z)
         }
     protected val networkHandler: ClientCommonNetworkHandler?
         get() = client.networkHandler
