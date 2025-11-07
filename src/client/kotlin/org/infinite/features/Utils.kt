@@ -10,8 +10,8 @@ import org.infinite.features.utils.noattack.NoAttack
 import org.infinite.features.utils.playermanager.PlayerManager
 import org.infinite.features.utils.tool.AutoTool
 
-val utils =
-    listOf(
+internal val utils =
+    mutableListOf(
         feature("AfkMode", AfkMode()),
         feature(
             "AutoTool",

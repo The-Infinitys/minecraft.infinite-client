@@ -41,7 +41,7 @@ class Feature(
 
 data class FeatureCategory(
     val name: String,
-    val features: List<Feature>,
+    val features: MutableList<Feature>,
 )
 
 fun <T : ConfigurableFeature> feature(
@@ -50,7 +50,7 @@ fun <T : ConfigurableFeature> feature(
 ): Feature = Feature(name, instance)
 
 val featureCategories =
-    listOf(
+    mutableListOf(
         FeatureCategory("Movement", movement),
         FeatureCategory("Rendering", rendering),
         FeatureCategory("Fighting", fighting),

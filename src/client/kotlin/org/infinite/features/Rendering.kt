@@ -12,8 +12,8 @@ import org.infinite.features.rendering.sight.SuperSight
 import org.infinite.features.rendering.tag.HyperTag
 import org.infinite.features.rendering.xray.XRay
 
-val rendering =
-    listOf(
+internal val rendering =
+    mutableListOf(
         feature(
             "AntiOverlay",
             AntiOverlay(),

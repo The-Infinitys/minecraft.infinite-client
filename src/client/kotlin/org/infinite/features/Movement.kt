@@ -18,8 +18,8 @@ import org.infinite.features.movement.walk.AutoWalk
 import org.infinite.features.movement.walk.SafeWalk
 import org.infinite.features.movement.water.WaterHover
 
-val movement =
-    listOf(
+internal val movement =
+    mutableListOf(
         feature(
             "HoverVehicle",
             HoverVehicle(),

@@ -1,12 +1,12 @@
 package org.infinite.libs.infinite
 
-import org.infinite.ConfigurableFeature
+import org.infinite.FeatureCategory
 
 interface InfiniteAddon {
-    val category: String
-    val name: String
-    val description: String
-    val feature: ConfigurableFeature
+    val id: String
+    val version: String
+
+    fun getFeatures(): List<FeatureCategory>
 
     fun onInitialize()
 

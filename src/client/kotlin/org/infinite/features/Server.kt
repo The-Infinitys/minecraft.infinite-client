@@ -6,8 +6,8 @@ import org.infinite.features.server.AutoLeave
 import org.infinite.features.server.DetectServer
 import org.infinite.features.server.ServerInfo
 
-val server =
-    listOf(
+internal val server =
+    mutableListOf(
         feature(
             "ServerInfo",
             ServerInfo(),

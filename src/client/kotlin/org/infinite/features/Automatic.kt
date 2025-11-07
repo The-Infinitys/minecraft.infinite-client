@@ -6,8 +6,8 @@ import org.infinite.features.automatic.pilot.AutoPilot
 import org.infinite.features.automatic.tunnel.ShieldMachine
 import org.infinite.features.automatic.wood.WoodMiner
 
-val automatic =
-    listOf(
+internal val automatic =
+    mutableListOf(
         feature(
             "AutoPilot",
             AutoPilot(),

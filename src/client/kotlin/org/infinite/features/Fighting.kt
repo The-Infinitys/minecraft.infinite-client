@@ -13,8 +13,8 @@ import org.infinite.features.fighting.shield.AutoShield
 import org.infinite.features.fighting.superattack.SuperAttack
 import org.infinite.features.fighting.totem.AutoTotem
 
-val fighting =
-    listOf(
+internal val fighting =
+    mutableListOf(
         feature("AutoShield", AutoShield()),
         feature(
             "KillAura",

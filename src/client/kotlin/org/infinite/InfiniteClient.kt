@@ -1,6 +1,5 @@
 package org.infinite
 
-import com.google.gson.Gson
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
@@ -30,8 +29,6 @@ import org.infinite.libs.infinite.InfiniteKeyBind
 import org.infinite.libs.world.WorldManager
 import org.infinite.utils.LogQueue
 import org.slf4j.LoggerFactory
-import java.io.InputStreamReader
-import java.nio.file.Files
 
 object InfiniteClient : ClientModInitializer {
     private val LOGGER = LoggerFactory.getLogger("InfiniteClient")
@@ -39,12 +36,8 @@ object InfiniteClient : ClientModInitializer {
     var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"
     var loadedAddons: MutableList<InfiniteAddon> = mutableListOf()
-
-    // Added for addon loading
-    private data class ModMetadataPlaceholder(
-        val id: String,
-        val version: String,
-    )
+    private val addonFeatureMap: MutableMap<InfiniteAddon, List<FeatureCategory>> = mutableMapOf()
+    private val featureInstances: MutableMap<Class<out ConfigurableFeature>, ConfigurableFeature> = mutableMapOf()
 
     fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: InfiniteTheme()
 
@@ -67,54 +60,35 @@ object InfiniteClient : ClientModInitializer {
         return result
     }
 
+    private fun loadAddons() {
+        if (!hasLoadedAddons) {
+            hasLoadedAddons = true
+            for (addon in loadedAddons) { // Addon initialize
+                log("Loading addon: ${addon.id} v${addon.version}")
+                val providedCategories = addon.getFeatures()
+                addonFeatureMap[addon] = providedCategories // Store provided categories
+
+                for (addonCategory in providedCategories) {
+                    val existingCategory = featureCategories.find { it.name == addonCategory.name }
+                    if (existingCategory != null) {
+                        // Merge features into existing category
+                        existingCategory.features.addAll(addonCategory.features)
+                    } else {
+                        // Add new category
+                        featureCategories.add(addonCategory)
+                    }
+                }
+                addon.onInitialize()
+            }
+        }
+    }
+
+    var hasLoadedAddons = false
+
     override fun onInitializeClient() {
         LogQueue.registerTickEvent()
 
-        // Addon loading
-        val addonsDir =
-            FabricLoader
-                .getInstance()
-                .gameDir
-                .resolve("infinite")
-                .resolve("addons")
-        if (!Files.exists(addonsDir)) {
-            Files.createDirectories(addonsDir)
-            log("Created addons directory: $addonsDir")
-        }
-
-        Files
-            .list(addonsDir)
-            .filter { it.toString().endsWith(".jar") }
-            .forEach { jarPath ->
-                log("Found addon JAR: $jarPath")
-                try {
-                    val classLoader =
-                        java.net.URLClassLoader(arrayOf(jarPath.toUri().toURL()), this.javaClass.classLoader)
-                    val serviceLoader = java.util.ServiceLoader.load(InfiniteAddon::class.java, classLoader)
-
-                    // Get mod metadata from fabric.mod.json inside the JAR
-                    val zipFile = java.util.zip.ZipFile(jarPath.toFile())
-                    val entry = zipFile.getEntry("fabric.mod.json")
-                    if (entry == null) {
-                        warn("Skipping addon $jarPath: fabric.mod.json not found.")
-                        return@forEach
-                    }
-                    val metadataReader = InputStreamReader(zipFile.getInputStream(entry))
-                    val gson = Gson()
-                    val modMetadata = gson.fromJson(metadataReader, ModMetadataPlaceholder::class.java)
-                    metadataReader.close()
-
-                    for (addon in serviceLoader) {
-                        log("Loading addon: ${addon.name} v${modMetadata.version}")
-                        loadedAddons.add(addon)
-                    }
-                } catch (e: Exception) {
-                    error("Failed to load addon from $jarPath: ${e.message}")
-                }
-            }
-
         InfiniteKeyBind.registerKeybindings()
-        // --- Event: when player joins a world ---
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             themes =
                 listOf(
@@ -126,11 +100,10 @@ object InfiniteClient : ClientModInitializer {
                     CyberTheme(),
                 )
             ConfigManager.loadConfig()
-            for (addon in loadedAddons) { // Addon initialize
-                addon.onInitialize()
-            }
+            loadAddons()
             for (category in featureCategories) {
                 for (features in category.features) {
+                    featureInstances[features.instance.javaClass] = features.instance
                     features.instance.start()
                 }
             }
@@ -152,13 +125,25 @@ object InfiniteClient : ClientModInitializer {
             ConfigManager.saveConfig()
             for (addon in loadedAddons) { // Addon shutdown
                 addon.onShutdown()
-            }
-            for (category in featureCategories) {
-                for (features in category.features) {
-                    features.instance.stop()
+                addonFeatureMap[addon]?.let { providedCategories ->
+                    for (addonCategory in providedCategories) {
+                        val existingCategory = featureCategories.find { it.name == addonCategory.name }
+                        if (existingCategory != null) {
+                            // Remove only the features provided by this addon from the existing category
+                            existingCategory.features.removeAll(addonCategory.features.toSet())
+                            // If the category becomes empty and was originally added by the addon, remove it
+                            if (existingCategory.features.isEmpty() && providedCategories.contains(existingCategory)) {
+                                featureCategories.remove(existingCategory)
+                            }
+                        } else {
+                            // If the category was added as a new one, remove it
+                            featureCategories.remove(addonCategory)
+                        }
+                    }
                 }
             }
             AiInterface.clear()
+            featureInstances.clear()
         }
         ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
             for (category in featureCategories) {
@@ -299,15 +284,8 @@ object InfiniteClient : ClientModInitializer {
     // フィーチャー関連の関数は変更なし
 
     fun <T : ConfigurableFeature> getFeature(featureClass: Class<T>): T? {
-        for (category in featureCategories) {
-            for (feature in category.features) {
-                if (featureClass.isInstance(feature.instance)) {
-                    @Suppress("UNCHECKED_CAST")
-                    return feature.instance as T
-                }
-            }
-        }
-        return null
+        @Suppress("UNCHECKED_CAST")
+        return featureInstances[featureClass] as? T
     }
 
     fun searchFeature(
@@ -321,16 +299,16 @@ object InfiniteClient : ClientModInitializer {
             ?.instance
 
     fun <T : ConfigurableFeature> isFeatureEnabled(featureClass: Class<T>): Boolean {
-        val feature = getFeature(featureClass)
-        return feature != null && feature.isEnabled()
+        val feature = getFeature(featureClass) ?: return false
+        return feature.isEnabled()
     }
 
     fun <T : ConfigurableFeature> isSettingEnabled(
         featureClass: Class<T>,
         settingName: String,
     ): Boolean {
-        val feature = getFeature(featureClass)
-        if (feature == null || !feature.isEnabled()) return false
+        val feature = getFeature(featureClass) ?: return false
+        if (!feature.isEnabled()) return false
         val setting = feature.getSetting(settingName)
         return setting != null && setting.value is Boolean && setting.value as Boolean
     }
@@ -340,8 +318,8 @@ object InfiniteClient : ClientModInitializer {
         settingName: String,
         defaultValue: Float,
     ): Float {
-        val feature = getFeature(featureClass)
-        if (feature == null || !feature.isEnabled()) return defaultValue
+        val feature = getFeature(featureClass) ?: return defaultValue
+        if (!feature.isEnabled()) return defaultValue
         val setting = feature.getSetting(settingName)
         return if (setting != null && setting.value is Float) setting.value as Float else defaultValue
     }
@@ -351,8 +329,8 @@ object InfiniteClient : ClientModInitializer {
         settingName: String,
         defaultValue: Int,
     ): Int {
-        val feature = getFeature(featureClass)
-        if (feature == null || !feature.isEnabled()) return defaultValue
+        val feature = getFeature(featureClass) ?: return defaultValue
+        if (!feature.isEnabled()) return defaultValue
         val setting = feature.getSetting(settingName)
         return if (setting != null && setting.value is Int) setting.value as Int else defaultValue
     }
