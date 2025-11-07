@@ -20,6 +20,7 @@ import org.infinite.gui.theme.official.MinecraftTheme
 import org.infinite.gui.theme.official.PastelTheme
 import org.infinite.gui.theme.official.SmeClanTheme
 import org.infinite.libs.ai.AiInterface
+import org.infinite.libs.client.async.AsyncInterface
 import org.infinite.libs.client.control.ControllerInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
@@ -87,7 +88,7 @@ object InfiniteClient : ClientModInitializer {
 
     override fun onInitializeClient() {
         LogQueue.registerTickEvent()
-
+        AsyncInterface.init()
         InfiniteKeyBind.registerKeybindings()
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             themes =
