@@ -45,7 +45,6 @@ class MineBlockAction(
             baritoneSettings.randomLooking113.value = 0.0
             isSettingsModified = true
         }
-        // --- 【削除】元のコードにあった毎ティック実行の設定変更は不要になりました ---
 
         // 現在Baritoneが何か処理中かを確認し、処理中であれば新しいタスクを与えない
         // (builderProcessのキャンセルは、意図しない中断を防ぐためここでは行わない)
@@ -114,7 +113,7 @@ class MineBlockAction(
      * オリジナル値を復元し、設定変更フラグをリセットします。
      */
     private fun restoreSettings() {
-        if (isSettingsModified) {
+        if (isSettingsModified && baritoneCheck()) {
             // オリジナル値が存在すれば復元
             originalRandomLooking?.let {
                 baritoneSettings.randomLooking.value = it

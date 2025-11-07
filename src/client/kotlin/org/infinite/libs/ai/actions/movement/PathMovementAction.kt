@@ -155,7 +155,9 @@ class PathMovementAction(
         }
 
     private fun cancelTask() {
-        baritone.pathingBehavior.cancelEverything()
+        if (baritoneCheck()) {
+            baritone.pathingBehavior.cancelEverything()
+        }
     }
 
     override fun onFailure() {
