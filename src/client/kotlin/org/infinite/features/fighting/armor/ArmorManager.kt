@@ -78,6 +78,9 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
     private var shouldSendElytraPacket: Boolean = false
     private var floatTick: Int = 0
 
+    // 前のティックでジャンプキーが押されていたかを追跡
+    private var wasJumpKeyPressed: Boolean = false
+    private var wasTouchingWater: Boolean = false
     override val level: FeatureLevel
         get() = FeatureLevel.Extend
 
@@ -124,7 +127,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         val currentChestStack = invManager.get(chestSlotIndex)
         val isCurrentElytra = currentChestStack.item == Items.ELYTRA
         val options = MinecraftClient.getInstance().options ?: return
-        // ★追加: Zキーによる手動解除のチェック
+        // Zキーによる手動解除のチェック
         val isReleaseElytraPressed = options.sneakKey.isPressed && options.sprintKey.isPressed
         // Handle elytra unequip logic (自動解除 または 手動解除)
         if (isElytraEquippedByHack) {
@@ -162,6 +165,9 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
                 if (swapped) {
                     resetElytraState() // 成功したら状態をリセット
                 }
+
+                // UnEquip時はwasJumpKeyPressedをリセット
+                wasJumpKeyPressed = options.jumpKey.isPressed
                 return // Exit to avoid multiple operations in one tick
             }
         }
@@ -171,7 +177,23 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
 
         // Trigger elytra equip if jumping in mid-air
         val jumpInput = options.jumpKey.isPressed
-        val shouldAttemptElytra = jumpInput && !player.isOnGround && floatTick > 2 && !isCurrentElytra
+
+        // ★追加: 水中脱出の例外条件
+        // ピッチ角が-70.0度以下（-90度が真上）の場合を「上を向いている」と判断
+        val isLookingUpward = player.pitch <= -70.0f
+        // 水中でジャンプキーが押されていて、真上を向いている場合、キー長押しを許可
+        val isWaterEscapeAttempt = jumpInput && player.isTouchingWater && isLookingUpward && !wasTouchingWater
+
+        // デフォルトの空中ジャンプ条件: 水中でない かつ 新規ジャンプ入力が必要
+        val isAirJumpAttempt = (jumpInput && !wasJumpKeyPressed) && !player.isTouchingWater
+
+        // エリトラ装着を試みるべき最終条件:
+        // (新規ジャンプ または 水中脱出) かつ (空中浮遊中) かつ (遅延後) かつ (エリトラ未装着)
+        val shouldAttemptElytra =
+            (isAirJumpAttempt || isWaterEscapeAttempt) &&
+                !player.isOnGround &&
+                floatTick > 2 &&
+                !isCurrentElytra
 
         if (shouldAttemptElytra && !isElytraEquippedByHack) {
             val elytraSlot = findBestElytraSlot(invManager)
@@ -183,6 +205,8 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
                 if (invManager.swap(chestSlotIndex, elytraSlot)) {
                     isElytraEquippedByHack = true
                     shouldSendElytraPacket = true
+                    // 装備に成功した場合は、次のティックのために状態を更新
+                    wasJumpKeyPressed = true
                     return // Exit to ensure swap completes before further actions
                 } else {
                     // スワップ失敗時は状態をリセット
@@ -190,6 +214,10 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
                 }
             }
         }
+
+        // 次のティックのためにジャンプキーの状態を更新
+        wasJumpKeyPressed = jumpInput
+        wasTouchingWater = player.isTouchingWater
     }
 
     private fun resetElytraState() {
