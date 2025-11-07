@@ -105,18 +105,33 @@ jar {
 // configure the maven publication
 publishing {
 	publications {
+		// --- 📌 修正箇所: ここをシンプルな定義に修正します ---
 		create("mavenJava", MavenPublication) {
 			artifactId = project.archives_base_name
+			// remapJarとremapSourcesJarを成果物として追加
+			// remapSourcesJarタスクを直接参照するだけでOK
+			artifact remapJar
+			artifact remapSourcesJar
+
 			from components.java
+			groupId project.group
+			version project.version
 		}
+		// ------------------------------------------------
 	}
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	// GitHub Packagesリポジトリへの公開設定
 	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
+		maven {
+			name = "GitHubPackages"
+			// GitHubリポジトリのURLを設定
+			url = uri("https://maven.pkg.github.com/The-Infinitys/minecraft-infinite-client")
+			credentials {
+				// GitHub Actionsで自動的に提供されるGITHUB_TOKENを使用
+				username = System.getenv("GITHUB_ACTOR") ?: "github"
+				password = System.getenv("GITHUB_TOKEN") ?: "token"
+			}
+		}
 	}
 }
 
