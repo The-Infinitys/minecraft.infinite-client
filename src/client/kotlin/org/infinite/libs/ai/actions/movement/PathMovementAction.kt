@@ -106,6 +106,7 @@ class PathMovementAction(
     val goal = Vec3iGoal(x, y, z, radius, height)
 
     override fun tick() {
+        if (!baritoneCheck()) return
         if (registered) {
             handleAim()
         } else {
