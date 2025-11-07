@@ -108,11 +108,6 @@ publishing {
 		// --- 📌 修正箇所: ここをシンプルな定義に修正します ---
 		create("mavenJava", MavenPublication) {
 			artifactId = project.archives_base_name
-			// remapJarとremapSourcesJarを成果物として追加
-			// remapSourcesJarタスクを直接参照するだけでOK
-			artifact remapJar
-			artifact remapSourcesJar
-
 			from components.java
 			groupId project.group
 			version project.version
