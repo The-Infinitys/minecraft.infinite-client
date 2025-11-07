@@ -96,18 +96,9 @@ object InfiniteKeyBind {
                 }
             }
         }
-        ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
-            val lackedTranslations = checkTranslations()
-            if (lackedTranslations.isEmpty()) {
-                log("Mod Keybind initialized successfully.")
-            } else {
-                val translationList = lackedTranslations.joinToString(",") { "\"$it\":\"$it\"" }
-                warn("Missing Translations: [$translationList]")
-            }
-        }
     }
 
-    private fun checkTranslations(): List<String> {
+    fun checkTranslations(): List<String> {
         val result = mutableListOf<String>()
         for (key in translationKeyList) {
             if (Text.translatable(key).string == key) {

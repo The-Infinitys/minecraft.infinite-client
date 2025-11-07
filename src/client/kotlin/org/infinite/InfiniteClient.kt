@@ -112,7 +112,7 @@ object InfiniteClient : ClientModInitializer {
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
 
             log("version $modVersion")
-            val lackedTranslations = checkTranslations()
+            val lackedTranslations = checkTranslations() + InfiniteKeyBind.checkTranslations()
             if (lackedTranslations.isEmpty()) {
                 log("Mod initialized successfully.")
             } else {
