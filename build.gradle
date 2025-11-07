@@ -117,7 +117,6 @@ publishing {
 			groupId project.group
 			version project.version
 		}
-		// ------------------------------------------------
 	}
 
 	// GitHub Packagesリポジトリへの公開設定
@@ -125,7 +124,7 @@ publishing {
 		maven {
 			name = "GitHubPackages"
 			// GitHubリポジトリのURLを設定
-			url = uri("https://maven.pkg.github.com/The-Infinitys/minecraft-infinite-client")
+			url = uri("https://maven.pkg.github.com/The-Infinitys/minecraft.infinite-client")
 			credentials {
 				// GitHub Actionsで自動的に提供されるGITHUB_TOKENを使用
 				username = System.getenv("GITHUB_ACTOR") ?: "github"
