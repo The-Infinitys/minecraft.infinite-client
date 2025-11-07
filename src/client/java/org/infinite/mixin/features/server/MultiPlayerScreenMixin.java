@@ -31,12 +31,16 @@ public class MultiPlayerScreenMixin extends Screen {
   private void onInit(CallbackInfo ci) {
     lastServerButton =
         addDrawableChild(
-            ButtonWidget.builder(
-                    Text.literal("Last Server"),
-                    b -> autoConnect().joinLastServer((MultiplayerScreen) (Object) this))
+            ButtonWidget.builder(Text.literal("Last Server"), b -> joinLastServer())
                 .dimensions(width / 2 - 154, 10, 100, 20)
                 .build());
     updateLastServerButton();
+  }
+
+  @Unique
+  private void joinLastServer() {
+    AutoConnect autoConnect = autoConnect();
+    if (autoConnect != null) autoConnect.joinLastServer((MultiplayerScreen) (Object) this);
   }
 
   @Inject(at = @At("HEAD"), method = "connect(Lnet/minecraft/client/network/ServerInfo;)V")
@@ -49,6 +53,7 @@ public class MultiPlayerScreenMixin extends Screen {
   private void updateLastServerButton() {
     if (lastServerButton == null) return;
 
-    lastServerButton.active = autoConnect().getLastServer() != null;
+    AutoConnect autoConnect = autoConnect();
+    lastServerButton.active = autoConnect != null && autoConnect.getLastServer() != null;
   }
 }
