@@ -45,8 +45,11 @@ public class MultiPlayerScreenMixin extends Screen {
 
   @Inject(at = @At("HEAD"), method = "connect(Lnet/minecraft/client/network/ServerInfo;)V")
   private void onConnect(ServerInfo entry, CallbackInfo ci) {
-    autoConnect().setLastServer(entry);
-    updateLastServerButton();
+    AutoConnect autoConnect = autoConnect();
+    if (autoConnect != null) {
+      autoConnect.setLastServer(entry);
+      updateLastServerButton();
+    }
   }
 
   @Unique
