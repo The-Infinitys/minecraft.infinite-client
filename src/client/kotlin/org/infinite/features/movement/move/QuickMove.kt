@@ -11,9 +11,10 @@ import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-// 基準となる各環境の移動速度（ブロック/秒）を定義
 class QuickMove : ConfigurableFeature() {
     override val tickTiming: TickTiming = TickTiming.End
+
+    // 基準となる各環境の移動速度（ブロック/秒）を定義
     private val currentMode: MoveMode
         get() {
             val player = player ?: return MoveMode.None
@@ -29,6 +30,7 @@ class QuickMove : ConfigurableFeature() {
                 else -> MoveMode.None
             }
         }
+
     private val currentMaxSpeed: Double
         get() {
             val player = player ?: return 0.0
@@ -156,44 +158,44 @@ class QuickMove : ConfigurableFeature() {
 
         var velocity = velocity ?: return
 
-        if (forwardInput == 0.0 && strafeInput == 0.0) {
-            // 入力がない場合は摩擦を適用
-            velocity = Vec3d(velocity.x * friction.value, velocity.y, velocity.z * friction.value)
-        } else {
-            val tickSpeedLimit = currentMaxSpeed * speed.value
+        val tickSpeedLimit = currentMaxSpeed * speed.value
 
-            // 1. グローバル速度をプレイヤーのローカル座標系に変換
-            val yaw = Math.toRadians(player.yaw.toDouble())
-            val sinYaw = sin(yaw)
-            val cosYaw = cos(yaw)
+        // 1. グローバル速度をプレイヤーのローカル座標系に変換
+        val yaw = Math.toRadians(player.yaw.toDouble())
+        val sinYaw = sin(yaw)
+        val cosYaw = cos(yaw)
 
-            // 現在の水平ベロシティ
-            val currentVelX = velocity.x
-            val currentVelZ = velocity.z
+        // 現在の水平ベロシティ
+        val currentVelX = velocity.x
+        val currentVelZ = velocity.z
 
-            // ローカル速度 (Forward, Strafe) への変換
-            var localVelForward = -sinYaw * currentVelX + cosYaw * currentVelZ
-            var localVelStrafe = cosYaw * currentVelX + sinYaw * currentVelZ
+        // ローカル速度 (Forward, Strafe) への変換
+        var localVelForward = -sinYaw * currentVelX + cosYaw * currentVelZ
+        var localVelStrafe = cosYaw * currentVelX + sinYaw * currentVelZ
 
-            // 2. 減速ロジックの適用 (キー入力とベロシティの符号が異なる場合に摩擦を適用)
-
-            // Forward (前後方向) の減速
-            if (localVelForward != 0.0) {
-                // localVelForwardとforwardInputの符号が異なる場合
-                if (sign(localVelForward) != sign(forwardInput)) {
-                    localVelForward *= friction.value
-                }
+        // 2. 減速ロジックの適用 (キー入力とベロシティの符号が異なる場合に摩擦を適用)
+        // Forward (前後方向) の減速
+        if (localVelForward != 0.0) {
+            // localVelForwardとforwardInputの符号が異なる場合
+            if (sign(localVelForward) != sign(forwardInput)) {
+                localVelForward *= friction.value
             }
+        }
 
-            // Strafe (左右方向) の減速
-            if (localVelStrafe != 0.0) {
-                // localVelStrafeとstrafeInputの符号が異なる場合
-                if (sign(localVelStrafe) != sign(strafeInput)) {
-                    localVelStrafe *= friction.value
-                }
+        // Strafe (左右方向) の減速
+        if (localVelStrafe != 0.0) {
+            // localVelStrafeとstrafeInputの符号が異なる場合
+            if (sign(localVelStrafe) != sign(strafeInput)) {
+                localVelStrafe *= friction.value
             }
+        }
 
-            // 3. 入力に基づいた加速の適用
+        // --- 速度制限チェックと加速の条件付け (リクエストによる修正) ---
+        val currentMoveSpeed = sqrt(localVelForward * localVelForward + localVelStrafe * localVelStrafe)
+        val allowAcceleration = currentMoveSpeed < tickSpeedLimit
+
+        // 3. 入力に基づいた加速の適用 (最大速度制限未満の場合のみ)
+        if (allowAcceleration) {
             val inputMagnitude = sqrt(forwardInput * forwardInput + strafeInput * strafeInput).coerceAtLeast(1.0)
             val normalizedForward = forwardInput / inputMagnitude
             val normalizedStrafe = strafeInput / inputMagnitude
@@ -201,23 +203,17 @@ class QuickMove : ConfigurableFeature() {
             // ローカルベロシティに加速を加算
             localVelForward += normalizedForward * acceleration.value
             localVelStrafe += normalizedStrafe * acceleration.value
-
-            // 4. ローカル速度のクランプ (最大速度制限)
-            val currentMoveSpeed = sqrt(localVelForward * localVelForward + localVelStrafe * localVelStrafe)
-
-            if (currentMoveSpeed > tickSpeedLimit) {
-                // 制限速度の大きさに正規化
-                val scale = tickSpeedLimit / currentMoveSpeed
-                localVelForward *= scale
-                localVelStrafe *= scale
-            }
-
-            // 5. ローカル速度をグローバル座標系に戻す
-            val newVelX = -sinYaw * localVelForward + cosYaw * localVelStrafe
-            val newVelZ = cosYaw * localVelForward + sinYaw * localVelStrafe
-
-            velocity = Vec3d(newVelX, velocity.y, newVelZ)
         }
+        // -----------------------------------------------------------
+
+        // 4. ローカル速度のクランプ (最大速度制限) - リクエストに基づき、**強制的な減速ロジックは削除**
+        // 速度が超過していても、加速を無効にしたことによる自然な減速（摩擦）に任せる。
+
+        // 5. ローカル速度をグローバル座標系に戻す
+        val newVelX = -sinYaw * localVelForward + cosYaw * localVelStrafe
+        val newVelZ = cosYaw * localVelForward + sinYaw * localVelStrafe
+
+        velocity = Vec3d(newVelX, velocity.y, newVelZ)
         this.velocity = velocity
     }
 }
