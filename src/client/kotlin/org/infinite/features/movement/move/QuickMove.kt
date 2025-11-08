@@ -32,38 +32,79 @@ class QuickMove : ConfigurableFeature() {
         }
     private val reductionThreshold =
         FeatureSetting.DoubleSetting("ReductionThreshold", 10.0, 0.0, 100.0)
-    private val currentMaxSpeed: Double
+    private val currentAcceleration: Double
+        get() {
+            val player = player ?: return 0.0
+            val attributes = player.attributes
+            return when (currentMode) {
+                MoveMode.Vehicle -> {
+                    val vehicle = player.vehicle ?: return 0.0
+                    when (vehicle) {
+                        is LivingEntity -> {
+                            vehicle.attributes.getValue(EntityAttributes.MOVEMENT_SPEED)
+                        }
+
+                        is BoatEntity -> {
+                            1.0
+                        }
+
+                        else -> {
+                            0.0
+                        }
+                    }
+                }
+
+                else ->
+                    attributes.getValue(
+                        EntityAttributes.MOVEMENT_SPEED,
+                    )
+            }
+        }
+    private val currentFriction: Double
         get() {
             val player = player ?: return 0.0
             val world = world ?: return 0.0
-            val attributes = player.attributes
-            val acceleration =
-                when (currentMode) {
-                    MoveMode.Vehicle -> {
-                        val vehicle = player.vehicle ?: return 0.0
-                        when (vehicle) {
-                            is LivingEntity -> {
-                                vehicle.attributes.getValue(EntityAttributes.MOVEMENT_SPEED)
-                            }
-
-                            is BoatEntity -> {
-                                1.0
-                            }
-
-                            else -> {
-                                0.0
-                            }
-                        }
-                    }
-
-                    else ->
-                        attributes.getValue(
-                            EntityAttributes.MOVEMENT_SPEED,
-                        )
-                }
             val entity = player.vehicle ?: player
-            val friction = world.getBlockState(entity.blockPos.add(0, -1, 0)).block.slipperiness
-            return acceleration / (1.0 - friction) * if (player.isSneaking) attributes.getValue(EntityAttributes.SNEAKING_SPEED) else 1.0
+            val attributes = player.attributes
+            return when (currentMode) {
+                MoveMode.Ground ->
+                    world
+                        .getBlockState(
+                            entity.blockPos.add(
+                                0,
+                                -1,
+                                0,
+                            ),
+                        ).block.slipperiness * if (player.isSneaking) attributes.getValue(EntityAttributes.SNEAKING_SPEED) else 1.0
+
+                MoveMode.Swimming, MoveMode.Water ->
+                    0.91
+
+                MoveMode.Lava -> // 溶岩
+                    0.5
+
+                MoveMode.Air, MoveMode.Gliding -> // 空中/滑空
+                    0.98 // 例: 空気抵抗に近い高い摩擦（低い減速）
+                MoveMode.Vehicle -> // 乗り物
+                    world
+                        .getBlockState(
+                            player.vehicle!!.blockPos.add(
+                                0,
+                                -1,
+                                0,
+                            ),
+                        ).block.slipperiness
+                        .toDouble()
+
+                MoveMode.None ->
+                    1.0 // 動きがない、またはデフォルト
+            }
+        }
+    private val currentMaxSpeed: Double
+        get() {
+            val acceleration = currentAcceleration
+            val friction = currentFriction
+            return acceleration / (1.0 - friction)
         }
 
     // 移動モードを定義し、処理の優先順位と状態を明確にする
@@ -97,6 +138,10 @@ class QuickMove : ConfigurableFeature() {
             0.0,
             2.0,
         )
+    private val antiFrictionBoost =
+        FeatureSetting.DoubleSetting("AntiFrictionBoost", 1.0, 0.0, 5.0)
+    private val antiFrictionPoint =
+        FeatureSetting.DoubleSetting("AntiFrictionPoint", 0.75, 0.0, 1.0)
 
     // --- Allow設定値 ---
     private val allowOnGround =
@@ -133,6 +178,8 @@ class QuickMove : ConfigurableFeature() {
             friction,
             speed,
             reductionThreshold,
+            antiFrictionBoost,
+            antiFrictionPoint,
             allowOnGround,
             allowOnSwimming,
             allowInWater,
@@ -192,11 +239,20 @@ class QuickMove : ConfigurableFeature() {
                 localVelStrafe *= friction.value
             }
         }
-        // --- 速度制限チェックと加速の条件付け (漸減ロジックの適用) ---
         val currentMoveSpeed = sqrt(localVelForward * localVelForward + localVelStrafe * localVelStrafe)
         val delta = reductionThreshold.value / 100.0
-        val startSpeed = tickSpeedLimit * (1 - delta) // 減速開始速度
-        val endSpeed = tickSpeedLimit // 加速0到達速度
+        val currentFriction = currentFriction
+        val antiFrictionBoost = antiFrictionBoost.value
+        val antiFrictionPoint = antiFrictionPoint.value
+        val antiFrictionFactor = (
+            1 + (antiFrictionPoint - currentFriction) *
+                (1.0 / antiFrictionPoint).coerceIn(
+                    0.0,
+                    1.0,
+                ) * antiFrictionBoost
+        )
+        val startSpeed = tickSpeedLimit * antiFrictionFactor * (1 - delta) // 減速開始速度
+        val endSpeed = tickSpeedLimit * antiFrictionFactor // 加速0到達速度
 
         val accelerationFactor: Double =
             when {
@@ -211,28 +267,26 @@ class QuickMove : ConfigurableFeature() {
                 // 速度が endSpeed 以上になったら加速はゼロ
                 else -> 0.0
             }
-
-        // 適用する加速度を計算 (基本加速度 × 加速倍率)
-        val currentAcceleration = baseAcceleration * accelerationFactor.coerceIn(0.0, 1.0)
+        val accelerationLimit = (endSpeed - currentMoveSpeed).coerceAtLeast(0.0)
+        val currentAcceleration =
+            (baseAcceleration * antiFrictionFactor * accelerationFactor.coerceIn(0.0, 1.0)).coerceAtMost(
+                accelerationLimit,
+            )
         // -----------------------------------------------------------
-
         // 3. 入力に基づいた加速の適用 (計算された加速度を使用)
         if (currentAcceleration > 0.0) {
             val inputMagnitude = sqrt(forwardInput * forwardInput + strafeInput * strafeInput).coerceAtLeast(1.0)
             val normalizedForward = forwardInput / inputMagnitude
             val normalizedStrafe = strafeInput / inputMagnitude
-
             // ローカルベロシティに計算された加速度を加算
             localVelForward += normalizedForward * currentAcceleration
             localVelStrafe += normalizedStrafe * currentAcceleration
         }
 
         // 4. ローカル速度のクランプ (最大速度制限) - 加速ロジックが速度超過を抑止しているため、ここでは**不要**
-
         // 5. ローカル速度をグローバル座標系に戻す
         val newVelX = -sinYaw * localVelForward + cosYaw * localVelStrafe
         val newVelZ = cosYaw * localVelForward + sinYaw * localVelStrafe
-
         velocity = Vec3d(newVelX, velocity.y, newVelZ)
         this.velocity = velocity
     }
