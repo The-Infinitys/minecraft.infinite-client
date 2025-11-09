@@ -1,221 +1,368 @@
 package org.infinite.libs.client.inventory
 
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import org.infinite.libs.client.player.ClientInterface
 
-// -------------------------------------------------------------------------
-// ユーティリティクラス（ContainerManagerで使用）
-// -------------------------------------------------------------------------
-
-/**
- * プレイヤーインベントリのスロット構造を定義。
- * ContainerManagerで開いているコンテナのスロットインデックスを計算するのに使用。
- * @param containerSize 開いているコンテナのスロット数
- */
-class ContainerIndexHelper(
-    private val containerSize: Int,
-) {
-    private val playerInventoryStart: Int = containerSize
-
-    // ホットバーの開始グローバルインデックス
-    private val hotbarStart: Int = containerSize + 27
-
-    /**
-     * コンテナ内の特定スロットのグローバルインデックスを返します。
-     * @param index コンテナ内のローカルインデックス (0から始まる)
-     */
-    fun container(index: Int): Int {
-        require(index in 0 until containerSize) { "Container index must be between 0 and ${containerSize - 1}" }
-        return index
-    }
-
-    /**
-     * プレイヤーインベントリ内の通常スロット（バックパック）のグローバルインデックスを返します。
-     * @param index バックパックのローカルインデックス (0〜26)
-     */
-    fun backpack(index: Int): Int {
-        require(index in 0..26) { "Backpack index must be between 0 and 26" }
-        return playerInventoryStart + index
-    }
-
-    /**
-     * ホットバー内の特定スロットのグローバルインデックスを返します。
-     * @param index ホットバーのローカルインデックス (0〜8)
-     */
-    fun hotbar(index: Int): Int {
-        require(index in 0..8) { "Hotbar index must be between 0 and 8" }
-        return hotbarStart + index
-    }
-
-    /**
-     * 全てのプレイヤーインベントリ（バックパックとホットバー）のグローバルインデックス範囲 (containerSize から containerSize + 35)
-     */
-    val allPlayerSlots: IntRange
-        get() = playerInventoryStart..playerInventoryStart + 35
-}
-
-// -------------------------------------------------------------------------
-// ContainerManager オブジェクトの定義
-// -------------------------------------------------------------------------
-
-/**
- * クライアントサイドでのインベントリおよびコンテナ操作を管理するユーティリティ。
- */
 object ContainerManager : ClientInterface() {
-    // --- ContainerType定義 ---
-    data class ContainerType(
-        val id: Identifier,
-        val handlerType: ScreenHandlerType<*>,
-        val containerSize: Int,
-        val indexHelper: ContainerIndexHelper,
-    ) {
-        override fun toString(): String = id.toString()
+    sealed class ContainerType {
+        object None : ContainerType()
+
+        object Inventory : ContainerType()
+
+        data class Generic(
+            val size: Int,
+        ) : ContainerType()
+
+        object Generic3x3 : ContainerType()
+
+        object Crafting : ContainerType()
+
+        object Crafter3x3 : ContainerType()
+
+        object Furnace : ContainerType()
+
+        object Smoker : ContainerType()
+
+        object BlastFurnace : ContainerType()
+
+        object Anvil : ContainerType()
+
+        object Beacon : ContainerType()
+
+        object BrewingStand : ContainerType()
+
+        object Enchantment : ContainerType()
+
+        object Grindstone : ContainerType()
+
+        object Hopper : ContainerType()
+
+        object Lectern : ContainerType()
+
+        object Loom : ContainerType()
+
+        object Merchant : ContainerType()
+
+        object ShulkerBox : ContainerType()
+
+        object Smithing : ContainerType()
+
+        object Cartography : ContainerType()
+
+        object Stonecutter : ContainerType()
     }
 
-    // --- 動的なマッピング ---
-    private val ALL_CONTAINER_TYPES: Map<ScreenHandlerType<*>, ContainerType> =
-        Registries.SCREEN_HANDLER.entrySet.associate { entry ->
-            val id = entry.key.value
-            val type = entry.value
-
-            val size =
-                when (type) {
-                    ScreenHandlerType.GENERIC_9X1 -> 9
-                    ScreenHandlerType.GENERIC_9X2 -> 18
-                    ScreenHandlerType.GENERIC_9X3 -> 27
-                    ScreenHandlerType.GENERIC_9X4 -> 36
-                    ScreenHandlerType.GENERIC_9X5 -> 45
-                    ScreenHandlerType.GENERIC_9X6 -> 54
-                    ScreenHandlerType.GENERIC_3X3 -> 9
-                    ScreenHandlerType.CRAFTING -> 10
-                    ScreenHandlerType.FURNACE, ScreenHandlerType.BLAST_FURNACE, ScreenHandlerType.SMOKER -> 3
-                    ScreenHandlerType.HOPPER -> 5
-                    ScreenHandlerType.SHULKER_BOX -> 27
-                    else -> 0
-                }
-
-            val indexHelper = ContainerIndexHelper(size)
-            type to ContainerType(id, type, size, indexHelper)
+    sealed class ContainerIndex {
+        // 汎用 (チェスト, バレル, シュルカーなど)
+        data class Generic(
+            val index: Int,
+        ) : ContainerIndex() {
+            init {
+                require(index >= 0) { "Index must be non-negative" }
+            }
         }
 
-    val screen: Screen?
-        get() = client.currentScreen
-    val handler: ScreenHandler?
-        get() = player?.currentScreenHandler
+        // 溶鉱炉系 (Furnace, Smoker, BlastFurnace)
+        sealed class FurnaceLike : ContainerIndex() {
+            object Material : FurnaceLike() // 0: 材料
 
-    /**
-     * 指定された位置のコンテナを開く操作をサーバーに送信します。
-     */
-    fun openContainer(pos: BlockPos): Boolean {
+            object Fuel : FurnaceLike() // 1: 燃料
+
+            object Product : FurnaceLike() // 2: 結果
+        }
+
+        // 醸造台 (BrewingStand)
+        sealed class Brewing : ContainerIndex() {
+            object Ingredient : Brewing() // 3: 醸造材料
+
+            object Fuel : Brewing() // 4: 燃料 (ブレイズパウダー)
+
+            data class Bottle(
+                val index: Int,
+            ) : Brewing() { // 0, 1, 2: ポーション
+                init {
+                    require(index in 0..2) { "Bottle index must be 0, 1, or 2" }
+                }
+            }
+        }
+
+        // 鍛冶台 (Smithing) - ネザライト装備など
+        sealed class Smithing : ContainerIndex() {
+            object Base : Smithing() // 0: ベースアイテム (例: ダイヤモンドの剣)
+
+            object Addition : Smithing() // 1: 追加材料 (例: ネザライトインゴット)
+
+            object Product : Smithing() // 2: 結果
+        }
+
+        // 金床 (Anvil)
+        sealed class Anvil : ContainerIndex() {
+            object Left : Anvil() // 0: 左スロット
+
+            object Right : Anvil() // 1: 右スロット
+
+            object Product : Anvil() // 2: 結果
+        }
+
+        // ホッパー/ディスペンサー/ドロッパー (Generic3x3 / Hopper)
+        data class SingleSlot(
+            val index: Int,
+        ) : ContainerIndex() {
+            init {
+                require(index in 0..8) { "SingleSlot index must be between 0 and 8" }
+            }
+        }
+
+        // プレイヤーインベントリ (メイン 27 スロット: 上から 3x9)
+        data class PlayerInventory(
+            val index: Int,
+        ) : ContainerIndex() {
+            init {
+                // インベントリの左上から右下へ 0..26
+                require(index in 0..26) { "PlayerInventory index must be between 0 and 26" }
+            }
+        }
+
+        // ホットバー (9 スロット: 左から右へ)
+        data class Hotbar(
+            val index: Int,
+        ) : ContainerIndex() {
+            init {
+                // ホットバーの左から右へ 0..8
+                require(index in 0..8) { "Hotbar index must be between 0 and 8" }
+            }
+        }
+    }
+
+    // (open, close, swap, cursorItem, containerType の実装は省略 - 変更なし)
+
+    fun open(pos: BlockPos): Boolean {
         val currentPlayer = player ?: return false
-        val interactionManager = interactionManager ?: return false
-        world ?: return false
+        val interaction = interactionManager ?: return false
 
-        val hitResult =
-            BlockHitResult(
-                pos.toCenterPos(),
-                Direction.UP,
-                pos,
-                false,
-            )
-
-        interactionManager.interactBlock(
+        interaction.interactBlock(
             currentPlayer,
             currentPlayer.activeHand,
-            hitResult,
+            BlockHitResult(Vec3d.ofCenter(pos), Direction.UP, pos, false),
         )
-
         return true
     }
 
-    /**
-     * 現在開いているコンテナを閉じます
-     */
-    fun closeContainer() {
-        player?.closeHandledScreen()
+    fun close() {
+        if (client.currentScreen != null) {
+            player?.closeScreen()
+        }
     }
 
-    /**
-     * 現在開いているコンテナの型とインデックスヘルパーを返します。
-     */
-    fun containerType(): ContainerType? {
-        val currentHandler = handler ?: return null
-        val screen = client.currentScreen ?: return null
-        if (screen is InventoryScreen) return null
-        return ALL_CONTAINER_TYPES[currentHandler.type]
+    fun get(index: ContainerIndex): ItemStack? {
+        val screenHandler = player?.currentScreenHandler ?: return null
+        val currentScreenId = screenHandler.syncId
+
+        // プレイヤーの標準インベントリ画面 (ID 0) の場合はコンテナ操作ではないため null (これは不要なチェックかもしれませんが、元コードに合わせて残します)
+        // if (currentScreenId == 0) return null
+
+        // indexToNetworkSlot 内でコンテナタイプのチェックが行われる
+        val containerSlotId = indexToNetworkSlot(index) ?: return null
+
+        // 画面ハンドラーからアイテムスタックを取得
+        return screenHandler.slots.getOrNull(containerSlotId)?.stack
     }
 
-    /**
-     * 開いているコンテナまたはプレイヤーインベントリ内のスロット間でアイテムを交換します。
-     */
     fun swap(
-        from: Int,
-        to: Int,
-    ) {
-        val currentHandler = handler ?: return
-        val interactionManager = interactionManager ?: return
+        from: ContainerIndex,
+        to: ContainerIndex,
+    ): Boolean {
+        val currentPlayer = player ?: return false
+        val interaction = interactionManager ?: return false
+        val currentScreenId = currentPlayer.currentScreenHandler.syncId
 
-        interactionManager.clickSlot(currentHandler.syncId, from, 0, SlotActionType.PICKUP, player)
-        interactionManager.clickSlot(currentHandler.syncId, to, 0, SlotActionType.PICKUP, player)
-        interactionManager.clickSlot(currentHandler.syncId, from, 0, SlotActionType.PICKUP, player)
+        // indexToNetworkSlot 内でコンテナタイプのチェックが行われる
+        val netFrom = indexToNetworkSlot(from) ?: return false // ★不正なIndexは中止★
+        val netTo = indexToNetworkSlot(to) ?: return false // ★不正なIndexは中止★
+
+        try {
+            // 3クリック スワップシーケンス
+            interaction.clickSlot(currentScreenId, netFrom, 0, SlotActionType.PICKUP, currentPlayer)
+            interaction.clickSlot(currentScreenId, netTo, 0, SlotActionType.PICKUP, currentPlayer)
+            interaction.clickSlot(currentScreenId, netFrom, 0, SlotActionType.PICKUP, currentPlayer)
+            return true
+        } catch (_: Exception) {
+            return false
+        }
     }
 
-    /**
-     * 指定されたスロット、またはカーソルのアイテムをドロップします。
-     */
-    fun drop(index: Int? = null) {
-        val currentHandler = handler ?: return
-        val interactionManager = interactionManager ?: return
-        val button = 0
+    fun cursorItem(): ItemStack? = player?.currentScreenHandler?.cursorStack
 
-        if (index == null) {
-            val cursorSlot = -999
-            interactionManager.clickSlot(currentHandler.syncId, cursorSlot, button, SlotActionType.PICKUP, player)
-        } else {
-            interactionManager.clickSlot(currentHandler.syncId, index, button, SlotActionType.THROW, player)
+    /**
+     * 現在開いている画面ハンドラーに基づいて、コンテナのタイプを識別して返します。
+     */
+    fun containerType(): ContainerType {
+        val handler = player?.currentScreenHandler ?: return ContainerType.None
+        val handlerType = handler.type
+
+        return when (handlerType) {
+            // プレイヤーインベントリ/汎用チェスト系
+            ScreenHandlerType.GENERIC_9X1 -> ContainerType.Inventory
+            ScreenHandlerType.GENERIC_9X2,
+            ScreenHandlerType.GENERIC_9X3,
+            ScreenHandlerType.GENERIC_9X4,
+            ScreenHandlerType.GENERIC_9X5,
+            ScreenHandlerType.GENERIC_9X6,
+            -> {
+                // handler.slots.size からプレイヤーインベントリの標準スロット数 36 を引いてコンテナサイズを推定
+                val containerSize = handler.slots.size - 36
+                ContainerType.Generic(containerSize)
+            }
+
+            // 3x3 グリッド系
+            ScreenHandlerType.GENERIC_3X3 -> ContainerType.Generic3x3
+            ScreenHandlerType.CRAFTER_3X3 -> ContainerType.Crafter3x3
+
+            // 溶鉱炉系
+            ScreenHandlerType.FURNACE -> ContainerType.Furnace
+            ScreenHandlerType.SMOKER -> ContainerType.Smoker
+            ScreenHandlerType.BLAST_FURNACE -> ContainerType.BlastFurnace
+
+            // ツール/特殊系
+            ScreenHandlerType.ANVIL -> ContainerType.Anvil
+            ScreenHandlerType.BEACON -> ContainerType.Beacon
+            ScreenHandlerType.BREWING_STAND -> ContainerType.BrewingStand
+            ScreenHandlerType.CRAFTING -> ContainerType.Crafting
+            ScreenHandlerType.ENCHANTMENT -> ContainerType.Enchantment
+            ScreenHandlerType.GRINDSTONE -> ContainerType.Grindstone
+            ScreenHandlerType.HOPPER -> ContainerType.Hopper
+            ScreenHandlerType.LECTERN -> ContainerType.Lectern
+            ScreenHandlerType.LOOM -> ContainerType.Loom
+            ScreenHandlerType.MERCHANT -> ContainerType.Merchant
+            ScreenHandlerType.SHULKER_BOX -> ContainerType.ShulkerBox
+            ScreenHandlerType.SMITHING -> ContainerType.Smithing
+            ScreenHandlerType.CARTOGRAPHY_TABLE -> ContainerType.Cartography
+            ScreenHandlerType.STONECUTTER -> ContainerType.Stonecutter
+
+            else -> ContainerType.None
         }
     }
 
     /**
-     * 現在開いているコンテナ内で、最初に見つかった空のスロットのグローバルインデックスを返します。
+     * 現在開いている画面ハンドラーのコンテナスロット数を返します。
+     * プレイヤーインベントリ (Inventory Type) の場合は 0 を返します。
      */
-    fun firstEmptySlotId(): Int? {
-        val currentHandler = handler ?: return null
-        val size = containerType()?.containerSize ?: return null
-        for (i in 0 until size) {
-            val stack = currentHandler.getSlot(i).stack
-            if (stack.isEmpty) {
-                return i
+    private fun getContainerSlotCount(): Int {
+        val handler = player?.currentScreenHandler ?: return 0
+        return when (val type = containerType()) {
+            is ContainerType.Generic -> type.size
+            ContainerType.ShulkerBox -> 27 // ShulkerBox は Generic に含まれないため別途定義
+            ContainerType.Furnace, ContainerType.Smoker, ContainerType.BlastFurnace -> 3
+            ContainerType.BrewingStand -> 5
+            ContainerType.Smithing, ContainerType.Anvil -> 3
+            ContainerType.Hopper, ContainerType.Generic3x3 -> 9
+            ContainerType.Inventory -> 0 // プレイヤーインベントリ画面の場合、コンテナスロットは 0 として扱う
+            // その他のタイプも、必要に応じて手動でスロット数を定義するか、handler.slots.size - 36 (プレイヤーインベントリ数) を使用します。
+            // 既存の ContainerIndex でサポートされているタイプのみスロット数を定義します。
+            else -> {
+                // その他のコンテナは、Slotsの合計数からプレイヤーインベントリの36スロットを引いて推定します。
+                // ただし、クラフティング/エンチャント/金床など、追加スロットを持つものもありますが、ここでは単純な推定を行います。
+                val totalSlots = handler.slots.size
+                // プレイヤーインベントリのスロットが 36 ではないハンドラーもある (例: Anvil, Beacon, Enchantment)
+                // プレイヤーのインベントリ/ホットバーは常にコンテナスロットの後に来るため、プレイヤーインベントリの始点を知る必要があります。
+                // プレイヤーインベントリのスロットIDは 0 から始まるため、以下は最も安全な方法です。
+                // ここでは、定義済みの ContainerIndex でサポートされているコンテナタイプ以外は、プレイヤーインベントリの計算を安全にするために 0 とします。
+                0
             }
         }
-        return null
     }
 
     /**
-     * 指定されたグローバルインデックスのアイテムスタックを取得します。
+     * ContainerIndexを現在開いている画面ハンドラーのネットワークスロットIDに変換します。
+     * 現在開いているコンテナのタイプと Index が一致しない場合、nullを返します。
      */
-    fun get(index: Int): ItemStack? {
-        val currentHandler = handler ?: return null
-        val slots = currentHandler.slots
-        return if (index in 0 until slots.size) {
-            slots[index].stack
-        } else {
-            null
+    private fun indexToNetworkSlot(index: ContainerIndex): Int? {
+        val currentType = containerType() // 現在のコンテナタイプを取得
+        val containerSlotCount = getContainerSlotCount() // コンテナスロットの総数 (0, 1, 2, ...)
+
+        val containerSlotId =
+            when (index) {
+                is ContainerIndex.Generic -> {
+                    // Generic Index は Generic または ShulkerBox のみで有効
+                    if (currentType !is ContainerType.Generic && currentType != ContainerType.ShulkerBox) return null
+                    val maxSize = (currentType as? ContainerType.Generic)?.size ?: 27
+                    if (index.index >= maxSize) return null
+                    index.index
+                }
+
+                is ContainerIndex.FurnaceLike -> {
+                    if (currentType != ContainerType.Furnace && currentType != ContainerType.Smoker &&
+                        currentType != ContainerType.BlastFurnace
+                    ) {
+                        return null
+                    }
+                    when (index) {
+                        ContainerIndex.FurnaceLike.Material -> 0
+                        ContainerIndex.FurnaceLike.Fuel -> 1
+                        ContainerIndex.FurnaceLike.Product -> 2
+                    }
+                }
+                // ... (その他のコンテナIndexの処理は変更なし) ...
+                is ContainerIndex.Brewing -> {
+                    if (currentType != ContainerType.BrewingStand) return null
+                    when (index) {
+                        is ContainerIndex.Brewing.Bottle -> index.index
+                        ContainerIndex.Brewing.Ingredient -> 3
+                        ContainerIndex.Brewing.Fuel -> 4
+                    }
+                }
+
+                is ContainerIndex.Smithing -> {
+                    if (currentType != ContainerType.Smithing) return null
+                    when (index) {
+                        ContainerIndex.Smithing.Base -> 0
+                        ContainerIndex.Smithing.Addition -> 1
+                        ContainerIndex.Smithing.Product -> 2
+                    }
+                }
+
+                is ContainerIndex.Anvil -> {
+                    if (currentType != ContainerType.Anvil) return null
+                    when (index) {
+                        ContainerIndex.Anvil.Left -> 0
+                        ContainerIndex.Anvil.Right -> 1
+                        ContainerIndex.Anvil.Product -> 2
+                    }
+                }
+
+                is ContainerIndex.SingleSlot -> {
+                    if (currentType != ContainerType.Hopper && currentType != ContainerType.Generic3x3) return null
+                    index.index
+                }
+
+                // 新規: プレイヤーインベントリ (メイン 27 スロット)
+                is ContainerIndex.PlayerInventory -> {
+                    // PlayerInventory のネットワークスロットIDは: (コンテナスロット数) + (インベントリのオフセット)
+                    val offset = index.index // 0..26
+                    containerSlotCount + offset
+                }
+
+                // 新規: ホットバー (9 スロット)
+                is ContainerIndex.Hotbar -> {
+                    // Hotbar のネットワークスロットIDは: (コンテナスロット数) + (インベントリのメインスロット 27) + (ホットバーのオフセット)
+                    val offset = index.index // 0..8
+                    containerSlotCount + 27 + offset
+                }
+            }
+
+        // プレイヤーインベントリとホットバーのネットワークスロットIDは計算済み
+        if (index is ContainerIndex.PlayerInventory || index is ContainerIndex.Hotbar) {
+            return containerSlotId
         }
-    }
 
-    /**
-     * 現在、カーソル（マウス）が持っているアイテムスタックを取得します。
-     */
-    fun currentItem(): ItemStack = player?.currentScreenHandler?.cursorStack ?: ItemStack.EMPTY
+        // コンテナスロットID (0, 1, 2, ...) をそのままネットワークスロットとして使用
+        // (PlayerInventory/Hotbar 以外の場合)
+        return containerSlotId
+    }
 }

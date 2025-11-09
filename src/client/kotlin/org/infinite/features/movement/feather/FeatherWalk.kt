@@ -15,7 +15,7 @@ class FeatherWalk : ConfigurableFeature(initialEnabled = false) {
     private val blockList: FeatureSetting.BlockListSetting =
         FeatureSetting.BlockListSetting(
             name = "AllowedBlocks",
-            defaultValue = mutableListOf("minecraft:farmland", "minecraft:gravel"), // 例として砂と砂利を設定
+            defaultValue = mutableListOf("minecraft:farmland"),
         )
 
     private val disableJump: FeatureSetting.BooleanSetting =

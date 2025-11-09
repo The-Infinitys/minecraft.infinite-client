@@ -1,4 +1,4 @@
-package org.infinite.features.automatic.branchminer
+package org.infinite.features.automatic.branch
 
 import net.minecraft.block.Blocks
 import net.minecraft.screen.slot.SlotActionType
@@ -471,9 +471,13 @@ class BranchMiner : ConfigurableFeature() {
     private fun performChestStorage() {
         waitTicks++
         when {
-            waitTicks == 1 -> ContainerManager.openContainer(nearestChest!!)
+            waitTicks == 1 -> {
+                // nearestChestがBlockPosであると仮定
+                ContainerManager.open(nearestChest!!)
+            }
+
             waitTicks == 10 -> storeMinedItems()
-            waitTicks == 30 -> ContainerManager.closeContainer()
+            waitTicks == 30 -> ContainerManager.close()
             waitTicks > 30 -> {
                 InfiniteClient.log(Text.literal("§a[BranchMiner] Items stored in chest"))
                 returnToBranchStart()
@@ -481,37 +485,65 @@ class BranchMiner : ConfigurableFeature() {
         }
     }
 
+    /**
+     * プレイヤーのバックパック内のアイテムを現在開いているコンテナに格納します。
+     * QUICK_MOVE (Shift+Click相当) を使用して、アイテムを自動でコンテナの空きスロットに移動させます。
+     */
     private fun storeMinedItems() {
-        val containerType = ContainerManager.containerType() ?: return
-        if (listOf(
-                "generic_9x1",
-                "generic_9x2",
-                "generic_9x3",
-                "generic_9x4",
-                "generic_9x5",
-                "generic_9x6",
-            ).contains((containerType.id.path))
-        ) {
+        val currentPlayer = player ?: return
+        val interaction = interactionManager ?: return
+        val screenHandler = currentPlayer.currentScreenHandler ?: return
+
+        // 1. 現在開いているコンテナがアイテムを格納できる汎用タイプであることを確認
+        val currentType = ContainerManager.containerType()
+
+        // Inventory や None ではなく、Generic または ShulkerBox であることを確認（その他の特殊コンテナは除外）
+        if (currentType != ContainerManager.ContainerType.ShulkerBox && currentType !is ContainerManager.ContainerType.Generic) {
+            // 現在開いている画面が格納に適したコンテナではない
+            InfiniteClient.log(Text.literal("§c[BranchMiner] Not a generic storage container."))
             return
         }
-        val interactionManager = interactionManager ?: return
-        val player = player ?: return
-        val size = containerType.containerSize
-        val invSize = 27
-        for (i in size until size + invSize) {
-            val stack = ContainerManager.get(i) ?: continue
-            // 1. 空のスタックはスキップ
+
+        val syncId = screenHandler.syncId
+        val playerInvSize = 36 // ホットバー9スロット + バックパック27スロット
+        val hotbarSize = 9
+
+        // 2. プレイヤーのバックパック (内部スロット 9 から 35 / ネットワークスロット 9 から 35) をループ
+        // ネットワークスロットIDは 9 (バックパックの最初のスロット) から 35 (最後のスロット)
+        // プレイヤーのインベントリは ScreenHandler のスロットリストの後半に位置します。
+
+        // コンテナスロットの数 (N) を取得。プレイヤーインベントリのスロットIDは N から始まります。
+        val containerSlotCount =
+            when (currentType) {
+                is ContainerManager.ContainerType.Generic -> currentType.size
+                ContainerManager.ContainerType.ShulkerBox -> 27
+                else -> 0 // 既に上でチェック済みだが念のため
+            }
+
+        // 格納対象のスロット範囲:
+        // バックパックの最初 (ネットワークスロット 9) は、画面ハンドラー上では (N + 9) に位置します。
+        // バックパックの最後 (ネットワークスロット 35) は、画面ハンドラー上では (N + 35) に位置します。
+
+        val startSlot = containerSlotCount + hotbarSize // ホットバーの終わり + 1 (例: チェスト27の場合 27+9=36)
+        val endSlot = containerSlotCount + playerInvSize // バックパックの終わり + 1 (例: チェスト27の場合 27+36=63)
+
+        for (screenSlotId in startSlot until endSlot) {
+            val stack = screenHandler.slots.getOrNull(screenSlotId)?.stack ?: continue
+
+            // 空のスタックはスキップ
             if (stack.isEmpty) {
                 continue
             }
-            val syncId = ContainerManager.handler?.syncId ?: break
-            val slotId = ContainerManager.firstEmptySlotId() ?: break
-            interactionManager.clickSlot(
+
+            // 3. QUICK_MOVE (Shift+Click) 操作を実行
+            // QUICK_MOVEは、クリックしたアイテムを自動的に反対側の空きスロットまたはスタック可能なスロットに移動させます。
+            // ここでは、プレイヤーインベントリのスロットをクリックし、コンテナへ移動させます。
+            interaction.clickSlot(
                 syncId,
-                slotId,
+                screenSlotId, // クリックするのはプレイヤーインベントリ内のスロット
                 0, // マウスボタン (左クリック)
                 SlotActionType.QUICK_MOVE,
-                player,
+                currentPlayer,
             )
         }
     }
