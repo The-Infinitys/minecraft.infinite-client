@@ -5,8 +5,6 @@ import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
-import org.infinite.InfiniteClient
-import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
 import kotlin.math.cos
 import kotlin.math.sign
@@ -291,10 +289,5 @@ class QuickMove : ConfigurableFeature() {
         val newVelZ = cosYaw * localVelForward + sinYaw * localVelStrafe
         velocity = Vec3d(newVelX, velocity.y, newVelZ)
         this.velocity = velocity
-    }
-
-    override fun render2d(graphics2D: Graphics2D) {
-        graphics2D.fillRect(100f, 100f, 110f, 110f, 0xFF00FFFF.toInt())
-        graphics2D.drawText("Hello, 日本語", 100f, 100f, 0xFFFFFFFF.toInt(), null, 64f)
     }
 }
