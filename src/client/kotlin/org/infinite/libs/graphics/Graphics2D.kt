@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
+import org.infinite.libs.graphics.render.TextRenderer
 import org.infinite.utils.average
 import org.infinite.utils.rendering.drawBorder
 import org.joml.Matrix3x2f
@@ -208,6 +209,26 @@ class Graphics2D(
             context.drawTextWithShadow(client.textRenderer, text, x, y, color)
         } else {
             context.drawText(client.textRenderer, text, x, y, color, false)
+        }
+    }
+
+    /**
+     * カスタムフォントを使用して文字列を指定した位置に描画します。
+     */
+    fun drawText(
+        text: String,
+        x: Float,
+        y: Float,
+        color: Int,
+        font: org.infinite.libs.graphics.render.Font? = null,
+        size: Float? = font?.fontSize,
+    ) {
+        if (font == null) {
+            TextRenderer
+                .render(this, text, x, y, color, size)
+        } else {
+            TextRenderer
+                .render(this, text, x, y, color, size, font)
         }
     }
 

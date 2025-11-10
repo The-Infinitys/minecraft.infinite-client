@@ -62,6 +62,7 @@ dependencies {
 
 	implementation "dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}"
 	modImplementation("meteordevelopment:baritone:${project.baritone_version}")
+	implementation "org.lwjgl:lwjgl-stb:${project.lwjgl_version}"
 }
 
 processResources {

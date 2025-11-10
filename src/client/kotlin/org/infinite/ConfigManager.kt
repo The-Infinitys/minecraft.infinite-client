@@ -118,8 +118,6 @@ object ConfigManager {
         InfiniteClient.log("Configuration saved to ${configFile.absolutePath}")
     }
 
-// ... (omitted preceding code)
-
     fun loadConfig() {
         val configDir = getConfigDirectory().toFile()
         val configFile = configDir.resolve("config.json")
