@@ -215,13 +215,17 @@ class Graphics2D(
     /**
      * カスタムフォントを使用して文字列を指定した位置に描画します。
      */
-    fun drawText(
+    fun renderString(
         text: String,
         x: Float,
         y: Float,
         color: Int,
-        font: org.infinite.libs.graphics.render.Font? = null,
-        size: Float? = font?.fontSize,
+        font: org.infinite.libs.graphics.render.FontKey? = null,
+        size: Float? =
+            run {
+                val font = font ?: return@run null
+                return@run TextRenderer.getFont(font)?.fontSize
+            },
     ) {
         if (font == null) {
             TextRenderer

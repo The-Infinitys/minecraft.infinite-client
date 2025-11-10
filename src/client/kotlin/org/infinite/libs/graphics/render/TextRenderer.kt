@@ -1,70 +1,89 @@
 package org.infinite.libs.graphics.render
 
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.resource.Resource
 import net.minecraft.util.Identifier
 import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics2D
 import org.lwjgl.BufferUtils
-import org.lwjgl.stb.STBTTAlignedQuad
-import org.lwjgl.stb.STBTTBakedChar
 import org.lwjgl.stb.STBTTFontinfo
-import org.lwjgl.stb.STBTruetype.stbtt_BakeFontBitmap
-import org.lwjgl.stb.STBTruetype.stbtt_GetBakedQuad
 import org.lwjgl.stb.STBTruetype.stbtt_InitFont
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.jvm.optionals.getOrNull
-import kotlin.math.roundToInt
 
 object TextRenderer {
-    // ロードされたすべてのフォントを保持
-    private val loadedFonts: MutableMap<Identifier, Font> = mutableMapOf()
+    // ロードされたすべてのフォント
+    private val loadedFonts = mutableMapOf<FontKey, Font>()
 
-    // フォールバックの優先順位リスト（描画時にこの順に試行）
-    private val fallbackOrder: MutableList<Identifier> = mutableListOf()
+    // フォールバック順序（カバレッジの高い順）
+    private val fallbackOrder = mutableListOf<FontKey>()
 
-    // フォントアトラスのサイズ
-    private const val ATLAS_WIDTH = 2048
-    private const val ATLAS_HEIGHT = 2048
-    private const val FONT_SIZE = 64f
+    // デフォルトフォント
+    private var defaultFontKey: FontKey? = null
 
-    // 描画するASCII文字の範囲 (スペース ' ' からチルダ '~' まで)
-    internal const val FIRST_CHAR = 32
-    internal const val CHAR_COUNT = 96 // 32から127まで (127 - 32 + 1)
+    private const val DEFAULT_FONT_SIZE = 64f
 
-    // デフォルトフォントのキー
-    lateinit var defaultFontKey: Identifier
+    // カバレッジ計算用のサンプル文字セット（よく使われる文字範囲）
+    private val COVERAGE_SAMPLE_RANGES =
+        listOf(
+            0x0020..0x007E, // Basic Latin (ASCII)
+            0x3040..0x309F, // Hiragana
+            0x30A0..0x30FF, // Katakana
+            0x4E00..0x9FFF, // CJK Unified Ideographs (サンプリング)
+            0x0400..0x04FF, // Cyrillic
+            0x0600..0x06FF, // Arabic
+        )
 
     /**
-     * 指定されたIdentifierのフォントをロードし、アトラスを作成します。
+     * TTFファイルからフォント名とスタイルを抽出
+     */
+    private fun extractFontKey(identifier: Identifier): FontKey {
+        val path = identifier.path
+        val fileName = path.substringAfterLast('/').removeSuffix(".ttf")
+
+        // ファイル名からスタイルを抽出 (例: "NotoSansJP-Bold.ttf" -> fontName="NotoSansJP", style="Bold")
+        val parts = fileName.split('-', '_')
+
+        return if (parts.size >= 2) {
+            val style = parts.last()
+            val fontName = parts.dropLast(1).joinToString("-")
+            FontKey(fontName, style)
+        } else {
+            FontKey(fileName, "Regular")
+        }
+    }
+
+    /**
+     * フォントをロード
      */
     fun loadFont(
         identifier: Identifier,
-        fontSize: Float,
-    ): Font {
-        if (loadedFonts.containsKey(identifier)) {
-            return loadedFonts[identifier]!!
-        }
+        fontSize: Float = DEFAULT_FONT_SIZE,
+    ): Font? {
+        val fontKey = extractFontKey(identifier)
+
+        // 既にロード済み
+        loadedFonts[fontKey]?.let { return it }
 
         val fontBuffer: ByteBuffer
         var resource: Resource?
         var inputStream: InputStream? = null
+
         try {
-            // リソースの読み込み
             resource =
                 MinecraftClient
                     .getInstance()
                     .resourceManager
                     .getResource(identifier)
                     .getOrNull()
+
             if (resource == null) {
                 throw IOException("Resource not found: $identifier")
             }
+
             inputStream = resource.inputStream as InputStream
 
             // InputStreamをByteBufferにコピー
@@ -77,60 +96,138 @@ object TextRenderer {
             val bytes = outputStream.toByteArray()
             fontBuffer = BufferUtils.createByteBuffer(bytes.size).put(bytes).flip()
         } catch (e: IOException) {
-            throw RuntimeException("Failed to load font: $identifier", e)
+            InfiniteClient.error("Failed to load font: $identifier - ${e.message}")
+            return null
         } finally {
             inputStream?.close()
         }
 
         val fontInfo = STBTTFontinfo.create()
         if (!stbtt_InitFont(fontInfo, fontBuffer)) {
-            throw RuntimeException("Failed to initialize font info: $identifier")
+            InfiniteClient.error("Failed to initialize font info: $identifier")
+            return null
         }
 
-        // フォントアトラスのNativeImageを作成
-        val nativeImage = NativeImage(ATLAS_WIDTH, ATLAS_HEIGHT, false)
-        val bitmap = BufferUtils.createByteBuffer(ATLAS_WIDTH * ATLAS_HEIGHT)
+        val font = Font(fontKey, identifier, fontSize, fontInfo)
+        loadedFonts[fontKey] = font
 
-        // グリフのパッキング
-        val cdata = STBTTBakedChar.malloc(CHAR_COUNT) // ASCII 32-127
-        stbtt_BakeFontBitmap(
-            fontBuffer,
-            fontSize,
-            bitmap,
-            ATLAS_WIDTH,
-            ATLAS_HEIGHT,
-            FIRST_CHAR, // 最初の文字 (スペース)
-            cdata,
-        )
-
-        // NativeImageにビットマップデータをコピー
-        for (y in 0 until ATLAS_HEIGHT) {
-            for (x in 0 until ATLAS_WIDTH) {
-                val alpha = bitmap.get(y * ATLAS_WIDTH + x).toInt() and 0xFF
-                // ARGB形式でコピー (R, G, BをFFにして白文字にし、アルファをビットマップから取得)
-                nativeImage.setColor(x, y, (alpha shl 24) or (0xFFFFFF))
-            }
-        }
-
-        // テクスチャマネージャーに登録
-        val fontTextureIdentifier =
-            Identifier.of(
-                identifier.namespace,
-                "font/${identifier.path.replace(".ttf", "")}_${fontSize.roundToInt()}",
-            )
-
-        MinecraftClient.getInstance().textureManager.registerTexture(
-            fontTextureIdentifier,
-            NativeImageBackedTexture({ fontTextureIdentifier.toString() }, nativeImage),
-        )
-
-        val font = Font(identifier, fontSize, fontTextureIdentifier, cdata, fontInfo)
-        loadedFonts[identifier] = font
+        InfiniteClient.info("Loaded font: $fontKey from $identifier")
         return font
     }
 
     /**
-     * STB_Truetypeの標準的な方法でテキストをレンダリングします。
+     * フォントのカバレッジを計算（サンプリング）
+     */
+    private fun calculateCoverage(font: Font): Int {
+        var supportedCount = 0
+
+        for (range in COVERAGE_SAMPLE_RANGES) {
+            // 大きな範囲はサンプリング（CJK等）
+            val step = if (range.last - range.first > 1000) 100 else 1
+
+            for (codepoint in range step step) {
+                if (font.supportsChar(codepoint)) {
+                    supportedCount++
+                }
+            }
+        }
+
+        return supportedCount
+    }
+
+    /**
+     * 指定ディレクトリ以下のすべてのTTFファイルをロード
+     */
+    private fun loadFontsFromDirectory(
+        namespace: String,
+        baseDirectory: String,
+    ): List<Font> {
+        val loaded = mutableListOf<Font>()
+        val resourceManager = MinecraftClient.getInstance().resourceManager
+
+        val resourceIdentifiers =
+            resourceManager
+                .findResources(baseDirectory) { identifier ->
+                    identifier.namespace == namespace && identifier.path.endsWith(".ttf")
+                }.keys
+
+        for (id in resourceIdentifiers) {
+            loadFont(id)?.let { loaded.add(it) }
+        }
+
+        return loaded
+    }
+
+    /**
+     * フォントの初期化
+     */
+    fun initFonts(defaultIdentifier: Identifier) {
+        // 1. すべてのフォントをロード
+        val baseDir =
+            defaultIdentifier.path
+                .split("/")
+                .dropLast(2)
+                .joinToString("/")
+        InfiniteClient.log("Loading from: $baseDir")
+        val loaded = loadFontsFromDirectory(defaultIdentifier.namespace, baseDir)
+
+        if (loaded.isEmpty()) {
+            throw RuntimeException("No fonts loaded from $baseDir")
+        }
+
+        // 2. デフォルトフォントを設定
+        val defaultKey = extractFontKey(defaultIdentifier)
+        if (loadedFonts.containsKey(defaultKey)) {
+            defaultFontKey = defaultKey
+        } else {
+            // 最初にロードされたフォントをデフォルトに
+            defaultFontKey = loaded.first().key
+            InfiniteClient.error("Default font not found: $defaultKey. Using $defaultFontKey as default.")
+        }
+
+        // 3. カバレッジを計算してフォールバック順序を決定
+        InfiniteClient.info("Calculating font coverage...")
+        val coverageMap = mutableMapOf<FontKey, Int>()
+
+        for (font in loaded) {
+            val coverage = calculateCoverage(font)
+            coverageMap[font.key] = coverage
+            InfiniteClient.info("Font ${font.key}: coverage = $coverage")
+        }
+
+        // 4. カバレッジの高い順にソート（デフォルトフォントを最優先）
+        fallbackOrder.clear()
+        fallbackOrder.add(defaultFontKey!!)
+
+        val sorted =
+            coverageMap.entries
+                .filter { it.key != defaultFontKey }
+                .sortedByDescending { it.value }
+                .map { it.key }
+
+        fallbackOrder.addAll(sorted)
+
+        InfiniteClient.info("Font fallback order: ${fallbackOrder.joinToString(", ")}")
+        InfiniteClient.info("Loaded ${loadedFonts.size} fonts. Default: $defaultFontKey")
+        val commonChars =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" +
+                "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほ" +
+                "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ" +
+                "！？、。　"
+        for (font in loadedFonts.values) {
+            for (char in commonChars) {
+                font.getOrCreateGlyph(char.code)
+            }
+        }
+    }
+
+    private fun fontNotFoundError(key: FontKey): IllegalArgumentException {
+        val availableFontKeyList = loadedFonts.keys.map { "FontKey(\"${it.fontName}\", \"${it.style}\")" }
+        return IllegalArgumentException("$key is not fonud. available: ${availableFontKeyList.joinToString(", ")}")
+    }
+
+    /**
+     * テキストをレンダリング
      */
     fun render(
         graphics: Graphics2D,
@@ -139,175 +236,120 @@ object TextRenderer {
         y: Float,
         color: Int,
         size: Float? = null,
-        font: Font? = null,
+        fontKey: FontKey? = null,
     ) {
-        val defaultFont = font ?: loadedFonts[defaultFontKey] ?: return // デフォルトフォントがない場合は何もしない
-        val size = size ?: defaultFont.fontSize
-        val scale = size / defaultFont.fontSize
-        val fontSize = defaultFont.ascent * scale
+        val targetFontKey = fontKey ?: defaultFontKey ?: return
+        val primaryFont = getFont(targetFontKey) ?: throw fontNotFoundError(targetFontKey)
+        val actualSize = size ?: primaryFont.fontSize
+        val scale = actualSize / primaryFont.fontSize
+        var currentX = x
+        val baselineY = y + primaryFont.ascent * scale
+        for (char in text) {
+            val codepoint = char.code
 
-        // 初期X位置をスケーリングの逆数で割って設定
-        val xPosBuffer = BufferUtils.createFloatBuffer(1)
-        xPosBuffer.put(0, x / scale)
+            // フォールバックを使って描画可能なフォントを探す
+            var fontToUse: Font? = null
+            var glyphInfo: Font.GlyphInfo? = null
 
-        val yPosBuffer = BufferUtils.createFloatBuffer(1)
-        yPosBuffer.put(0, y / scale)
-        val quad = STBTTAlignedQuad.malloc()
+            // まず指定されたフォントで試す
+            if (primaryFont.supportsChar(codepoint)) {
+                fontToUse = primaryFont
+                glyphInfo = primaryFont.getOrCreateGlyph(codepoint)
+            } else {
+                for (fallbackKey in fallbackOrder) {
+                    if (fallbackKey == targetFontKey) continue // 既に試した
+                    val fallbackFont = loadedFonts[fallbackKey] ?: continue
+                    if (fallbackFont.supportsChar(codepoint)) {
+                        fontToUse = fallbackFont
+                        glyphInfo = fallbackFont.getOrCreateGlyph(codepoint)
+                        break
+                    }
+                }
+            }
+            // 描画可能なフォントが見つからなかった
+            if (fontToUse == null || glyphInfo == null) {
+                // スペースとして扱う（進める）
+                currentX += primaryFont.fontSize * 0.25f * scale
+                continue
+            }
+            // グリフを描画
+            if (glyphInfo.width > 0 && glyphInfo.height > 0) {
+                val renderX = currentX + glyphInfo.xOffset * scale
+                val renderY = baselineY + glyphInfo.yOffset * scale
+                val renderWidth = glyphInfo.width * scale
+                val renderHeight = glyphInfo.height * scale
+
+                graphics.drawRotatedTexture(
+                    fontToUse.textureIdentifier,
+                    renderX,
+                    renderY,
+                    renderWidth,
+                    renderHeight,
+                    0f,
+                    color,
+                    glyphInfo.x,
+                    glyphInfo.y,
+                    glyphInfo.width,
+                    glyphInfo.height,
+                    fontToUse.getAtlasWidth().toFloat(),
+                    fontToUse.getAtlasHeight().toFloat(),
+                )
+            }
+
+            // 次の文字位置へ
+            currentX += glyphInfo.advanceWidth * scale
+        }
+    }
+
+    /**
+     * テキストの幅を計算
+     */
+    fun getWidth(
+        text: String,
+        size: Float? = null,
+        fontKey: FontKey? = null,
+    ): Float {
+        val targetFontKey = fontKey ?: defaultFontKey ?: return 0f
+        val primaryFont = loadedFonts[targetFontKey] ?: return 0f
+
+        val actualSize = size ?: primaryFont.fontSize
+        val scale = actualSize / primaryFont.fontSize
+
+        var width = 0f
 
         for (char in text) {
-            val charCode = char.code
+            val codepoint = char.code
 
-            // 描画に使用するフォントとBakedCharデータを決定（フォールバック）
-            var fontToUse: Font = defaultFont
-            var bakedCharDataToUse: STBTTBakedChar.Buffer = defaultFont.bakedCharData
+            // フォールバックを考慮
+            var glyphInfo: Font.GlyphInfo? = null
 
-            // 1. デフォルトフォントが文字を持っているかチェック
-            if (charCode !in FIRST_CHAR until (FIRST_CHAR + CHAR_COUNT)) {
-                // 2. フォールバック順序を探索
-                val fallbackFontId =
-                    fallbackOrder.firstOrNull { id ->
-                        // フォールバックフォントはすべて同じASCII範囲をカバーすると仮定
-                        loadedFonts.containsKey(id)
+            if (primaryFont.supportsChar(codepoint)) {
+                glyphInfo = primaryFont.getOrCreateGlyph(codepoint)
+            } else {
+                for (fallbackKey in fallbackOrder) {
+                    if (fallbackKey == targetFontKey) continue
+
+                    val fallbackFont = loadedFonts[fallbackKey] ?: continue
+                    if (fallbackFont.supportsChar(codepoint)) {
+                        glyphInfo = fallbackFont.getOrCreateGlyph(codepoint)
+                        break
                     }
-
-                if (fallbackFontId != null) {
-                    fontToUse = loadedFonts[fallbackFontId]!!
-                    bakedCharDataToUse = fontToUse.bakedCharData
-                } else {
-                    // どのフォントでも描画できない場合はスキップ
-                    continue
                 }
             }
 
-            // stbtt_GetBakedQuadは、渡されたxPosBufferを更新し、次の文字の開始位置を書き込む
-            stbtt_GetBakedQuad(
-                bakedCharDataToUse, // 選択されたフォントのデータ
-                ATLAS_WIDTH,
-                ATLAS_HEIGHT,
-                charCode - FIRST_CHAR,
-                xPosBuffer,
-                yPosBuffer,
-                quad,
-                true,
-            )
-
-            // quadから描画に必要な情報を取得 (これらは元のサイズ（font.fontSize）でのピクセル値)
-            var x0 = quad.x0()
-            var y0 = quad.y0()
-            var x1 = quad.x1()
-            var y1 = quad.y1()
-
-            // 取得した元のサイズでの座標を、要求されたサイズに合わせてスケーリング
-            x0 *= scale
-            y0 *= scale
-            x1 *= scale
-            y1 *= scale
-
-            // UV座標は0.0〜1.0で返される
-            val u0 = quad.s0() * ATLAS_WIDTH
-            val v0 = quad.t0() * ATLAS_HEIGHT
-            val u1 = quad.s1() * ATLAS_WIDTH
-            val v1 = quad.t1() * ATLAS_HEIGHT
-
-            val width = x1 - x0
-            val height = y1 - y0
-            val texWidth = u1 - u0
-            val texHeight = v1 - v0
-            val fontWidth = ATLAS_WIDTH.toFloat()
-            val fontHeight = ATLAS_HEIGHT.toFloat()
-
-            graphics.drawRotatedTexture(
-                fontToUse.textureIdentifier, // 選択されたフォントのテクスチャ
-                x0,
-                y0 + fontSize,
-                width,
-                height,
-                0f,
-                color,
-                u0,
-                v0,
-                texWidth,
-                texHeight,
-                fontWidth,
-                fontHeight,
-            )
-            // xPosBufferはstbtt_GetBakedQuadが内部で更新しており、
-            // その値は次の文字の元のサイズでのベースラインX位置を示しているため、
-            // 次の文字に進むためにここでの操作は不要です。
+            width +=
+                if (glyphInfo != null) {
+                    glyphInfo.advanceWidth * scale
+                } else {
+                    primaryFont.fontSize * 0.25f * scale
+                }
         }
 
-        quad.free()
+        return width
     }
 
     /**
-     * 指定されたアセットディレクトリ以下のすべての .ttf ファイルを再帰的に検索し、ロードします。
-     * @param namespace フォントリソースのネームスペース (例: "modid")
-     * @param baseDirectory アセット内のベースディレクトリ (例: "fonts")
-     * @param FONT_SIZE ロードするフォントサイズ
-     * @return ロードされた Font オブジェクトのリスト
+     * フォントを取得
      */
-    private fun loadFontsFromAssetDirectory(
-        namespace: String,
-        baseDirectory: String,
-    ): List<Font> {
-        val loaded = mutableListOf<Font>()
-        val resourceManager = MinecraftClient.getInstance().resourceManager
-
-        // .ttf で終わるすべてのリソースIdentifierを検索
-        val resourceIdentifiers =
-            resourceManager
-                .findResources(
-                    baseDirectory,
-                ) { identifier -> identifier.namespace == namespace && identifier.path.endsWith(".ttf") }
-                .keys
-
-        for (id in resourceIdentifiers) {
-            try {
-                // 個々のフォントをロード
-                val font = loadFont(id, FONT_SIZE)
-                loaded.add(font)
-            } catch (e: Exception) {
-                InfiniteClient.error("Failed to load font: $id. Error: ${e.message}")
-            }
-        }
-        return loaded
-    }
-
-    /**
-     * フォントの初期化とフォールバック順序の設定を行います。
-     */
-    fun initFonts(defaultId: Identifier) {
-        // 1. すべての .ttf フォントを検索・ロード
-        val loaded =
-            loadFontsFromAssetDirectory(
-                defaultId.namespace,
-                defaultId.path
-                    .split("/")
-                    .dropLast(1)
-                    .joinToString("/"),
-            )
-
-        // 2. ロードされたフォントをフォールバック順序リストに追加
-        fallbackOrder.clear()
-        loaded.forEach { font ->
-            // デフォルトフォントは一旦リストに追加せず、後で先頭に追加する
-            if (font.identifier != defaultId) {
-                fallbackOrder.add(font.identifier)
-            }
-        }
-
-        // 3. デフォルトフォントを決定し、フォールバック順序の先頭に設定
-        if (loadedFonts.containsKey(defaultId)) {
-            defaultFontKey = defaultId
-            fallbackOrder.add(0, defaultId) // デフォルトを最優先として先頭に追加
-        } else {
-            InfiniteClient.error("Default font not loaded: $defaultId. Using first loaded font as default.")
-            if (fallbackOrder.isNotEmpty()) {
-                defaultFontKey = fallbackOrder.first()
-            } else {
-                throw RuntimeException("No fonts loaded and default font not found.")
-            }
-        }
-        InfiniteClient.info("Loaded ${loadedFonts.size} fonts. Default: $defaultFontKey")
-    }
+    fun getFont(fontKey: FontKey): Font? = loadedFonts[fontKey]
 }

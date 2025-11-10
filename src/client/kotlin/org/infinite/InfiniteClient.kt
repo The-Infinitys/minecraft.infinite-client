@@ -401,7 +401,7 @@ object InfiniteClient : ClientModInitializer {
 
     fun loadFonts() {
         TextRenderer.initFonts(
-            Identifier.of("infinite", "fonts/chakra_petch/chakrapetch_regular.ttf"),
+            Identifier.of("infinite", "fonts/chakra_petch/chakrapetch_italic.ttf"),
         )
     }
 }
