@@ -6,7 +6,7 @@ import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics2D
-import org.infinite.libs.graphics.render.FontKey
+import org.infinite.libs.graphics.render.text.FontKey
 import org.infinite.settings.FeatureSetting
 import kotlin.math.cos
 import kotlin.math.sign
@@ -294,6 +294,6 @@ class QuickMove : ConfigurableFeature() {
     }
 
     override fun render2d(graphics2D: Graphics2D) {
-        graphics2D.renderString("hello", 0f, 0f, 0xFFFFFF00.toInt(), FontKey("chakrapetch", "regular"))
+        graphics2D.renderString("hello", 0f, 0f, 0xFFFFFF00.toInt())
     }
 }

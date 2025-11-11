@@ -1,17 +1,14 @@
-package org.infinite.libs.graphics.render
+package org.infinite.libs.graphics.render.text
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
+import org.infinite.libs.graphics.render.text.FontKey
 import org.lwjgl.BufferUtils
 import org.lwjgl.stb.STBTTFontinfo
-import org.lwjgl.stb.STBTruetype.stbtt_FindGlyphIndex
-import org.lwjgl.stb.STBTruetype.stbtt_GetFontVMetrics
-import org.lwjgl.stb.STBTruetype.stbtt_GetGlyphBitmapBox
-import org.lwjgl.stb.STBTruetype.stbtt_GetGlyphHMetrics
-import org.lwjgl.stb.STBTruetype.stbtt_MakeGlyphBitmap
-import org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight
+import org.lwjgl.stb.STBTruetype
+import kotlin.text.iterator
 
 /**
  * 動的アトラスを持つフォント
@@ -37,7 +34,7 @@ class Font(
     private var currentRowHeight = 0
 
     private var nativeImage: NativeImage = NativeImage(atlasWidth, atlasHeight, false)
-    private var texture: NativeImageBackedTexture? = null
+    internal var texture: NativeImageBackedTexture? = null
 
     // キャッシュされたグリフ情報
     data class GlyphInfo(
@@ -53,7 +50,7 @@ class Font(
     private val glyphCache = mutableMapOf<Int, GlyphInfo>()
 
     // フォントメトリクス
-    val scale: Float = stbtt_ScaleForPixelHeight(fontInfo, fontSize)
+    val scale: Float = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, fontSize)
     val ascent: Float
     val descent: Float
     val lineGap: Float
@@ -63,7 +60,7 @@ class Font(
         val pAscent = BufferUtils.createIntBuffer(1)
         val pDescent = BufferUtils.createIntBuffer(1)
         val pLineGap = BufferUtils.createIntBuffer(1)
-        stbtt_GetFontVMetrics(fontInfo, pAscent, pDescent, pLineGap)
+        STBTruetype.stbtt_GetFontVMetrics(fontInfo, pAscent, pDescent, pLineGap)
 
         ascent = pAscent.get(0) * scale
         descent = pDescent.get(0) * scale
@@ -82,7 +79,7 @@ class Font(
      * 指定された文字がこのフォントでサポートされているかチェック
      */
     fun supportsChar(codepoint: Int): Boolean {
-        val glyphIndex = stbtt_FindGlyphIndex(fontInfo, codepoint)
+        val glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, codepoint)
         return glyphIndex != 0
     }
 
@@ -100,8 +97,10 @@ class Font(
         return bakeGlyph(codepoint)
     }
 
+    internal var dirty = false // 追加
+
     private fun bakeGlyph(codepoint: Int): GlyphInfo? {
-        val glyphIndex = stbtt_FindGlyphIndex(fontInfo, codepoint)
+        val glyphIndex = STBTruetype.stbtt_FindGlyphIndex(fontInfo, codepoint)
         if (glyphIndex == 0) return null
 
         // グリフの境界ボックスを取得
@@ -109,7 +108,7 @@ class Font(
         val iy0 = BufferUtils.createIntBuffer(1)
         val ix1 = BufferUtils.createIntBuffer(1)
         val iy1 = BufferUtils.createIntBuffer(1)
-        stbtt_GetGlyphBitmapBox(fontInfo, glyphIndex, scale, scale, ix0, iy0, ix1, iy1)
+        STBTruetype.stbtt_GetGlyphBitmapBox(fontInfo, glyphIndex, scale, scale, ix0, iy0, ix1, iy1)
 
         val x0 = ix0.get(0)
         val y0 = iy0.get(0)
@@ -123,7 +122,7 @@ class Font(
         if (glyphWidth <= 0 || glyphHeight <= 0) {
             val pAdvanceWidth = BufferUtils.createIntBuffer(1)
             val pLeftSideBearing = BufferUtils.createIntBuffer(1)
-            stbtt_GetGlyphHMetrics(fontInfo, glyphIndex, pAdvanceWidth, pLeftSideBearing)
+            STBTruetype.stbtt_GetGlyphHMetrics(fontInfo, glyphIndex, pAdvanceWidth, pLeftSideBearing)
 
             val info =
                 GlyphInfo(
@@ -155,7 +154,7 @@ class Font(
 
         // グリフのビットマップを生成
         val bitmap = BufferUtils.createByteBuffer(glyphWidth * glyphHeight)
-        stbtt_MakeGlyphBitmap(
+        STBTruetype.stbtt_MakeGlyphBitmap(
             fontInfo,
             bitmap,
             glyphWidth,
@@ -177,12 +176,12 @@ class Font(
         }
 
         // テクスチャを更新
-        texture?.upload()
+        dirty = true
 
         // グリフ情報を作成
         val pAdvanceWidth = BufferUtils.createIntBuffer(1)
         val pLeftSideBearing = BufferUtils.createIntBuffer(1)
-        stbtt_GetGlyphHMetrics(fontInfo, glyphIndex, pAdvanceWidth, pLeftSideBearing)
+        STBTruetype.stbtt_GetGlyphHMetrics(fontInfo, glyphIndex, pAdvanceWidth, pLeftSideBearing)
 
         val info =
             GlyphInfo(
@@ -227,7 +226,7 @@ class Font(
 
         // 重要：destroyTexture() を削除
         // texture は自動で更新される
-        texture?.upload() // 再アップロードのみ
+        dirty = true
     }
 
     fun getWidth(text: String): Float {

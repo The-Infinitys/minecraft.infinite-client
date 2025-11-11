@@ -1,4 +1,4 @@
-package org.infinite.libs.graphics.render
+package org.infinite.libs.graphics.render.text
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.resource.Resource
@@ -7,12 +7,13 @@ import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.Graphics2D
 import org.lwjgl.BufferUtils
 import org.lwjgl.stb.STBTTFontinfo
-import org.lwjgl.stb.STBTruetype.stbtt_InitFont
+import org.lwjgl.stb.STBTruetype
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.jvm.optionals.getOrNull
+import kotlin.text.iterator
 
 object TextRenderer {
     // ロードされたすべてのフォント
@@ -103,7 +104,7 @@ object TextRenderer {
         }
 
         val fontInfo = STBTTFontinfo.create()
-        if (!stbtt_InitFont(fontInfo, fontBuffer)) {
+        if (!STBTruetype.stbtt_InitFont(fontInfo, fontBuffer)) {
             InfiniteClient.error("Failed to initialize font info: $identifier")
             return null
         }
@@ -238,6 +239,12 @@ object TextRenderer {
         size: Float? = null,
         fontKey: FontKey? = null,
     ) {
+        loadedFonts.values.forEach { font ->
+            if ((font).dirty) {
+                font.texture?.upload()
+                font.dirty = false
+            }
+        }
         val targetFontKey = fontKey ?: defaultFontKey ?: return
         val primaryFont = getFont(targetFontKey) ?: throw fontNotFoundError(targetFontKey)
         val actualSize = size ?: primaryFont.fontSize
@@ -246,27 +253,12 @@ object TextRenderer {
         val baselineY = y + primaryFont.ascent * scale
         for (char in text) {
             val codepoint = char.code
-
-            // フォールバックを使って描画可能なフォントを探す
-            var fontToUse: Font? = null
-            var glyphInfo: Font.GlyphInfo? = null
-
-            // まず指定されたフォントで試す
-            if (primaryFont.supportsChar(codepoint)) {
-                fontToUse = primaryFont
-                glyphInfo = primaryFont.getOrCreateGlyph(codepoint)
-            } else {
-                for (fallbackKey in fallbackOrder) {
-                    if (fallbackKey == targetFontKey) continue // 既に試した
-                    val fallbackFont = loadedFonts[fallbackKey] ?: continue
-                    if (fallbackFont.supportsChar(codepoint)) {
-                        fontToUse = fallbackFont
-                        glyphInfo = fallbackFont.getOrCreateGlyph(codepoint)
-                        break
+            val (fontToUse: Font?, glyphInfo: Font.GlyphInfo?) =
+                findSupportingFontAndGlyph(targetFontKey, codepoint)
+                    ?: run {
+                        currentX += primaryFont.fontSize * 0.25f * scale
+                        return@run null to null
                     }
-                }
-            }
-            // 描画可能なフォントが見つからなかった
             if (fontToUse == null || glyphInfo == null) {
                 // スペースとして扱う（進める）
                 currentX += primaryFont.fontSize * 0.25f * scale
@@ -346,6 +338,46 @@ object TextRenderer {
         }
 
         return width
+    }
+
+    /**
+     * 指定された文字をサポートする最適なフォントとグリフ情報を検索
+     *
+     * @param targetFontKey 最初に試すフォントキー
+     * @param codepoint 検索する文字のコードポイント
+     * @return サポートするFontとGlyphInfoのペア。見つからない場合はnull
+     */
+    private fun findSupportingFontAndGlyph(
+        targetFontKey: FontKey,
+        codepoint: Int,
+    ): Pair<Font, Font.GlyphInfo?>? {
+        val primaryFont = loadedFonts[targetFontKey] ?: return null
+
+        // 1. プライマリフォント
+        if (primaryFont.supportsChar(codepoint)) {
+            return Pair(primaryFont, primaryFont.getOrCreateGlyph(codepoint))
+        }
+
+        // 2. 同じスタイルの別フォント（例: IntelOneMono-Regular）
+        for (font in loadedFonts.values) {
+            if (font.key == targetFontKey) continue
+            if (font.key.style.equals(targetFontKey.style, ignoreCase = true) &&
+                font.supportsChar(codepoint)
+            ) {
+                return Pair(font, font.getOrCreateGlyph(codepoint))
+            }
+        }
+
+        // 3. カバレッジ順（fallbackOrder）で検索（スタイル問わず）
+        for (fallbackKey in fallbackOrder) {
+            if (fallbackKey == targetFontKey) continue
+            val font = loadedFonts[fallbackKey] ?: continue
+            if (font.supportsChar(codepoint)) {
+                return Pair(font, font.getOrCreateGlyph(codepoint))
+            }
+        }
+
+        return null
     }
 
     /**

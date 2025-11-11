@@ -25,7 +25,7 @@ import org.infinite.libs.client.async.AsyncInterface
 import org.infinite.libs.client.control.ControllerInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
-import org.infinite.libs.graphics.render.TextRenderer
+import org.infinite.libs.graphics.render.text.TextRenderer
 import org.infinite.libs.infinite.InfiniteAddon
 import org.infinite.libs.infinite.InfiniteCommand
 import org.infinite.libs.infinite.InfiniteKeyBind
@@ -401,7 +401,7 @@ object InfiniteClient : ClientModInitializer {
 
     fun loadFonts() {
         TextRenderer.initFonts(
-            Identifier.of("infinite", "fonts/chakra_petch/chakrapetch_italic.ttf"),
+            Identifier.of("infinite", "fonts/noto_sans_jp/notosansjp_black.ttf"),
         )
     }
 }

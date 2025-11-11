@@ -9,7 +9,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
-import org.infinite.libs.graphics.render.TextRenderer
+import org.infinite.libs.graphics.render.text.FontKey
+import org.infinite.libs.graphics.render.text.TextRenderer
 import org.infinite.utils.average
 import org.infinite.utils.rendering.drawBorder
 import org.joml.Matrix3x2f
@@ -220,7 +221,7 @@ class Graphics2D(
         x: Float,
         y: Float,
         color: Int,
-        font: org.infinite.libs.graphics.render.FontKey? = null,
+        font: FontKey? = null,
         size: Float? =
             run {
                 val font = font ?: return@run null
