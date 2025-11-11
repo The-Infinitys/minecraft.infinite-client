@@ -1,4 +1,3 @@
 package org.infinite.libs.server
 
-class ModListener {
-}
+class ModListener

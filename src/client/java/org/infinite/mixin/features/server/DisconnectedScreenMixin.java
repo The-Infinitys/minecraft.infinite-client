@@ -8,7 +8,7 @@ import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
 import net.minecraft.network.DisconnectionInfo;
 import net.minecraft.text.Text;
 import org.infinite.InfiniteClient;
-import org.infinite.features.server.AutoConnect;
+import org.infinite.features.server.connection.AutoConnect;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
