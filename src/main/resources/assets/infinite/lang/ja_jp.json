@@ -325,6 +325,8 @@
   "infinite.feature.automatic.auto_pilot.target_z.description": "オートパイロットのターゲットZ座標。",
   "infinite.feature.server.auto_leave.totem_threshold.description": "自動離脱をトリガーする残りトーテム数。",
   "infinite.feature.server.auto_leave.method.description": "サーバーを離脱する方法。",
+  "infinite.feature.server.anti_vulcan.description": "Vulcanアンチチートが特定の行動を検出するのを防ぎます。",
+  "key.infinite-client.toggle.server.anti_vulcan": "Anti Vulcanを切り替える",
   "infinite.feature.utils.hyper_map.description": "画面にミニマップを表示します。",
   "infinite.feature.utils.hyper_map.radius.description": "ミニマップ表示の半径を設定します。",
   "infinite.feature.utils.hyper_map.height.description": "ミニマップに表示する垂直高さ範囲を設定します。",

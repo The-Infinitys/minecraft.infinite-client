@@ -1,4 +1,4 @@
-package org.infinite.features.server
+package org.infinite.features.server.meta
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager

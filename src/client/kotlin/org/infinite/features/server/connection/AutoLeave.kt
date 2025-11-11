@@ -1,4 +1,4 @@
-package org.infinite.features.server
+package org.infinite.features.server.connection
 
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity

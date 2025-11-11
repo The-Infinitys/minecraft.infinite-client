@@ -1,4 +1,4 @@
-package org.infinite.features.server
+package org.infinite.features.server.connection
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.screen.Screen

@@ -1,4 +1,4 @@
-package org.infinite.features.server
+package org.infinite.features.server.meta
 
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
