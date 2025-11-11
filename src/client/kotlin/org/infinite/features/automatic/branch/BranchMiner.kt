@@ -516,7 +516,7 @@ class BranchMiner : ConfigurableFeature() {
         val containerSlotCount =
             when (currentType) {
                 is ContainerManager.ContainerType.Generic -> currentType.size
-                ContainerManager.ContainerType.ShulkerBox -> 27
+                is ContainerManager.ContainerType.ShulkerBox -> 27
                 else -> 0 // 既に上でチェック済みだが念のため
             }
 

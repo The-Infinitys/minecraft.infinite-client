@@ -40,9 +40,11 @@
     "minecraft": "~1.21.8",
     "java": ">=21",
     "fabric-api": "*",
+
     "fabric-language-kotlin": "*"
   },
   "suggests": {
     "baritone": "~1.21.10"
-  }
+  },
+  "assetSources": ["assets"]
 }

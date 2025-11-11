@@ -9,8 +9,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
-import org.infinite.libs.graphics.render.text.FontKey
-import org.infinite.libs.graphics.render.text.TextRenderer
 import org.infinite.utils.average
 import org.infinite.utils.rendering.drawBorder
 import org.joml.Matrix3x2f
@@ -26,7 +24,7 @@ import kotlin.math.roundToInt
  * @property tickCounter レンダリングティックの情報
  */
 class Graphics2D(
-    val context: DrawContext,
+    private val context: DrawContext,
     val tickCounter: RenderTickCounter,
 ) {
     val client: MinecraftClient = MinecraftClient.getInstance()
@@ -210,30 +208,6 @@ class Graphics2D(
             context.drawTextWithShadow(client.textRenderer, text, x, y, color)
         } else {
             context.drawText(client.textRenderer, text, x, y, color, false)
-        }
-    }
-
-    /**
-     * カスタムフォントを使用して文字列を指定した位置に描画します。
-     */
-    fun renderString(
-        text: String,
-        x: Float,
-        y: Float,
-        color: Int,
-        font: FontKey? = null,
-        size: Float? =
-            run {
-                val font = font ?: return@run null
-                return@run TextRenderer.getFont(font)?.fontSize
-            },
-    ) {
-        if (font == null) {
-            TextRenderer
-                .render(this, text, x, y, color, size)
-        } else {
-            TextRenderer
-                .render(this, text, x, y, color, size, font)
         }
     }
 
@@ -729,4 +703,17 @@ class Graphics2D(
         color: Int,
         size: Int = 1,
     ): Unit = drawLine(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), color, size)
+
+    fun enableScissor(
+        x1: Int,
+        y1: Int,
+        x2: Int,
+        y2: Int,
+    ) {
+        context.enableScissor(x1, y1, x2, y2)
+    }
+
+    fun disableScissor() {
+        context.disableScissor()
+    }
 }

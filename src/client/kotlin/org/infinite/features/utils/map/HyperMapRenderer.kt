@@ -90,7 +90,7 @@ object HyperMapRenderer {
         val playerYaw = player.headYaw
         // 背景と外枠の描画
         graphics2d.fill(centerX - halfSizePx, centerY - halfSizePx, sizePx, sizePx, innerColor)
-        graphics2d.context.enableScissor(
+        graphics2d.enableScissor(
             centerX - halfSizePx,
             centerY - halfSizePx,
             centerX + halfSizePx,
@@ -100,7 +100,7 @@ object HyperMapRenderer {
             renderTerrain(graphics2d, hyperMapFeature, mode) // mode を渡す
         }
         renderMobs(graphics2d, hyperMapFeature, centerX, centerY, halfSizePx, player, playerYaw)
-        graphics2d.context.disableScissor()
+        graphics2d.disableScissor()
         graphics2d.drawBorder(centerX - halfSizePx, centerY - halfSizePx, sizePx, sizePx, primaryColor, 4)
         // 方位描画 (Graphics2D.drawText を使用)
         val compassPoints =

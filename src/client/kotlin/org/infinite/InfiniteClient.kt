@@ -11,7 +11,6 @@ import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.ColorHelper
 import org.infinite.gui.theme.Theme
 import org.infinite.gui.theme.official.CyberTheme
@@ -25,7 +24,6 @@ import org.infinite.libs.client.async.AsyncInterface
 import org.infinite.libs.client.control.ControllerInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
-import org.infinite.libs.graphics.render.text.TextRenderer
 import org.infinite.libs.infinite.InfiniteAddon
 import org.infinite.libs.infinite.InfiniteCommand
 import org.infinite.libs.infinite.InfiniteKeyBind
@@ -65,8 +63,6 @@ object InfiniteClient : ClientModInitializer {
 
     private fun loadAddons() {
         if (!hasLoadedAddons) {
-            loadFonts()
-
             hasLoadedAddons = true
             for (addon in loadedAddons) { // Addon initialize
                 log("Loading addon: ${addon.id} v${addon.version}")
@@ -86,6 +82,7 @@ object InfiniteClient : ClientModInitializer {
                 addon.onInitialize()
             }
         }
+        updateFeatureInstances()
     }
 
     var hasLoadedAddons = false
@@ -93,6 +90,7 @@ object InfiniteClient : ClientModInitializer {
     override fun onInitializeClient() {
         LogQueue.registerTickEvent()
         AsyncInterface.init()
+        updateFeatureInstances()
         InfiniteKeyBind.registerKeybindings()
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             themes =
@@ -106,12 +104,6 @@ object InfiniteClient : ClientModInitializer {
                 )
             loadAddons()
             ConfigManager.loadConfig()
-            for (category in featureCategories) {
-                for (features in category.features) {
-                    featureInstances[features.instance.javaClass] = features.instance
-                    features.instance.start()
-                }
-            }
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
 
@@ -144,7 +136,6 @@ object InfiniteClient : ClientModInitializer {
                 }
             }
             AiInterface.clear()
-            featureInstances.clear()
         }
         ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
             for (category in featureCategories) {
@@ -399,9 +390,14 @@ object InfiniteClient : ClientModInitializer {
         }
     }
 
-    fun loadFonts() {
-        TextRenderer.initFonts(
-            Identifier.of("infinite", "fonts/noto_sans_jp/notosansjp_black.ttf"),
-        )
+    // InfiniteClient オブジェクト内に追加する
+    fun updateFeatureInstances() {
+        featureInstances.clear() // 既存のマップをクリア
+        for (category in featureCategories) {
+            for (feature in category.features) {
+                // 新しいインスタンス（または既存のインスタンス）をマップに追加
+                featureInstances[feature.instance.javaClass] = feature.instance
+            }
+        }
     }
 }
