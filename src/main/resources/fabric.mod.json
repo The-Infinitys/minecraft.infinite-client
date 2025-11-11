@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "infinite",
   "version": "${version}",
-  "name": "Infinite",
-  "description": "This is a hacked client for anti anti-cheat",
+  "name": "Infinite Client",
+  "description": "Infinite Ultimate Utilities",
   "authors": [
     "The Infinity's"
   ],
