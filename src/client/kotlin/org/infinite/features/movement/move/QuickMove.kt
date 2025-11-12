@@ -27,7 +27,7 @@ class QuickMove : ConfigurableFeature() {
                 player.isOnGround && allowOnGround.value -> MoveMode.Ground
                 player.isInLava && allowInLava.value -> MoveMode.Lava
                 player.isTouchingWater && allowInWater.value -> MoveMode.Water
-                !player.isOnGround && !player.isInLava && !player.isTouchingWater && allowInAir.value -> MoveMode.Air
+                !player.isOnGround && allowInAir.value -> MoveMode.Air
                 else -> MoveMode.None
             }
         }
@@ -79,7 +79,7 @@ class QuickMove : ConfigurableFeature() {
                         ).block.slipperiness * if (player.isSneaking) attributes.getValue(EntityAttributes.SNEAKING_SPEED) else 1.0
 
                 MoveMode.Swimming, MoveMode.Water ->
-                    0.91
+                    0.8
 
                 MoveMode.Lava -> // 溶岩
                     0.5
@@ -191,6 +191,7 @@ class QuickMove : ConfigurableFeature() {
         )
 
     override fun tick() {
+        if (currentMode == MoveMode.None) return
         val player = player ?: return
         val options = options
         val vehicle = player.vehicle

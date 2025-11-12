@@ -26,34 +26,30 @@ public class CancelRenderUiMixin {
    */
   @Inject(method = "renderHealthBar", at = @At("HEAD"), cancellable = true)
   private void infinite$cancelHealthRender(CallbackInfo ci) {
-    if (shouldCancel()) {
-      // CallbackInfoをキャンセルすると、元のメソッド(renderHealth)の実行が停止します。
-      ci.cancel();
-    }
+    if (shouldCancel()) ci.cancel();
+  }
+
+  @Inject(method = "renderAirBubbles", at = @At("HEAD"), cancellable = true)
+  private void infinite$cancelAirBubbles(CallbackInfo ci) {
+    if (shouldCancel()) ci.cancel();
   }
 
   /** 満腹度バー（Food）の描画をキャンセルします。 InGameHud#renderFoodBar(MatrixStack) のようなメソッドにインジェクトします。 */
   @Inject(method = "renderFood", at = @At("HEAD"), cancellable = true)
   private void infinite$cancelFoodRender(CallbackInfo ci) {
-    if (shouldCancel()) {
-      ci.cancel();
-    }
+    if (shouldCancel()) ci.cancel();
   }
 
   /** 防御力/アーマーバー（Armor）の描画をキャンセルします。 InGameHud#renderArmor(MatrixStack) のようなメソッドにインジェクトします。 */
   @Inject(method = "renderArmor", at = @At("HEAD"), cancellable = true)
   private static void infinite$cancelArmorRender(CallbackInfo ci) {
-    if (shouldCancel()) {
-      ci.cancel();
-    }
+    if (shouldCancel()) ci.cancel();
   }
 
   // 乗り物の体力（Vehicle Health）の描画も同様に、該当する描画メソッドにインジェクトします。
   // 例: renderMountHealth (バージョンやLoaderによってメソッド名が異なります)
   @Inject(method = "renderMountHealth", at = @At("HEAD"), cancellable = true)
   private void infinite$cancelMountHealthRender(CallbackInfo ci) {
-    if (shouldCancel()) {
-      ci.cancel();
-    }
+    if (shouldCancel()) ci.cancel();
   }
 }

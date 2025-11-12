@@ -37,6 +37,7 @@ object InfiniteClient : ClientModInitializer {
     var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"
     var loadedAddons: MutableList<InfiniteAddon> = mutableListOf()
+    var loadedThemes: MutableList<Theme> = mutableListOf()
     private val addonFeatureMap: MutableMap<InfiniteAddon, List<FeatureCategory>> = mutableMapOf()
     private val featureInstances: MutableMap<Class<out ConfigurableFeature>, ConfigurableFeature> = mutableMapOf()
 
@@ -66,7 +67,7 @@ object InfiniteClient : ClientModInitializer {
             hasLoadedAddons = true
             for (addon in loadedAddons) { // Addon initialize
                 log("Loading addon: ${addon.id} v${addon.version}")
-                val providedCategories = addon.getFeatures()
+                val providedCategories = addon.features
                 addonFeatureMap[addon] = providedCategories // Store provided categories
 
                 for (addonCategory in providedCategories) {
@@ -79,6 +80,7 @@ object InfiniteClient : ClientModInitializer {
                         featureCategories.add(addonCategory)
                     }
                 }
+                loadedThemes += addon.themes
                 addon.onInitialize()
             }
         }

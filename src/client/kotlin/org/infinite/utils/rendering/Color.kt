@@ -1,6 +1,7 @@
 package org.infinite.utils.rendering
 
 import net.minecraft.util.math.ColorHelper
+import kotlin.math.roundToInt
 
 fun getRainbowColor(value: Float? = null): Int {
     val rainbowDuration = 6000L
@@ -32,8 +33,9 @@ fun getRainbowColor(value: Float? = null): Int {
     )
 }
 
-fun Int.transparent(alpha: Int): Int =
-    ColorHelper.getArgb(
+fun Int.transparent(alpha: Int): Int {
+    val alpha = alpha.coerceIn(0, 255)
+    return ColorHelper.getArgb(
         alpha,
         ColorHelper.getRed(
             this,
@@ -45,3 +47,6 @@ fun Int.transparent(alpha: Int): Int =
             this,
         ),
     )
+}
+
+fun Int.transparent(alpha: Double): Int = this.transparent(alpha.roundToInt())
