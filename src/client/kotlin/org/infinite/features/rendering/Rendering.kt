@@ -10,10 +10,12 @@ import org.infinite.features.rendering.search.BlockSearch
 import org.infinite.features.rendering.sensory.ExtraSensory
 import org.infinite.features.rendering.sight.SuperSight
 import org.infinite.features.rendering.tag.HyperTag
+import org.infinite.features.rendering.ui.HyperUi
 import org.infinite.features.rendering.xray.XRay
 
 internal val rendering =
     mutableListOf(
+        feature("HyperUi", HyperUi()),
         feature(
             "AntiOverlay",
             AntiOverlay(),

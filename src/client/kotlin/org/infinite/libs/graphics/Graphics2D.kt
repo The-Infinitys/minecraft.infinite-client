@@ -321,7 +321,7 @@ class Graphics2D(
         fillQuad(outerX3, outerY3, innerX3, innerY3, innerX1, innerY1, outerX1, outerY1, color)
     }
 
-    private fun fillQuad(
+    fun fillQuad(
         x1: Double,
         y1: Double,
         x2: Double,
@@ -537,6 +537,13 @@ class Graphics2D(
     }
 
     // --- Rectangle (Rect) ---
+    fun fillRect(
+        x1: Double,
+        y1: Double,
+        x2: Double,
+        y2: Double,
+        color: Int,
+    ): Unit = fillRect(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), color)
 
     /**
      * 長方形（左上隅と右下隅で定義）を指定した色で塗りつぶし描画します。

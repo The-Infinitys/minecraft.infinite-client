@@ -23,7 +23,7 @@ object InventoryManager : ClientInterface() {
 
             class Legs : Armor()
 
-            class Feet : Armor()
+            class Foots : Armor()
         }
 
         data class Hotbar(
@@ -56,7 +56,7 @@ object InventoryManager : ClientInterface() {
                         is InventoryIndex.Armor.Head -> 39
                         is InventoryIndex.Armor.Chest -> 38
                         is InventoryIndex.Armor.Legs -> 37
-                        is InventoryIndex.Armor.Feet -> 36
+                        is InventoryIndex.Armor.Foots -> 36
                         else -> {
                             throw IllegalStateException("Illegal State on InventoryIndex.Armor")
                         }
@@ -178,7 +178,7 @@ object InventoryManager : ClientInterface() {
         for (i in 36 until 40) {
             if (playerInv.getStack(i).item == item) {
                 return when (i) {
-                    36 -> InventoryIndex.Armor.Feet()
+                    36 -> InventoryIndex.Armor.Foots()
                     37 -> InventoryIndex.Armor.Legs()
                     38 -> InventoryIndex.Armor.Chest()
                     39 -> InventoryIndex.Armor.Head()
@@ -321,7 +321,7 @@ object InventoryManager : ClientInterface() {
                     is InventoryIndex.Armor.Head -> 39
                     is InventoryIndex.Armor.Chest -> 38
                     is InventoryIndex.Armor.Legs -> 37
-                    is InventoryIndex.Armor.Feet -> 36
+                    is InventoryIndex.Armor.Foots -> 36
                     else -> null
                 }
 

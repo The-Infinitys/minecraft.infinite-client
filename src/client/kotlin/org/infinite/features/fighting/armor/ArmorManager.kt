@@ -249,7 +249,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
                     EquipmentSlot.HEAD -> InventoryIndex.Armor.Head()
                     EquipmentSlot.CHEST -> InventoryIndex.Armor.Chest()
                     EquipmentSlot.LEGS -> InventoryIndex.Armor.Legs()
-                    EquipmentSlot.FEET -> InventoryIndex.Armor.Feet()
+                    EquipmentSlot.FEET -> InventoryIndex.Armor.Foots()
                     else -> continue
                 }
 
@@ -291,7 +291,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
                     EquipmentSlot.HEAD -> InventoryIndex.Armor.Head()
                     EquipmentSlot.CHEST -> InventoryIndex.Armor.Chest()
                     EquipmentSlot.LEGS -> InventoryIndex.Armor.Legs()
-                    EquipmentSlot.FEET -> InventoryIndex.Armor.Feet()
+                    EquipmentSlot.FEET -> InventoryIndex.Armor.Foots()
                     else -> continue
                 }
 
