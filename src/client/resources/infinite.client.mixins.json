@@ -34,6 +34,7 @@
     "features.rendering.hypertag.EntityRendererMixin",
     "features.rendering.hypertag.LivingEntityRendererMixin",
     "features.rendering.hyperui.CancelRenderUiMixin",
+    "features.rendering.hyperui.CancelRenderWorldMixin",
     "features.rendering.portalgui.PortalGuiMixin",
     "features.rendering.supersight.GameRendererMixin",
     "features.rendering.supersight.SuperSightMixin",

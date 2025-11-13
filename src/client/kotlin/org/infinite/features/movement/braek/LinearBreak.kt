@@ -115,10 +115,10 @@ class LinearBreak : ConfigurableFeature() {
 
         // 2. ターゲットの決定とブロック状態のチェック
         val targetPos = blocksToMine.first()
-        val blockState = client.world?.getBlockState(targetPos)
+        val blockState = client.world?.getBlockState(targetPos) ?: return
 
-        // ターゲットブロックが空気または置換可能なら、破壊リストから削除
-        if (blockState?.isAir == true || blockState?.isReplaceable == true) {
+        // ターゲットブロックが流体なら、破壊リストから削除
+        if (blockState.isAir || blockState.isOpaque) {
             blocksToMine.remove(targetPos)
             currentBreakingPos = null
             currentBreakingProgress = 0.0f
@@ -143,14 +143,15 @@ class LinearBreak : ConfigurableFeature() {
 
             // サーバーに視点変更パケットを送信
             BlockUtils.faceVectorPacket(params.hitVec)
-
             // 破壊開始
-            interactionManager.updateBlockBreakingProgress(params.pos, params.side)
 
             // 状態の更新
             currentBreakingPos = params.pos
             currentBreakingSide = params.side
-            currentBreakingProgress = 0.0f // 新しいブロックなので0から開始
+            currentBreakingProgress =
+                0.0f // 新しいブロックなので0か                                                              ら開始
+            interactionManager.attackBlock(params.pos, params.side)
+            interactionManager.updateBlockBreakingProgress(params.pos, params.side)
 
             // IgnoreHotbarChangeが有効でない場合にのみスロットを保存
             startHotbarSlot =

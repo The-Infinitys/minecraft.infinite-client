@@ -21,7 +21,6 @@ import org.infinite.utils.rendering.getRainbowColor
 import org.lwjgl.glfw.GLFW
 import kotlin.math.acos
 
-// Graphics3D.kt で使用するため、ここで定義するか、適切なパッケージからインポート
 class LockOn : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel = FeatureLevel.Cheat
     override val toggleKeyBind: Property<Int>
@@ -29,15 +28,23 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     private val range: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
             "Range",
-            7f,
+            16f,
             3.0f,
-            25.0f,
+            256.0f,
         )
     private val players: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Players",
             true,
         )
+
+    enum class Priority {
+        Direction, // 角度優先
+        Distance, // 距離優先
+        Both, // 両方
+    }
+
+    private val priority = FeatureSetting.EnumSetting("Priority", Priority.Both, Priority.entries)
     private val mobs: FeatureSetting.BooleanSetting =
         FeatureSetting.BooleanSetting(
             "Mobs",
@@ -71,6 +78,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
             fov,
             speed,
             method,
+            priority,
         )
 
     var lockedEntity: LivingEntity? = null
@@ -116,12 +124,56 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
         exec()
     }
 
+    // ----------------------------------------------------------------------
+    // ターゲット選択のヘルパー関数
+    // ----------------------------------------------------------------------
+
+    /**
+     * ターゲットへの角度 (FOV) を取得します。
+     * AimAssistが利用できない場合は Double.MAX_VALUE を返して優先度を下げます。
+     */
+    private fun getAngle(
+        player: PlayerEntity,
+        target: LivingEntity,
+    ): Double = InfiniteClient.getFeature(AimAssist::class.java)?.calcFov(player, target) ?: Double.MAX_VALUE
+
+    /**
+     * 角度と距離を正規化し、重み付けして総合スコアを計算します (低い方が優先)。
+     */
+    private fun calculateCombinedScore(
+        player: PlayerEntity,
+        target: LivingEntity,
+    ): Double {
+        val distance = player.distanceTo(target).toDouble()
+        val angle = getAngle(player, target)
+
+        // 角度を少し優先させる (例: 60% 角度, 40% 距離)
+        val angleWeight = 0.6
+        val distanceWeight = 0.4
+
+        // 正規化された角度 (0 から 1)
+        // fov.value は FOV の全角なので、最大角度はその半分。0.001 で除算エラーを防止。
+        val maxFovAngle = (fov.value / 2.0).coerceAtLeast(0.001)
+        val normalizedAngle = (angle / maxFovAngle).coerceIn(0.0, 1.0)
+
+        // 正規化された距離 (0 から 1)
+        // range.value は最大距離。0.001 で除算エラーを防止。
+        val maxRange = range.value.toDouble().coerceAtLeast(0.001)
+        val normalizedDistance = (distance / maxRange).coerceIn(0.0, 1.0)
+
+        // 総合スコア (低い方が優先)
+        return (angleWeight * normalizedAngle) + (distanceWeight * normalizedDistance)
+    }
+
+    // ----------------------------------------------------------------------
+    // ターゲット検索とロックオン
+    // ----------------------------------------------------------------------
     private fun findAndLockTarget() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
         val world = client.world ?: return
 
-        val target =
+        val candidates =
             world.entities
                 .filter { it is LivingEntity }
                 .filter { it != player && it.isAlive }
@@ -129,9 +181,13 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
                     (players.value && it is PlayerEntity) || (mobs.value && it !is PlayerEntity)
                 }.filter { player.distanceTo(it) <= range.value }
                 .filter { isWithinFOV(player, it as LivingEntity, fov.value) }
-                .minByOrNull {
-                    InfiniteClient.getFeature(AimAssist::class.java)?.calcFov(player, it as LivingEntity) ?: 0.0
-                }
+
+        val target =
+            when (priority.value) {
+                Priority.Direction -> candidates.minByOrNull { getAngle(player, it as LivingEntity) }
+                Priority.Distance -> candidates.minByOrNull { player.distanceTo(it) }
+                Priority.Both -> candidates.minByOrNull { calculateCombinedScore(player, it as LivingEntity) }
+            }
 
         lockedEntity = target as? LivingEntity
     }
