@@ -1,6 +1,7 @@
 package org.infinite.libs.client.player
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.minecraft.client.network.ClientPlayerEntity
@@ -10,7 +11,6 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.HungerConstants
-import org.infinite.InfiniteClient
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.server.mod.appleskin.ExhaustionSyncPayload
 import org.infinite.utils.item.enchantLevel
@@ -87,7 +87,6 @@ object PlayerStatsManager : ClientInterface() {
             exhaustion += reducedFoodLevels * MAX_EXHAUSTION
             return
         }
-        InfiniteClient.log("$exhaustion")
         exhaustion = exhaustion.coerceIn(0.0, MAX_EXHAUSTION * 10.0)
     }
 
@@ -224,7 +223,18 @@ object PlayerStatsManager : ClientInterface() {
         ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
             resetHunger()
         }
-        ClientPlayNetworking.registerGlobalReceiver<ExhaustionSyncPayload>(
+        ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
+            registerReceiver()
+        }
+        ClientPlayConnectionEvents.DISCONNECT.register { _, _ -> unregisterReceiver() }
+    }
+
+    fun unregisterReceiver() {
+        ClientPlayNetworking.unregisterReceiver(ExhaustionSyncPayload.ID.id)
+    }
+
+    fun registerReceiver() {
+        ClientPlayNetworking.registerReceiver<ExhaustionSyncPayload>(
             ExhaustionSyncPayload.ID,
         ) { payload: ExhaustionSyncPayload, _: ClientPlayNetworking.Context ->
             handleAppleSkinExhaustion(payload)
