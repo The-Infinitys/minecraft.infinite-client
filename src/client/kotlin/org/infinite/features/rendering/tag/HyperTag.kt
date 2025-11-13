@@ -467,13 +467,12 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
 
             // 耐久値バーの背景
             graphics2D.fill(x, barY, size, barHeight, ColorHelper.getArgb(alphaInt, 0, 0, 0)) // 💡 アルファ値を適用
-
             // 耐久値の進捗バー
             val fillWidth = (size * progress).toInt()
             if (fillWidth > 0) {
                 val color = getRainbowColor(progress * 0.3f).transparent(alphaInt) // 💡 色にアルファ値を適用
                 // 💡 修正: 前回の fill 関数呼び出しの高さが 0 になっていたため修正
-                graphics2D.fill(x + 1, barY + 1, fillWidth - 2, 0, color)
+                graphics2D.fill(x + 1, barY + 1, fillWidth - 2, barHeight, color)
             }
         }
     }
