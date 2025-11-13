@@ -55,7 +55,7 @@ object ItemEsp {
         graphics3d.renderLinedColorBoxes(renderBoxes, true)
     }
 
-    private fun rarityColor(entity: ItemEntity): Int =
+    fun rarityColor(entity: ItemEntity): Int =
         when (entity.stack.rarity) {
             Rarity.COMMON ->
                 org.infinite.InfiniteClient
