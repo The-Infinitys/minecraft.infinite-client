@@ -237,7 +237,7 @@ class HyperUi : ConfigurableFeature() {
             colors.oceanAccentColor.transparent(255 * transparentOfAirProgress * a),
             BarSide.Right,
         )
-        val sprinting = player.isSprinting
+        val sprinting = player.isSprinting && !player.isSwimming && !player.isGliding
         if (sprinting) {
             val sprintTime = statsManager.sprintMeters(player)
             val sprintableLength = sprintTime.toString() + "m"
@@ -250,13 +250,25 @@ class HyperUi : ConfigurableFeature() {
         }
         // 5. 潜水時間テキスト
         val diveTime = statsManager.diveSeconds(player)
+        val diveTimeString = diveTime.toString() + "s"
         if (diveTime > 0) {
-            val diveTimeString = diveTime.toString() + "s"
             graphics2D.drawText(
                 diveTimeString,
                 graphics2D.width - graphics2D.textWidth(diveTimeString),
                 graphics2D.height - graphics2D.fontHeight(),
                 colors.foregroundColor.transparent(255 * isSubmerged * (1 + transparentOfAirProgress) / 2.0),
+            )
+        }
+        val swimming = player.isSwimming && player.isSprinting
+        if (swimming) {
+            val swimTime = statsManager.sprintMeters(player)
+            val spaceString = " "
+            val swimmableLength = swimTime.toString() + "m"
+            graphics2D.drawText(
+                swimmableLength,
+                graphics2D.width - graphics2D.textWidth(swimmableLength + spaceString + diveTimeString),
+                graphics2D.height - graphics2D.fontHeight(),
+                colors.foregroundColor.transparent(255),
             )
         }
     }

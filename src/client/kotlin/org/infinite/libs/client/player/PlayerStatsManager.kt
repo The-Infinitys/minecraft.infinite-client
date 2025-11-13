@@ -188,13 +188,25 @@ object PlayerStatsManager : ClientInterface() {
 
     fun sprintMeters(player: ClientPlayerEntity): Int {
         val hungerManager = player.hungerManager
-        val maxExhaustion = 4.0
+        val maxExhaustion = MAX_EXHAUSTION
         val food = hungerManager.foodLevel
         val saturation = hungerManager.saturationLevel
         val totalLevel = food + saturation - exhaustion / maxExhaustion
         val runnableLevel = totalLevel - 6
         if (runnableLevel <= 0) return 0
         val exhaustionPerMeter = 0.1
+        return (runnableLevel * maxExhaustion / exhaustionPerMeter).roundToInt()
+    }
+
+    fun swimMeters(player: ClientPlayerEntity): Int {
+        val hungerManager = player.hungerManager
+        val maxExhaustion = MAX_EXHAUSTION
+        val food = hungerManager.foodLevel
+        val saturation = hungerManager.saturationLevel
+        val totalLevel = food + saturation - exhaustion / maxExhaustion
+        val runnableLevel = totalLevel - 6
+        if (runnableLevel <= 0) return 0
+        val exhaustionPerMeter = 0.01
         return (runnableLevel * maxExhaustion / exhaustionPerMeter).roundToInt()
     }
 
