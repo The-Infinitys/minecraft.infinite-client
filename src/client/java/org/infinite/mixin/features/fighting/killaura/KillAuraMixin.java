@@ -140,7 +140,10 @@ public class KillAuraMixin {
   @Unique
   private void faceEntity(ClientPlayerEntity player, Entity target) {
     double x = target.getX() - player.getX();
-    double y = target.getY() - (player.getY() + player.getEyeHeight(player.getPose()));
+    double y =
+        target.getY()
+            + target.getEyeHeight(target.getPose())
+            - (player.getY() + player.getEyeHeight(player.getPose()));
     double z = target.getZ() - player.getZ();
 
     double dist = Math.sqrt(x * x + z * z);

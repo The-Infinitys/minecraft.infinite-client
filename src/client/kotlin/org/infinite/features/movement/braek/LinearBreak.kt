@@ -1,5 +1,6 @@
 package org.infinite.features.movement.braek
 
+import net.minecraft.block.Blocks
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -117,14 +118,12 @@ class LinearBreak : ConfigurableFeature() {
         val targetPos = blocksToMine.first()
         val blockState = client.world?.getBlockState(targetPos) ?: return
 
-        // ターゲットブロックが流体なら、破壊リストから削除
-        if (blockState.isAir || blockState.isOpaque) {
+        if (listOf(Blocks.WATER, Blocks.LAVA, Blocks.AIR, Blocks.BARRIER, Blocks.BEDROCK).contains(blockState.block)) {
             blocksToMine.remove(targetPos)
             currentBreakingPos = null
             currentBreakingProgress = 0.0f
             return
         }
-
         // 3. 破壊パラメータの取得と有効性のチェック
         val params = BlockUtils.getBlockBreakingParams(targetPos)
 
