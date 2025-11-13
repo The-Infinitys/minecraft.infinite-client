@@ -13,12 +13,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.ColorHelper
 import org.infinite.gui.theme.Theme
-import org.infinite.gui.theme.official.CyberTheme
-import org.infinite.gui.theme.official.HackerTheme
-import org.infinite.gui.theme.official.InfiniteTheme
-import org.infinite.gui.theme.official.MinecraftTheme
-import org.infinite.gui.theme.official.PastelTheme
-import org.infinite.gui.theme.official.SmeClanTheme
+import org.infinite.gui.theme.official.officialThemes
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.client.async.AsyncInterface
 import org.infinite.libs.client.control.ControllerInterface
@@ -42,7 +37,7 @@ object InfiniteClient : ClientModInitializer {
     private val addonFeatureMap: MutableMap<InfiniteAddon, List<FeatureCategory>> = mutableMapOf()
     private val featureInstances: MutableMap<Class<out ConfigurableFeature>, ConfigurableFeature> = mutableMapOf()
 
-    fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: InfiniteTheme()
+    fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: Theme.default()
 
     private fun checkTranslations(): List<String> {
         val result = mutableListOf<String>()
@@ -96,15 +91,7 @@ object InfiniteClient : ClientModInitializer {
         updateFeatureInstances()
         InfiniteKeyBind.registerKeybindings()
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
-            themes =
-                listOf(
-                    InfiniteTheme(),
-                    SmeClanTheme(),
-                    HackerTheme(),
-                    PastelTheme(),
-                    MinecraftTheme(),
-                    CyberTheme(),
-                )
+            themes = officialThemes
             loadAddons()
             ConfigManager.loadConfig()
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
@@ -152,10 +139,7 @@ object InfiniteClient : ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }
         ClientTickEvents.START_CLIENT_TICK.register { _ -> ControllerInterface.tick() }
         ClientTickEvents.START_CLIENT_TICK.register { _ -> AiInterface.tick() }
-        ClientTickEvents.START_CLIENT_TICK.register { _ -> PlayerStatsManager.tick() }
-        ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
-            PlayerStatsManager.resetHunger()
-        }
+        PlayerStatsManager.init()
         ClientCommandRegistrationCallback.EVENT.register(InfiniteCommand::registerCommands)
         worldManager = WorldManager()
         ClientTickEvents.START_CLIENT_TICK.register { _ ->

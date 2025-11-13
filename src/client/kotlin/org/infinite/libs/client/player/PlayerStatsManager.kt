@@ -1,5 +1,8 @@
 package org.infinite.libs.client.player
 
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.enchantment.Enchantments
@@ -9,6 +12,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.HungerConstants
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.server.mod.appleskin.ExhaustionSyncPayload
 import org.infinite.utils.item.enchantLevel
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -205,5 +209,25 @@ object PlayerStatsManager : ClientInterface() {
 
     fun resetHunger() {
         exhaustion = 0.0
+    }
+
+    /**
+     * AppleSkinの疲労度同期パケットを受信し、exhaustionの値を更新します。
+     * @param buf 疲労度のfloat値のみを含むPacketByteBuf
+     */
+    fun handleAppleSkinExhaustion(buf: ExhaustionSyncPayload) {
+        exhaustion = buf.exhaustion().toDouble()
+    }
+
+    fun init() {
+        ClientTickEvents.START_CLIENT_TICK.register { _ -> tick() }
+        ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
+            resetHunger()
+        }
+        ClientPlayNetworking.registerGlobalReceiver<ExhaustionSyncPayload>(
+            ExhaustionSyncPayload.ID,
+        ) { payload: ExhaustionSyncPayload, _: ClientPlayNetworking.Context ->
+            handleAppleSkinExhaustion(payload)
+        }
     }
 }
