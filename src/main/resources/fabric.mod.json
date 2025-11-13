@@ -45,6 +45,5 @@
   },
   "suggests": {
     "baritone": "~1.21.10"
-  },
-  "assetSources": ["assets"]
+  }
 }
