@@ -45,6 +45,7 @@
     "features.server.DisconnectedScreenMixin",
     "features.server.MultiPlayerScreenMixin",
     "features.utils.afk.WorldRendererMixin",
+    "infinite.client.player.ClientPlayerInteractionManagerMixin",
     "infinite.graphics.InGameHudMixin",
     "infinite.graphics.WorldRendererMixin",
     "infinite.interfaces.WorldRendererMixin",

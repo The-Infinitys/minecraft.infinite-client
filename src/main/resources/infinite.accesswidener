@@ -34,3 +34,6 @@ accessible field net/minecraft/block/AbstractBlock$AbstractBlockState mapColor L
 
 # --- Navigator ---
 accessible method net/minecraft/entity/mob/MobEntity <init> (Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V
+
+# --- Hyper Ui ---
+accessible field net/minecraft/entity/player/HungerManager exhaustion F

@@ -1,5 +1,6 @@
 package org.infinite.features.rendering.ui
 
+import org.infinite.libs.client.player.PlayerStatsManager.PlayerStats
 import org.infinite.settings.FeatureSetting
 
 /**

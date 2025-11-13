@@ -22,6 +22,7 @@ import org.infinite.gui.theme.official.SmeClanTheme
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.client.async.AsyncInterface
 import org.infinite.libs.client.control.ControllerInterface
+import org.infinite.libs.client.player.PlayerStatsManager
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.infinite.InfiniteAddon
@@ -151,6 +152,10 @@ object InfiniteClient : ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register { _ -> handleWorldSystem() }
         ClientTickEvents.START_CLIENT_TICK.register { _ -> ControllerInterface.tick() }
         ClientTickEvents.START_CLIENT_TICK.register { _ -> AiInterface.tick() }
+        ClientTickEvents.START_CLIENT_TICK.register { _ -> PlayerStatsManager.tick() }
+        ServerPlayerEvents.AFTER_RESPAWN.register { _, _, _ ->
+            PlayerStatsManager.resetHunger()
+        }
         ClientCommandRegistrationCallback.EVENT.register(InfiniteCommand::registerCommands)
         worldManager = WorldManager()
         ClientTickEvents.START_CLIENT_TICK.register { _ ->

@@ -3,6 +3,8 @@ package org.infinite.features.rendering.ui
 import net.minecraft.client.MinecraftClient
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.libs.client.player.PlayerStatsManager
+import org.infinite.libs.client.player.PlayerStatsManager.PlayerStats
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
@@ -20,7 +22,7 @@ class HyperUi : ConfigurableFeature() {
         listOf(easeSpeedSetting, alphaSetting, heightSetting, paddingSetting)
 
     // --- 依存オブジェクト ---
-    private val statsManager = PlayerStatsManager()
+    private val statsManager = PlayerStatsManager
     private val easingManager = EasingManager(easeSpeedSetting)
     private val damageCalculator = DamageCalculator()
     private val rayCastRenderer = RayCastRenderer()
@@ -35,9 +37,8 @@ class HyperUi : ConfigurableFeature() {
     override fun tick() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
-
         // 1. 統計情報の更新
-        currentStats = statsManager.getStats(player)
+        currentStats = statsManager.stats() ?: return
 
         // 2. fireTicksの更新
         fireTicks = max(fireTicks, player.fireTicks)
@@ -72,9 +73,11 @@ class HyperUi : ConfigurableFeature() {
         val player = MinecraftClient.getInstance().player ?: return
         val estimatedTotalDamage = damageCalculator.estimations(player, fireTicks)
 
-        // --- 左側 (体力、装甲) ---
         // ベースの背景 (全領域)
         renderBar(graphics2D, 1.0, h + p * 2.0, 0.0, colors.backgroundColor.transparent(255 * a), BarSide.Left)
+        renderBar(graphics2D, 1.0, h, p, colors.backgroundColor.transparent(500 * a), BarSide.Right)
+
+        // --- 左側 (体力、装甲) ---
 
         // 1. 装甲 (Armor) バー
         renderBar(
@@ -178,14 +181,10 @@ class HyperUi : ConfigurableFeature() {
             BarSide.Right,
         )
 
-        // 2. 満腹度 (Hunger) バーの背景
-        renderBar(graphics2D, 1.0, h, p, colors.backgroundColor.transparent(500 * a), BarSide.Right)
-
         // 3. 満腹度/飽和度 (Hunger/Saturation) バー
         val (nutritionInfo, saturationInfo) = statsManager.foodSaturation(player)
         val hungerProgress = (s.hungerProgress + nutritionInfo).coerceIn(0.0, 1.0)
-        val saturationProgress = (s.saturationProgress + saturationInfo).coerceIn(0.0, s.hungerProgress)
-
+        val saturationProgress = (s.saturationProgress + saturationInfo).coerceIn(0.0, hungerProgress)
         renderBar(
             graphics2D,
             max(hungerProgress, e.easingHunger),
@@ -238,7 +237,17 @@ class HyperUi : ConfigurableFeature() {
             colors.oceanAccentColor.transparent(255 * transparentOfAirProgress * a),
             BarSide.Right,
         )
-
+        val sprinting = player.isSprinting
+        if (sprinting) {
+            val sprintTime = statsManager.sprintMeters(player)
+            val sprintableLength = sprintTime.toString() + "m"
+            graphics2D.drawText(
+                sprintableLength,
+                graphics2D.width - graphics2D.textWidth(sprintableLength),
+                graphics2D.height - graphics2D.fontHeight(),
+                colors.foregroundColor.transparent(255),
+            )
+        }
         // 5. 潜水時間テキスト
         val diveTime = statsManager.diveSeconds(player)
         if (diveTime > 0) {
