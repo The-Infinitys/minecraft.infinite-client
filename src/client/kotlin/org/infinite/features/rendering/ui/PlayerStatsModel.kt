@@ -60,7 +60,7 @@ class PlayerStatsModel(
         val s = currentStats ?: return 0.0 to 0.0
         val (nutritionInfo, saturationInfo) = statsManager.foodSaturation(player)
         val hungerProgress = (s.hungerProgress + nutritionInfo).coerceIn(0.0, 1.0)
-        val saturationProgress = (s.saturationProgress + saturationInfo).coerceIn(0.0, hungerProgress)
+        val saturationProgress = (s.saturationProgress + saturationInfo).coerceIn(0.0, s.hungerProgress)
         return hungerProgress to saturationProgress
     }
 }
