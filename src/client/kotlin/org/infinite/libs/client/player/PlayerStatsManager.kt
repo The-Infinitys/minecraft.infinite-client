@@ -33,6 +33,8 @@ object PlayerStatsManager : ClientInterface() {
         val airProgress: Double,
         val vehicleHealthProgress: Double,
         val isJumping: Boolean,
+        val totalFoodProgress: Double, // 回復予測用の食料進捗
+        val canNaturallyRegenerate: Boolean, // 自然回復フラグ
     )
 
     private const val MAX_EXHAUSTION = HungerConstants.EXHAUSTION_UNIT.toDouble()
@@ -111,7 +113,7 @@ object PlayerStatsManager : ClientInterface() {
         val hungerManager = player.hungerManager
         val hungerLevel = hungerManager.foodLevel.toDouble()
         val saturationLevel = hungerManager.saturationLevel.toDouble()
-        val maxHunger = HungerConstants.FULL_FOOD_LEVEL
+        val maxHunger = HungerConstants.FULL_FOOD_LEVEL.toDouble()
         val exhaustionProgress = exhaustion / MAX_EXHAUSTION
         val saturationProgress =
             if (exhaustionProgress > saturationLevel) {
@@ -125,6 +127,13 @@ object PlayerStatsManager : ClientInterface() {
             } else {
                 hungerLevel / maxHunger
             }
+
+        // ★ 回復予測に必要な新しい計算
+        val foodPoints: Double = hungerLevel + saturationLevel
+        val maxFoodPoints: Double = 20.0 + 20.0
+        val totalFoodProgress: Double = foodPoints / maxFoodPoints.coerceAtLeast(1.0)
+        val canNaturallyRegenerate: Boolean = hungerManager.foodLevel >= 18
+
         // 空気 (Air)
         val air = player.air.toDouble()
         val maxAir = player.maxAir.toDouble()
@@ -152,6 +161,8 @@ object PlayerStatsManager : ClientInterface() {
             airProgress = airProgress,
             vehicleHealthProgress = vehicleHealthProgress,
             isJumping = player.isJumping,
+            totalFoodProgress = totalFoodProgress.coerceIn(0.0, 1.0),
+            canNaturallyRegenerate = canNaturallyRegenerate,
         )
     }
 

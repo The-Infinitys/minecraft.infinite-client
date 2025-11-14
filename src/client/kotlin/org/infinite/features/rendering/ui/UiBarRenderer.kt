@@ -1,7 +1,10 @@
 package org.infinite.features.rendering.ui
 
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.effect.StatusEffects
+import org.infinite.InfiniteClient
 import org.infinite.gui.theme.ThemeColors
+import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.client.player.PlayerStatsManager.PlayerStats
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.transparent
@@ -10,7 +13,7 @@ import kotlin.math.min
 
 class UiBarRenderer(
     private val config: UiRenderConfig,
-) {
+) : ClientInterface() {
     enum class BarSide { Left, Right }
 
     fun renderBars(
@@ -28,10 +31,38 @@ class UiBarRenderer(
         val a = config.alpha
         val hasOffHand = player.offHandStack?.isEmpty == false
 
+        // 状態異常のオーバーレイ設定
+        val (hpOverlayColor, hpOverlayAlpha) = getHpStatusEffectOverlay(player)
+        val (hungerOverlayColor, hungerOverlayAlpha) = getHungerStatusEffectOverlay(player)
+
         // ベースの背景 (全領域)
-        renderBar(graphics2D, 1.0, h + p * 2.0, 0.0, colors.backgroundColor.transparent((255 * a).toInt()), BarSide.Left, hasOffHand)
-        renderBar(graphics2D, 1.0, h + p * 2.0, 0.0, colors.backgroundColor.transparent((255 * a).toInt()), BarSide.Right, hasOffHand)
-        renderBar(graphics2D, 1.0, h, p, colors.backgroundColor.transparent((500 * a).toInt()), BarSide.Right, hasOffHand)
+        renderBar(
+            graphics2D,
+            1.0,
+            h + p * 2.0,
+            0.0,
+            colors.backgroundColor.transparent((255 * a).toInt()),
+            BarSide.Left,
+            hasOffHand,
+        )
+        renderBar(
+            graphics2D,
+            1.0,
+            h + p * 2.0,
+            0.0,
+            colors.backgroundColor.transparent((255 * a).toInt()),
+            BarSide.Right,
+            hasOffHand,
+        )
+        renderBar(
+            graphics2D,
+            1.0,
+            h,
+            p,
+            colors.backgroundColor.transparent((500 * a).toInt()),
+            BarSide.Right,
+            hasOffHand,
+        )
 
         // --- 左側 (体力、装甲) ---
 
@@ -61,7 +92,32 @@ class UiBarRenderer(
         )
 
         // 3. 体力 (Health) バーの背景
-        renderBar(graphics2D, 1.0, h, p, colors.backgroundColor.transparent((500 * a).toInt()), BarSide.Left, hasOffHand)
+        renderBar(
+            graphics2D,
+            1.0,
+            h,
+            p,
+            colors.backgroundColor.transparent((500 * a).toInt()),
+            BarSide.Left,
+            hasOffHand,
+        )
+
+        // ★ 3.5. 回復予測バーの描画
+        if (s.canNaturallyRegenerate) {
+            // 現在のHP (drawnHpProgress) から、満腹度と飽和度から導かれる最大回復可能量 (totalFoodProgress) を加算したプログレスまでを描画
+            val recoveryEndProgress = min(1.0, max(drawnHpProgress, e.easingHp) + s.totalFoodProgress)
+
+            renderBar(
+                graphics2D,
+                recoveryEndProgress, // 予測量を含めた進捗
+                h,
+                p,
+                colors.redAccentColor.transparent((100 * a).toInt()), // 非常に薄い赤（回復予測）
+                BarSide.Left,
+                hasOffHand,
+            )
+        }
+
         // 4. 体力 (Health) バー (推定ダメージ反映)
         renderBarPair(
             graphics2D,
@@ -83,6 +139,17 @@ class UiBarRenderer(
             p,
             colors.yellowAccentColor,
             a * 0.4,
+            BarSide.Left,
+            hasOffHand,
+        )
+
+        // ★ 6. 体力オーバーレイの描画 (炎、毒、衰弱、凍結)
+        renderBar(
+            graphics2D,
+            1.0, // 常にバー全体を覆う
+            h + p * 2.0,
+            0.0,
+            hpOverlayColor.transparent((255 * a * hpOverlayAlpha).toInt()),
             BarSide.Left,
             hasOffHand,
         )
@@ -126,7 +193,18 @@ class UiBarRenderer(
             hasOffHand,
         )
 
-        // 3. 空気 (Air) バー
+        // ★ 3. 満腹度オーバーレイの描画 (空腹)
+        renderBar(
+            graphics2D,
+            1.0, // 常にバー全体を覆う
+            h + p * 2.0,
+            0.0,
+            hungerOverlayColor.transparent((255 * a * hungerOverlayAlpha).toInt()),
+            BarSide.Right,
+            hasOffHand,
+        )
+
+        // 4. 空気 (Air) バー
         val transparentOfAirProgress = min(1.0, (1.0 - s.airProgress) * 10)
         renderBarPair(
             graphics2D,
@@ -175,7 +253,7 @@ class UiBarRenderer(
         )
     }
 
-    // 元のrenderBar関数 (player引数は不要、hasOffHandフラグを受け取る)
+    // 元のrenderBar関数
     private fun renderBar(
         graphics2D: Graphics2D,
         progress: Double,
@@ -247,5 +325,42 @@ class UiBarRenderer(
                 color,
             )
         }
+    }
+
+    // ★ 状態異常オーバーレイを取得するヘルパー関数 (体力)
+    private fun getHpStatusEffectOverlay(player: ClientPlayerEntity): Pair<Int, Double> {
+        val defaultColor = 0 // 透明
+        val colors = InfiniteClient.theme().colors
+        // 毒 (Poison)
+        if (player.hasStatusEffect(StatusEffects.POISON)) {
+            return Pair(colors.emeraldAccentColor, 0.6)
+        }
+        // 衰弱 (Wither)
+        if (player.hasStatusEffect(StatusEffects.WITHER)) {
+            return Pair(colors.foregroundColor, 0.7)
+        }
+        // 炎 (Fire)
+        if (player.isOnFire) {
+            return Pair(colors.orangeAccentColor, 0.8)
+        }
+        // 凍結 (Frozen)
+        if (player.isFrozen) {
+            return Pair(colors.oceanAccentColor, 0.5)
+        }
+
+        return Pair(defaultColor, 0.0)
+    }
+
+    // ★ 状態異常オーバーレイを取得するヘルパー関数 (満腹度)
+    private fun getHungerStatusEffectOverlay(player: ClientPlayerEntity): Pair<Int, Double> {
+        val defaultColor = 0
+        val colors = InfiniteClient.theme().colors
+
+        // 空腹 (Hunger)
+        if (player.hasStatusEffect(StatusEffects.HUNGER)) {
+            return Pair(colors.greenAccentColor, 0.7)
+        }
+
+        return Pair(defaultColor, 0.0)
     }
 }
