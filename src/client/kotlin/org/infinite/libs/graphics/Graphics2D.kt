@@ -3,11 +3,14 @@ package org.infinite.libs.graphics
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.render.state.GuiRenderState
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.item.ItemStack
+import net.minecraft.text.StringVisitable
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.Language
 import net.minecraft.util.math.MathHelper
 import org.infinite.utils.average
 import org.infinite.utils.rendering.drawBorder
@@ -69,6 +72,10 @@ class Graphics2D(
         y: Float,
     ) {
         matrixStack.translate(x, y)
+    }
+
+    fun rotate(ang: Float) {
+        matrixStack.rotate(ang)
     }
 
     /**
@@ -195,6 +202,28 @@ class Graphics2D(
         } else {
             context.drawText(client.textRenderer, text, x, y, color, false)
         }
+    }
+
+    fun drawText(text: String, x: Double, y: Double, color: Int, shadow: Boolean = true): Unit =
+        drawText(text, x.toFloat(), y.toFloat(), color, shadow)
+
+    fun drawText(text: String, x: Float, y: Float, color: Int, shadow: Boolean = true) {
+        val orderedText =
+            Language.getInstance().reorder(StringVisitable.plain(text))
+        val backgroundColor = 0
+        val clipBounds =
+            context.scissorStack.peekLast()
+        val state = TextRenderState(
+            client.textRenderer,
+            orderedText, matrixStack,
+            x,
+            y,
+            color,
+            backgroundColor,
+            shadow,
+            clipBounds
+        )
+        context.state.addText(state)
     }
 
     fun drawText(

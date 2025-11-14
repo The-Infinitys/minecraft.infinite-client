@@ -37,3 +37,7 @@ accessible method net/minecraft/entity/mob/MobEntity <init> (Lnet/minecraft/enti
 
 # --- Hyper Ui ---
 accessible field net/minecraft/entity/player/HungerManager exhaustion F
+accessible method net/minecraft/client/gui/render/state/GuiRenderState findAndGoToLayerToAdd (Lnet/minecraft/client/gui/render/state/GuiElementRenderState;)Z
+accessible field net/minecraft/client/gui/render/state/GuiRenderState currentLayer Lnet/minecraft/client/gui/render/state/GuiRenderState$Layer;
+accessible method net/minecraft/client/gui/render/state/GuiRenderState onElementAdded (Lnet/minecraft/client/gui/ScreenRect;)V
+extendable class net/minecraft/client/gui/render/state/TextGuiElementRenderState

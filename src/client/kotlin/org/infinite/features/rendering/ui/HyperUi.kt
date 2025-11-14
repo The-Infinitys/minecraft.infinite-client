@@ -16,7 +16,7 @@ class HyperUi : ConfigurableFeature() {
     // --- 設定 ---
     private val easeSpeedSetting = FeatureSetting.DoubleSetting("EasingSpeed", 0.25, 0.0, 1.0)
     private val alphaSetting = FeatureSetting.DoubleSetting("Transparency", 0.5, 0.0, 1.0)
-    private val heightSetting = FeatureSetting.IntSetting("Height", 24, 8, 32)
+    val heightSetting = FeatureSetting.IntSetting("Height", 24, 8, 32)
     private val paddingSetting = FeatureSetting.IntSetting("Padding", 4, 0, 16)
     override val settings: List<FeatureSetting<*>> =
         listOf(easeSpeedSetting, alphaSetting, heightSetting, paddingSetting)
@@ -26,6 +26,7 @@ class HyperUi : ConfigurableFeature() {
     private val easingManager = EasingManager(easeSpeedSetting)
     private val damageCalculator = DamageCalculator()
     private val rayCastRenderer = RayCastRenderer()
+    private val flightUiRenderer = ElytraFlightUiRenderer()
 
     // --- 内部状態 ---
     private var currentStats: PlayerStats? = null
@@ -261,7 +262,7 @@ class HyperUi : ConfigurableFeature() {
         }
         val swimming = player.isSwimming && player.isSprinting
         if (swimming) {
-            val swimTime = statsManager.sprintMeters(player)
+            val swimTime = statsManager.swimMeters(player)
             val spaceString = " "
             val swimmableLength = swimTime.toString() + "m"
             graphics2D.drawText(
@@ -270,6 +271,10 @@ class HyperUi : ConfigurableFeature() {
                 graphics2D.height - graphics2D.fontHeight(),
                 colors.foregroundColor.transparent(255),
             )
+        }
+        val gliding = player.isGliding
+        if (gliding) {
+            flightUiRenderer.render(graphics2D)
         }
     }
 
