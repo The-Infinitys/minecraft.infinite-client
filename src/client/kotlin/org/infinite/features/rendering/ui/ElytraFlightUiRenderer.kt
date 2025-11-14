@@ -127,8 +127,8 @@ class ElytraFlightUiRenderer : ClientInterface() {
         for ((degree, char) in compassPoints) {
             val relativeYaw = MathHelper.wrapDegrees(degree - direction.yaw)
             val relativeRad = toRadians(relativeYaw)
-            val textX = centerX + (sin(relativeRad) * textOffset).toInt().coerceIn(-renderSize, renderSize)
-            val textY = centerY - (cos(relativeRad) * textOffset).toInt().coerceIn(-renderSize, renderSize)
+            val textX = centerX + (sin(relativeRad) * textOffset).toInt().coerceIn(-clipOffset, clipOffset)
+            val textY = centerY - (cos(relativeRad) * textOffset).toInt().coerceIn(-clipOffset, clipOffset)
             val textWidth = graphics2D.textWidth(char)
             graphics2D.drawText(
                 char,
