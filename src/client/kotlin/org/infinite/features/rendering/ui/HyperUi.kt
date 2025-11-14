@@ -1,6 +1,7 @@
 package org.infinite.features.rendering.ui
 
 import net.minecraft.client.MinecraftClient
+import net.minecraft.util.math.MathHelper
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.PlayerStatsManager
@@ -275,6 +276,106 @@ class HyperUi : ConfigurableFeature() {
         val gliding = player.isGliding
         if (gliding) {
             flightUiRenderer.render(graphics2D)
+        }
+
+        // --- 方位計の描画を追加 ---
+        renderCompassAtTopCenter(graphics2D, player.getLerpedYaw(graphics2D.tickProgress))
+    }
+
+    // --- 方位計の描画関数 ---
+    private fun renderCompassAtTopCenter(
+        graphics2D: Graphics2D,
+        playerYaw: Float,
+    ) {
+        val width = graphics2D.width
+        val colors = InfiniteClient.theme().colors
+
+        val compassWidth = 200 // 方位計の全体の幅
+        val compassHeight = 20 // 方位計の高さ
+        val topY = paddingSetting.value.toDouble() // 画面上部からのパディング
+
+        val centerX = width / 2
+
+        // 現在のプレイヤーのヨー角を正規化
+        val currentYaw = MathHelper.wrapDegrees(playerYaw)
+
+        // 主要な方角
+        val cardinalPoints =
+            mapOf(
+                0f to "S",
+                90f to "W",
+                180f to "N",
+                270f to "E",
+            )
+        // 中間の方角
+        val interCardinalPoints =
+            mapOf(
+                45f to "SW",
+                135f to "NW",
+                225f to "NE",
+                315f to "SE",
+            )
+
+        // 方位計の表示範囲 (例: 中心から左右90度ずつ、合計180度)
+        val displayRangeDegrees = 90f
+        val pixelsPerDegree = compassWidth / (displayRangeDegrees * 2) // 1度あたりのピクセル数
+        val majorMarkColor = colors.foregroundColor
+        val minorMarkColor = colors.foregroundColor
+
+        // 中央の現在位置を示すポインター
+        graphics2D.drawLine(
+            centerX.toDouble(),
+            topY,
+            centerX.toDouble(),
+            topY + compassHeight,
+            colors.primaryColor.transparent(255),
+            2,
+        )
+        for (degree in 0..359 step 5) { // 5度刻みで目盛りをチェック
+            val relativeDegree = MathHelper.wrapDegrees(degree - currentYaw)
+            // 表示範囲内にある場合のみ描画
+            if (relativeDegree >= -displayRangeDegrees && relativeDegree <= displayRangeDegrees) {
+                val markX = centerX + (relativeDegree * pixelsPerDegree).toInt()
+                var markLength = 5.0 // 小さい目盛りの長さ
+                var displayChar: String? = null
+                var markDrawColor = minorMarkColor.transparent(255)
+
+                if (degree % 90 == 0) { // 主要な方角 (N, S, E, W)
+                    markLength = 10.0
+                    displayChar = cardinalPoints[degree.toFloat()]
+                    markDrawColor = majorMarkColor.transparent(255)
+                    if (displayChar == "N") markDrawColor = colors.purpleAccentColor.transparent(255) // 北だけ特別色
+                } else if (degree % 45 == 0) { // 中間の方角 (NE, NW, SE, SW)
+                    markLength = 8.0
+                    displayChar = interCardinalPoints[degree.toFloat()]
+                    markDrawColor = majorMarkColor.transparent(200)
+                } else if (degree % 10 == 0) { // 10度ごとの目盛り
+                    markLength = 7.0
+                    markDrawColor = minorMarkColor.transparent(200)
+                }
+
+                // 目盛り線
+                graphics2D.drawLine(
+                    markX.toDouble(),
+                    topY + compassHeight,
+                    markX.toDouble(),
+                    topY + compassHeight + markLength,
+                    markDrawColor,
+                    1,
+                )
+
+                // 方角テキスト
+                if (displayChar != null) {
+                    val textWidth = graphics2D.textWidth(displayChar)
+                    graphics2D.drawText(
+                        displayChar,
+                        markX - textWidth / 2,
+                        topY.toInt() + 2, // 目盛り線の上に表示
+                        markDrawColor,
+                        true, // shadow
+                    )
+                }
+            }
         }
     }
 

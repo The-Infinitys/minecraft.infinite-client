@@ -204,25 +204,38 @@ class Graphics2D(
         }
     }
 
-    fun drawText(text: String, x: Double, y: Double, color: Int, shadow: Boolean = true): Unit =
-        drawText(text, x.toFloat(), y.toFloat(), color, shadow)
+    fun drawText(
+        text: String,
+        x: Double,
+        y: Double,
+        color: Int,
+        shadow: Boolean = true,
+    ): Unit = drawText(text, x.toFloat(), y.toFloat(), color, shadow)
 
-    fun drawText(text: String, x: Float, y: Float, color: Int, shadow: Boolean = true) {
+    fun drawText(
+        text: String,
+        x: Float,
+        y: Float,
+        color: Int,
+        shadow: Boolean = true,
+    ) {
         val orderedText =
             Language.getInstance().reorder(StringVisitable.plain(text))
         val backgroundColor = 0
         val clipBounds =
             context.scissorStack.peekLast()
-        val state = TextRenderState(
-            client.textRenderer,
-            orderedText, matrixStack,
-            x,
-            y,
-            color,
-            backgroundColor,
-            shadow,
-            clipBounds
-        )
+        val state =
+            TextRenderState(
+                client.textRenderer,
+                orderedText,
+                matrixStack,
+                x,
+                y,
+                color,
+                backgroundColor,
+                shadow,
+                clipBounds,
+            )
         context.state.addText(state)
     }
 

@@ -10,15 +10,13 @@ import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.transparent
 import org.infinite.utils.toRadians
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
-import kotlin.math.pow
 import kotlin.math.sqrt
 
 class ElytraFlightUiRenderer : ClientInterface() {
-    fun render(
-        graphics2D: Graphics2D,
-    ) {
+    fun render(graphics2D: Graphics2D) {
         val info = flightInfo(graphics2D.tickProgress) ?: return
         renderAttitudeIndicator(graphics2D, info.directions)
         renderHeight(graphics2D, info.altitude)
@@ -33,7 +31,10 @@ class ElytraFlightUiRenderer : ClientInterface() {
         }
 
     // --- 残り飛行可能時間を描画する関数の実装 ---
-    private fun renderFlightTime(graphics2D: Graphics2D, remainingTimeSeconds: Double) {
+    private fun renderFlightTime(
+        graphics2D: Graphics2D,
+        remainingTimeSeconds: Double,
+    ) {
         // 時:分:秒の形式に変換
         // 秒を負の値として扱うことは想定しないが、念のため0以下を最小値とする
         val safeSeconds = remainingTimeSeconds.coerceAtLeast(0.0)
@@ -42,10 +43,11 @@ class ElytraFlightUiRenderer : ClientInterface() {
         val minutes = ((safeSeconds % 3600) / 60).toInt()
         val seconds = (safeSeconds % 60).toInt()
 
-        val timeString = when {
-            hours > 0 -> String.format("%d:%02d:%02d", hours, minutes, seconds)
-            else -> String.format("%02d:%02d", minutes, seconds)
-        }
+        val timeString =
+            when {
+                hours > 0 -> String.format("%d:%02d:%02d", hours, minutes, seconds)
+                else -> String.format("%02d:%02d", minutes, seconds)
+            }
 
         val displayString = "Remaining Time: $timeString"
         val colors = InfiniteClient.theme().colors
@@ -140,10 +142,12 @@ class ElytraFlightUiRenderer : ClientInterface() {
                 true, // shadow
             )
         }
-
     }
 
-    fun renderHeight(graphics2D: Graphics2D, altitude: Double) {
+    fun renderHeight(
+        graphics2D: Graphics2D,
+        altitude: Double,
+    ) {
         val width = graphics2D.width
         val height = graphics2D.height
         val attitudeIndicatorCenterY = height - bottomLength
@@ -220,7 +224,6 @@ class ElytraFlightUiRenderer : ClientInterface() {
             val markY = gaugeBottomY - normalizedHeight * gaugeHeight
 
             if (markY in gaugeTopY..gaugeBottomY) {
-
                 // --- 透明度の計算 (変更なし) ---
                 var alpha = maxAlpha
                 if (markY < gaugeTopY + fadeZoneHeight) {
