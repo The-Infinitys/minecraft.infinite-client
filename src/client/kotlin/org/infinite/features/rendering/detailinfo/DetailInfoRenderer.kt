@@ -3,6 +3,8 @@ package org.infinite.features.rendering.detailinfo
 import net.minecraft.client.MinecraftClient
 import net.minecraft.entity.LivingEntity
 import net.minecraft.text.Text
+import org.infinite.InfiniteClient
+import org.infinite.features.rendering.ui.HyperUi
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.ColorUtils
 import org.infinite.utils.rendering.transparent
@@ -13,7 +15,7 @@ object DetailInfoRenderer {
     const val BAR_PADDING = 5
     private val INNER_COLOR
         get() =
-            org.infinite.InfiniteClient
+            InfiniteClient
                 .theme()
                 .colors.backgroundColor
                 .transparent(192)
@@ -29,7 +31,12 @@ object DetailInfoRenderer {
 
         val screenWidth = client.window.scaledWidth
         val widthSetting = detailInfoFeature.getSetting("Width")?.value as? Int ?: return
-        val startY = detailInfoFeature.getSetting("PaddingTop")?.value as? Int ?: return
+        val startY =
+            run {
+                val default = detailInfoFeature.getSetting("PaddingTop")?.value as? Int ?: 0
+                val isHyperUi = InfiniteClient.isFeatureEnabled(HyperUi::class.java)
+                if (isHyperUi) default + 25 else default
+            }
 
         val uiWidth = (screenWidth * widthSetting / 100)
         val startX = (screenWidth / 2) - (uiWidth / 2)
@@ -118,7 +125,8 @@ object DetailInfoRenderer {
 
         val fillWidth = (barWidth * progress).toInt()
         val barBackgroundColor =
-            org.infinite.InfiniteClient
+
+            InfiniteClient
                 .theme()
                 .colors.backgroundColor
                 .transparent(128)
@@ -136,7 +144,7 @@ object DetailInfoRenderer {
             infoText.string,
             barStartX,
             barY - font.fontHeight - 2,
-            org.infinite.InfiniteClient
+            InfiniteClient
                 .theme()
                 .colors.foregroundColor,
             true,

@@ -1,0 +1,251 @@
+package org.infinite.features.rendering.ui
+
+import net.minecraft.client.network.ClientPlayerEntity
+import org.infinite.gui.theme.ThemeColors
+import org.infinite.libs.client.player.PlayerStatsManager.PlayerStats
+import org.infinite.libs.graphics.Graphics2D
+import org.infinite.utils.rendering.transparent
+import kotlin.math.max
+import kotlin.math.min
+
+class UiBarRenderer(
+    private val config: UiRenderConfig,
+) {
+    enum class BarSide { Left, Right }
+
+    fun renderBars(
+        graphics2D: Graphics2D,
+        s: PlayerStats,
+        e: EasingManager,
+        colors: ThemeColors,
+        player: ClientPlayerEntity,
+        drawnHpProgress: Double,
+        hungerProgress: Double,
+        saturationProgress: Double,
+    ) {
+        val p = config.padding.toDouble()
+        val h = config.height.toDouble()
+        val a = config.alpha
+        val hasOffHand = player.offHandStack?.isEmpty == false
+
+        // ベースの背景 (全領域)
+        renderBar(graphics2D, 1.0, h + p * 2.0, 0.0, colors.backgroundColor.transparent((255 * a).toInt()), BarSide.Left, hasOffHand)
+        renderBar(graphics2D, 1.0, h + p * 2.0, 0.0, colors.backgroundColor.transparent((255 * a).toInt()), BarSide.Right, hasOffHand)
+        renderBar(graphics2D, 1.0, h, p, colors.backgroundColor.transparent((500 * a).toInt()), BarSide.Right, hasOffHand)
+
+        // --- 左側 (体力、装甲) ---
+
+        // 1. 装甲 (Armor) バー
+        renderBarPair(
+            graphics2D,
+            max(s.armorProgress, e.easingArmor),
+            min(s.armorProgress, e.easingArmor),
+            h + p,
+            p / 2.0,
+            colors.aquaAccentColor,
+            a,
+            BarSide.Left,
+            hasOffHand,
+        )
+        // 2. 装甲強度 (Toughness) バー
+        renderBarPair(
+            graphics2D,
+            max(s.toughnessProgress, e.easingToughness),
+            min(s.toughnessProgress, e.easingToughness),
+            h + p,
+            p / 2.0,
+            colors.blueAccentColor,
+            a,
+            BarSide.Left,
+            hasOffHand,
+        )
+
+        // 3. 体力 (Health) バーの背景
+        renderBar(graphics2D, 1.0, h, p, colors.backgroundColor.transparent((500 * a).toInt()), BarSide.Left, hasOffHand)
+        // 4. 体力 (Health) バー (推定ダメージ反映)
+        renderBarPair(
+            graphics2D,
+            max(drawnHpProgress, e.easingHp),
+            min(drawnHpProgress, e.easingHp),
+            h,
+            p,
+            colors.redAccentColor,
+            a,
+            BarSide.Left,
+            hasOffHand,
+        )
+        // 5. 吸収 (Absorption) バー
+        renderBarPair(
+            graphics2D,
+            max(s.absorptionProgress, e.easingAbsorption),
+            min(s.absorptionProgress, e.easingAbsorption),
+            h,
+            p,
+            colors.yellowAccentColor,
+            a * 0.4,
+            BarSide.Left,
+            hasOffHand,
+        )
+
+        // --- 右側 (乗り物、満腹度、空気) ---
+
+        // 1. 乗り物の体力 (Vehicle Health) バー
+        renderBarPair(
+            graphics2D,
+            max(s.vehicleHealthProgress, e.easingVehicleHealth),
+            min(s.vehicleHealthProgress, e.easingVehicleHealth),
+            h + p,
+            p / 2.0,
+            colors.greenAccentColor,
+            a,
+            BarSide.Right,
+            hasOffHand,
+        )
+
+        // 2. 満腹度/飽和度 (Hunger/Saturation) バー
+        renderBarPair(
+            graphics2D,
+            max(hungerProgress, e.easingHunger),
+            min(hungerProgress, e.easingHunger),
+            h,
+            p,
+            colors.yellowAccentColor,
+            a,
+            BarSide.Right,
+            hasOffHand,
+        )
+        renderBarPair(
+            graphics2D,
+            max(saturationProgress, e.easingSaturation),
+            min(saturationProgress, e.easingSaturation),
+            h,
+            p,
+            colors.orangeAccentColor,
+            a,
+            BarSide.Right,
+            hasOffHand,
+        )
+
+        // 3. 空気 (Air) バー
+        val transparentOfAirProgress = min(1.0, (1.0 - s.airProgress) * 10)
+        renderBarPair(
+            graphics2D,
+            max(s.airProgress, e.easingAir),
+            min(s.airProgress, e.easingAir),
+            h / 2.0,
+            p,
+            colors.oceanAccentColor,
+            a * transparentOfAirProgress,
+            BarSide.Right,
+            hasOffHand,
+        )
+    }
+
+    // 描画を簡略化するためのヘルパー関数
+    private fun renderBarPair(
+        graphics2D: Graphics2D,
+        progressMax: Double,
+        progressMin: Double,
+        height: Double,
+        padding: Double,
+        color: Int,
+        alphaMultiplier: Double,
+        side: BarSide,
+        hasOffHand: Boolean,
+    ) {
+        // イージングが遅れる部分 (淡い色)
+        renderBar(
+            graphics2D,
+            progressMax,
+            height,
+            padding,
+            color.transparent((200 * alphaMultiplier).toInt()),
+            side,
+            hasOffHand,
+        )
+        // 現在値の部分 (濃い色)
+        renderBar(
+            graphics2D,
+            progressMin,
+            height,
+            padding,
+            color.transparent((255 * alphaMultiplier).toInt()),
+            side,
+            hasOffHand,
+        )
+    }
+
+    // 元のrenderBar関数 (player引数は不要、hasOffHandフラグを受け取る)
+    private fun renderBar(
+        graphics2D: Graphics2D,
+        progress: Double,
+        height: Double = 22.0,
+        padding: Double,
+        color: Int,
+        side: BarSide,
+        hasOffHand: Boolean,
+    ) {
+        val progress = progress.coerceIn(0.0, 1.0)
+        val screenWidth = graphics2D.width
+        val screenHeight = graphics2D.height
+
+        val hotBarWidth = 180
+        val offHandSlotSize = 30.0
+
+        // 最大幅の計算ロジック
+        val barMaxWidth =
+            (screenWidth - hotBarWidth) / 2.0 - 3 * padding -
+                if (hasOffHand && side == BarSide.Left) offHandSlotSize else 0.0
+
+        // ... (続く描画ロジックは元のコードから変更なし) ...
+        val cornerX =
+            when (side) {
+                BarSide.Right -> screenWidth - padding
+                BarSide.Left -> padding
+            }
+        val cornerPos = cornerX to (screenHeight - padding)
+        val topPos = cornerX to screenHeight - height * 1.5 - padding
+
+        val turnPos =
+            cornerX +
+                when (side) {
+                    BarSide.Left -> barMaxWidth * 0.9
+                    BarSide.Right -> -barMaxWidth * 0.9
+                } to screenHeight - height - padding
+
+        val endPos =
+            cornerX +
+                when (side) {
+                    BarSide.Left -> barMaxWidth
+                    BarSide.Right -> -barMaxWidth
+                } to screenHeight - padding
+
+        // バーの描画ロジック... (元のコードと同じ)
+        val coercedProgress09 = progress.coerceIn(0.0, 0.9)
+        graphics2D.fillQuad(
+            topPos.first,
+            topPos.second,
+            topPos.first,
+            cornerPos.second,
+            (endPos.first - topPos.first) * coercedProgress09 + topPos.first,
+            cornerPos.second,
+            (endPos.first - topPos.first) * coercedProgress09 + topPos.first,
+            (turnPos.second - topPos.second) * coercedProgress09 / 0.9 + topPos.second,
+            color,
+        )
+        if (progress > coercedProgress09) {
+            val reducedProgress = (progress - 0.9) / (1.0 - 0.9)
+            graphics2D.fillQuad(
+                turnPos.first,
+                turnPos.second,
+                turnPos.first,
+                cornerPos.second,
+                (endPos.first - topPos.first) * progress + topPos.first,
+                cornerPos.second,
+                (endPos.first - topPos.first) * progress + topPos.first,
+                (cornerPos.second - turnPos.second) * reducedProgress + turnPos.second,
+                color,
+            )
+        }
+    }
+}

@@ -5,6 +5,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.passive.PassiveEntity
@@ -14,7 +15,6 @@ import net.minecraft.item.Items
 import net.minecraft.util.math.ColorHelper
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.features.rendering.sensory.esp.ItemEsp
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
@@ -41,7 +41,6 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
             256,
         )
 
-    // 💡 新規設定: 透過度コントロール
     private val fadeStartDistance =
         FeatureSetting.IntSetting(
             "FadeStartDistance",
@@ -64,6 +63,14 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
             100,
         )
 
+    // 💡 新規設定: ステータスオーバーレイとパーティクル
+    private val showStatusEffects =
+        FeatureSetting.BooleanSetting("ShowStatusEffects", true)
+    private val showHealthRegen =
+        FeatureSetting.BooleanSetting("ShowHealthRegen", true)
+    private val showHunger =
+        FeatureSetting.BooleanSetting("ShowHunger", true)
+
     override val settings: List<FeatureSetting<*>> =
         listOf(
             mobs,
@@ -72,9 +79,12 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
             always,
             showItems,
             minScaleDistance,
-            fadeStartDistance, // 設定に追加
-            fadeEndDistance, // 設定に追加
-            minAlpha, // 設定に追加
+            fadeStartDistance,
+            fadeEndDistance,
+            minAlpha,
+            showStatusEffects,
+            showHealthRegen,
+            showHunger,
         )
 
     private data class TagRenderInfo(
@@ -83,31 +93,65 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         val distSq: Double, // 距離の二乗を保存
     )
 
+    // 💡 2Dタグパーティクルデータクラス
+    private data class TagParticle(
+        var x: Float, // 画面上のX座標 (エンティティタグの中心からの相対座標)
+        var y: Float, // 画面上のY座標 (エンティティタグの中心からの相対座標)
+        var entityId: Int, // 関連エンティティのID
+        var color: Int, // ARGBカラー
+        var size: Float, // パーティクルのサイズ
+        var lifetime: Int, // 残り寿命 (ティック)
+        val maxLifetime: Int, // 最大寿命 (不透明度計算用)
+        var velX: Float, // X方向の速度
+        var velY: Float, // Y方向の速度
+        val gravity: Float, // 重力の模倣 (Y方向の加速度)
+    )
+
     private val targetEntities: MutableList<TagRenderInfo> = mutableListOf()
 
-    // アイテム描画用の定数をクラスレベルで定義
+    // 💡 パーティクルリスト
+    private val activeParticles: MutableList<TagParticle> = mutableListOf()
+
     private val itemRenderSize = 16
     private val itemPaddingSize = 2
 
+    // ----------------------------------------------------------------------
+    // 3Dレンダリングフック (主に更新処理とパーティクル生成に使用)
+    // ----------------------------------------------------------------------
     override fun render3d(graphics3D: Graphics3D) {
         targetEntities.clear()
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
         val entities = client.world?.entities ?: return
+        val worldRandom = client.world?.random
 
-        val maxDistSq = distance.value * distance.value // 距離の2乗を事前に計算
+        val maxDistSq = distance.value * distance.value
 
+        // 💡 1. 既存パーティクルの更新とフィルタリング
+        activeParticles.removeIf { particle ->
+            particle.lifetime--
+            if (particle.lifetime <= 0) return@removeIf true
+
+            // 位置と速度の更新 (2D座標系内)
+            particle.velY += particle.gravity
+            particle.x += particle.velX
+            particle.y += particle.velY
+
+            return@removeIf false
+        }
+
+        // 💡 2. エンティティフィルタリング、2D座標計算、新規パーティクル生成
         val filteredEntities =
             entities
-                .filter { it is LivingEntity || (showItems.value && it is ItemEntity) } // ItemEntityを追加
+                .filter { it is LivingEntity || (showItems.value && it is ItemEntity) }
                 .filter {
                     val distCheck = player.squaredDistanceTo(it) < maxDistSq || maxDistSq == 0 || always.value
                     if (!distCheck) return@filter false
 
                     when (it) {
-                        is PlayerEntity -> players.value // プレイヤー
-                        is MobEntity -> mobs.value && (it.health < it.maxHealth || always.value) // モブ (体力満タン時はスキップ可能)
-                        is ItemEntity -> showItems.value // 落ちているアイテム
+                        is PlayerEntity -> players.value
+                        is MobEntity -> mobs.value && (it.health < it.maxHealth || always.value)
+                        is ItemEntity -> showItems.value
                         else -> false
                     }
                 }
@@ -123,16 +167,67 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
                     is ItemEntity ->
                         entity
                             .getLerpedPos(graphics3D.tickCounter.getTickProgress(false))
-                            .add(0.0, 0.5, 0.0) // 落ちているアイテムの中心あたり
+                            .add(0.0, 0.5, 0.0)
+
                     else -> continue
                 }
             val pos2d = graphics3D.toDisplayPos(aboveHeadPos)
+
             if (pos2d != null) {
                 targetEntities.add(TagRenderInfo(entity, pos2d, player.squaredDistanceTo(entity)))
+
+                // 💡 新規パーティクル生成フック (20ティックごとに1/20の確率でスポーン)
+                if (entity is LivingEntity && showStatusEffects.value && entity.age % 20 == 0 && worldRandom?.nextInt(20) == 0) {
+                    generate2dTagParticles(entity, entity.id)
+                }
             }
         }
     }
 
+    // ----------------------------------------------------------------------
+    // 💡 2Dパーティクル生成ロジック
+    // ----------------------------------------------------------------------
+
+    private fun generate2dTagParticles(
+        entity: LivingEntity,
+        entityId: Int,
+    ) {
+        val (particleColor, _) = getStatusOverlay(entity) // オーバーレイの色を取得
+
+        if (particleColor != null) {
+            val random = world?.random ?: return
+
+            val lifetime = 25 // ティック
+            val size = random.nextFloat() * 1.5f + 2.0f // 2.0から3.5
+
+            // パーティクルの初期位置と速度をランダムに設定 (タグの中心基準)
+            val initialX = (random.nextFloat() - 0.5f) * 10f
+            val initialY = (random.nextFloat() * 5f) - 40f // タグの中心付近 (HPバーあたり)
+
+            val velX = (random.nextFloat() - 0.5f) * 0.3f
+            val velY = random.nextFloat() * -0.5f - 0.5f // 上向き
+            val gravity = 0.03f
+
+            val particle =
+                TagParticle(
+                    x = initialX,
+                    y = initialY,
+                    entityId = entityId,
+                    color = particleColor,
+                    size = size,
+                    lifetime = lifetime,
+                    maxLifetime = lifetime,
+                    velX = velX,
+                    velY = velY,
+                    gravity = gravity,
+                )
+            activeParticles.add(particle)
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // HPバー描画ヘルパー
+    // ----------------------------------------------------------------------
     private fun drawBar(
         graphics2d: Graphics2D,
         x: Int,
@@ -143,7 +238,6 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         alpha: Float = 1.0f,
     ) {
         val clampedProgress = progress.coerceIn(0.0f, 1.0f)
-        // 💡 透過度 alpha を barBackgroundColor の計算に反映
         val barBackgroundColor =
             ColorHelper.getArgb(
                 (128 * alpha).toInt(),
@@ -155,13 +249,13 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
 
         val fillWidth = (width * clampedProgress).toInt()
         if (fillWidth > 0) {
-            val healthColor = getRainbowColor(progress * 0.4f).transparent((alpha * 255).toInt()) // 塗りつぶしの色にもアルファ値を適用
+            val healthColor = getRainbowColor(progress * 0.4f).transparent((alpha * 255).toInt())
             graphics2d.fill(x, y, fillWidth, height, healthColor)
         }
     }
 
     // ----------------------------------------------------------------------
-    // 💡 アルファ値を計算するヘルパー関数
+    // 透過度 (アルファ値) 計算ヘルパー関数
     // ----------------------------------------------------------------------
     private fun calculateAlpha(distance: Double): Float {
         val start = fadeStartDistance.value.toDouble()
@@ -169,25 +263,81 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         val min = minAlpha.value.toFloat() / 100.0f
 
         if (distance <= start) {
-            return 1.0f // 透過開始距離内は完全に不透明
+            return 1.0f
         }
         if (distance >= end) {
-            return min // 透過終了距離外は最小アルファ値
+            return min
         }
 
-        // 線形補間 (lerp): start (1.0) から end (min) へ
-        // progress: 0.0 (start) から 1.0 (end) へ
         val progress = ((distance - start) / (end - start)).toFloat().coerceIn(0.0f, 1.0f)
 
-        return 1.0f + (min - 1.0f) * progress // 1.0からminまで減少
+        return 1.0f + (min - 1.0f) * progress
     }
 
+    private fun calculateAlpha(entityId: Int): Float {
+        val distSq = targetEntities.find { it.entity.id == entityId }?.distSq ?: 0.0
+        return calculateAlpha(sqrt(distSq))
+    }
+
+    // ----------------------------------------------------------------------
+    // ステータスオーバーレイの色を取得するヘルパー関数
+    // ----------------------------------------------------------------------
+
+    private fun getStatusOverlay(entity: LivingEntity): Pair<Int?, Float> {
+        val theme = InfiniteClient.theme().colors
+
+        // 1. デバフ (優先度高)
+        if (entity.isOnFire) {
+            // 火: 赤/オレンジ
+            return Pair(ColorHelper.getArgb(0, 255, 127, 0), 1.0f)
+        }
+        if (entity.hasStatusEffect(StatusEffects.POISON)) {
+            // 毒: 緑
+            return Pair(theme.greenAccentColor.transparent(0), 1.0f)
+        }
+        if (entity.hasStatusEffect(StatusEffects.WITHER)) {
+            // 衰弱: 暗い灰色/黒
+            return Pair(ColorHelper.getArgb(0, 50, 50, 50), 1.0f)
+        }
+        if (entity.hasStatusEffect(StatusEffects.WEAKNESS)) {
+            // 弱体化: 淡い紫
+            return Pair(ColorHelper.getArgb(0, 150, 150, 200), 1.0f)
+        }
+        if (entity.hasStatusEffect(StatusEffects.BLINDNESS)) {
+            // 盲目: 黒
+            return Pair(ColorHelper.getArgb(0, 0, 0, 0), 1.0f)
+        }
+
+        // 2. バフ/特殊状態
+        if (showHealthRegen.value && entity.hasStatusEffect(StatusEffects.REGENERATION)) {
+            // 再生: 明るい緑
+            return Pair(ColorHelper.getArgb(0, 0, 255, 0), 1.0f)
+        }
+
+        // 3. プレイヤー固有の状態
+        if (showHunger.value && entity is PlayerEntity) {
+            val hungerLevel = entity.hungerManager.foodLevel
+            if (hungerLevel <= 6) { // 空腹エフェクトが始まるレベル (1-6)
+                // 空腹: 黄色/茶色
+                return Pair(ColorHelper.getArgb(0, 200, 150, 50), 1.0f)
+            }
+        }
+
+        return Pair(null, 0.0f) // 該当なし
+    }
+
+    // ----------------------------------------------------------------------
+    // 2Dレンダリングフック (メイン描画)
+    // ----------------------------------------------------------------------
     override fun render2d(graphics2D: Graphics2D) {
         val minScaleDist = minScaleDistance.value.toDouble()
         val maxDist = distance.value.toDouble()
 
-        // 💡 描画順序を変更: 遠いものから順に描画
+        // 描画順序を変更: 遠いものから順に描画
         targetEntities.sortByDescending { it.distSq }
+
+        // 💡 描画済みのエンティティのIDとスケール、座標をマップに保存 (パーティクル描画用)
+        val renderedTags = mutableMapOf<Int, Triple<Float, Float, Float>>() // ID -> (scale, screenX, screenY)
 
         for (renderInfo in targetEntities) {
             val entity = renderInfo.entity
@@ -195,11 +345,9 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
             val distSq = renderInfo.distSq
             val distance = sqrt(distSq)
 
-            // 💡 透過度 (アルファ値) の計算
             val alpha = calculateAlpha(distance)
-            if (alpha < 0.01f) continue // ほぼ透明ならスキップ
+            if (alpha < 0.01f) continue
 
-            // ----------------------------------------------------------------------
             // スケール計算
             val scale =
                 if (distance <= minScaleDist) {
@@ -218,13 +366,12 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
                     }
                 }
 
+            // 描画情報を保存
+            renderedTags[entity.id] = Triple(scale, pos.x.toFloat(), pos.y.toFloat())
+
             graphics2D.pushState()
             graphics2D.translate(pos.x.toFloat(), pos.y.toFloat())
             graphics2D.scale(scale, scale)
-
-            // スケール適用後の描画開始座標 (中央揃えのため pos.x, pos.y は (0, 0) に移動済み)
-
-            // ----------------------------------------------------------------------
 
             when (entity) {
                 is LivingEntity -> renderLivingEntityTag(graphics2D, entity, alpha)
@@ -233,10 +380,54 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
 
             graphics2D.popState()
         }
+
+        // --------------------------------------------------
+        // 💡 2Dパーティクルの描画
+        // --------------------------------------------------
+        for (particle in activeParticles) {
+            val tagInfo = renderedTags[particle.entityId] ?: continue // タグが描画されていなければスキップ
+
+            val (scale, tagScreenX, tagScreenY) = tagInfo
+
+            // 描画状態をプッシュ
+            graphics2D.pushState()
+
+            // 1. タグの中心位置に移動
+            graphics2D.translate(tagScreenX, tagScreenY)
+
+            // 2. タグのスケールを適用
+            graphics2D.scale(scale, scale)
+
+            // 3. パーティクルの座標に移動 (X, Yはタグの中心からの相対座標)
+            graphics2D.translate(particle.x, particle.y)
+
+            // 4. 不透明度とサイズを計算
+            val lifeRatio = particle.lifetime.toFloat() / particle.maxLifetime.toFloat()
+            // 距離によるアルファ値とライフタイムによるアルファ値を乗算し、最大80%の不透明度を適用
+            val distAlpha = calculateAlpha(particle.entityId)
+            val currentAlpha = (lifeRatio * distAlpha * 255 * 0.8f).toInt()
+
+            // 色に不透明度を適用
+            val particleColor =
+                ColorHelper.getArgb(
+                    currentAlpha.coerceIn(0, 255),
+                    ColorHelper.getRed(particle.color),
+                    ColorHelper.getGreen(particle.color),
+                    ColorHelper.getBlue(particle.color),
+                )
+
+            // サイズもライフタイムで少し縮小
+            val currentSize = particle.size * lifeRatio.coerceAtLeast(0.2f)
+
+            // 5. パーティクルの描画 (円で模倣)
+            graphics2D.fillCircle(0f, 0f, currentSize, particleColor)
+
+            graphics2D.popState()
+        }
     }
 
     // ----------------------------------------------------------------------
-    // 💡 落ちているアイテムのタグ描画 (alpha引数を追加)
+    // 落ちているアイテムのタグ描画
     // ----------------------------------------------------------------------
 
     private fun renderItemEntityTag(
@@ -245,66 +436,14 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         alpha: Float,
     ) {
         val stack = itemEntity.stack
+        val x = -(itemRenderSize / 2)
+        val y = -(itemRenderSize / 2) - 32
 
-        val name = stack.name.string
-        val nameWidth = graphics2D.textWidth(name)
-
-        val itemText =
-            if (stack.damage > 0) {
-                "Dur: ${stack.maxDamage - stack.damage}/${stack.maxDamage}"
-            } else if (stack.count > 1) {
-                "Count: ${stack.count}"
-            } else {
-                null
-            }
-        val itemTextWidth = itemText?.let { graphics2D.textWidth(it) } ?: 0
-
-        val contentWidth = nameWidth.coerceAtLeast(itemTextWidth).coerceAtLeast(itemRenderSize)
-
-        // サイズ計算
-        val padding = 1
-        val width = contentWidth + itemRenderSize + padding * 4 // 名前/テキスト + アイコン + パディング
-        val height = graphics2D.fontHeight() * 2 + padding * 2 // 名前 + 情報 + パディング
-
-        val startX = -(width / 2)
-        val startY = -height
-
-        // 💡 タグの色にアルファ値を適用
-        val alphaInt = (alpha * 255.0)
-        val tagColor = ItemEsp.rarityColor(itemEntity).transparent(alphaInt)
-        val bgColor =
-            InfiniteClient
-                .theme()
-                .colors.backgroundColor
-                .transparent(136.0 * alpha)
-
-        // 背景と枠
-        graphics2D.fill(startX, startY, width, height, bgColor)
-        graphics2D.drawBorder(startX, startY, width, height, tagColor, padding)
-
-        // アイコンの描画
-        val iconX = startX + padding
-        val iconY = startY + padding + (height - itemRenderSize) / 2
-        graphics2D.drawItem(stack, iconX, iconY - 4) // 💡 drawItemにアルファ値を渡す（対応している場合）
-
-        // 名前の描画
-        val textX = startX + itemRenderSize + padding * 2
-        graphics2D.drawText(name, textX, startY + padding, tagColor, true)
-
-        // 詳細テキストの描画
-        if (itemText != null) {
-            graphics2D.drawText(
-                itemText,
-                textX,
-                startY + padding + graphics2D.fontHeight(),
-                tagColor.transparent((180 * alpha).toInt()), // 💡 アルファ値を適用
-                true,
-            )
-        }
+        renderEquipmentStack(graphics2D, stack, x, y, alpha)
     }
 
     // ----------------------------------------------------------------------
-    // 💡 生存エンティティのタグ描画 (alpha引数を追加)
+    // 生存エンティティのタグ描画 (オーバーレイロジックを含む)
     // ----------------------------------------------------------------------
 
     private fun renderLivingEntityTag(
@@ -323,19 +462,16 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         val minWidth = graphics2D.textWidth("defaultNameText")
         val contentWidth = if (hasName) graphics2D.textWidth(displayName) else minWidth
 
-        // --------------------------------------------------
         // 1. タグ本体（名前とHPバー）のサイズ計算
-        // --------------------------------------------------
         val tagWidth = contentWidth.coerceAtLeast(minWidth) + padding * 2
         val tagHeight = nameHeight + barHeight + padding * 2
 
-        // タグ本体の描画開始座標
         val tagStartX = -(tagWidth / 2)
         val tagStartY = -tagHeight
 
         val healthPer = entity.health / entity.maxHealth
 
-        // 💡 タグの色にアルファ値を適用
+        // タグの色にアルファ値を適用
         val alphaInt = (alpha * 255).toInt()
         val tagColor =
             when (entity) {
@@ -376,60 +512,73 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         }
 
         // 体力バーの描画
+        val barX = tagStartX + padding
         val barY = tagStartY + nameHeight + padding
-        drawBar(
-            graphics2D,
-            tagStartX + padding,
-            barY,
-            tagWidth - padding * 2,
-            barHeight,
-            healthPer,
-            alpha, // 💡 drawBarにアルファ値を渡す
-        )
-        // --------------------------------------------------
-        // 2. 装備品の描画 (タグ本体から分離)
-        // --------------------------------------------------
+        val barW = tagWidth - padding * 2
+
+        drawBar(graphics2D, barX, barY, barW, barHeight, healthPer, alpha)
+
+        // 💡 状態オーバーレイの描画 (HPバーの上)
+        if (showStatusEffects.value) {
+            val (overlayColor, progressRatio) = getStatusOverlay(entity)
+
+            if (overlayColor != null && progressRatio > 0.001f) {
+                // オーバーレイのアルファ値を計算 (最大50%の透過度)
+                val overlayAlpha = (0.5f * alpha).coerceIn(0.0f, 1.0f)
+
+                // オーバーレイの塗りつぶし色
+                val overlayArgb = overlayColor.transparent((overlayAlpha * 255).toInt())
+
+                // オーバーレイの幅 (HPバー全体を覆う)
+                val overlayWidth = (barW * progressRatio).toInt().coerceAtLeast(barW)
+
+                graphics2D.fill(
+                    barX,
+                    barY,
+                    overlayWidth,
+                    barHeight,
+                    overlayArgb,
+                )
+            }
+        }
+
+        // 2. 装備品の描画
         if (!showItems.value) return
 
-        // 2-1. 防具スロットの描画 (タグの下に配置)
+        // 2-1. 防具スロットの描画
         val armorSlots = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
         val armorSlotCount = 4
         val armorAreaWidth = armorSlotCount * itemRenderSize + (armorSlotCount - 1) * itemPaddingSize
 
-        // 防具描画のY座標 (タグ本体の最下部から少し下にオフセット)
         val armorY = tagStartY + tagHeight + itemPaddingSize * 2
-
-        // 防具描画のX座標 (タグの中心に合わせて中央揃え)
         var currentX = -(armorAreaWidth / 2)
 
         for (slot in armorSlots) {
             val itemStack = entity.getEquippedStack(slot)
             val renderStack = if (itemStack.isEmpty) ItemStack(Items.AIR) else itemStack
 
-            renderEquipmentStack(graphics2D, renderStack, currentX, armorY, alpha) // 💡 alpha引数を追加
+            renderEquipmentStack(graphics2D, renderStack, currentX, armorY, alpha)
 
             currentX += itemRenderSize + itemPaddingSize
         }
 
-        // 2-2. 手持ちアイテムの描画 (タグの左右に配置し、防具とは別のY座標か、防具に干渉しない位置にする)
-
+        // 2-2. 手持ちアイテムの描画
         val mainHandStack = entity.getEquippedStack(EquipmentSlot.MAINHAND)
         val offHandStack = entity.getEquippedStack(EquipmentSlot.OFFHAND)
 
-        // 手持ちアイテム描画のY座標 (タグのY座標の中心付近に配置)
         val handY = tagStartY + tagHeight / 2 - itemRenderSize / 2
 
         // メインハンド (タグの右端外側)
         val mainHandX = tagStartX + tagWidth + itemPaddingSize
-        renderEquipmentStack(graphics2D, mainHandStack, mainHandX, handY, alpha) // 💡 alpha引数を追加
+        renderEquipmentStack(graphics2D, mainHandStack, mainHandX, handY, alpha)
 
         // オフハンド (タグの左端外側)
         val offHandX = tagStartX - itemRenderSize - itemPaddingSize
-        renderEquipmentStack(graphics2D, offHandStack, offHandX, handY, alpha) // 💡 alpha引数を追加
+        renderEquipmentStack(graphics2D, offHandStack, offHandX, handY, alpha)
     }
 
     // ----------------------------------------------------------------------
-    // 💡 アイテムアイコン、個数、耐久値を描画するヘルパー (alpha引数を追加)
+    // アイテムアイコン、個数、耐久値を描画するヘルパー
     // ----------------------------------------------------------------------
 
     private fun renderEquipmentStack(
@@ -442,13 +591,13 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         if (stack.isEmpty && stack.item != Items.AIR) return
         val size = itemRenderSize
 
-        // 💡 アイコンの描画にアルファ値を渡す（対応している場合）
+        // アイコンの描画
         graphics2D.drawItem(stack, x, y)
 
         // 個数の描画
         if (stack.count > 1) {
             val text = stack.count.toString()
-            val textColor = ColorHelper.getArgb((alpha * 255).toInt(), 255, 255, 255) // 💡 色にアルファ値を適用
+            val textColor = ColorHelper.getArgb((alpha * 255).toInt(), 255, 255, 255)
             graphics2D.drawText(
                 text,
                 x + size - graphics2D.textWidth(text),
@@ -458,7 +607,7 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
             )
         }
 
-        // 耐久値の描画 (耐久値を持つアイテムかつダメージを受けている場合)
+        // 耐久値の描画
         if (stack.isDamageable && stack.damage > 0) {
             val progress = (stack.maxDamage - stack.damage).toFloat() / stack.maxDamage.toFloat()
             val barHeight = 2
@@ -466,13 +615,12 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
             val alphaInt = (alpha * 255).toInt()
 
             // 耐久値バーの背景
-            graphics2D.fill(x, barY, size, barHeight, ColorHelper.getArgb(alphaInt, 0, 0, 0)) // 💡 アルファ値を適用
+            graphics2D.fill(x, barY, size, barHeight, ColorHelper.getArgb(alphaInt, 0, 0, 0))
             // 耐久値の進捗バー
             val fillWidth = (size * progress).toInt()
             if (fillWidth > 0) {
-                val color = getRainbowColor(progress * 0.3f).transparent(alphaInt) // 💡 色にアルファ値を適用
-                // 💡 修正: 前回の fill 関数呼び出しの高さが 0 になっていたため修正
-                graphics2D.fill(x + 1, barY + 1, fillWidth - 2, barHeight, color)
+                val color = getRainbowColor(progress * 0.3f).transparent(alphaInt)
+                graphics2D.fill(x, barY, fillWidth, barHeight, color)
             }
         }
     }
