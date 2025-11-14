@@ -6,7 +6,6 @@ import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.registry.Registries
 import org.infinite.ConfigurableFeature
 import org.infinite.libs.client.inventory.InventoryManager
@@ -60,7 +59,7 @@ private val ARMOR_TOUGHNESS_VALUES =
 class ArmorManager : ConfigurableFeature(initialEnabled = false) {
     private val autoEquip: BooleanSetting =
         BooleanSetting("AutoEquip", true)
-    private val elytraSwitch: BooleanSetting =
+    val elytraSwitch: BooleanSetting =
         BooleanSetting("ElytraSwitch", true)
     private val durabilityThreshold: IntSetting =
         IntSetting("DurabilityThreshold", 5, 0, 100)
@@ -114,7 +113,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
 
         // Handle elytra packet sending for immediate gliding
         if (shouldSendElytraPacket && currentChestStack.item == Items.ELYTRA) {
-            sendStartFallFlyingPacket(player)
+//            sendStartFallFlyingPacket(player)
             shouldSendElytraPacket = false
         }
     }
@@ -127,7 +126,6 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         val currentChestStack = invManager.get(chestSlotIndex)
         val isCurrentElytra = currentChestStack.item == Items.ELYTRA
         val options = MinecraftClient.getInstance().options ?: return
-        // Zキーによる手動解除のチェック
         val isReleaseElytraPressed = options.sneakKey.isPressed && options.sprintKey.isPressed
         // Handle elytra unequip logic (自動解除 または 手動解除)
         if (isElytraEquippedByHack) {
@@ -225,11 +223,6 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
         previousChestplate = ItemStack.EMPTY
         isElytraEquippedByHack = false
         shouldSendElytraPacket = false
-    }
-
-    private fun sendStartFallFlyingPacket(player: ClientPlayerEntity) {
-        val packet = ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_FALL_FLYING)
-        player.networkHandler.sendPacket(packet)
     }
 
     private fun handleAutoEquip(invManager: InventoryManager) {

@@ -98,8 +98,6 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
         }
     }
 
-// --- ACCELERATION METHOD IMPLEMENTATIONS (Refactored from original) ---
-
     private fun controlAccelerationSpeed(client: MinecraftClient) {
         val player = client.player ?: return
         val yaw = toRadians(player.yaw)

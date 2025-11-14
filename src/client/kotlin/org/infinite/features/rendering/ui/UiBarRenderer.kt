@@ -104,8 +104,15 @@ class UiBarRenderer(
 
         // ★ 3.5. 回復予測バーの描画
         if (s.canNaturallyRegenerate) {
+            val recoverSpeedFactor = 1 / 8.0
             // 現在のHP (drawnHpProgress) から、満腹度と飽和度から導かれる最大回復可能量 (totalFoodProgress) を加算したプログレスまでを描画
-            val recoveryEndProgress = min(1.0, max(drawnHpProgress, e.easingHp) + s.totalFoodProgress)
+            val recoverProgress =
+                when {
+                    s.hungerProgress >= 1.0 -> s.saturationProgress + (s.hungerProgress - 0.9) * recoverSpeedFactor
+                    s.hungerProgress > 0.9 -> (s.totalFoodProgress - 0.9) * recoverSpeedFactor
+                    else -> 0.0
+                }.coerceIn(0.0, 1.0)
+            val recoveryEndProgress = min(1.0, max(drawnHpProgress, e.easingHp) + recoverProgress)
 
             renderBar(
                 graphics2D,
