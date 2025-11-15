@@ -219,10 +219,10 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
         val x = pos.x
         val y = pos.y
         val rainbowColor = getRainbowColor()
-        val boxSize = 8
+        val boxSize = 8.0
         graphics2D.drawBorder(
-            (x - boxSize / 2).toInt(),
-            (y - boxSize / 2).toInt(),
+            x - boxSize / 2.0,
+            y - boxSize / 2.0,
             boxSize,
             boxSize,
             rainbowColor,

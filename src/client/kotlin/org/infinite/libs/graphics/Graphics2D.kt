@@ -187,6 +187,20 @@ class Graphics2D(
         context.drawBorder(x, y, width, height, color, size)
     }
 
+    fun drawBorder(
+        x: Double,
+        y: Double,
+        width: Double,
+        height: Double,
+        color: Int,
+        size: Double = 1.0,
+    ) {
+        fillRect(x, y, x + width, y + size, color)
+        fillRect(x + width - size, y + size, x + width, y + height - size, color)
+        fillRect(x, y + height - size, x + width, y + height, color)
+        fillRect(x, y + size, x + size, y + height - size, color)
+    }
+
     /**
      * 文字列を指定した位置に描画します。
      */

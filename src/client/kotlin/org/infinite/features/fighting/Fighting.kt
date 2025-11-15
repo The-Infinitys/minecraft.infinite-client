@@ -20,10 +20,14 @@ internal val fighting =
         feature("AutoShield", AutoShield()),
         feature("HyperMace", HyperMace()),
         feature("MaceAssist", MaceAssist()),
+<<<<<<< HEAD
         feature(
             "KillAura",
             KillAura(),
         ),
+=======
+        feature("KillAura", KillAura()),
+>>>>>>> refs/remotes/origin/dev/The-Infinitys
         feature(
             "Reach",
             Reach(),
