@@ -15,45 +15,46 @@ import org.infinite.features.fighting.shield.AutoShield
 import org.infinite.features.fighting.superattack.SuperAttack
 import org.infinite.features.fighting.totem.AutoTotem
 
-internal val fighting = mutableListOf(
-    feature("AutoShield", AutoShield()),
-    feature("HyperMace", HyperMace()),
-    feature("MaceAssist", MaceAssist()),
-    feature("KillAura", KillAura()),
-    feature(
-        "Reach",
-        Reach(),
-    ),
-    feature(
-        "SuperAttack",
-        SuperAttack(),
-    ),
-    feature(
-        "CounterAttack",
-        CounterAttack(),
-    ),
-    feature(
-        "ImpactAttack",
-        ImpactAttack(),
-    ),
-    feature(
-        "ArmorManager",
-        ArmorManager(),
-    ),
-    feature(
-        "Gunner",
-        Gunner(),
-    ),
-    feature(
-        "AutoTotem",
-        AutoTotem(),
-    ),
-    feature(
-        "AimAssist",
-        AimAssist(),
-    ),
-    feature(
-        "LockOn",
-        LockOn(),
-    ),
-)
+internal val fighting =
+    mutableListOf(
+        feature("AutoShield", AutoShield()),
+        feature("HyperMace", HyperMace()),
+        feature("MaceAssist", MaceAssist()),
+        feature("KillAura", KillAura()),
+        feature(
+            "Reach",
+            Reach(),
+        ),
+        feature(
+            "SuperAttack",
+            SuperAttack(),
+        ),
+        feature(
+            "CounterAttack",
+            CounterAttack(),
+        ),
+        feature(
+            "ImpactAttack",
+            ImpactAttack(),
+        ),
+        feature(
+            "ArmorManager",
+            ArmorManager(),
+        ),
+        feature(
+            "Gunner",
+            Gunner(),
+        ),
+        feature(
+            "AutoTotem",
+            AutoTotem(),
+        ),
+        feature(
+            "AimAssist",
+            AimAssist(),
+        ),
+        feature(
+            "LockOn",
+            LockOn(),
+        ),
+    )

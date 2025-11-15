@@ -6,22 +6,27 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.features.fighting.aimassist.AimAssistTaskCondition
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.task.AimTask
-import org.infinite.libs.client.aim.task.condition.AimTaskConditionByFrame
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionInterface
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
 import org.infinite.libs.client.aim.task.config.AimCalculateMethod
 import org.infinite.libs.client.aim.task.config.AimPriority
 import org.infinite.libs.client.aim.task.config.AimTarget
 import org.infinite.libs.client.inventory.InventoryManager
+import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.rendering.Line
-import kotlin.math.*
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.roundToInt
+import kotlin.math.sin
 
 class MaceAssist : ConfigurableFeature() {
     private val searchTickSetting = FeatureSetting.IntSetting("SearchTick", 128, 0, 256)
-    private val reactTickSetting = FeatureSetting.IntSetting("ReactTick", 4, 0, 10)
+    private val reactTickSetting = FeatureSetting.IntSetting("ReactTick", 10, 0, 10)
     private val methodSetting =
         FeatureSetting.EnumSetting("Method", AimCalculateMethod.Linear, AimCalculateMethod.entries)
     override val settings: List<FeatureSetting<*>> = listOf(searchTickSetting, reactTickSetting, methodSetting)
@@ -37,25 +42,21 @@ class MaceAssist : ConfigurableFeature() {
         get() =
             InventoryManager.get(InventoryManager.InventoryIndex.MainHand()).item == Items.MACE
 
-
     override fun tick() {
-        val wasFalling = fallDistance > 0.0
         calcFallDistance()
-        if (wasFalling && fallDistance == 0.0) {
-            hasAttackedInFall = false // 攻撃フラグをリセットし、次の落下に備える
-        }
         if (!haveMace) return
         // ターゲットエンティティの検索ロジック（変更なし）
-        targetEntities = if (isCollision) {
-            val reactTick = reactTickSetting.value
-            if (remainTick <= reactTick) {
-                searchTargetEntities(calculatedPos)
+        targetEntities =
+            if (isCollision) {
+                val reactTick = reactTickSetting.value
+                if (remainTick <= reactTick) {
+                    searchTargetEntities(calculatedPos)
+                } else {
+                    emptyList()
+                }
             } else {
                 emptyList()
             }
-        } else {
-            emptyList()
-        }
 
         // 💡 追加: 攻撃の予約/実行ロジック
         val reactTick = reactTickSetting.value
@@ -79,19 +80,19 @@ class MaceAssist : ConfigurableFeature() {
 
     override fun render3d(graphics3D: Graphics3D) {
         updateCalculatedPositions(graphics3D.tickProgress)
-        if (!haveMace) return
-        if (!isCollision) return
         val player = player ?: return
-        val radius = player.entityInteractionRange
-        val pos = calculatedPos
-        val centerX = pos.x
-        val centerY = pos.y
-        val centerZ = pos.z
-        val color = InfiniteClient.theme().colors.primaryColor
-        graphics3D.pushMatrix()
-        graphics3D.translate(centerX, centerY, centerZ)
-        renderCircle(graphics3D, radius, color)
-        graphics3D.popMatrix()
+        if (haveMace && !hasAttackedInFall && remainTick >= reactTickSetting.value && !player.isOnGround) {
+            val radius = player.entityInteractionRange
+            val pos = calculatedPos
+            val centerX = pos.x
+            val centerY = pos.y
+            val centerZ = pos.z
+            val color = InfiniteClient.theme().colors.primaryColor
+            graphics3D.pushMatrix()
+            graphics3D.translate(centerX, centerY, centerZ)
+            renderCircle(graphics3D, radius, color)
+            graphics3D.popMatrix()
+        }
     }
 
     /**
@@ -100,8 +101,12 @@ class MaceAssist : ConfigurableFeature() {
      * @param radius 半径
      * @param color 色
      */
-    private fun renderCircle(graphics3D: Graphics3D, radius: Double, color: Int) {
-        val segments = max(radius.roundToInt(), 8)
+    private fun renderCircle(
+        graphics3D: Graphics3D,
+        radius: Double,
+        color: Int,
+    ) {
+        val segments = max((radius * 2).roundToInt(), 16)
         val lines = mutableListOf<Line>()
         for (i in 0 until segments) {
             val angle1 = (i.toDouble() / segments.toDouble()) * 2 * PI
@@ -131,42 +136,71 @@ class MaceAssist : ConfigurableFeature() {
         // メイスのスマッシュ攻撃のターゲット検索範囲（例: 5ブロック半径）
         val searchRadius = player.entityInteractionRange
         // 衝突予測地点を中心とした検索範囲を定義
-        val searchBox = Box(
-            smashPos.x - searchRadius, smashPos.y - searchRadius, smashPos.z - searchRadius,
-            smashPos.x + searchRadius, smashPos.y + searchRadius, smashPos.z + searchRadius
-        )
+        val searchBox =
+            Box(
+                smashPos.x - searchRadius,
+                smashPos.y - searchRadius,
+                smashPos.z - searchRadius,
+                smashPos.x + searchRadius,
+                smashPos.y + searchRadius,
+                smashPos.z + searchRadius,
+            )
         // 指定された範囲内のすべての LivingEntity を検索し、フィルタリングする
-        return world.getOtherEntities(player, searchBox)
+        return world
+            .getOtherEntities(player, searchBox)
             .filter { entity ->
                 entity != player && entity is LivingEntity &&
-                        entity.isAlive
-            }.map { it as LivingEntity }.toList()
+                    entity.isAlive
+            }.map { it as LivingEntity }
+            .toList()
     }
 
     private fun calcFallDistance() {
         val velocity = player?.velocity ?: return
         val y = velocity.y
+        if (player?.isOnGround == true) {
+            hasAttackedInFall = false
+        }
         if (y > 0) {
+            hasAttackedInFall = false // 攻撃フラグをリセットし、次の落下に備える
             fallDistance = 0.0
         } else {
             fallDistance -= y
         }
     }
-    private class MaceAttackCondition: AimAssistTaskCondition(){
 
+    private class MaceAttackCondition(
+        val target: LivingEntity,
+    ) : ClientInterface(),
+        AimTaskConditionInterface {
+        override fun check(): AimTaskConditionReturn {
+            val player = player ?: return AimTaskConditionReturn.Failure
+            if (player.fallDistance == 0.0) return AimTaskConditionReturn.Failure
+            return if (player.distanceTo(target) < player.entityInteractionRange) {
+                interactionManager?.attackEntity(player, target)
+                AimTaskConditionReturn.Force
+            } else {
+                AimTaskConditionReturn.Exec
+            }
+        }
     }
+
     // 💡 追加: 攻撃を実行するスタブ関数
     private fun attackEntity(target: LivingEntity) {
         AimInterface.addTask(
             AimTask(
-                AimPriority.Preferentially, AimTarget.EntityTarget(target),
-                AimTaskConditionByFrame(0, min(0,reactTickSetting.value - 2), true), methodSetting.value, 5.0,
-                onSuccess = { interactionManager?.attackEntity(player, target)}
-            )
+                AimPriority.Preferentially,
+                AimTarget.EntityTarget(target),
+                MaceAttackCondition(target),
+                methodSetting.value,
+            ),
         )
     }
 
-    private fun calcFallPosition(ticks: Int, progress: Float): Triple<Vec3d, Boolean, Int>? {
+    private fun calcFallPosition(
+        ticks: Int,
+        progress: Float,
+    ): Triple<Vec3d, Boolean, Int>? {
         if (vehicle != null) return null
         val player = player ?: return null
         val world = world ?: return null
@@ -181,8 +215,10 @@ class MaceAssist : ConfigurableFeature() {
             // 注意: playerPos!! はコード内に定義されていません。
             // プレイヤーの現在の位置 (player.posなど) を想定していると思われます。
             isCollision =
-                world.getBlockOrFluidCollisions(player, player.boundingBox.offset(nextPos.subtract(playerPos!!)))
-                    .toList().isNotEmpty()
+                world
+                    .getBlockOrFluidCollisions(player, player.boundingBox.offset(nextPos.subtract(playerPos!!)))
+                    .toList()
+                    .isNotEmpty()
             if (isCollision) break
             pos = nextPos
             velocity = velocity.multiply(friction)
