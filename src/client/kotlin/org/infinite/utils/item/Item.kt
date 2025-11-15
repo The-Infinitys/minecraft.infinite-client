@@ -2,6 +2,7 @@ package org.infinite.utils.item
 import net.minecraft.client.MinecraftClient
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.EnchantmentHelper
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
@@ -16,10 +17,10 @@ fun enchantLevel(
     val registryManager = MinecraftClient.getInstance().world?.registryManager
     val enchantRegistry = registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)
     if (enchantRegistry != null) {
-        val protection: Optional<RegistryEntry.Reference<Enchantment>> =
+        val enchantment: Optional<RegistryEntry.Reference<Enchantment>> =
             enchantRegistry.getOptional(enchantment)
-        val protectionLevel =
-            protection
+        val enchantmentLevel =
+            enchantment
                 .map(
                     Function { entry: RegistryEntry.Reference<Enchantment> ->
                         EnchantmentHelper.getLevel(
@@ -28,7 +29,7 @@ fun enchantLevel(
                         )
                     },
                 ).orElse(0)
-        return protectionLevel
+        return enchantmentLevel
     } else {
         return 0
     }
