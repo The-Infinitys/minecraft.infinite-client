@@ -212,7 +212,7 @@ object HyperMapRenderer {
             val finalDotColor = blendedColor.transparent(alpha)
             val x = mobX.toFloat()
             val y = mobY.toFloat()
-            graphics2d.fillRect(
+            graphics2d.rect(
                 x - mobDotRadius,
                 y - mobDotRadius,
                 x + mobDotRadius,

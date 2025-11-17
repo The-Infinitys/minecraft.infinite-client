@@ -5,6 +5,8 @@ import org.infinite.InfiniteClient
 import org.infinite.features.rendering.detailinfo.DetailInfo
 import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.graphics.Graphics2D
+import org.infinite.utils.rendering.transparent
+import kotlin.math.PI
 
 class CrosshairRenderer : ClientInterface() {
     fun render(graphics2D: Graphics2D) {
@@ -14,6 +16,8 @@ class CrosshairRenderer : ClientInterface() {
         val boxSize = 16.0
         val boxHalfSize = boxSize / 2
         val targetHit = findCrossHairTarget() ?: return
+
+        // 既存のクロスヘア描画ロジック (省略) ...
         when (targetHit.type) {
             HitResult.Type.ENTITY -> {
                 graphics2D.drawBorder(
@@ -69,6 +73,26 @@ class CrosshairRenderer : ClientInterface() {
                     2,
                 )
             }
+        }
+        val player = player ?: return
+        val cooldownProgress = player.getAttackCooldownProgress(graphics2D.tickProgress)
+        if (cooldownProgress < 1.0f) {
+            val centerX = scaledWidth / 2.0f
+            val centerY = scaledHeight / 2.0f
+
+            // クロスヘアのボックスサイズから少し外側に描画する半径を設定
+            val radius = (boxHalfSize + 4).toFloat()
+            val lineThickness = 3 // 描画する円弧の太さ
+            val arcAngle = cooldownProgress * (2 * PI).toFloat()
+            // 円弧描画ロジック
+            graphics2D.drawArc(
+                centerX,
+                centerY,
+                radius,
+                arcAngle,
+                lineThickness,
+                accentColor.transparent(128),
+            )
         }
     }
 

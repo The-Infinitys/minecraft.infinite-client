@@ -92,14 +92,14 @@ class ElytraFlightUiRenderer : ClientInterface() {
             endY,
         )
         val clipPoint = centerY - renderSize * pitchHeight
-        graphics2D.fillRect(
+        graphics2D.rect(
             startX.toDouble(),
             startY.toDouble(),
             endX.toDouble(),
             clipPoint,
             airColor,
         )
-        graphics2D.fillRect(
+        graphics2D.rect(
             startX.toDouble(),
             clipPoint,
             endX.toDouble(),
@@ -163,7 +163,7 @@ class ElytraFlightUiRenderer : ClientInterface() {
         val gaugeLeftX = gaugeRightX - gaugeWidth
 
         // 1. 高度計の背景を描画
-        graphics2D.fillRect(
+        graphics2D.rect(
             gaugeLeftX,
             gaugeTopY,
             gaugeRightX.toDouble(),

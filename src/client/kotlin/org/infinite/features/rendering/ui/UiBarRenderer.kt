@@ -312,7 +312,7 @@ class UiBarRenderer(
 
         // バーの描画ロジック... (元のコードと同じ)
         val coercedProgress09 = progress.coerceIn(0.0, 0.9)
-        graphics2D.fillQuad(
+        graphics2D.quad(
             topPos.first,
             topPos.second,
             topPos.first,
@@ -325,7 +325,7 @@ class UiBarRenderer(
         )
         if (progress > coercedProgress09) {
             val reducedProgress = (progress - 0.9) / (1.0 - 0.9)
-            graphics2D.fillQuad(
+            graphics2D.quad(
                 turnPos.first,
                 turnPos.second,
                 turnPos.first,

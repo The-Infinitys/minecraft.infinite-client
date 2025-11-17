@@ -3,7 +3,6 @@ package org.infinite.libs.graphics
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.render.state.GuiRenderState
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.item.ItemStack
@@ -17,6 +16,7 @@ import org.infinite.utils.rendering.drawBorder
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 import org.joml.Vector2d
+import kotlin.math.PI
 import kotlin.math.roundToInt
 
 /**
@@ -195,10 +195,10 @@ class Graphics2D(
         color: Int,
         size: Double = 1.0,
     ) {
-        fillRect(x, y, x + width, y + size, color)
-        fillRect(x + width - size, y + size, x + width, y + height - size, color)
-        fillRect(x, y + height - size, x + width, y + height, color)
-        fillRect(x, y + size, x + size, y + height - size, color)
+        rect(x, y, x + width, y + size, color)
+        rect(x + width - size, y + size, x + width, y + height - size, color)
+        rect(x, y + height - size, x + width, y + height, color)
+        rect(x, y + size, x + size, y + height - size, color)
     }
 
     /**
@@ -372,12 +372,12 @@ class Graphics2D(
         val innerY2 = y2 - vec2.y * size / 2
         val innerX3 = x3 - vec3.x * size / 2
         val innerY3 = y3 - vec3.y * size / 2
-        fillQuad(outerX1, outerY1, innerX1, innerY1, innerX2, innerY2, outerX2, outerY2, color)
-        fillQuad(outerX2, outerY2, innerX2, innerY2, innerX3, innerY3, outerX3, outerY3, color)
-        fillQuad(outerX3, outerY3, innerX3, innerY3, innerX1, innerY1, outerX1, outerY1, color)
+        quad(outerX1, outerY1, innerX1, innerY1, innerX2, innerY2, outerX2, outerY2, color)
+        quad(outerX2, outerY2, innerX2, innerY2, innerX3, innerY3, outerX3, outerY3, color)
+        quad(outerX3, outerY3, innerX3, innerY3, innerX1, innerY1, outerX1, outerY1, color)
     }
 
-    fun fillQuad(
+    fun quad(
         x1: Double,
         y1: Double,
         x2: Double,
@@ -388,7 +388,7 @@ class Graphics2D(
         y4: Double,
         color: Int,
     ) {
-        fillQuad(
+        quad(
             x1.toFloat(),
             y1.toFloat(),
             x2.toFloat(),
@@ -481,7 +481,7 @@ class Graphics2D(
             val p3X = MathHelper.cos(angle3) * radius
             val p3Y = MathHelper.sin(angle3) * radius
 
-            fillQuad(
+            quad(
                 p1X,
                 p1Y,
                 p2X,
@@ -530,7 +530,7 @@ class Graphics2D(
             val outerY = cy + MathHelper.sin(angle) * outerRadius
             val innerX = cx + MathHelper.cos(angle) * innerRadius
             val innerY = cy + MathHelper.sin(angle) * innerRadius
-            fillQuad(
+            quad(
                 prevOuterX,
                 prevOuterY,
                 prevInnerX,
@@ -560,7 +560,7 @@ class Graphics2D(
      * @param y4 頂点4 Y座標
      * @param color ARGB形式の色 (0xAARRGGBB)
      */
-    fun fillQuad(
+    fun quad(
         x1: Float,
         y1: Float,
         x2: Float,
@@ -593,13 +593,13 @@ class Graphics2D(
     }
 
     // --- Rectangle (Rect) ---
-    fun fillRect(
+    fun rect(
         x1: Double,
         y1: Double,
         x2: Double,
         y2: Double,
         color: Int,
-    ): Unit = fillRect(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), color)
+    ): Unit = rect(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), color)
 
     /**
      * 長方形（左上隅と右下隅で定義）を指定した色で塗りつぶし描画します。
@@ -609,7 +609,7 @@ class Graphics2D(
      * @param y2 右下隅 Y座標
      * @param color ARGB形式の色 (0xAARRGGBB)
      */
-    fun fillRect(
+    fun rect(
         x1: Float,
         y1: Float,
         x2: Float,
@@ -766,6 +766,145 @@ class Graphics2D(
         color: Int,
         size: Int = 1,
     ): Unit = drawLine(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat(), color, size)
+
+    /**
+     * 頂点のリストに基づいて、太さのある多角線（ポリライン）を描画します。
+     * 線分同士の接続点（ジョイント）は円形に処理され、滑らかに結合されます。
+     *
+     * @param lines 頂点のリスト。Pair<Float, Float> は (X座標, Y座標) を表します。
+     * @param color ARGB形式の色 (0xAARRGGBB)
+     * @param size 線の太さ (ピクセル)。線分幅全体を表します。
+     */
+    fun renderLines(
+        lines: List<Pair<Float, Float>>,
+        color: Int,
+        size: Float = 1f,
+    ) {
+        if (lines.size < 2) return
+
+        val halfSize = size / 2f
+
+        // 1. 各線分を描画
+        for (i in 0 until lines.size - 1) {
+            val (x1, y1) = lines[i]
+            val (x2, y2) = lines[i + 1]
+
+            // 既存のdrawLineメソッドは太い線の描画に複雑な行列操作を使用しているため、
+            // ここではQuadを使ってより制御しやすい太い線分を描画するロジックを実装します。
+
+            // 線分の方向ベクトル
+            val dx = x2 - x1
+            val dy = y2 - y1
+
+            // 線分の長さ
+            val length = MathHelper.sqrt(dx * dx + dy * dy)
+
+            // 長さが0の場合はスキップ
+            if (length == 0f) continue
+
+            // 単位方向ベクトル
+            val unitX = dx / length
+            val unitY = dy / length
+
+            // 線分に垂直な単位ベクトル (線分の幅を定義するために使用)
+            val perpX = -unitY // (-dy, dx)
+            val perpY = unitX // (dx, dy)
+
+            // 垂直ベクトルの半分の太さ
+            val offsetPerpX = perpX * halfSize
+            val offsetPerpY = perpY * halfSize
+
+            // 四角形の4頂点を計算
+            // 頂点1 (x1の左上/左下)
+            val q1X = x1 + offsetPerpX
+            val q1Y = y1 + offsetPerpY
+            // 頂点2 (x1の右上/右下)
+            val q2X = x1 - offsetPerpX
+            val q2Y = y1 - offsetPerpY
+            // 頂点3 (x2の右上/右下)
+            val q3X = x2 - offsetPerpX
+            val q3Y = y2 - offsetPerpY
+            // 頂点4 (x2の左上/左下)
+            val q4X = x2 + offsetPerpX
+            val q4Y = y2 + offsetPerpY
+
+            // 四角形として線分を描画
+            // 頂点の順序は、GPUでの描画順序（巻き順）に合わせて調整する必要があります
+            // ここでは、一般的なQuad描画（x1,y1 -> x2,y2 -> x3,y3 -> x4,y4）を使用
+            quad(q1X, q1Y, q4X, q4Y, q3X, q3Y, q2X, q2Y, color)
+        }
+
+        fun renderLines(
+            lines: List<Pair<Double, Double>>,
+            color: Int,
+            size: Double = 1.0,
+        ): Unit = renderLines(lines.map { (x, y) -> x.toFloat() to y.toFloat() }, color, size.toFloat())
+
+        fun renderLines(
+            lines: List<Pair<Int, Int>>,
+            color: Int,
+            size: Int = 1,
+        ): Unit = renderLines(lines.map { (x, y) -> x.toFloat() to y.toFloat() }, color, size.toFloat())
+        // 2. 頂点と終点に丸いジョイントを描画 (連続する線分を結合)
+        // 始点と終点、および中間点すべてに対して円を描画することで、線分の終端とジョイントが丸くなります。
+        for (i in lines.indices) {
+            val (x, y) = lines[i]
+            // halfSize を半径として円を描画
+            fillCircle(x, y, halfSize, color)
+        }
+    }
+
+    /**
+     * 指定された中心、半径、太さで円弧を描画します。
+     * 円弧は下部 (Y軸正方向, 270度/1.5*PI) から時計回りに始まります。
+     */
+    fun drawArc(
+        cx: Float,
+        cy: Float,
+        radius: Float,
+        endAngle: Float, // 0 から 2*PI までの完了角度
+        thickness: Int, // 線の太さ
+        color: Int,
+    ) {
+        // 円弧の中心線となる頂点リスト
+        val arcPoints = mutableListOf<Pair<Float, Float>>()
+
+        // セグメント数 (細かくするほど滑らかになる)
+        val segments = 64
+
+        // 描画開始角度: 円の下部 (時計回りに 270度/1.5*PI, 垂直下向き) からスタート
+        val startAngleOffset = (PI / 2).toFloat() // 90度 (上向き) からスタート
+
+        // 描画するセグメント数 (endAngle に比例)
+        val segmentsToDraw = (segments * (endAngle / (2 * PI))).toInt()
+
+        // セグメントごとの角度変化量
+        // endAngle までに segmentsToDraw 分のステップで到達させる
+        val angleStep = endAngle / segmentsToDraw.toFloat()
+
+        // 開始点 (クールダウンバーの始点)
+        var currentAngle = startAngleOffset
+
+        // 最初の点を追加
+        val startX = cx + MathHelper.cos(currentAngle) * radius
+        val startY = cy + MathHelper.sin(currentAngle) * radius
+        arcPoints.add(startX to startY)
+
+        // 中間点を計算し、リストに追加
+        for (i in 1..segmentsToDraw) {
+            currentAngle = startAngleOffset + i * angleStep
+
+            // 描画する円弧上の頂点の座標を計算
+            val x = cx + MathHelper.cos(currentAngle) * radius
+            val y = cy + MathHelper.sin(currentAngle) * radius
+
+            arcPoints.add(x to y)
+        }
+
+        // 最終的な頂点リストを使って太い多角線を描画
+        // drawArc のロジックは Graphics2D クラスのメンバーとして実装されていることを前提とします
+        renderLines(arcPoints, color, thickness.toFloat())
+    }
 
     fun enableScissor(
         x1: Int,
