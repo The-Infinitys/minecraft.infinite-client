@@ -121,24 +121,37 @@ open class AimTask(
     ): CameraRoll {
         // 【修正点2】マウス感度にmultiply値を乗算し、エイム速度を調整する
         val scaledSensitivity = (mouseSensitivity().coerceAtLeast(0.1)) * multiply
+
+        // 【修正】すべてのMethodで基準となる最大移動速度を定義する（Linearのscaler=10を基準とする）
+        val baseMaxSpeed = (duration * scaledSensitivity / 10)
+
         val result =
             when (calcMethod) {
                 AimCalculateMethod.EaseOut -> {
-                    val scaler = 200
+                    val scaler = 50
                     val diffMultiply = (duration * scaledSensitivity / scaler).coerceAtMost(1.0)
-                    rollDiff * diffMultiply
+
+                    // ただし、diffMultiplyが1.0未満の時のみ徐々に減速する挙動を維持
+                    if (diffMultiply < 1.0) {
+                        rollDiff * diffMultiply
+                    } else {
+                        // diffMultiplyが1.0以上の場合は、目標移動量そのまま（即座に完了）
+                        rollDiff
+                    }
                 }
 
                 AimCalculateMethod.Linear -> {
-                    val scaler = 10
-                    val maxSpeed = (duration * scaledSensitivity / scaler)
-                    rollDiff.limitedBySpeed(maxSpeed)
+                    // 【変更なし】baseMaxSpeedを使用
+                    rollDiff.limitedBySpeed(baseMaxSpeed)
                 }
 
                 AimCalculateMethod.EaseIn -> {
+                    // 【修正】加速度(acceleration)をbaseMaxSpeedに依存させて統一的な速度基準とする
                     val currentMagnitude = rollVelocity.magnitude()
                     val targetMagnitude = rollDiff.magnitude()
-                    val acceleration = scaledSensitivity / 2
+
+                    val acceleration = baseMaxSpeed / 2
+
                     if (currentMagnitude < targetMagnitude) {
                         rollDiff.limitedBySpeed(currentMagnitude + acceleration)
                     } else {
@@ -147,6 +160,7 @@ open class AimTask(
                 }
 
                 AimCalculateMethod.EaseInOut -> {
+                    // ロジックは変更せず、EaseInとEaseOutの統一された基準に基づいて計算される
                     val easeIn = calcExecRotation(rollDiff, AimCalculateMethod.EaseIn)
                     val easeOut = calcExecRotation(rollDiff, AimCalculateMethod.EaseOut)
                     val easeInMagnitude = easeIn.magnitude()
