@@ -25,10 +25,8 @@ import org.infinite.libs.infinite.InfiniteCommand
 import org.infinite.libs.infinite.InfiniteKeyBind
 import org.infinite.libs.world.WorldManager
 import org.infinite.utils.LogQueue
-import org.slf4j.LoggerFactory
 
 object InfiniteClient : ClientModInitializer {
-    private val LOGGER = LoggerFactory.getLogger("InfiniteClient")
     lateinit var worldManager: WorldManager
     var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"
@@ -222,10 +220,7 @@ object InfiniteClient : ClientModInitializer {
             .append(Text.literal(prefixType).styled { style -> style.withColor(textColor) })
             .append(Text.literal("]: ").formatted(Formatting.RESET))
 
-    private fun logger(text: String) = LOGGER.info(text)
-
     fun log(text: String) {
-        logger("[Infinite Client]: $text")
         val message =
             createPrefixedMessage("", theme().colors.foregroundColor)
                 .append(Text.literal(text).styled { style -> style.withColor(theme().colors.foregroundColor) })
@@ -233,7 +228,6 @@ object InfiniteClient : ClientModInitializer {
     }
 
     fun log(text: Text) {
-        logger("[Infinite Client]: $text")
         val message =
             createPrefixedMessage("", theme().colors.foregroundColor)
                 .append(text)
@@ -241,7 +235,6 @@ object InfiniteClient : ClientModInitializer {
     }
 
     fun info(text: String) {
-        logger("[Infinite Client - Info]: $text")
         val message =
             createPrefixedMessage(" - Info ", theme().colors.infoColor)
                 .append(Text.literal(text).styled { style -> style.withColor(theme().colors.infoColor) })
@@ -249,7 +242,6 @@ object InfiniteClient : ClientModInitializer {
     }
 
     fun warn(text: String) {
-        LOGGER.warn("[Infinite Client - Warn]: $text")
         val message =
             createPrefixedMessage(" - Warn ", theme().colors.warnColor)
                 .append(Text.literal(text).styled { style -> style.withColor(theme().colors.warnColor) })
@@ -257,7 +249,6 @@ object InfiniteClient : ClientModInitializer {
     }
 
     fun error(text: String) {
-        LOGGER.error("[Infinite Client - Error]: $text")
         val message =
             createPrefixedMessage(" - Error", theme().colors.errorColor)
                 .append(Text.literal(text).styled { style -> style.withColor(theme().colors.errorColor) })
