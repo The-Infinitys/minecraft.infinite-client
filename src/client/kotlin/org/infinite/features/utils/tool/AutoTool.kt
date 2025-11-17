@@ -44,7 +44,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             FineToolStrategy.entries,
         )
 
-    // ★ 新規追加: ツール切り替えディレイ設定
+    // ツールを元に戻すまでのディレイ設定
     private val switchDelay =
         FeatureSetting.IntSetting(
             "SwitchDelay",
@@ -63,7 +63,9 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
         )
 
     private var previousSelectedSlot: Int = -1
-    private var lastSwitchTick: Long = 0 // ★ 新規追加: 最後にツールを切り替えたティック
+
+    // 修正: 最後に採掘していたティックを記録する変数
+    private var lastMiningTick: Long = 0
 
     private val materialLevels =
         mapOf(
@@ -139,13 +141,8 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
     }
 
     override fun tick() {
-        val client = MinecraftClient.getInstance() // clientインスタンスを取得
+        val client = MinecraftClient.getInstance()
         val currentTime = client.world?.time ?: 0L // 現在のティックを取得
-
-        // ★ 新規追加: ツール切り替えディレイチェック
-        if (currentTime - lastSwitchTick < switchDelay.value) {
-            return // ディレイ期間中はツール切り替えをスキップ
-        }
 
         val linearBreak = InfiniteClient.getFeature(LinearBreak::class.java)
         val veinBreak = InfiniteClient.getFeature(VeinBreak::class.java)
@@ -158,11 +155,25 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                 isVeinBreakWorking -> veinBreak.currentBreakingPos
                 else -> interactionManager?.currentBreakingPos
             }
+
         val isMining = isInteractingToBlock || isLinearBreakWorking || isVeinBreakWorking
+
+        // 修正: 採掘中でない場合のツールリセットロジックを修正
         if (!isMining || blockPos == null) {
-            resetTool()
+            // 採掘中でない場合
+
+            // lastMiningTickからswitchDelay分の時間が経過しているかチェック
+            if (currentTime - lastMiningTick >= switchDelay.value) {
+                resetTool()
+            }
+            // 採掘中でないが、ディレイ期間中の場合は何もしない（ツール切り替えを維持）
             return
         }
+
+        // 採掘中の場合、lastMiningTickを更新
+        lastMiningTick = currentTime
+
+        // --- ツール選択ロジック（以下、変更なし） ---
         val blockState = world?.getBlockState(blockPos) ?: return
         val block = blockState.block
         val correctToolInfo = ToolChecker.getCorrectTool(block)
@@ -211,7 +222,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                 }
 
                 FineToolStrategy.Hand -> {
-                    resetTool()
+                    // resetTool()を呼ばない。採掘は継続されている
                     return
                 }
             }
@@ -229,18 +240,17 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             }
 
             // 特殊ブロックだが、特殊ツールがインベントリにない場合
-            resetTool()
+            // resetTool()を呼ばない。採掘は継続されている
             return
         }
 
         // ----------------------------------------------------
         // 2. メインのツール検索処理 (グレード付きのツール)
-        //    requiredToolLevel >= 0 に緩和し、レベル0のツルハシブロックも対象とする
         // ----------------------------------------------------
 
         if (requiredToolLevel >= 0) { // レベル0も含め、ツール検索を行う
             if (toolKind == null) {
-                resetTool()
+                // resetTool()を呼ばない。採掘は継続されている
                 return
             }
 
@@ -258,11 +268,11 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                 handleToolSwitch(bestToolIndex)
             } else {
                 // 最適なツールが見つからない
-                resetTool()
+                // resetTool()を呼ばない。採掘は継続されている
             }
         } else {
-            // Special Blockではないが、requiredToolLevelが負の値のブロック（理論上はありえないが安全のため）
-            resetTool()
+            // Special Blockではないが、requiredToolLevelが負の値のブロック
+            // resetTool()を呼ばない。採掘は継続されている
         }
     }
 
@@ -279,7 +289,6 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             previousSelectedSlot = currentSlot
         }
 
-        // ★ BackPackManagerの一時停止/再開をregisterで置き換え
         backPackManager?.register {
             when (method.value) {
                 Method.Swap -> {
@@ -296,8 +305,8 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             }
         }
 
-        // ★ ツールを切り替えたので、lastSwitchTickを更新
-        lastSwitchTick = client.world?.time ?: 0L
+        // ツールを切り替えたので、lastMiningTickを更新（この行は不要だが、意図を尊重しここでは残します）
+        // lastSwitchTickは削除したので、不要な更新は行いません
     }
 
     /**
@@ -312,7 +321,6 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             val originalIndex = InventoryIndex.Hotbar(previousSelectedSlot)
             val currentIndex = InventoryIndex.Hotbar(currentSlot)
 
-            // ★ BackPackManagerの一時停止/再開をregisterで置き換え
             backPackManager?.register {
                 when (method.value) {
                     Method.Swap -> {
@@ -334,9 +342,6 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
                     }
                 }
             }
-
-            // ★ ツールを元のスロットに戻したので、lastSwitchTickを更新
-            lastSwitchTick = client.world?.time ?: 0L
         }
     }
 }
