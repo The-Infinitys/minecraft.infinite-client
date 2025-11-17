@@ -3,7 +3,6 @@
   "package": "org.infinite.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "features.fighting.gunner.GunnerHudMixin",
     "features.fighting.gunner.GunnerNetworkMixin",
     "features.fighting.hypermace.HyperMaceMixin",
     "features.fighting.killaura.KillAuraMixin",
@@ -55,5 +54,6 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "features.fighting.counterattack.DamageListenerMixin"
   ]
 }

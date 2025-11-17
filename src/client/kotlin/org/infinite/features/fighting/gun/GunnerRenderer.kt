@@ -10,7 +10,6 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 import org.infinite.InfiniteClient
-import org.infinite.features.rendering.detailinfo.DetailInfo
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.utils.rendering.getRainbowColor
@@ -95,77 +94,6 @@ object GunnerRenderer {
             // 進捗バー
             val filledWidth = (barWidth * progress).toInt()
             graphics2D.fill(barX, barY, filledWidth, barHeight, bowColor)
-        }
-    }
-
-    fun renderSight(
-        context: DrawContext,
-        tickCounter: RenderTickCounter,
-    ) {
-        val graphics2D = Graphics2D(context, tickCounter)
-        val rainbowColor = getRainbowColor()
-        val scaledWidth = context.scaledWindowWidth
-        val scaledHeight = context.scaledWindowHeight
-        val boxSize = 16
-        val detailInfo = InfiniteClient.getFeature(DetailInfo::class.java) ?: return
-        val cameraEntity = MinecraftClient.getInstance().cameraEntity ?: return
-        val reach = 10.0
-        val targetHit = detailInfo.findCrosshairTarget(cameraEntity, reach, reach)
-        when (targetHit.type) {
-            HitResult.Type.ENTITY -> {
-                graphics2D.drawBorder(
-                    scaledWidth / 2 - boxSize / 2,
-                    scaledHeight / 2 - boxSize / 2,
-                    boxSize,
-                    boxSize,
-                    rainbowColor,
-                )
-                graphics2D.drawLine(
-                    scaledWidth / 2f - boxSize,
-                    scaledHeight / 2f,
-                    scaledWidth / 2f + boxSize,
-                    scaledHeight / 2f,
-                    rainbowColor,
-                    2,
-                )
-                graphics2D.drawLine(
-                    scaledWidth / 2f,
-                    scaledHeight / 2f - boxSize,
-                    scaledWidth / 2f,
-                    scaledHeight / 2f + boxSize,
-                    rainbowColor,
-                    2,
-                )
-            }
-
-            HitResult.Type.BLOCK -> {
-                graphics2D.drawBorder(
-                    scaledWidth / 2 - boxSize / 2,
-                    scaledHeight / 2 - boxSize / 2,
-                    boxSize,
-                    boxSize,
-                    rainbowColor,
-                )
-            }
-
-            HitResult.Type.MISS -> {
-                graphics2D.drawLine(
-                    scaledWidth / 2f - boxSize,
-                    scaledHeight / 2f,
-                    scaledWidth / 2f + boxSize,
-                    scaledHeight / 2f,
-                    0xFF888888.toInt(),
-                    2,
-                )
-                graphics2D.drawLine(
-                    scaledWidth / 2f,
-                    scaledHeight / 2f - boxSize,
-                    scaledWidth / 2f,
-                    scaledHeight / 2f + boxSize,
-                    0xFF888888.toInt(),
-                    2,
-                )
-            }
         }
     }
 

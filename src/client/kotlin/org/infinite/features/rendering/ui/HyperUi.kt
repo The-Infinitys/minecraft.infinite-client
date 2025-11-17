@@ -28,6 +28,7 @@ class HyperUi : ConfigurableFeature() {
     private val damageCalculator = DamageCalculator()
     private val rayCastRenderer = RayCastRenderer()
     private val flightUiRenderer = ElytraFlightUiRenderer()
+    private val crosshairRenderer = CrosshairRenderer()
 
     // 描画に必要な設定値をまとめる
     private val renderConfig = UiRenderConfig(heightSetting, paddingSetting, alphaSetting)
@@ -83,6 +84,9 @@ class HyperUi : ConfigurableFeature() {
 
         // 方位計の描画
         compassRenderer.render(graphics2D, player.getLerpedYaw(graphics2D.tickProgress), colors)
+
+        // クロスヘアの描画
+        crosshairRenderer.render(graphics2D)
 
         // スプリント/潜水時間テキスト (barRendererに移譲しても良いが、ここではシンプルにHyperUiに残す)
         renderStatsText(graphics2D, player, colors)

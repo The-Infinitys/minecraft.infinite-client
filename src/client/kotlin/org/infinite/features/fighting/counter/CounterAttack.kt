@@ -1,137 +1,72 @@
 package org.infinite.features.fighting.counter
 
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.MathHelper
+import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
 import org.infinite.ConfigurableFeature
+import org.infinite.libs.client.aim.AimInterface
+import org.infinite.libs.client.aim.task.AimTask
+import org.infinite.libs.client.aim.task.condition.AimTaskConditionByFrame
+import org.infinite.libs.client.aim.task.config.AimCalculateMethod
+import org.infinite.libs.client.aim.task.config.AimPriority
+import org.infinite.libs.client.aim.task.config.AimTarget
 import org.infinite.settings.FeatureSetting
-import kotlin.math.sqrt
 
 class CounterAttack : ConfigurableFeature(initialEnabled = false) {
-    override val settings: List<FeatureSetting<*>> = listOf()
+    private val reactionTickSetting = FeatureSetting.IntSetting("ReactionTick", 4, 0, 10)
+    private val processTickSetting = FeatureSetting.IntSetting("ProcessTick", 4, 0, 10)
+    private val randomizerSetting = FeatureSetting.IntSetting("Randomizer", 2, 0, 10)
+    private val methodSetting =
+        FeatureSetting.EnumSetting("Method", AimCalculateMethod.Linear, AimCalculateMethod.entries)
+    private val aimSpeed =
+        FeatureSetting.DoubleSetting("AimSpeed", 5.0, 1.0, 10.0)
+    override val settings: List<FeatureSetting<*>> = listOf(
+        reactionTickSetting, processTickSetting,
+        randomizerSetting, methodSetting, aimSpeed
+    )
 
-    private var lastHurtTime = 0
-
-    private var targetToAttack: LivingEntity? = null
-
-    private var attackDelayTicks = 0
-
-    private var internalCooldown = 0
-    private val cooldownTicks = 20
-
-    override fun tick() {
+    /**
+     * 1. ダメージパケット受信時の処理 (Mixinで呼び出される想定)
+     * サーバーからの正確な攻撃者情報に基づいて反撃対象をセットします。
+     */
+    fun receive(packet: EntityDamageS2CPacket) {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
-
-        // 内部クールダウンを減少させる
-        if (internalCooldown > 0) {
-            internalCooldown--
-        }
-
-        // --- 1. ダメージ検出 ---
-        // プレイヤーのhurtTimeが設定され、かつ前回のtick時よりも増えた場合（つまり、今ダメージを受けた）
-        if (player.hurtTime > lastHurtTime && internalCooldown <= 0) {
-            // --- 2. 攻撃者の推測 ---
-            val target = findBestAttacker(player)
-
-            if (target != null) {
-                // Mixinから受け取っていた情報をここで再取得/再計算
-                val range = ((settings.find { it.name == "Range" } as? FeatureSetting.FloatSetting)?.value ?: 4.2f)
-                val delay = ((settings.find { it.name == "Delay" } as? FeatureSetting.IntSetting)?.value ?: 0)
-
-                // 範囲内か確認
-                if (player.distanceTo(target) <= range) {
-                    targetToAttack = target
-                    attackDelayTicks = delay
-                }
-            }
-        }
-        // 最後に現在のhurtTimeを保存
-        lastHurtTime = player.hurtTime
-
-        // --- 3. 反撃実行ロジック ---
-        val target = targetToAttack ?: return
-
-        // 反撃ディレイを減少させる
-        if (attackDelayTicks > 0) {
-            attackDelayTicks--
+        val world = client.world ?: return
+        // パケットの対象エンティティがプレイヤー自身か確認
+        if (packet.entityId() != player.id) {
             return
         }
-
-        // ディレイが0以下になったら反撃を実行する
-        if (internalCooldown <= 0) {
-            executeCounterAttack(target)
-            targetToAttack = null
-            internalCooldown = cooldownTicks
+        // 攻撃者（間接的な原因）のIDを取得
+        // DamageSource#getAttacker() に相当する sourceCauseId を使用
+        val attackerId = packet.sourceCauseId()
+        // IDからエンティティを取得
+        val attackerEntity = world.getEntityById(attackerId)
+        if (attackerEntity is LivingEntity && attackerEntity != player) {
+            executeCounterAttack(attackerEntity)
         }
     }
 
-    /**
-     * 周囲から最も可能性の高い攻撃者を推測するメソッド
-     */
-    private fun findBestAttacker(player: ClientPlayerEntity): LivingEntity? {
-        val client = MinecraftClient.getInstance()
-        val world = client.world ?: return null
-        val range = ((settings.find { it.name == "Range" } as? FeatureSetting.FloatSetting)?.value ?: 4.2f).toDouble()
+    val rand: Int
+        get() = (0..randomizerSetting.value).random()
 
-        // プレイヤーに近いLivingEntityをリストアップ
-        val potentialTargets =
-            world
-                .getOtherEntities(player, player.boundingBox.expand(range)) { entity ->
-                    entity is LivingEntity && entity != player && entity.isAlive
-                }.filterIsInstance<LivingEntity>()
-
-        // ここで、ターゲットの優先順位付けロジックを入れる（例：最も近いエンティティ、または直前に攻撃アニメーションを見せたエンティティなど）
-        // 単純化のため、ここでは「最も近く、生きているLivingEntity」を返す
-        return potentialTargets.minByOrNull { it.distanceTo(player) }
-    }
-
-    /**
-     * 実際に反撃を実行するメソッド。
-     * Mixinで要求された「別の場所でその方向に向いて攻撃を実行するメソッド」に相当します。
-     */
     private fun executeCounterAttack(target: LivingEntity) {
-        val client = MinecraftClient.getInstance()
-        val player = client.player
-
-        // 念のための null チェック
-        if (client.world == null || client.interactionManager == null || player == null || player.isDead) {
-            return
-        }
-
-        // 1. 攻撃者の方向を向く
-        faceEntity(player, target)
-
-        // 2. 攻撃を実行する
-        client.interactionManager!!.attackEntity(player, target)
-    }
-
-    /**
-     * エンティティの方向を向くメソッド。Mixinから移動。
-     */
-    private fun faceEntity(
-        player: ClientPlayerEntity,
-        target: Entity,
-    ) {
-        val x = target.x - player.x
-        val y = (target.y + target.getEyeHeight(target.pose)) - (player.y + player.getEyeHeight(player.pose))
-        val z = target.z - player.z
-
-        val dist = sqrt(x * x + z * z)
-        val yaw = (MathHelper.atan2(z, x) * 180.0 / Math.PI).toFloat() - 90.0F
-        val pitch = (-(MathHelper.atan2(y, dist) * 180.0 / Math.PI)).toFloat()
-
-        player.yaw = yaw
-        player.pitch = pitch
-    }
-
-    override fun disabled() {
-        super.disabled()
-        // 機能が無効になったら待機中のターゲットをクリアする
-        targetToAttack = null
-        attackDelayTicks = 0
-        internalCooldown = 0
+        val react = reactionTickSetting.value + rand
+        val progress = processTickSetting.value + rand
+        val total = react + progress
+        AimInterface.addTask(
+            AimTask(
+                AimPriority.Preferentially,
+                AimTarget.EntityTarget(target),
+                condition = AimTaskConditionByFrame(react, total, true),
+                calcMethod = methodSetting.value,
+                multiply = aimSpeed.value,
+                onSuccess = {
+                    val player = player ?: return@AimTask
+                    val interactionManager = interactionManager ?: return@AimTask
+                    interactionManager.attackEntity(player, target)
+                }
+            )
+        )
     }
 }

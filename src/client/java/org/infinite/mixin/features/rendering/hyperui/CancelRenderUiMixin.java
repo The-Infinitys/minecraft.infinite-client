@@ -18,8 +18,6 @@ public class CancelRenderUiMixin {
     return InfiniteClient.INSTANCE.isFeatureEnabled(HyperUi.class);
   }
 
-  // --- 描画のキャンセルロジック ---
-
   /**
    * 体力バー（HP）の描画をキャンセルします。 InGameHud#renderHealthBar(MatrixStack) のようなメソッドにインジェクトします。 * @param ci
    * CallbackInfo for canceling the method execution.
@@ -50,6 +48,11 @@ public class CancelRenderUiMixin {
   // 例: renderMountHealth (バージョンやLoaderによってメソッド名が異なります)
   @Inject(method = "renderMountHealth", at = @At("HEAD"), cancellable = true)
   private void infinite$cancelMountHealthRender(CallbackInfo ci) {
+    if (shouldCancel()) ci.cancel();
+  }
+
+  @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
+  private void infinite$cancelCrossHairRender(CallbackInfo ci) {
     if (shouldCancel()) ci.cancel();
   }
 }
