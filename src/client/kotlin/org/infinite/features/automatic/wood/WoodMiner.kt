@@ -8,11 +8,10 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.infinite.ConfigurableFeature
-import org.infinite.InfiniteClient
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.block.MineBlockAction
+import org.infinite.libs.ai.actions.movement.BlockPosMovementAction
 import org.infinite.libs.ai.actions.movement.LinearMovementAction
-import org.infinite.libs.ai.actions.movement.PathMovementAction
 import org.infinite.libs.ai.interfaces.AiAction.AiActionState
 import org.infinite.settings.FeatureSetting
 
@@ -229,7 +228,7 @@ class WoodMiner : ConfigurableFeature() {
             goto.registered = true
             val pos = goto.pos
             AiInterface.add(
-                PathMovementAction(
+                BlockPosMovementAction(
                     pos.x,
                     if (goto.isRandomMode) null else pos.y,
                     pos.z,

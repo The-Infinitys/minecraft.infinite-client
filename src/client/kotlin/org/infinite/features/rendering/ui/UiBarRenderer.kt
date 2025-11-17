@@ -2,6 +2,7 @@ package org.infinite.features.rendering.ui
 
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.util.Arm
 import org.infinite.InfiniteClient
 import org.infinite.gui.theme.ThemeColors
 import org.infinite.libs.client.player.ClientInterface
@@ -276,11 +277,15 @@ class UiBarRenderer(
 
         val hotBarWidth = 180
         val offHandSlotSize = 30.0
-
+        val offHandsSide =
+            when (options.mainArm.value) {
+                Arm.LEFT -> BarSide.Right
+                Arm.RIGHT -> BarSide.Left
+            }
         // 最大幅の計算ロジック
         val barMaxWidth =
             (screenWidth - hotBarWidth) / 2.0 - 3 * padding -
-                if (hasOffHand && side == BarSide.Left) offHandSlotSize else 0.0
+                if (hasOffHand && side == offHandsSide) offHandSlotSize else 0.0
 
         // ... (続く描画ロジックは元のコードから変更なし) ...
         val cornerX =

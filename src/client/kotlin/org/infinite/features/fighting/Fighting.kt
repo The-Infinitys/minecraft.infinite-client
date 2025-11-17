@@ -3,6 +3,7 @@ package org.infinite.features.fighting
 import org.infinite.feature
 import org.infinite.features.fighting.aimassist.AimAssist
 import org.infinite.features.fighting.armor.ArmorManager
+import org.infinite.features.fighting.berserk.Berserker
 import org.infinite.features.fighting.counter.CounterAttack
 import org.infinite.features.fighting.gun.Gunner
 import org.infinite.features.fighting.impact.ImpactAttack
@@ -21,6 +22,7 @@ internal val fighting =
         feature("HyperMace", HyperMace()),
         feature("MaceAssist", MaceAssist()),
         feature("KillAura", KillAura()),
+        feature("Berserker", Berserker()),
         feature(
             "Reach",
             Reach(),

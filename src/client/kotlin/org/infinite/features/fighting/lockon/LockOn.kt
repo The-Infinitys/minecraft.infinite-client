@@ -22,7 +22,7 @@ import org.lwjgl.glfw.GLFW
 import kotlin.math.acos
 
 class LockOn : ConfigurableFeature(initialEnabled = false) {
-    override val level: FeatureLevel = FeatureLevel.Cheat
+    override val level: FeatureLevel = FeatureLevel.Utils
     override val toggleKeyBind: Property<Int>
         get() = Property(GLFW.GLFW_KEY_K)
     private val range: FeatureSetting.FloatSetting =
@@ -55,7 +55,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
             "FOV",
             90.0f,
             10.0f,
-            180.0f,
+            360.0f,
         )
     private val speed: FeatureSetting.FloatSetting =
         FeatureSetting.FloatSetting(
@@ -132,7 +132,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
      * ターゲットへの角度 (FOV) を取得します。
      * AimAssistが利用できない場合は Double.MAX_VALUE を返して優先度を下げます。
      */
-    private fun getAngle(
+    fun getAngle(
         player: PlayerEntity,
         target: LivingEntity,
     ): Double = InfiniteClient.getFeature(AimAssist::class.java)?.calcFov(player, target) ?: Double.MAX_VALUE

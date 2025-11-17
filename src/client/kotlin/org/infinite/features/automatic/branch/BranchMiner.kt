@@ -9,7 +9,7 @@ import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.block.MineBlockAction
-import org.infinite.libs.ai.actions.movement.PathMovementAction
+import org.infinite.libs.ai.actions.movement.BlockPosMovementAction
 import org.infinite.libs.ai.interfaces.AiAction
 import org.infinite.libs.client.inventory.ContainerManager
 import org.infinite.libs.client.inventory.InventoryManager
@@ -311,7 +311,7 @@ class BranchMiner : ConfigurableFeature() {
         val endPos = branchEndPosition ?: return
 
         AiInterface.add(
-            PathMovementAction(
+            BlockPosMovementAction(
                 x = endPos.x,
                 y = endPos.y,
                 z = endPos.z,
@@ -355,7 +355,7 @@ class BranchMiner : ConfigurableFeature() {
         // 現在の鉱石を採掘
         val orePos = exposedOres[currentOreIndex]
         AiInterface.add(
-            PathMovementAction(
+            BlockPosMovementAction(
                 x = orePos.x,
                 y = orePos.y,
                 z = orePos.z,
@@ -414,7 +414,7 @@ class BranchMiner : ConfigurableFeature() {
         for (itemEntity in itemEntities) {
             val itemPos = itemEntity.blockPos
             AiInterface.add(
-                PathMovementAction(
+                BlockPosMovementAction(
                     x = itemPos.x,
                     y = itemPos.y,
                     z = itemPos.z,
@@ -450,7 +450,7 @@ class BranchMiner : ConfigurableFeature() {
             }
 
         AiInterface.add(
-            PathMovementAction(
+            BlockPosMovementAction(
                 x = chest.x,
                 y = chest.y,
                 z = chest.z,
@@ -517,7 +517,11 @@ class BranchMiner : ConfigurableFeature() {
             when (currentType) {
                 is ContainerManager.ContainerType.Generic -> currentType.size
                 is ContainerManager.ContainerType.ShulkerBox -> 27
-                else -> 0 // 既に上でチェック済みだが念のため
+                is ContainerManager.ContainerType.Loom -> 3
+                is ContainerManager.ContainerType.None -> 0
+                is ContainerManager.ContainerType.Beacon -> 1
+                is ContainerManager.ContainerType.Anvil -> 3
+                else -> 0
             }
 
         // 格納対象のスロット範囲:
@@ -552,7 +556,7 @@ class BranchMiner : ConfigurableFeature() {
         val startPos = branchStartPosition ?: return
 
         AiInterface.add(
-            PathMovementAction(
+            BlockPosMovementAction(
                 x = startPos.x,
                 y = startPos.y,
                 z = startPos.z,
@@ -621,7 +625,7 @@ class BranchMiner : ConfigurableFeature() {
         } else {
             // 掘る必要がない場合、次のメイン通路位置へ移動
             AiInterface.add(
-                PathMovementAction(
+                BlockPosMovementAction(
                     x = nextMainPos.x,
                     y = nextMainPos.y,
                     z = nextMainPos.z,
@@ -678,7 +682,7 @@ class BranchMiner : ConfigurableFeature() {
             }
 
         AiInterface.add(
-            PathMovementAction(
+            BlockPosMovementAction(
                 x = initPos.x,
                 y = initPos.y,
                 z = initPos.z,
@@ -913,7 +917,7 @@ class BranchMiner : ConfigurableFeature() {
         for (itemEntity in itemEntities) {
             val itemPos = itemEntity.blockPos
             AiInterface.add(
-                PathMovementAction(
+                BlockPosMovementAction(
                     x = itemPos.x,
                     y = itemPos.y,
                     z = itemPos.z,

@@ -27,33 +27,35 @@ open class AimTask(
             .getInstance()
             .options.mouseSensitivity.value
 
-    private fun calcLookAt(target: Vec3d): CameraRoll {
-        val vec3d: Vec3d = MinecraftClient.getInstance().player!!.eyePos
-        val d = target.x - vec3d.x
-        val e = target.y - vec3d.y
-        val f = target.z - vec3d.z
-        val g = sqrt(d * d + f * f)
-        val pitch =
-            MathHelper.wrapDegrees(
-                (
-                    -(
+    companion object {
+        fun calcLookAt(target: Vec3d): CameraRoll {
+            val vec3d: Vec3d = MinecraftClient.getInstance().player!!.eyePos
+            val d = target.x - vec3d.x
+            val e = target.y - vec3d.y
+            val f = target.z - vec3d.z
+            val g = sqrt(d * d + f * f)
+            val pitch =
+                MathHelper.wrapDegrees(
+                    (
+                        -(
+                            MathHelper.atan2(
+                                e,
+                                g,
+                            ) * (180.0 / Math.PI)
+                        )
+                    ),
+                )
+            val yaw =
+                MathHelper.wrapDegrees(
+                    (
                         MathHelper.atan2(
-                            e,
-                            g,
+                            f,
+                            d,
                         ) * (180.0 / Math.PI)
-                    )
-                ),
-            )
-        val yaw =
-            MathHelper.wrapDegrees(
-                (
-                    MathHelper.atan2(
-                        f,
-                        d,
-                    ) * (180.0 / Math.PI)
-                ) - 90.0,
-            )
-        return CameraRoll(yaw, pitch)
+                    ) - 90.0,
+                )
+            return CameraRoll(yaw, pitch)
+        }
     }
 
     private var rollVelocity = CameraRoll(0.0, 0.0)

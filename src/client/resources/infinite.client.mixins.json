@@ -5,7 +5,6 @@
   "client": [
     "features.fighting.gunner.GunnerNetworkMixin",
     "features.fighting.hypermace.HyperMaceMixin",
-    "features.fighting.killaura.KillAuraMixin",
     "features.fighting.noattack.NoAttackMixin",
     "features.fighting.reach.ReachMixin",
     "features.fighting.superattack.SuperAttackMixin",

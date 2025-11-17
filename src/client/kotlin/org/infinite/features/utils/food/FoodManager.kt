@@ -58,13 +58,23 @@ class FoodManager : ConfigurableFeature() {
     private val eatWhileMoving =
         FeatureSetting.BooleanSetting(
             "EatWhileMoving",
-            true, // デフォルトは移動中も食べる(true)にしておくと便利かもしれません
+            true,
         )
     private val eatWhileAttacking =
         FeatureSetting.BooleanSetting(
             "EatWhileAttacking",
             true,
         )
+
+    // --- 追加: スワップディレイ設定 ---
+    private val swapDelay =
+        FeatureSetting.IntSetting(
+            "SwapDelayTicks",
+            5, // デフォルト 5 tick (0.25秒)
+            0,
+            20,
+        )
+    // ---------------------------------
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
@@ -77,9 +87,11 @@ class FoodManager : ConfigurableFeature() {
             prioritizeHealth,
             eatWhileMoving,
             eatWhileAttacking,
+            swapDelay, // 設定リストに追加
         )
 
     private var oldSlot = -1
+    private var delayTicks = 0 // ディレイカウンター
 
     // UseKeyがトグル（切り替え）モードかどうか
     private val isUseKeyToggleMode: Boolean
@@ -87,12 +99,14 @@ class FoodManager : ConfigurableFeature() {
 
     override fun enabled() {
         oldSlot = -1
+        delayTicks = 0
     }
 
     override fun disabled() {
         if (isEating()) {
             stopEating()
         }
+        delayTicks = 0
     }
 
     override fun tick() {
@@ -100,6 +114,7 @@ class FoodManager : ConfigurableFeature() {
 
         if (player.abilities.creativeMode || !player.canConsume(false)) {
             if (isEating()) stopEating()
+            delayTicks = 0 // 無効な状態ではディレイをリセット
             return
         }
 
@@ -110,23 +125,20 @@ class FoodManager : ConfigurableFeature() {
         val injuredHungerI = (injuredHunger.value * 2).toInt()
 
         // --- 修正箇所 1: 満腹度MAXチェック ---
-        // 満腹度が最大値(20)の場合、処理を停止
         if (foodLevel >= 20) {
             if (isEating()) stopEating()
+            delayTicks = 0 // 食事不要ならディレイリセット
             return
         }
         // --- 修正箇所 1 終了 ---
 
         // --- 修正箇所 2: 食事継続のチェックとトグル/ホールド対応 ---
         if (isEating()) {
-            // ホールドモードの場合、キーを押し続ける必要がある
+            delayTicks = 0 // 食事中はディレイ不要
             if (!isUseKeyToggleMode) {
                 options.useKey.isPressed = true
             }
 
-            // プレイヤーがアイテムの使用を終えたら（アニメーションが終了したら）、
-            // またはトグルモードの場合は一度押したら食事は続いているので、
-            // isUsingItemがfalseになったら完了と判断
             if (!player.isUsingItem) {
                 stopEating()
             }
@@ -134,46 +146,52 @@ class FoodManager : ConfigurableFeature() {
         }
         // --- 修正箇所 2 終了 ---
 
+        // ------------------ 食事判定ロジック ------------------
         val isPlayerInjured = isInjured(player)
+        var shouldEat = false
+        var maxPointsToEat = -1
 
-        // 食事が必要な条件をチェック
         if (isPlayerInjured && foodLevel < injuredHungerI) {
-            eat(-1) // Eat to full if injured
+            shouldEat = true // Eat to full if injured
+        } else if (foodLevel < minHungerI) {
+            shouldEat = true // Eat to min hunger
+        } else if (foodLevel < targetHungerI) {
+            shouldEat = true
+            maxPointsToEat = targetHungerI - foodLevel
+        } else if (prioritizeHealth.value && player.health < player.maxHealth) {
+            shouldEat = true // Eat to heal if health is not full
+        }
+
+        // 外部要因による食事のキャンセル判定
+        val isMoving = (
+            options.forwardKey.isPressed ||
+                options.backKey.isPressed ||
+                options.leftKey.isPressed ||
+                options.rightKey.isPressed
+        )
+        val isAttacking = options.attackKey.isPressed
+
+        if (client.currentScreen != null ||
+            (!eatWhileMoving.value && isMoving) ||
+            (!eatWhileAttacking.value && isAttacking)
+        ) {
+            if (isEating()) stopEating()
+            delayTicks = 0
             return
         }
 
-        if (foodLevel < minHungerI) {
-            eat(-1) // Eat to min hunger
-            return
-        }
-        // 移動中に食べるか
-        if (!eatWhileMoving.value && (
-                options.forwardKey.isPressed ||
-                    options.backKey.isPressed ||
-                    options.leftKey.isPressed ||
-                    options.rightKey.isPressed
-            )
-        ) {
-            if (isEating()) {
-                stopEating()
+        // --- ディレイ処理の実行 ---
+        if (shouldEat) {
+            if (delayTicks < swapDelay.value) {
+                // ディレイカウント中
+                delayTicks++
+                return
             }
-            return
-        }
-        if (client.currentScreen != null) return
-        // 攻撃中に食べるか
-        if (!eatWhileAttacking.value && options.attackKey.isPressed) {
-            if (isEating()) {
-                stopEating()
-            }
-            return
-        }
-        if (foodLevel < targetHungerI) {
-            val maxPoints = targetHungerI - foodLevel
-            eat(maxPoints)
-        } else if (prioritizeHealth.value && player.health < player.maxHealth) {
-            eat(-1) // Eat to heal if health is not full and prioritizeHealth is true
+            // ディレイ終了、食事開始
+            eat(maxPointsToEat)
         } else {
-            // 食事の必要がない場合は何もしない
+            // 食事の必要がない場合はディレイをリセット
+            delayTicks = 0
         }
     }
 
@@ -186,6 +204,7 @@ class FoodManager : ConfigurableFeature() {
             return
         }
 
+        // 修正 1: 食事開始時、oldSlotを現在の選択スロットに設定する
         if (!isEating()) {
             oldSlot = inventory.selectedSlot
         }
@@ -193,34 +212,29 @@ class FoodManager : ConfigurableFeature() {
         if (foodSlot < 9) { // Hotbar slot
             inventory.selectedSlot = foodSlot
         } else if (foodSlot == 40) { // Off-hand slot
-            // No need to select anything, it's already in off-hand
-        } else { // Inventory slot, move to hotbar
-            // Find an empty hotbar slot or swap with current selected slot
-            val currentHotbarSlot = inventory.selectedSlot
+            // オフハンドなので選択スロットの変更は不要
+        } else { // Inventory slot (9-35), move to hotbar
+            // 修正 2: 現在選択されているホットバースロットとインベントリ内の食べ物をスワップする
+            val currentSelectedSlotIndex = inventory.selectedSlot
+
+            // 剣など（Hotbarのアイテム）をインベントリ内の食べ物のスロットに移動させ、
+            // 食べ物をホットバースロットに移動させる
             InventoryManager.swap(
                 InventoryManager.InventoryIndex.Backpack(foodSlot - 9),
-                InventoryManager.InventoryIndex.Hotbar(currentHotbarSlot),
+                InventoryManager.InventoryIndex.Hotbar(currentSelectedSlotIndex),
             )
+            // スワップにより食べ物がホットバーに移動したので、次のティックで食べるためにreturn
+            // 現在の選択スロットはそのまま
             return // Wait for next tick to eat
         }
 
-        // --- 修正箇所 3: トグル/ホールド対応 ---
-        // Eat food: トグル/ホールドモードに応じてキー操作を変更
-        if (isUseKeyToggleMode) {
-            // トグルモード: キーを一度押す (trueにしてすぐにfalseに戻す)
-            options.useKey.isPressed = true
-            // 仮想的な入力として、次のティックでfalseに戻すことが理想だが、
-            // tick()の同じサイクルでfalseにすると認識されない可能性があるため、
-            // isPressed=true の状態を維持し、stopEating()でfalseに戻す戦略を採用
-            // ただし、トグルモードの場合、isPressed=true は食事開始のシグナル
-        } else {
-            // ホールドモード: キーを押し続ける
-            options.useKey.isPressed = true
-        }
+        // --- 修正箇所 3 (食事開始のシグナル): トグル/ホールド対応 ---
+        options.useKey.isPressed = true
         // --- 修正箇所 3 終了 ---
     }
 
-    // ... (findBestFoodSlot, slotToInventoryIndex, isAllowedFood, isInjured メソッドは省略) ...
+    // ... (findBestFoodSlot, slotToInventoryIndex, stopEating, isAllowedFood, isEating, isInjured メソッドは省略) ...
+    // ※ 以下のメソッドは元のコードから変更なし
 
     private fun findBestFoodSlot(maxPoints: Int): Int {
         var bestFood: FoodComponent? = null
@@ -283,6 +297,7 @@ class FoodManager : ConfigurableFeature() {
         options.useKey.isPressed = false
         inventory?.selectedSlot = oldSlot
         oldSlot = -1
+        delayTicks = 0 // 停止時もディレイリセット
     }
 
     private fun isAllowedFood(consumable: ConsumableComponent?): Boolean {

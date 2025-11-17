@@ -20,10 +20,14 @@ class CounterAttack : ConfigurableFeature(initialEnabled = false) {
         FeatureSetting.EnumSetting("Method", AimCalculateMethod.Linear, AimCalculateMethod.entries)
     private val aimSpeed =
         FeatureSetting.DoubleSetting("AimSpeed", 5.0, 1.0, 10.0)
-    override val settings: List<FeatureSetting<*>> = listOf(
-        reactionTickSetting, processTickSetting,
-        randomizerSetting, methodSetting, aimSpeed
-    )
+    override val settings: List<FeatureSetting<*>> =
+        listOf(
+            reactionTickSetting,
+            processTickSetting,
+            randomizerSetting,
+            methodSetting,
+            aimSpeed,
+        )
 
     /**
      * 1. ダメージパケット受信時の処理 (Mixinで呼び出される想定)
@@ -65,8 +69,8 @@ class CounterAttack : ConfigurableFeature(initialEnabled = false) {
                     val player = player ?: return@AimTask
                     val interactionManager = interactionManager ?: return@AimTask
                     interactionManager.attackEntity(player, target)
-                }
-            )
+                },
+            ),
         )
     }
 }
