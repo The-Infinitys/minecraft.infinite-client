@@ -11,6 +11,7 @@ import net.minecraft.util.math.Vec3d
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.braek.FastBreak
+import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.movement.LinearMovementAction
 import org.infinite.libs.client.inventory.InventoryManager
@@ -101,6 +102,7 @@ class ShieldMachine : ConfigurableFeature() {
     private fun handlePlacing(placing: State.Placing) {
         val player = player ?: return
         val blocksToPlace = placing.pos
+        val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java)
 
         // 設置リストが空なら次のステップへ (Mining完了後の場合は移動へ)
         val targetPos =
@@ -127,8 +129,33 @@ class ShieldMachine : ConfigurableFeature() {
         }
 
         val hotbarSlot = inventoryIndex.index
-        player.inventory.selectedSlot = hotbarSlot
+        // ★ BackPackManagerの一時停止/再開をregisterで置き換え
+        backPackManager?.register {
+            player.inventory.selectedSlot = hotbarSlot
+            val world = client.world ?: return@register // register内のラムダなのでreturn@register
 
+            // 既にブロックが設置されているか、置き換え不可能なブロックがあるかチェック
+            val targetState = world.getBlockState(targetPos)
+            if (!targetState.isAir && !targetState.isReplaceable) {
+                blocksToPlace.remove(targetPos)
+                return@register
+            }
+
+            // 設置先の隣接ブロック (ここでは床を設置するため、下側を基準とする)
+            val neighbor = targetPos.down()
+            val side = net.minecraft.util.math.Direction.UP
+            val hitVec = Vec3d(targetPos.x + 0.5, targetPos.y + 0.5, targetPos.z + 0.5)
+
+            // BlockUtils.placeBlockがパケットを送信
+            val placementAttempt = BlockUtils.placeBlock(neighbor, side, hitVec, hotbarSlot)
+
+            if (placementAttempt) {
+                // 💡 改善点: 設置パケット送信後、次のtickでブロックが実際に設置されたかを確認するロジックが必要だが、
+                // フレームワークの制限上、ここではパケット送信と同時にリストから削除し、手振りを行う（成功したと見なす）
+                blocksToPlace.remove(targetPos)
+                player.swingHand(Hand.MAIN_HAND)
+            }
+        }
         val world = client.world ?: return
 
         // 既にブロックが設置されているか、置き換え不可能なブロックがあるかチェック

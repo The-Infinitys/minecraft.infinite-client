@@ -33,6 +33,8 @@ class QuickMove : ConfigurableFeature() {
         }
     private val reductionThreshold =
         FeatureSetting.DoubleSetting("ReductionThreshold", 10.0, 0.0, 100.0)
+    private val itemUseBoost =
+        FeatureSetting.DoubleSetting("BoostWhenUseItem", 0.5, 0.0, 1.0)
     private val currentAcceleration: Double
         get() {
             val player = player ?: return 0.0
@@ -181,6 +183,7 @@ class QuickMove : ConfigurableFeature() {
             reductionThreshold,
             antiFrictionBoost,
             antiFrictionPoint,
+            itemUseBoost,
             allowOnGround,
             allowOnSwimming,
             allowInWater,
@@ -253,6 +256,25 @@ class QuickMove : ConfigurableFeature() {
                     1.0,
                 ) * antiFrictionBoost
         )
+
+        val isApplyingCorrection = player.isUsingItem && player.isOnGround
+        val itemUseFactor =
+            if (isApplyingCorrection) {
+                val baseMovementReductionFactor = 0.15
+                // boostの値を0.0から1.0の間に制限する（安全のため）
+                val boost = itemUseBoost.value.coerceIn(0.0, 1.0)
+                // アイテム使用後の最終的な移動速度 (FINAL_SPEED) を計算する
+                // boost=0.0の時: FINAL_SPEED = 1.0 (緩和なし -> 速度低下なし)
+                // boost=1.0の時: FINAL_SPEED = 0.15 (最大緩和 -> 速度を1.0に戻すための計算の土台)
+                val finalSpeedDenominator = boost * (baseMovementReductionFactor - 1.0) + 1.0
+                // 速度低下を打ち消すための乗数 (補正係数) を計算
+                // 例: boost=1.0の時, 1.0 / 0.15 ≈ 6.667 となり、低下分を完全に打ち消す係数となる
+                1.0 / finalSpeedDenominator
+            } else {
+                // 補正条件を満たさない場合は補正なし (係数1.0)
+                1.0
+            }
+
         val startSpeed = tickSpeedLimit * antiFrictionFactor * (1 - delta) // 減速開始速度
         val endSpeed = tickSpeedLimit * antiFrictionFactor // 加速0到達速度
 
@@ -271,7 +293,13 @@ class QuickMove : ConfigurableFeature() {
             }
         val accelerationLimit = (endSpeed - currentMoveSpeed).coerceAtLeast(0.0)
         val currentAcceleration =
-            (baseAcceleration * antiFrictionFactor * accelerationFactor.coerceIn(0.0, 1.0)).coerceAtMost(
+            (
+                baseAcceleration * antiFrictionFactor *
+                    accelerationFactor.coerceIn(
+                        0.0,
+                        1.0,
+                    ) * itemUseFactor
+            ).coerceAtMost(
                 accelerationLimit,
             )
         // -----------------------------------------------------------

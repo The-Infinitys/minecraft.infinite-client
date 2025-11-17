@@ -8,6 +8,8 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.consume.ApplyEffectsConsumeEffect
 import net.minecraft.item.consume.TeleportRandomlyConsumeEffect
 import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient
+import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.settings.FeatureSetting
 
@@ -198,6 +200,7 @@ class FoodManager : ConfigurableFeature() {
     private fun eat(maxPoints: Int) {
         val inventory = inventory ?: return
         val foodSlot = findBestFoodSlot(maxPoints)
+        val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java) ?: return
 
         if (foodSlot == -1) {
             if (isEating()) stopEating()
@@ -209,23 +212,24 @@ class FoodManager : ConfigurableFeature() {
             oldSlot = inventory.selectedSlot
         }
 
-        if (foodSlot < 9) { // Hotbar slot
-            inventory.selectedSlot = foodSlot
-        } else if (foodSlot == 40) { // Off-hand slot
-            // オフハンドなので選択スロットの変更は不要
-        } else { // Inventory slot (9-35), move to hotbar
-            // 修正 2: 現在選択されているホットバースロットとインベントリ内の食べ物をスワップする
-            val currentSelectedSlotIndex = inventory.selectedSlot
+        // ★ BackPackManagerの一時停止/再開をregisterで置き換え
+        backPackManager.register {
+            if (foodSlot < 9) { // Hotbar slot
+                inventory.selectedSlot = foodSlot
+            } else if (foodSlot != 40) { // Off-hand slot
+                // 修正 2: 現在選択されているホットバースロットとインベントリ内の食べ物をスワップする
+                val currentSelectedSlotIndex = inventory.selectedSlot
 
-            // 剣など（Hotbarのアイテム）をインベントリ内の食べ物のスロットに移動させ、
-            // 食べ物をホットバースロットに移動させる
-            InventoryManager.swap(
-                InventoryManager.InventoryIndex.Backpack(foodSlot - 9),
-                InventoryManager.InventoryIndex.Hotbar(currentSelectedSlotIndex),
-            )
-            // スワップにより食べ物がホットバーに移動したので、次のティックで食べるためにreturn
-            // 現在の選択スロットはそのまま
-            return // Wait for next tick to eat
+                // 剣など（Hotbarのアイテム）をインベントリ内の食べ物のスロットに移動させ、
+                // 食べ物をホットバースロットに移動させる
+                InventoryManager.swap(
+                    InventoryManager.InventoryIndex.Backpack(foodSlot - 9),
+                    InventoryManager.InventoryIndex.Hotbar(currentSelectedSlotIndex),
+                )
+                // スワップにより食べ物がホットバーに移動したので、次のティックで食べるためにreturn
+                // 現在の選択スロットはそのまま
+                return@register // Wait for next tick to eat
+            }
         }
 
         // --- 修正箇所 3 (食事開始のシグナル): トグル/ホールド対応 ---

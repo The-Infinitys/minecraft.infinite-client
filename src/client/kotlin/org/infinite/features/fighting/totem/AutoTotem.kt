@@ -3,6 +3,8 @@ package org.infinite.features.fighting.totem
 import net.minecraft.item.Items
 import net.minecraft.screen.slot.SlotActionType
 import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient
+import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.async.AsyncInterface
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
@@ -65,6 +67,7 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
     ) {
         val currentPlayer = player ?: return
         val interactionManager = interactionManager // InteractionManagerの取得を仮定
+        val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java)
 
         // スロットの変換
         val netA = InventoryIndex.OffHand().slotId() ?: return
@@ -79,82 +82,85 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
         }
 
         var cumulativeDelay = 0L
-        // --- 1. クリック 1 (オフハンドを掴む) ---
-        // 最初のクリックは、操作の開始として即座に予約（遅延0）
-        AsyncInterface.add(
-            AsyncInterface.AsyncAction(0L) {
-                interactionManager?.clickSlot(currentScreenId, netA, 0, SlotActionType.PICKUP, currentPlayer)
-            },
-        )
+        // ★ BackPackManagerの一時停止/再開をregisterで置き換え
+        backPackManager?.register {
+            // --- 1. クリック 1 (オフハンドを掴む) ---
+            // 最初のクリックは、操作の開始として即座に予約（遅延0）
+            AsyncInterface.add(
+                AsyncInterface.AsyncAction(0L) {
+                    interactionManager?.clickSlot(currentScreenId, netA, 0, SlotActionType.PICKUP, currentPlayer)
+                },
+            )
 
-        // --- 2. クリック 2 (トーテムスロットに置く) ---
-        // ランダム遅延 1 を計算
-        val delay1 = randomDelay()
-        cumulativeDelay += delay1
-        AsyncInterface.add(
-            AsyncInterface.AsyncAction(cumulativeDelay) {
-                interactionManager?.clickSlot(currentScreenId, netB, 0, SlotActionType.PICKUP, currentPlayer)
-            },
-        )
+            // --- 2. クリック 2 (トーテムスロットに置く) ---
+            // ランダム遅延 1 を計算
+            val delay1 = randomDelay()
+            cumulativeDelay += delay1
+            AsyncInterface.add(
+                AsyncInterface.AsyncAction(cumulativeDelay) {
+                    interactionManager?.clickSlot(currentScreenId, netB, 0, SlotActionType.PICKUP, currentPlayer)
+                },
+            )
 
-        // --- 3. クリック 3 (オフハンドを再度掴む) ---
-        // ランダム遅延 2 を計算
-        val delay2 = randomDelay()
-        cumulativeDelay += delay2
-        AsyncInterface.add(
-            AsyncInterface.AsyncAction(cumulativeDelay) {
-                interactionManager?.clickSlot(currentScreenId, netA, 0, SlotActionType.PICKUP, currentPlayer)
-            },
-        )
+            // --- 3. クリック 3 (オフハンドを再度掴む) ---
+            // ランダム遅延 2 を計算
+            val delay2 = randomDelay()
+            cumulativeDelay += delay2
+            AsyncInterface.add(
+                AsyncInterface.AsyncAction(cumulativeDelay) {
+                    interactionManager?.clickSlot(currentScreenId, netA, 0, SlotActionType.PICKUP, currentPlayer)
+                },
+            )
 
-        // --- 4. 修正ロジックの開始 (カーソルアイテムの処理) ---
-        // ランダム遅延 3 を計算 (3クリック後のカーソル処理に移るまでの間隔)
-        val delay3 = randomDelay()
-        cumulativeDelay += delay3
-        AsyncInterface.add(
-            AsyncInterface.AsyncAction(cumulativeDelay) {
-                // カーソルにアイテムが残っているかチェック
-                if (!currentPlayer.currentScreenHandler.cursorStack.isEmpty) {
-                    val emptyBackpackSlot = manager.findFirstEmptyBackpackSlot()
+            // --- 4. 修正ロジックの開始 (カーソルアイテムの処理) ---
+            // ランダム遅延 3 を計算 (3クリック後のカーソル処理に移るまでの間隔)
+            val delay3 = randomDelay()
+            cumulativeDelay += delay3
+            AsyncInterface.add(
+                AsyncInterface.AsyncAction(cumulativeDelay) {
+                    // カーソルにアイテムが残っているかチェック
+                    if (!currentPlayer.currentScreenHandler.cursorStack.isEmpty) {
+                        val emptyBackpackSlot = manager.findFirstEmptyBackpackSlot()
 
-                    if (emptyBackpackSlot != null) {
-                        // 空きスロットが見つかった場合、そこに配置する操作を予約
-                        val emptyNetSlot = emptyBackpackSlot.slotId() ?: return@AsyncAction
+                        if (emptyBackpackSlot != null) {
+                            // 空きスロットが見つかった場合、そこに配置する操作を予約
+                            val emptyNetSlot = emptyBackpackSlot.slotId() ?: return@AsyncAction
 
-                        // 5. クリック 4 (カーソルアイテムを空きスロットに戻す)
-                        // 極短い遅延（例: 20ms）後に実行を予約し、パケット間のばらつきを維持
-                        val delay4 = (0L..20L).random()
-                        cumulativeDelay += delay4
+                            // 5. クリック 4 (カーソルアイテムを空きスロットに戻す)
+                            // 極短い遅延（例: 20ms）後に実行を予約し、パケット間のばらつきを維持
+                            val delay4 = (0L..20L).random()
+                            cumulativeDelay += delay4
 
-                        AsyncInterface.add(
-                            AsyncInterface.AsyncAction(cumulativeDelay) {
-                                interactionManager?.clickSlot(
-                                    currentScreenId,
-                                    emptyNetSlot,
-                                    0,
-                                    SlotActionType.PICKUP,
-                                    currentPlayer,
-                                )
-                                isSwapping = false // すべての操作が完了
-                            },
-                        )
+                            AsyncInterface.add(
+                                AsyncInterface.AsyncAction(cumulativeDelay) {
+                                    interactionManager?.clickSlot(
+                                        currentScreenId,
+                                        emptyNetSlot,
+                                        0,
+                                        SlotActionType.PICKUP,
+                                        currentPlayer,
+                                    )
+                                    isSwapping = false // すべての操作が完了
+                                },
+                            )
+                        } else {
+                            // 5. カーソルアイテムをドロップ (空きスロットがない場合)
+                            val delay4 = (0L..20L).random()
+                            cumulativeDelay += delay4
+
+                            AsyncInterface.add(
+                                AsyncInterface.AsyncAction(cumulativeDelay) {
+                                    interactionManager?.clickSlot(currentScreenId, -999, 0, SlotActionType.PICKUP, currentPlayer)
+                                    isSwapping = false // すべての操作が完了
+                                },
+                            )
+                        }
                     } else {
-                        // 5. カーソルアイテムをドロップ (空きスロットがない場合)
-                        val delay4 = (0L..20L).random()
-                        cumulativeDelay += delay4
-
-                        AsyncInterface.add(
-                            AsyncInterface.AsyncAction(cumulativeDelay) {
-                                interactionManager?.clickSlot(currentScreenId, -999, 0, SlotActionType.PICKUP, currentPlayer)
-                                isSwapping = false // すべての操作が完了
-                            },
-                        )
+                        // カーソルにアイテムが残っていなければ、即座に完了
+                        isSwapping = false
                     }
-                } else {
-                    // カーソルにアイテムが残っていなければ、即座に完了
-                    isSwapping = false
-                }
-            },
-        )
+                },
+            )
+        }
     }
 }

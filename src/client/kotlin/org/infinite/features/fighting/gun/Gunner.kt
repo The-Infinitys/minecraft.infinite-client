@@ -8,6 +8,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient
+import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.libs.graphics.Graphics3D
@@ -97,41 +99,46 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
     override fun tick() {
         switchMode()
         val manager = InventoryManager
-        when (mode) {
-            GunnerMode.SHOT -> {
-                val mainHandItem = manager.get(InventoryIndex.MainHand())
-                if (isLoadedCrossbow(mainHandItem)) {
-                    state = GunnerState.READY
-                } else {
-                    state = GunnerState.IDLE
-                    val loadedCrossbow = findFirstLoadedCrossbow()
-                    val readyToSet =
-                        (fireMode.value == FireMode.FULL_AUTO && intervalCount == 0) ||
-                            (fireMode.value == FireMode.SEMI_AUTO && !options.useKey.isPressed)
-                    if (loadedCrossbow != null && readyToSet) {
-                        intervalCount = additionalInterval.value
-                        manager.swap(InventoryIndex.MainHand(), loadedCrossbow)
+        val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java)
+
+        backPackManager?.register {
+            // tick()全体をregisterで囲む
+            when (mode) {
+                GunnerMode.SHOT -> {
+                    val mainHandItem = manager.get(InventoryIndex.MainHand())
+                    if (isLoadedCrossbow(mainHandItem)) {
+                        state = GunnerState.READY
                     } else {
-                        if (intervalCount > 0) intervalCount--
-                        val emptySlot = manager.findFirstEmptyBackpackSlot()
-                        if (emptySlot != null) {
-                            manager.swap(InventoryIndex.MainHand(), emptySlot)
+                        state = GunnerState.IDLE
+                        val loadedCrossbow = findFirstLoadedCrossbow()
+                        val readyToSet =
+                            (fireMode.value == FireMode.FULL_AUTO && intervalCount == 0) ||
+                                (fireMode.value == FireMode.SEMI_AUTO && !options.useKey.isPressed)
+                        if (loadedCrossbow != null && readyToSet) {
+                            intervalCount = additionalInterval.value
+                            manager.swap(InventoryIndex.MainHand(), loadedCrossbow)
+                        } else {
+                            if (intervalCount > 0) intervalCount--
+                            val emptySlot = manager.findFirstEmptyBackpackSlot()
+                            if (emptySlot != null) {
+                                manager.swap(InventoryIndex.MainHand(), emptySlot)
+                            }
                         }
                     }
                 }
-            }
 
-            GunnerMode.RELOAD -> {
-                state = GunnerState.IDLE
-                val mainHandItem = manager.get(InventoryIndex.MainHand())
-                if (!isUnloadedCrossbow(mainHandItem)) {
-                    val loadedCrossbow = findFirstUnloadedCrossbow()
-                    if (loadedCrossbow != null) {
-                        manager.swap(InventoryIndex.MainHand(), loadedCrossbow)
-                    } else {
-                        val emptySlot = manager.findFirstEmptyBackpackSlot()
-                        if (emptySlot != null) {
-                            manager.swap(InventoryIndex.MainHand(), emptySlot)
+                GunnerMode.RELOAD -> {
+                    state = GunnerState.IDLE
+                    val mainHandItem = manager.get(InventoryIndex.MainHand())
+                    if (!isUnloadedCrossbow(mainHandItem)) {
+                        val loadedCrossbow = findFirstUnloadedCrossbow()
+                        if (loadedCrossbow != null) {
+                            manager.swap(InventoryIndex.MainHand(), loadedCrossbow)
+                        } else {
+                            val emptySlot = manager.findFirstEmptyBackpackSlot()
+                            if (emptySlot != null) {
+                                manager.swap(InventoryIndex.MainHand(), emptySlot)
+                            }
                         }
                     }
                 }

@@ -7,6 +7,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.block.MineBlockAction
 import org.infinite.libs.ai.actions.movement.BlockPosMovementAction
@@ -493,6 +494,7 @@ class BranchMiner : ConfigurableFeature() {
         val currentPlayer = player ?: return
         val interaction = interactionManager ?: return
         val screenHandler = currentPlayer.currentScreenHandler ?: return
+        val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java)
 
         // 1. 現在開いているコンテナがアイテムを格納できる汎用タイプであることを確認
         val currentType = ContainerManager.containerType()
@@ -508,10 +510,6 @@ class BranchMiner : ConfigurableFeature() {
         val playerInvSize = 36 // ホットバー9スロット + バックパック27スロット
         val hotbarSize = 9
 
-        // 2. プレイヤーのバックパック (内部スロット 9 から 35 / ネットワークスロット 9 から 35) をループ
-        // ネットワークスロットIDは 9 (バックパックの最初のスロット) から 35 (最後のスロット)
-        // プレイヤーのインベントリは ScreenHandler のスロットリストの後半に位置します。
-
         // コンテナスロットの数 (N) を取得。プレイヤーインベントリのスロットIDは N から始まります。
         val containerSlotCount =
             when (currentType) {
@@ -524,31 +522,26 @@ class BranchMiner : ConfigurableFeature() {
                 else -> 0
             }
 
-        // 格納対象のスロット範囲:
-        // バックパックの最初 (ネットワークスロット 9) は、画面ハンドラー上では (N + 9) に位置します。
-        // バックパックの最後 (ネットワークスロット 35) は、画面ハンドラー上では (N + 35) に位置します。
+        val startSlot = containerSlotCount + hotbarSize
+        val endSlot = containerSlotCount + playerInvSize
 
-        val startSlot = containerSlotCount + hotbarSize // ホットバーの終わり + 1 (例: チェスト27の場合 27+9=36)
-        val endSlot = containerSlotCount + playerInvSize // バックパックの終わり + 1 (例: チェスト27の場合 27+36=63)
+        // ★ BackPackManagerの一時停止/再開をregisterで置き換え
+        backPackManager?.register {
+            for (screenSlotId in startSlot until endSlot) {
+                val stack = screenHandler.slots.getOrNull(screenSlotId)?.stack ?: continue
 
-        for (screenSlotId in startSlot until endSlot) {
-            val stack = screenHandler.slots.getOrNull(screenSlotId)?.stack ?: continue
+                if (stack.isEmpty) {
+                    continue
+                }
 
-            // 空のスタックはスキップ
-            if (stack.isEmpty) {
-                continue
+                interaction.clickSlot(
+                    syncId,
+                    screenSlotId,
+                    0,
+                    SlotActionType.QUICK_MOVE,
+                    currentPlayer,
+                )
             }
-
-            // 3. QUICK_MOVE (Shift+Click) 操作を実行
-            // QUICK_MOVEは、クリックしたアイテムを自動的に反対側の空きスロットまたはスタック可能なスロットに移動させます。
-            // ここでは、プレイヤーインベントリのスロットをクリックし、コンテナへ移動させます。
-            interaction.clickSlot(
-                syncId,
-                screenSlotId, // クリックするのはプレイヤーインベントリ内のスロット
-                0, // マウスボタン (左クリック)
-                SlotActionType.QUICK_MOVE,
-                currentPlayer,
-            )
         }
     }
 

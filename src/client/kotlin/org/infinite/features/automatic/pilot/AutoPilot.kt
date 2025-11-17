@@ -21,6 +21,7 @@ import net.minecraft.world.Heightmap
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.features.movement.vehicle.HoverVehicle
+import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.camera.CameraRoll
 import org.infinite.libs.client.aim.task.condition.AimTaskConditionReturn
@@ -411,30 +412,34 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         val equippedElytraStack = invManager.get(InventoryIndex.Armor.Chest())
         val isElytraEquipped = isElytra(equippedElytraStack)
         val currentDurability = if (isElytraEquipped) elytraDurability() else 0.0
+        val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java)
 
         val needsSwap = !isElytraEquipped || (currentDurability <= elytraThreshold.value)
         if (needsSwap) {
             val bestElytra = findBestElytraInInventory()
             if (bestElytra != null) {
-                if (invManager.swap(InventoryIndex.Armor.Chest(), bestElytra.index)) {
-                    val swapMessage =
-                        if (isElytraEquipped) {
-                            Text
-                                .translatable(
-                                    "autopilot.elytra.swapped.low_durability",
-                                    currentDurability.roundToInt(),
-                                    bestElytra.durability.roundToInt(),
-                                ).string
-                        } else {
-                            Text
-                                .translatable(
-                                    "autopilot.elytra.swapped.not_equipped",
-                                    bestElytra.durability.roundToInt(),
-                                ).string
-                        }
-                    InfiniteClient.info(swapMessage)
-                } else {
-                    InfiniteClient.error(Text.translatable("autopilot.elytra.swap_failed").string)
+                // ★ BackPackManagerの一時停止/再開をregisterで置き換え
+                backPackManager?.register {
+                    if (invManager.swap(InventoryIndex.Armor.Chest(), bestElytra.index)) {
+                        val swapMessage =
+                            if (isElytraEquipped) {
+                                Text
+                                    .translatable(
+                                        "autopilot.elytra.swapped.low_durability",
+                                        currentDurability.roundToInt(),
+                                        bestElytra.durability.roundToInt(),
+                                    ).string
+                            } else {
+                                Text
+                                    .translatable(
+                                        "autopilot.elytra.swapped.not_equipped",
+                                        bestElytra.durability.roundToInt(),
+                                    ).string
+                            }
+                        InfiniteClient.info(swapMessage)
+                    } else {
+                        InfiniteClient.error(Text.translatable("autopilot.elytra.swap_failed").string)
+                    }
                 }
             } else if (player?.vehicle !is BoatEntity) {
                 if (isElytraEquipped) {

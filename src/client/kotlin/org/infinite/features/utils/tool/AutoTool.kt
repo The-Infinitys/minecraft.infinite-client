@@ -1,6 +1,7 @@
 package org.infinite.features.utils.tool
 
 import net.minecraft.block.Block
+import net.minecraft.client.MinecraftClient
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import org.infinite.ConfigurableFeature
@@ -8,6 +9,7 @@ import org.infinite.InfiniteClient
 import org.infinite.features.movement.braek.LinearBreak
 import org.infinite.features.movement.braek.VeinBreak
 import org.infinite.features.rendering.detailinfo.ToolChecker
+import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
 import org.infinite.settings.FeatureSetting
@@ -42,15 +44,26 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
             FineToolStrategy.entries,
         )
 
+    // ★ 新規追加: ツール切り替えディレイ設定
+    private val switchDelay =
+        FeatureSetting.IntSetting(
+            "SwitchDelay",
+            5, // デフォルト5ティック (0.25秒)
+            0,
+            20, // 最大20ティック (1秒)
+        )
+
     override val level: FeatureLevel = FeatureLevel.Extend
 
     override val settings: List<FeatureSetting<*>> =
         listOf(
             method,
             fineToolStrategy,
+            switchDelay, // 設定リストに追加
         )
 
     private var previousSelectedSlot: Int = -1
+    private var lastSwitchTick: Long = 0 // ★ 新規追加: 最後にツールを切り替えたティック
 
     private val materialLevels =
         mapOf(
@@ -126,6 +139,14 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
     }
 
     override fun tick() {
+        val client = MinecraftClient.getInstance() // clientインスタンスを取得
+        val currentTime = client.world?.time ?: 0L // 現在のティックを取得
+
+        // ★ 新規追加: ツール切り替えディレイチェック
+        if (currentTime - lastSwitchTick < switchDelay.value) {
+            return // ディレイ期間中はツール切り替えをスキップ
+        }
+
         val linearBreak = InfiniteClient.getFeature(LinearBreak::class.java)
         val veinBreak = InfiniteClient.getFeature(VeinBreak::class.java)
         val isLinearBreakWorking = linearBreak?.isWorking ?: false
@@ -251,25 +272,32 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
     private fun handleToolSwitch(bestToolIndex: InventoryIndex) {
         val player = player ?: return
         val currentSlot = player.inventory.selectedSlot
+        val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java)
 
         // ツール切り替え前のスロットを保存（まだ保存されていなければ）
         if (previousSelectedSlot == -1) {
             previousSelectedSlot = currentSlot
         }
 
-        when (method.value) {
-            Method.Swap -> {
-                InventoryManager.swap(InventoryIndex.Hotbar(currentSlot), bestToolIndex)
-            }
+        // ★ BackPackManagerの一時停止/再開をregisterで置き換え
+        backPackManager?.register {
+            when (method.value) {
+                Method.Swap -> {
+                    InventoryManager.swap(InventoryIndex.Hotbar(currentSlot), bestToolIndex)
+                }
 
-            Method.HotBar -> {
-                if (bestToolIndex is InventoryIndex.Hotbar) {
-                    player.inventory.selectedSlot = bestToolIndex.index
-                    InfiniteClient.getFeature(LinearBreak::class.java)?.autoToolCallBack = bestToolIndex.index
-                    InfiniteClient.getFeature(VeinBreak::class.java)?.autoToolCallBack = bestToolIndex.index
+                Method.HotBar -> {
+                    if (bestToolIndex is InventoryIndex.Hotbar) {
+                        player.inventory.selectedSlot = bestToolIndex.index
+                        InfiniteClient.getFeature(LinearBreak::class.java)?.autoToolCallBack = bestToolIndex.index
+                        InfiniteClient.getFeature(VeinBreak::class.java)?.autoToolCallBack = bestToolIndex.index
+                    }
                 }
             }
         }
+
+        // ★ ツールを切り替えたので、lastSwitchTickを更新
+        lastSwitchTick = client.world?.time ?: 0L
     }
 
     /**
@@ -277,31 +305,38 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
      */
     private fun resetTool() {
         val player = player ?: return
+        val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java)
 
         if (previousSelectedSlot != -1) {
             val currentSlot = player.inventory.selectedSlot
             val originalIndex = InventoryIndex.Hotbar(previousSelectedSlot)
             val currentIndex = InventoryIndex.Hotbar(currentSlot)
 
-            when (method.value) {
-                Method.Swap -> {
-                    try {
-                        // 現在手に持っているアイテム（ツール）と、元のスロットにあるアイテムをスワップ
-                        InventoryManager.swap(currentIndex, originalIndex)
+            // ★ BackPackManagerの一時停止/再開をregisterで置き換え
+            backPackManager?.register {
+                when (method.value) {
+                    Method.Swap -> {
+                        try {
+                            // 現在手に持っているアイテム（ツール）と、元のスロットにあるアイテムをスワップ
+                            InventoryManager.swap(currentIndex, originalIndex)
+                            previousSelectedSlot = -1 // リセット完了
+                        } catch (e: Exception) {
+                            // スワップ失敗時
+                            InfiniteClient.error("[AutoTool] Error: $e")
+                            previousSelectedSlot = -1
+                        }
+                    }
+
+                    Method.HotBar -> {
+                        // ホットバーモードの場合、元のホットバーのスロットを選択
+                        player.inventory.selectedSlot = previousSelectedSlot
                         previousSelectedSlot = -1 // リセット完了
-                    } catch (e: Exception) {
-                        // スワップ失敗時
-                        InfiniteClient.error("[AutoTool] Error: $e")
-                        previousSelectedSlot = -1
                     }
                 }
-
-                Method.HotBar -> {
-                    // ホットバーモードの場合、元のホットバーのスロットを選択
-                    player.inventory.selectedSlot = previousSelectedSlot
-                    previousSelectedSlot = -1 // リセット完了
-                }
             }
+
+            // ★ ツールを元のスロットに戻したので、lastSwitchTickを更新
+            lastSwitchTick = client.world?.time ?: 0L
         }
     }
 }
