@@ -1,0 +1,34 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "minecraft:chakrapetch_mediumitalic.ttf",
+      "shift": [
+        0.0,
+        0.0
+      ],
+      "size": 8.0,
+      "oversample": 8.0
+    },
+    {
+      "type": "ttf",
+      "file": "minecraft:intelonemono_regular.ttf",
+      "shift": [
+        0.0,
+        0.0
+      ],
+      "size": 8.0,
+      "oversample": 8.0
+    },
+    {
+      "type": "ttf",
+      "file": "minecraft:notosansjp_regular.ttf",
+      "shift": [
+        0.0,
+        0.0
+      ],
+      "size": 8.0,
+      "oversample": 8.0
+    }
+  ]
+}

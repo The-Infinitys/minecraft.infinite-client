@@ -29,6 +29,7 @@
     "features.rendering.freecamera.ClientPlayerEntityMixin",
     "features.rendering.freecamera.ClientPlayerEntityMovementMixin",
     "features.rendering.freecamera.ZeroHitBox",
+    "features.rendering.hyperfont.FontManagerMixin",
     "features.rendering.hypertag.EntityRendererMixin",
     "features.rendering.hypertag.LivingEntityRendererMixin",
     "features.rendering.hyperui.CancelRenderUiMixin",

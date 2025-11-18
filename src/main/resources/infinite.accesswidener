@@ -41,3 +41,9 @@ accessible method net/minecraft/client/gui/render/state/GuiRenderState findAndGo
 accessible field net/minecraft/client/gui/render/state/GuiRenderState currentLayer Lnet/minecraft/client/gui/render/state/GuiRenderState$Layer;
 accessible method net/minecraft/client/gui/render/state/GuiRenderState onElementAdded (Lnet/minecraft/client/gui/ScreenRect;)V
 extendable class net/minecraft/client/gui/render/state/TextGuiElementRenderState
+
+# --- Font Renderer ---
+accessible class net/minecraft/client/font/FontManager$Fonts
+accessible field net/minecraft/client/font/TextRenderer fonts Lnet/minecraft/client/font/TextRenderer$GlyphsProvider;
+accessible field net/minecraft/client/font/FontManager anyFonts Lnet/minecraft/client/font/FontManager$Fonts;
+extendable method net/minecraft/client/font/TextRenderer getGlyphs (Lnet/minecraft/text/StyleSpriteSource;)Lnet/minecraft/client/font/GlyphProvider;
