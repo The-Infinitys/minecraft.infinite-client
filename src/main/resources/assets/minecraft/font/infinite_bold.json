@@ -2,7 +2,7 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "minecraft:chakrapetch_bolditalic.ttf",
+      "file": "infinite:chakrapetch_bolditalic.ttf",
       "shift": [
         0.0,
         0.0
@@ -12,7 +12,7 @@
     },
     {
       "type": "ttf",
-      "file": "minecraft:intelonemono_bold.ttf",
+      "file": "infinite:intelonemono_bold.ttf",
       "shift": [
         0.0,
         0.0
@@ -22,7 +22,7 @@
     },
     {
       "type": "ttf",
-      "file": "minecraft:notosansjp_bold.ttf",
+      "file": "infinite:notosansjp_bold.ttf",
       "shift": [
         0.0,
         0.0

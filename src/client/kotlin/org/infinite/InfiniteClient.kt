@@ -6,12 +6,14 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.loader.api.FabricLoader
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.ColorHelper
+import org.infinite.features.rendering.font.HyperTextRenderer
 import org.infinite.gui.theme.Theme
 import org.infinite.gui.theme.official.officialThemes
 import org.infinite.libs.ai.AiInterface
@@ -91,6 +93,7 @@ object InfiniteClient : ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             themes = officialThemes
             loadAddons()
+            (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.enable()
             ConfigManager.loadConfig()
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
@@ -103,10 +106,16 @@ object InfiniteClient : ClientModInitializer {
                 val translationList = lackedTranslations.joinToString(",") { "\"$it\":\"$it\"" }
                 warn("Missing Translations: [$translationList]")
             }
+            for (category in featureCategories) {
+                for (feature in category.features) {
+                    feature.instance.start()
+                }
+            }
         }
         // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             ConfigManager.saveConfig()
+            (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.disable()
             for (addon in loadedAddons) { // Addon shutdown
                 addon.onShutdown()
                 addonFeatureMap[addon]?.let { providedCategories ->
@@ -121,6 +130,11 @@ object InfiniteClient : ClientModInitializer {
                             featureCategories.remove(addonCategory)
                         }
                     }
+                }
+            }
+            for (category in featureCategories) {
+                for (feature in category.features) {
+                    feature.instance.stop()
                 }
             }
             AiInterface.clear()

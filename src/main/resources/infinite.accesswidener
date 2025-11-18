@@ -48,3 +48,6 @@ accessible field net/minecraft/client/font/TextRenderer fonts Lnet/minecraft/cli
 accessible field net/minecraft/client/font/FontManager anyFonts Lnet/minecraft/client/font/FontManager$Fonts;
 extendable method net/minecraft/client/font/TextRenderer getGlyphs (Lnet/minecraft/text/StyleSpriteSource;)Lnet/minecraft/client/font/GlyphProvider;
 extendable method net/minecraft/client/font/TextRenderer getGlyph (ILnet/minecraft/text/Style;)Lnet/minecraft/client/font/BakedGlyph;
+accessible method net/minecraft/client/font/FontManager getStorageInternal (Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/font/FontStorage;
+accessible field net/minecraft/client/font/FontManager fontStorages Ljava/util/Map;
+extendable field net/minecraft/client/font/TextRenderer handler Lnet/minecraft/client/font/TextHandler;

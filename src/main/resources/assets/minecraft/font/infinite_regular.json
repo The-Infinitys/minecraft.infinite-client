@@ -2,7 +2,7 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "minecraft:chakrapetch_mediumitalic.ttf",
+      "file": "infinite:chakrapetch_mediumitalic.ttf",
       "shift": [
         0.0,
         0.0
@@ -12,7 +12,7 @@
     },
     {
       "type": "ttf",
-      "file": "minecraft:intelonemono_regular.ttf",
+      "file": "infinite:intelonemono_regular.ttf",
       "shift": [
         0.0,
         0.0
@@ -22,7 +22,7 @@
     },
     {
       "type": "ttf",
-      "file": "minecraft:notosansjp_regular.ttf",
+      "file": "infinite:notosansjp_regular.ttf",
       "shift": [
         0.0,
         0.0
