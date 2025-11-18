@@ -47,3 +47,4 @@ accessible class net/minecraft/client/font/FontManager$Fonts
 accessible field net/minecraft/client/font/TextRenderer fonts Lnet/minecraft/client/font/TextRenderer$GlyphsProvider;
 accessible field net/minecraft/client/font/FontManager anyFonts Lnet/minecraft/client/font/FontManager$Fonts;
 extendable method net/minecraft/client/font/TextRenderer getGlyphs (Lnet/minecraft/text/StyleSpriteSource;)Lnet/minecraft/client/font/GlyphProvider;
+extendable method net/minecraft/client/font/TextRenderer getGlyph (ILnet/minecraft/text/Style;)Lnet/minecraft/client/font/BakedGlyph;
