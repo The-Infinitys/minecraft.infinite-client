@@ -5,8 +5,4 @@ import org.infinite.settings.FeatureSetting
 
 class HyperFont : ConfigurableFeature() {
     override val settings: List<FeatureSetting<*>> = emptyList()
-    override fun start() {
-        if (isEnabled())
-            client.reloadResources()
-    }
 }

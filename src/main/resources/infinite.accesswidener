@@ -1,5 +1,4 @@
 accessWidener v1 named
-
 # --- 既存の定義 ---
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager breakingBlock Z
@@ -50,4 +49,5 @@ extendable method net/minecraft/client/font/TextRenderer getGlyphs (Lnet/minecra
 extendable method net/minecraft/client/font/TextRenderer getGlyph (ILnet/minecraft/text/Style;)Lnet/minecraft/client/font/BakedGlyph;
 accessible method net/minecraft/client/font/FontManager getStorageInternal (Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/font/FontStorage;
 accessible field net/minecraft/client/font/FontManager fontStorages Ljava/util/Map;
-extendable field net/minecraft/client/font/TextRenderer handler Lnet/minecraft/client/font/TextHandler;
+accessible field net/minecraft/client/font/TextRenderer handler Lnet/minecraft/client/font/TextHandler;
+mutable field net/minecraft/client/font/TextRenderer handler Lnet/minecraft/client/font/TextHandler;

@@ -197,6 +197,8 @@
   "infinite.feature.rendering.hyper_tag.fade_start_distance.description": "Hyper Tagがフェードアウトを開始する距離。",
   "infinite.feature.rendering.hyper_tag.fade_end_distance.description": "Hyper Tagがフェードアウトを完了する距離。",
   "infinite.feature.rendering.hyper_tag.min_alpha_percent.description": "フェード時のHyper Tagの最小アルファ値（%）。",
+  "infinite.feature.rendering.hyper_font.description": "ハイパーフォントの設定をします。",
+  "key.infinite-client.toggle.rendering.hyper_font": "Hyper Fontを切り替える",
   "infinite.feature.rendering.radar.radius.description": "検出半径を設定します。",
   "infinite.feature.rendering.radar.height.description": "検出高さを設定します。",
   "infinite.feature.rendering.radar.margin.description": "レーダーUIのマージン（画面短辺の%）。",
