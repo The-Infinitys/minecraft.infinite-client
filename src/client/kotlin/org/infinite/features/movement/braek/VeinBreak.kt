@@ -92,7 +92,7 @@ class VeinBreak : ConfigurableFeature() {
     // 破壊開始時のホットバーのスロットを保持
     private var startHotbarSlot: Int = -1
 
-    override fun tick() {
+    override fun onTick() {
         rayCast()
         mine()
     }
@@ -329,7 +329,7 @@ class VeinBreak : ConfigurableFeature() {
     var autoToolCallBack: Int = -1
 
     // VeinBreakの有効化/無効化時に状態をリセット
-    override fun enabled() {
+    override fun onEnabled() {
         blocksToMine.clear()
         currentBreakingPos = null
         currentBreakingSide = null
@@ -337,7 +337,7 @@ class VeinBreak : ConfigurableFeature() {
         startHotbarSlot = -1
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         val interactionManager = client.interactionManager ?: return
         interactionManager.cancelBlockBreaking()
         blocksToMine.clear()

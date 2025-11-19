@@ -28,14 +28,14 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
         )
     private var currentMode: GameMode? = GameMode.SURVIVAL
 
-    override fun disabled() {
+    override fun onDisabled() {
         // Teleport player back to original position
         client.player?.setPos(originalPos.x, originalPos.y, originalPos.z)
         client.player?.yaw = originalYaw
         client.player?.pitch = originalPitch
     }
 
-    override fun start() {
+    override fun onStart() {
         disable()
     }
 
@@ -46,7 +46,7 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
     private var originalHorizontalCollision: Boolean = false
     private var lastHealth: Float = 0.0f // Store player's health from previous tick
 
-    override fun enabled() {
+    override fun onEnabled() {
         originalPos = player?.eyePos ?: Vec3d.ZERO
         originalYaw = player?.yaw ?: 0.0f
         originalPitch = player?.pitch ?: 0.0f
@@ -55,7 +55,7 @@ class FreeCamera : ConfigurableFeature(initialEnabled = false) {
         lastHealth = player?.health ?: 0.0f // Capture initial health
     }
 
-    override fun tick() {
+    override fun onTick() {
         if (currentMode == null) {
             disable()
             return

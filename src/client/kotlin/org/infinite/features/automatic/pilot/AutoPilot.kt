@@ -73,7 +73,7 @@ enum class PilotState {
 
 // AutoPilot メイン機能クラス
 class AutoPilot : ConfigurableFeature(initialEnabled = false) {
-    override fun disabled() {
+    override fun onDisabled() {
         MinecraftClient
             .getInstance()
             .options.jumpKey.isPressed = false
@@ -263,7 +263,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         return blockState.isOf(Blocks.WATER)
     }
 
-    override fun start() {
+    override fun onStart() {
         reconnectInterval = 20
         aimTaskCallBack = null // AimTaskの状態をリセット
         state = PilotState.Idle // 状態を適切に初期化
@@ -272,7 +272,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         bestLandingSpot = null // 着陸地点をリセット
     }
 
-    override fun tick() {
+    override fun onTick() {
         if (reconnectInterval > 0) {
             if (player != null) {
                 reconnectInterval--
@@ -465,7 +465,7 @@ class AutoPilot : ConfigurableFeature(initialEnabled = false) {
         }
     }
 
-    override fun enabled() {
+    override fun onEnabled() {
         moveSpeedAverage = moveSpeed
         riseSpeedAverage = riseSpeed
         state = if (player?.vehicle is BoatEntity && isBoatOnWater()) PilotState.TakingOff else PilotState.Idle

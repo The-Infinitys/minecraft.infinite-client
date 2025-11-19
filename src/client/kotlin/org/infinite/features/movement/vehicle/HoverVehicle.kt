@@ -32,7 +32,7 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
 
     override val settings: List<FeatureSetting<*>> = listOf(speed, acceleration)
 
-    override fun tick() {
+    override fun onTick() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
         val vehicle = player.vehicle
@@ -185,7 +185,7 @@ class HoverVehicle : ConfigurableFeature(initialEnabled = false) {
      * Featureが無効になったときに、ボートの重力設定をリセットします。
      * ボートが物理演算の影響を受けるように、ボートの重力を有効にします。
      */
-    override fun disabled() {
+    override fun onDisabled() {
         val client = MinecraftClient.getInstance()
         val player = client.player
         val vehicle = player?.vehicle

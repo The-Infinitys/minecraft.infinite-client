@@ -140,7 +140,7 @@ class AutoTool : ConfigurableFeature(initialEnabled = false) {
         return null
     }
 
-    override fun tick() {
+    override fun onTick() {
         val client = MinecraftClient.getInstance()
         val currentTime = client.world?.time ?: 0L // 現在のティックを取得
 

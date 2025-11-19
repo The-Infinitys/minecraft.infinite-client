@@ -97,7 +97,7 @@ class KillAura : ConfigurableFeature(initialEnabled = false) {
     private var nextAttackTick = 0
     // ------------------------
 
-    override fun tick() {
+    override fun onTick() {
         val player = player ?: return
         val world = world ?: return
 

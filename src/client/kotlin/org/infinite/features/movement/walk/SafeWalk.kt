@@ -14,12 +14,12 @@ class SafeWalk : ConfigurableFeature(initialEnabled = false) {
     // --- 内部状態 ---
     private var sneaking = false
 
-    override fun enabled() {
+    override fun onEnabled() {
         sneaking = false
     }
 
     // Wurst Clientの onDisable に相当する処理
-    override fun disabled() {
+    override fun onDisabled() {
         if (sneaking) {
             setSneaking(false)
         }

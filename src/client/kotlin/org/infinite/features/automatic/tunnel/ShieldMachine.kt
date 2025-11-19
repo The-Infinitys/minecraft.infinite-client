@@ -76,7 +76,7 @@ class ShieldMachine : ConfigurableFeature() {
 
     var walkingCallBack = true
 
-    override fun enabled() {
+    override fun onEnabled() {
         // 全てリセットし、初期化を待つ
         aiActionCallback = null
         state = State.Idle()
@@ -90,7 +90,7 @@ class ShieldMachine : ConfigurableFeature() {
         walkingCallBack = true
     }
 
-    override fun tick() {
+    override fun onTick() {
         when (state) {
             is State.Idle -> initialization()
             is State.Walking -> handleWalking(state as State.Walking)

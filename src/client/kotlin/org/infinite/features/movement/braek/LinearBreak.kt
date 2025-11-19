@@ -59,7 +59,7 @@ class LinearBreak : ConfigurableFeature() {
     // 破壊開始時のホットバーのスロットを保持
     private var startHotbarSlot: Int = -1
 
-    override fun tick() {
+    override fun onTick() {
         rayCast()
         mine()
     }

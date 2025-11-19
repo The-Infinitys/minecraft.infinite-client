@@ -6,23 +6,23 @@ import org.infinite.settings.FeatureSetting
 class HyperFont : ConfigurableFeature() {
     override val settings: List<FeatureSetting<*>> = emptyList()
 
-    override fun start() {
+    override fun onStart() {
         if (isEnabled()) {
-            enabled()
+            onEnabled()
         } else {
-            disabled()
+            onDisabled()
         }
     }
 
-    override fun enabled() {
+    override fun onEnabled() {
         (client.textRenderer as? HyperTextRenderer)?.enable()
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         (client.textRenderer as? HyperTextRenderer)?.disable()
     }
 
     override fun stop() {
-        disabled()
+        onDisabled()
     }
 }

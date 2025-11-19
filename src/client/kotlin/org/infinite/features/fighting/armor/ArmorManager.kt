@@ -85,7 +85,7 @@ class ArmorManager : ConfigurableFeature(initialEnabled = false) {
     override val level: FeatureLevel
         get() = FeatureLevel.Extend
 
-    override fun tick() {
+    override fun onTick() {
         val player = player ?: return
         val invManager = InventoryManager
 

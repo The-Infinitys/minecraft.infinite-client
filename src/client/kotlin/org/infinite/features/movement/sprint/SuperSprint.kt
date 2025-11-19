@@ -24,7 +24,7 @@ class SuperSprint : ConfigurableFeature(initialEnabled = false) {
             evenIfHungry,
         )
 
-    override fun disabled() {
+    override fun onDisabled() {
         MinecraftClient
             .getInstance()
             .options
@@ -32,7 +32,7 @@ class SuperSprint : ConfigurableFeature(initialEnabled = false) {
             ?.isPressed = false
     }
 
-    override fun tick() {
+    override fun onTick() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
         val options = client.options ?: return

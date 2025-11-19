@@ -36,7 +36,7 @@ class WoodMiner : ConfigurableFeature() {
             woodTypes,
         )
 
-    override fun start() = disable()
+    override fun onStart() = disable()
 
     private fun isLogBlock(blockState: BlockState): Boolean = isLogBlock(blockState.block)
 
@@ -181,13 +181,13 @@ class WoodMiner : ConfigurableFeature() {
     var trees: List<Tree> = emptyList()
     var currentTree: Tree? = null
 
-    override fun enabled() {
+    override fun onEnabled() {
         state = State.Idle()
         trees = emptyList()
         currentTree = null
     }
 
-    override fun tick() {
+    override fun onTick() {
         when (state) {
             is State.Idle -> {
                 handleIdle()

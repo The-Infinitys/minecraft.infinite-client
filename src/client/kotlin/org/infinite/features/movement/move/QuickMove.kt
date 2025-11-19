@@ -193,7 +193,7 @@ class QuickMove : ConfigurableFeature() {
             allowWithVehicle,
         )
 
-    override fun tick() {
+    override fun onTick() {
         if (currentMode == MoveMode.None) return
         val player = player ?: return
         val options = options

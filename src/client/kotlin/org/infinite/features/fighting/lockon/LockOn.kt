@@ -86,12 +86,12 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
     // 🎯 座標変換の結果を格納するプライベートフィールド
     private var screenPos: Graphics2D.DisplayPos? = null
 
-    override fun enabled() {
+    override fun onEnabled() {
         findAndLockTarget()
         screenPos = null // 有効化時にクリア
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         lockedEntity = null
         screenPos = null // 無効化時にクリア
     }
@@ -120,7 +120,7 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
         }
     }
 
-    override fun tick() {
+    override fun onTick() {
         exec()
     }
 

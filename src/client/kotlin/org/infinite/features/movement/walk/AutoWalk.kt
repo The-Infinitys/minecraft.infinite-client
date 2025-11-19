@@ -23,7 +23,7 @@ class AutoWalk : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> = listOf(waySetting)
 
     // 機能が無効化されたときに全ての移動キーを離すロジックを追加
-    override fun disabled() {
+    override fun onDisabled() {
         val options = MinecraftClient.getInstance().options ?: return
         ControllerInterface.release(options.forwardKey)
         ControllerInterface.release(options.backKey)
@@ -31,7 +31,7 @@ class AutoWalk : ConfigurableFeature(initialEnabled = false) {
         ControllerInterface.release(options.rightKey)
     }
 
-    override fun tick() {
+    override fun onTick() {
         val keysToPress: List<KeyBinding> =
             when (waySetting.value) {
                 Way.Forward -> listOf(options.forwardKey)

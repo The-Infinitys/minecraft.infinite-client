@@ -53,7 +53,7 @@ class FastBreak : ConfigurableFeature(initialEnabled = false) {
         }
     }
 
-    override fun tick() {
+    override fun onTick() {
         if (safeMode.value) return
 
         val interactionManager = interactionManager ?: return

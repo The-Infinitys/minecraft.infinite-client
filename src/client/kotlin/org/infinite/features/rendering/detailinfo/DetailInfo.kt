@@ -168,7 +168,7 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
         ) : TargetDetail(pos, name)
     }
 
-    override fun tick() {
+    override fun onTick() {
         targetDetail = null
         isTargetInReach = true
 

@@ -34,7 +34,7 @@ class ImpactAttack : ConfigurableFeature(initialEnabled = false) {
             ),
         )
 
-    override fun tick() {
+    override fun onTick() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
         val interactionManager = client.interactionManager ?: return
@@ -128,8 +128,8 @@ class ImpactAttack : ConfigurableFeature(initialEnabled = false) {
         attackDelayTimer = 0
     }
 
-    override fun disabled() {
-        super.disabled()
+    override fun onDisabled() {
+        super.onDisabled()
         stopAttack()
     }
 

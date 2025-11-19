@@ -77,7 +77,7 @@ class BlockSearch : ConfigurableFeature(initialEnabled = false) {
 
     fun getBlockSearchColors(): MutableMap<String, Int> = (getSetting("blockSearchColors") as FeatureSetting.BlockColorListSetting).value
 
-    override fun tick() {
+    override fun onTick() {
         BlockSearchRenderer.tick()
     }
 
@@ -89,11 +89,11 @@ class BlockSearch : ConfigurableFeature(initialEnabled = false) {
         BlockSearchRenderer.handleChunk(worldChunk)
     }
 
-    override fun enabled() {
+    override fun onEnabled() {
         BlockSearchRenderer.clear()
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         BlockSearchRenderer.clear()
     }
 }

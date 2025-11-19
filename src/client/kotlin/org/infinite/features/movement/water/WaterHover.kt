@@ -19,7 +19,7 @@ class WaterHover : ConfigurableFeature(initialEnabled = false) {
 
     override val settings: List<FeatureSetting<*>> = listOf(method)
 
-    override fun tick() {
+    override fun onTick() {
         val player = client.player ?: return
         when (method.value) {
             WaterHoverMethod.Jump -> {

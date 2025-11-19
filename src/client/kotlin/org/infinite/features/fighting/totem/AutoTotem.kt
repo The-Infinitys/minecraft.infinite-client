@@ -32,7 +32,7 @@ class AutoTotem : ConfigurableFeature(initialEnabled = false) {
     // 現在、トーテム装備シーケンスが進行中かどうかを示すフラグ
     private var isSwapping: Boolean = false
 
-    override fun tick() {
+    override fun onTick() {
         val health: Float = player?.health ?: 0f
         val targetHealth = hpSetting.value
         val manager = InventoryManager

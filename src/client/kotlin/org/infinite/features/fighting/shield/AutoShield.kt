@@ -57,7 +57,7 @@ class AutoShield : ConfigurableFeature(initialEnabled = false) {
 
     var isAimTaskRegistered: Boolean = false
 
-    override fun tick() {
+    override fun onTick() {
         val playerEntity = player ?: return
         val detectionRange = detectionRangeSetting.value
         val controller = ControllerInterface

@@ -1,9 +1,12 @@
 package org.infinite.features.movement
 
 import org.infinite.feature
+import org.infinite.features.movement.adventure.Adventure
 import org.infinite.features.movement.braek.FastBreak
 import org.infinite.features.movement.braek.LinearBreak
 import org.infinite.features.movement.braek.VeinBreak
+import org.infinite.features.movement.brawler.Brawler
+import org.infinite.features.movement.builder.Builder
 import org.infinite.features.movement.fall.AntiFall
 import org.infinite.features.movement.fall.QuickLand
 import org.infinite.features.movement.feather.FeatherWalk
@@ -88,5 +91,17 @@ internal val movement =
         feature(
             "QuickMove",
             QuickMove(),
+        ),
+        feature(
+            "Adventure",
+            Adventure(),
+        ),
+        feature(
+            "Brawler",
+            Brawler(),
+        ),
+        feature(
+            "Builder",
+            Builder(),
         ),
     )

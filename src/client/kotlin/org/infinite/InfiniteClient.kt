@@ -116,7 +116,7 @@ object InfiniteClient : ClientModInitializer {
             }
             for (category in featureCategories) {
                 for (feature in category.features) {
-                    feature.instance.start()
+                    feature.instance.onStart()
                 }
             }
         }
@@ -151,7 +151,7 @@ object InfiniteClient : ClientModInitializer {
             for (category in featureCategories) {
                 for (feature in category.features) {
                     if (feature.instance.isEnabled()) {
-                        feature.instance.respawn()
+                        feature.instance.onRespawn()
                     }
                 }
             }
@@ -166,7 +166,7 @@ object InfiniteClient : ClientModInitializer {
             for (category in featureCategories) {
                 for (feature in category.features) {
                     if (feature.instance.isEnabled() && feature.instance.tickTiming == ConfigurableFeature.Timing.Start) {
-                        feature.instance.tick()
+                        feature.instance.onTick()
                     }
                 }
             }
@@ -175,7 +175,7 @@ object InfiniteClient : ClientModInitializer {
             for (category in featureCategories) {
                 for (feature in category.features) {
                     if (feature.instance.isEnabled() && feature.instance.tickTiming == ConfigurableFeature.Timing.End) {
-                        feature.instance.tick()
+                        feature.instance.onTick()
                     }
                 }
             }
