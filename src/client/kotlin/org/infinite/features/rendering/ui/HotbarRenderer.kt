@@ -2,6 +2,7 @@ package org.infinite.features.rendering.ui
 
 import net.minecraft.text.Text
 import net.minecraft.util.Arm
+import org.infinite.features.rendering.sensory.esp.ItemEsp
 import org.infinite.gui.theme.ThemeColors
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.player.ClientInterface
@@ -115,70 +116,32 @@ class HotbarRenderer(
         }
 
         val textRenderer = client.textRenderer
-        val screenWidth = graphics2D.width
-        // val screenHeight = graphics2D.height // 使用しない
+        val width = graphics2D.width
+        val centerX = width / 2
         val padding = config.padding.toDouble()
+        val fontHeight = textRenderer.fontHeight.toDouble()
+        val expBarHeight = fontHeight * 1.5
+        val hotbarBoxSize = 22
+        val hotbarHeight = hotbarBoxSize + padding
+        val hotbarWidth = 9 * hotbarBoxSize
+        val bottomY = graphics2D.height - hotbarHeight - expBarHeight - padding
+        val iconSize = 16.0
+        val leftSideTexts = mutableListOf<Triple<String, Int, Boolean>>() // Text, Color, Shadow
+        leftSideTexts.add(Triple(selectedStack.name.string, ItemEsp.rarityColor(selectedStack), false))
+        leftSideTexts.add(Triple("x${selectedStack.count}", colors.secondaryColor, true))
 
-        // --- 基準Y座標の計算を修正 ---
-        // 標準のホットバーY座標: graphics2D.height - 22
-        // 経験値バーY座標: graphics2D.height - 22 - 5 (経験値バーの高さ)
-        // 情報を表示するY座標は、経験値バーの上端からさらにパディングとフォントの高さを引いた位置
-        val expBarHeight = 5.0 // 経験値バーの一般的な高さ (概算)
-        val hotbarHeight = 32.0 // ホットバーの一般的な高さ (概算)
+        // 右側情報 (耐久値、エンチャント)
+        val rightSideTexts = mutableListOf<Triple<String, Int, Boolean>>() // Text, Color, Shadow
 
-        // 画面下端を基準に、ホットバー、経験値バー、パディング、フォントの高さを引いた位置が、
-        // 最初のテキストを描画する基準Y座標となる
-        var currentY = graphics2D.height - hotbarHeight - expBarHeight - padding - textRenderer.fontHeight
-
-        // --- 1. アイテム名と数量の描画 ---
-        val itemName = selectedStack.name.string
-        val itemNameWidth = textRenderer.getWidth(itemName)
-
-        // アイテム名
-        var itemNameX = (screenWidth - itemNameWidth) / 2.0
-        graphics2D.drawText(
-            itemName,
-            itemNameX,
-            currentY,
-            colors.foregroundColor,
-            true,
-        )
-
-        // 数量 (スタック可能なアイテムの場合) - アイテム名の右側に描画し、Y座標はそのまま
-        if (selectedStack.count > 1) {
-            val countText = "x${selectedStack.count}"
-            val countTextX = (screenWidth / 2.0) + (itemNameWidth / 2.0) + padding
-            graphics2D.drawText(
-                countText,
-                countTextX,
-                currentY, // アイテム名と同じY座標
-                colors.foregroundColor,
-                true,
-            )
-        }
-
-        // アイテム名/数量の行を描画し終わったので、次の情報のY座標を更新する
-        currentY -= textRenderer.fontHeight + 2.0
-
-        // --- 2. 耐久値 (耐久性のあるアイテムの場合) ---
+        // 1. 耐久値
         if (selectedStack.isDamageable) {
             val durability = selectedStack.maxDamage - selectedStack.damage
             val maxDurability = selectedStack.maxDamage
-            val durabilityText = "Durability: $durability/$maxDurability"
-            val durabilityTextWidth = textRenderer.getWidth(durabilityText)
-            val durabilityTextX = (screenWidth - durabilityTextWidth) / 2.0
-
-            graphics2D.drawText(
-                durabilityText,
-                durabilityTextX,
-                currentY,
-                colors.foregroundColor,
-                true,
-            )
-            // 耐久値の行を描画し終わったので、次の情報のY座標を更新する
-            currentY -= textRenderer.fontHeight + 2.0
+            val durabilityText = "$durability/$maxDurability"
+            rightSideTexts.add(Triple(durabilityText, colors.foregroundColor, true))
         }
 
+        // 2. エンチャント
         val originalEnchantments =
             selectedStack.enchantments.enchantmentEntries
                 .map { it.key }
@@ -186,25 +149,32 @@ class HotbarRenderer(
                 .map { it.key.get() }
         for (enchantment in originalEnchantments) {
             val level = enchantLevel(selectedStack, enchantment)
-
-            // エンチャント名の取得は、元のコードのように TranslationKey を使用するのが正しい
             val enchantmentText =
                 Text.translatable("enchantment.${enchantment.value.toTranslationKey()}").string + level.toRomanNumerics()
-            val enchantTextWidth = textRenderer.getWidth(enchantmentText)
-            val enchantTextX = (screenWidth - enchantTextWidth) / 2.0
-
-            graphics2D.drawText(
-                enchantmentText,
-                enchantTextX,
-                currentY,
-                colors.yellowAccentColor, // エンチャントは金色で表示
-                true,
-            )
-            // エンチャントの行を描画し終わったので、次の情報のY座標を更新する
-            currentY -= textRenderer.fontHeight + 2.0
+            rightSideTexts.add(Triple(enchantmentText, colors.yellowAccentColor, true))
+        }
+        // アイコンの中央 Y 座標 (bottomY を情報の描画エリアの下端とする)
+        val iconCenterY = bottomY - padding - iconSize / 2.0
+        val iconY = (iconCenterY - iconSize / 2.0).roundToInt()
+        val iconX = (width / 2.0 - iconSize / 2.0).roundToInt()
+        graphics2D.drawItem(selectedStack, iconX, iconY)
+        for (i in 0 until leftSideTexts.size) {
+            val startX = centerX - hotbarWidth / 2.0
+            val startY = iconY - i * fontHeight
+            val (text, color, shadow) = leftSideTexts.reversed()[i]
+            graphics2D.drawText(text, startX, startY, color, shadow)
+        }
+        for (i in 0 until rightSideTexts.size) {
+            val endX = centerX + hotbarWidth / 2.0
+            val startY = iconY - i * fontHeight
+            val (text, color, shadow) = rightSideTexts.reversed()[i]
+            val width = graphics2D.textWidth(text)
+            val startX = endX - width
+            graphics2D.drawText(text, startX, startY, color, shadow)
         }
     }
 
+    // toRomanNumerics 関数は変更なし
     private fun Int.toRomanNumerics(): String {
         if (this !in 1..3999) {
             if (this < 0) {
