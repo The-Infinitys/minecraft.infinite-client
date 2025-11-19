@@ -12,6 +12,7 @@ import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.ColorHelper
 import org.infinite.features.rendering.font.HyperTextRenderer
 import org.infinite.gui.theme.Theme
@@ -93,7 +94,14 @@ object InfiniteClient : ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             themes = officialThemes
             loadAddons()
-            (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.enable()
+            (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.defineFont(
+                HyperTextRenderer.HyperFonts(
+                    Identifier.of("minecraft", "infinite_regular"),
+                    Identifier.of("minecraft", "infinite_italic"),
+                    Identifier.of("minecraft", "infinite_bold"),
+                    Identifier.of("minecraft", "infinite_bolditalic"),
+                ),
+            )
             ConfigManager.loadConfig()
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
@@ -108,7 +116,7 @@ object InfiniteClient : ClientModInitializer {
             }
             for (category in featureCategories) {
                 for (feature in category.features) {
-                    feature.instance.start()
+                    feature.instance.onStart()
                 }
             }
         }
@@ -143,7 +151,7 @@ object InfiniteClient : ClientModInitializer {
             for (category in featureCategories) {
                 for (feature in category.features) {
                     if (feature.instance.isEnabled()) {
-                        feature.instance.respawn()
+                        feature.instance.onRespawn()
                     }
                 }
             }
@@ -157,10 +165,8 @@ object InfiniteClient : ClientModInitializer {
         ClientTickEvents.START_CLIENT_TICK.register { _ ->
             for (category in featureCategories) {
                 for (feature in category.features) {
-                    if (feature.instance.isEnabled() && feature.instance.tickTiming ==
-                        ConfigurableFeature.Timing.Start
-                    ) {
-                        feature.instance.tick()
+                    if (feature.instance.isEnabled() && feature.instance.tickTiming == ConfigurableFeature.Timing.Start) {
+                        feature.instance.onTick()
                     }
                 }
             }
@@ -168,10 +174,8 @@ object InfiniteClient : ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register { _ ->
             for (category in featureCategories) {
                 for (feature in category.features) {
-                    if (feature.instance.isEnabled() && feature.instance.tickTiming ==
-                        ConfigurableFeature.Timing.End
-                    ) {
-                        feature.instance.tick()
+                    if (feature.instance.isEnabled() && feature.instance.tickTiming == ConfigurableFeature.Timing.End) {
+                        feature.instance.onTick()
                     }
                 }
             }
@@ -236,36 +240,42 @@ object InfiniteClient : ClientModInitializer {
 
     fun log(text: String) {
         val message =
-            createPrefixedMessage("", theme().colors.foregroundColor)
-                .append(Text.literal(text).styled { style -> style.withColor(theme().colors.foregroundColor) })
+            createPrefixedMessage(
+                "",
+                theme().colors.foregroundColor,
+            ).append(Text.literal(text).styled { style -> style.withColor(theme().colors.foregroundColor) })
         LogQueue.enqueueMessage(message) // キューに追加
     }
 
     fun log(text: Text) {
-        val message =
-            createPrefixedMessage("", theme().colors.foregroundColor)
-                .append(text)
+        val message = createPrefixedMessage("", theme().colors.foregroundColor).append(text)
         LogQueue.enqueueMessage(message)
     }
 
     fun info(text: String) {
         val message =
-            createPrefixedMessage(" - Info ", theme().colors.infoColor)
-                .append(Text.literal(text).styled { style -> style.withColor(theme().colors.infoColor) })
+            createPrefixedMessage(
+                " - Info ",
+                theme().colors.infoColor,
+            ).append(Text.literal(text).styled { style -> style.withColor(theme().colors.infoColor) })
         LogQueue.enqueueMessage(message) // キューに追加
     }
 
     fun warn(text: String) {
         val message =
-            createPrefixedMessage(" - Warn ", theme().colors.warnColor)
-                .append(Text.literal(text).styled { style -> style.withColor(theme().colors.warnColor) })
+            createPrefixedMessage(
+                " - Warn ",
+                theme().colors.warnColor,
+            ).append(Text.literal(text).styled { style -> style.withColor(theme().colors.warnColor) })
         LogQueue.enqueueMessage(message) // キューに追加
     }
 
     fun error(text: String) {
         val message =
-            createPrefixedMessage(" - Error", theme().colors.errorColor)
-                .append(Text.literal(text).styled { style -> style.withColor(theme().colors.errorColor) })
+            createPrefixedMessage(
+                " - Error",
+                theme().colors.errorColor,
+            ).append(Text.literal(text).styled { style -> style.withColor(theme().colors.errorColor) })
         LogQueue.enqueueMessage(message) // キューに追加
     }
 
@@ -283,8 +293,12 @@ object InfiniteClient : ClientModInitializer {
         featureCategories
             .find { it.name.equals(category, ignoreCase = true) }
             ?.features
-            ?.find { it.name.equals(name, ignoreCase = true) }
-            ?.instance
+            ?.find {
+                it.name.equals(
+                    name,
+                    ignoreCase = true,
+                )
+            }?.instance
 
     fun <T : ConfigurableFeature> isFeatureEnabled(featureClass: Class<T>): Boolean {
         val feature = getFeature(featureClass) ?: return false

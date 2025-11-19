@@ -38,7 +38,7 @@ class SuperFly : ConfigurableFeature(initialEnabled = false) {
             keepFly,
         )
 
-    override fun tick() {
+    override fun onTick() {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return
 

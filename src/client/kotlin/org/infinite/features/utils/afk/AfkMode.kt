@@ -9,7 +9,7 @@ class AfkMode : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> = listOf()
     private var hp = 0f
 
-    override fun tick() {
+    override fun onTick() {
         val currentHp = player!!.health
         if (currentHp > hp) {
             hp = currentHp
@@ -20,7 +20,7 @@ class AfkMode : ConfigurableFeature(initialEnabled = false) {
         }
     }
 
-    override fun enabled() {
+    override fun onEnabled() {
         hp = player!!.health
     }
 }

@@ -27,7 +27,7 @@ class HighStep : ConfigurableFeature() {
 
     override val level: FeatureLevel = FeatureLevel.Extend
 
-    override fun tick() {
+    override fun onTick() {
         val player = this.player ?: return
         val world = this.world ?: return
 

@@ -131,12 +131,12 @@ class BranchMiner : ConfigurableFeature() {
     private var collectedItems: MutableMap<String, Int> = mutableMapOf()
     private var waitTicks = 0
 
-    override fun enabled() {
+    override fun onEnabled() {
         state = State.Initialize
         clearState()
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         AiInterface.actions.clear()
         clearState()
         state = State.Idle
@@ -155,7 +155,7 @@ class BranchMiner : ConfigurableFeature() {
         waitTicks = 0
     }
 
-    override fun tick() {
+    override fun onTick() {
         if (state == State.Idle) return
 
         // 安全チェック

@@ -36,7 +36,7 @@ class ServerInfo : ConfigurableFeature() {
         return 1
     }
 
-    override fun enabled() {
+    override fun onEnabled() {
         disable()
     }
 

@@ -85,7 +85,7 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
         return arrowCount + tippedArrowCount + spectralArrowCount + fireworkCount
     }
 
-    override fun start() {
+    override fun onStart() {
         state = GunnerState.IDLE
         mode = GunnerMode.RELOAD
     }
@@ -97,7 +97,7 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
 
     private var intervalCount = 0
 
-    override fun tick() {
+    override fun onTick() {
         if (client.currentScreen != null) return
         switchMode()
         val manager = InventoryManager

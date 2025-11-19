@@ -99,19 +99,19 @@ class FoodManager : ConfigurableFeature() {
     private val isUseKeyToggleMode: Boolean
         get() = options.useToggled.value
 
-    override fun enabled() {
+    override fun onEnabled() {
         oldSlot = -1
         delayTicks = 0
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         if (isEating()) {
             stopEating()
         }
         delayTicks = 0
     }
 
-    override fun tick() {
+    override fun onTick() {
         val player = player ?: return
 
         if (player.abilities.creativeMode || !player.canConsume(false)) {

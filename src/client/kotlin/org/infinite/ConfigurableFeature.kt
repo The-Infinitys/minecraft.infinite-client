@@ -51,10 +51,10 @@ abstract class ConfigurableFeature(
             if (newValue) {
                 // 依存・矛盾の即時解決
                 resolve()
-                enabled()
+                onEnabled()
             } else {
                 // Featureが無効になったとき
-                disabled()
+                onDisabled()
             }
         }
 
@@ -62,10 +62,10 @@ abstract class ConfigurableFeature(
         disabled.addListener { _, newValue ->
             enabled.value = !newValue
             if (newValue) {
-                disabled()
+                onDisabled()
             } else {
                 resolve()
-                enabled()
+                onEnabled()
             }
         }
     }
@@ -79,9 +79,9 @@ abstract class ConfigurableFeature(
     open val depends: List<Class<out ConfigurableFeature>> = emptyList()
     open val conflicts: List<Class<out ConfigurableFeature>> = emptyList()
 
-    open fun tick() {}
+    open fun onTick() {}
 
-    open fun start() {}
+    open fun onStart() {}
 
     // --- リスナー登録用API ---
     fun addEnabledChangeListener(listener: (oldValue: Boolean, newValue: Boolean) -> Unit) {
@@ -124,9 +124,9 @@ abstract class ConfigurableFeature(
         }
     }
 
-    open fun enabled() {}
+    open fun onEnabled() {}
 
-    open fun disabled() {}
+    open fun onDisabled() {}
 
     fun enable() {
         if (isEnabled()) return
@@ -212,7 +212,7 @@ abstract class ConfigurableFeature(
         if (isEnabled()) disable() else enable()
     }
 
-    open fun respawn() {}
+    open fun onRespawn() {}
 
     fun registerKeybinds(
         categoryName: String,

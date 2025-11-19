@@ -443,5 +443,18 @@
   "infinite.feature.automatic.branch_miner.item_collection_wait_ticks.description": "アイテム収集待機ティックを設定します。",
   "infinite.feature.automatic.branch_miner.detect_space_threshold.description": "空間検出閾値を設定します。",
   "infinite.feature.automatic.branch_miner.enable_torch_placement.description": "ブランチマイニング中の松明配置を有効/無効にします。",
-  "infinite.feature.automatic.branch_miner.torch_interval.description": "ブランチマイニング中の松明配置間隔（ブロック単位）を設定します。"
+  "infinite.feature.automatic.branch_miner.torch_interval.description": "ブランチマイニング中の松明配置間隔（ブロック単位）を設定します。",
+  "infinite.feature.movement.adventure.description": "冒険のための移動機能。",
+  "infinite.feature.movement.brawler.description": "乱闘のための移動機能。",
+  "infinite.feature.movement.brawler.interact_cancel_blocks.description": "乱闘移動中にインタラクションをキャンセルするブロック。",
+  "infinite.feature.movement.builder.description": "建築のための移動機能。",
+  "key.infinite-client.toggle.movement.adventure": "Adventureを切り替える",
+  "key.infinite-client.toggle.movement.brawler": "Brawlerを切り替える",
+  "key.infinite-client.toggle.movement.builder": "Builderを切り替える",
+  "key.infinite-client.action.movement.builder.move_up": "Builder: 上へ移動",
+  "key.infinite-client.action.movement.builder.move_down": "Builder: 下へ移動",
+  "key.infinite-client.action.movement.builder.move_forward": "Builder: 前へ移動",
+  "key.infinite-client.action.movement.builder.move_backward": "Builder: 後ろへ移動",
+  "key.infinite-client.action.movement.builder.move_left": "Builder: 左へ移動",
+  "key.infinite-client.action.movement.builder.move_right": "Builder: 右へ移動"
 }

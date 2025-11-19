@@ -41,7 +41,7 @@ class FeatherWalk : ConfigurableFeature(initialEnabled = false) {
     // 例: Minecraft client object
     private var mc = MinecraftClient.getInstance()
 
-    override fun tick() {
+    override fun onTick() {
         var isWalkingOnFeatherBlock = false
 
         // 1. プレイヤーの現在のブロック座標を取得

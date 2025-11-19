@@ -44,7 +44,7 @@ class AutoLeave : ConfigurableFeature(initialEnabled = false) {
             method, // Method設定を追加
         )
 
-    override fun tick() {
+    override fun onTick() {
         val player = client.player ?: return
         val handler = client.networkHandler ?: return
         val isLowHp = player.health <= hpThreshold.value

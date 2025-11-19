@@ -46,7 +46,7 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
 
     // --- Featureライフサイクル ---
 
-    override fun enabled() {
+    override fun onEnabled() {
         freezeStartTime = System.currentTimeMillis()
         cleanup()
         // 偽プレイヤーを作成し、本物のプレイヤーの位置を維持
@@ -55,7 +55,7 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
         // 注: Mixinがすでにパケット送信をフックしているため、ここではイベントリスナーの追加は不要
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         // 1. 偽プレイヤーを削除
         fakePlayer?.despawn()
         fakePlayer = null
@@ -64,7 +64,7 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
         cleanup()
     }
 
-    override fun tick() {
+    override fun onTick() {
         // Durationによる自動無効化チェック
         val duration = durationSetting.value
         if (duration > 0.0f && !InfiniteClient.isFeatureEnabled(FreeCamera::class.java)) {
@@ -146,7 +146,7 @@ class Freeze : ConfigurableFeature(initialEnabled = false) {
         packets.clear() // disabled()でも呼ばれているが、念のためここに集約
     }
 
-    override fun start() {
+    override fun onStart() {
         disable()
     }
 

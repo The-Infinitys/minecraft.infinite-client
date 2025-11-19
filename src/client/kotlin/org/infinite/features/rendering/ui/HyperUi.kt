@@ -42,13 +42,13 @@ class HyperUi : ConfigurableFeature() {
 
     // --- ライフサイクル/Tick処理 ---
 
-    override fun tick() {
+    override fun onTick() {
         val player = MinecraftClient.getInstance().player ?: return
         // データモデルにTick処理を委譲
         statsModel.tick(player)
     }
 
-    override fun respawn() {
+    override fun onRespawn() {
         // データモデルにリスポーン処理を委譲
         statsModel.reset()
     }

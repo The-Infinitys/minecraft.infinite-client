@@ -44,7 +44,7 @@ class MaceAssist : ConfigurableFeature() {
         get() =
             InventoryManager.get(InventoryManager.InventoryIndex.MainHand()).item == Items.MACE
 
-    override fun tick() {
+    override fun onTick() {
         calcFallDistance()
         if (!haveMace) return
         // ターゲットエンティティの検索ロジック（変更なし）

@@ -65,7 +65,7 @@ class BackPackManager : ConfigurableFeature() {
         updateSlotsInfo()
     }
 
-    override fun start() {
+    override fun onStart() {
         // 【修正点】: 起動時に空きホットバーを登録
         updateSlotsInfo()
     }
@@ -128,7 +128,7 @@ class BackPackManager : ConfigurableFeature() {
         updateSlotsInfo()
     }
 
-    override fun tick() {
+    override fun onTick() {
         val currentScreen = client.currentScreen
         if (isInventoryOpen && currentScreen == null) {
             updateSlotsInfo()
@@ -142,7 +142,7 @@ class BackPackManager : ConfigurableFeature() {
         process()
     }
 
-    override fun enabled() {
+    override fun onEnabled() {
         // Featureが有効になったときにインベントリの状態を初期化
         val player = MinecraftClient.getInstance().player
         previousInventory =

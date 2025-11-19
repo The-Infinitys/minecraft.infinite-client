@@ -127,12 +127,12 @@ class XRay : ConfigurableFeature(initialEnabled = false) {
         )
 
     // ... (enabled/disabled関数は変更なし)
-    override fun enabled() {
+    override fun onEnabled() {
         // Trigger world re-render when XRay is enabled
         MinecraftClient.getInstance().worldRenderer.reload()
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         // Trigger world re-render when XRay is disabled
         MinecraftClient.getInstance().worldRenderer.reload()
     }

@@ -21,7 +21,7 @@ class QuickLand : ConfigurableFeature(initialEnabled = false) {
     override val settings: List<FeatureSetting<*>> = listOf(safeFallDistance)
     var interval = 0
 
-    override fun tick() {
+    override fun onTick() {
         if (interval > 0) {
             --interval
             return

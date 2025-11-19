@@ -443,5 +443,19 @@
   "infinite.feature.automatic.branch_miner.item_collection_wait_ticks.description": "Sets the item collection wait ticks.",
   "infinite.feature.automatic.branch_miner.detect_space_threshold.description": "Sets the space detection threshold.",
   "infinite.feature.automatic.branch_miner.enable_torch_placement.description": "Enables or disables torch placement during branch mining.",
-  "infinite.feature.automatic.branch_miner.torch_interval.description": "Sets the interval (in blocks) for placing torches during branch mining."
+  "infinite.feature.automatic.branch_miner.torch_interval.description": "Sets the interval (in blocks) for placing torches during branch mining.",
+  "infinite.feature.movement.adventure.description": "Adventure Time!",
+  "infinite.feature.movement.brawler.description": "The Brawler",
+  "infinite.feature.movement.brawler.interact_cancel_blocks.description": "The blocks that cancel interactions",
+  "infinite.feature.movement.builder.description": "Feature for Builder",
+  "key.infinite-client.toggle.movement.adventure": "Toggle Adventure",
+  "key.infinite-client.toggle.movement.brawler": "Toggle Brawler",
+  "key.infinite-client.toggle.movement.builder": "Toggle Builder",
+  "key.infinite-client.action.movement.builder.move_up": "Builder: Move to top",
+  "key.infinite-client.action.movement.builder.move_down": "Builder: Move to bottom",
+  "key.infinite-client.action.movement.builder.move_forward": "Builder: Move forward",
+  "key.infinite-client.action.movement.builder.move_backward": "Builder: Move backward",
+  "key.infinite-client.action.movement.builder.move_left": "Builder: Move left",
+  "key.infinite-client.action.movement.builder.move_right": "Builder: Move right"
+
 }

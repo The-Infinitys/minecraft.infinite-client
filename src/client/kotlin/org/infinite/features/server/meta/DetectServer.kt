@@ -16,7 +16,7 @@ class DetectServer : ConfigurableFeature(initialEnabled = true) {
             ),
         )
 
-    override fun tick() {
+    override fun onTick() {
         val maxAllowedLevel = getSetting("FeatureLevel")?.value as? FeatureLevel ?: FeatureLevel.Extend
         featureCategories.forEach { category ->
             category.features.forEach { feature ->

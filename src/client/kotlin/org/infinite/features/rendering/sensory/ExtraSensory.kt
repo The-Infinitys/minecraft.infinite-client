@@ -82,13 +82,13 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
         ContainerEsp.handleChunk(worldChunk)
     }
 
-    override fun disabled() {
-        super.disabled()
+    override fun onDisabled() {
+        super.onDisabled()
         PortalEsp.clear()
         ContainerEsp.clear()
     }
 
-    override fun tick() {
+    override fun onTick() {
         PortalEsp.tick()
         ContainerEsp.tick()
     }

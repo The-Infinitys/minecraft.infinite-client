@@ -55,3 +55,9 @@ extendable class net/minecraft/client/gui/render/state/ItemGuiElementRenderState
 accessible method net/minecraft/client/gui/render/state/ItemGuiElementRenderState createOversizedBounds ()Lnet/minecraft/client/gui/ScreenRect;
 accessible method net/minecraft/client/gui/render/state/ItemGuiElementRenderState createBounds (Lnet/minecraft/client/gui/ScreenRect;)Lnet/minecraft/client/gui/ScreenRect;
 extendable method net/minecraft/client/gui/render/state/ItemGuiElementRenderState createBounds (Lnet/minecraft/client/gui/ScreenRect;)Lnet/minecraft/client/gui/ScreenRect;
+accessible field net/minecraft/client/gui/hud/ChatHud messages Ljava/util/List;
+mutable field net/minecraft/client/gui/hud/ChatHud messages Ljava/util/List;
+accessible method net/minecraft/client/gui/hud/ChatHud refresh ()V
+
+# --- Builder Feature ---
+accessible method net/minecraft/client/network/ClientPlayerInteractionManager interactBlockInternal (Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;

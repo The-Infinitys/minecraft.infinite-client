@@ -33,13 +33,13 @@ class Berserker : ConfigurableFeature() {
     private val targetEntity: LivingEntity?
         get() = lockOn?.lockedEntity
 
-    override fun disabled() {
+    override fun onDisabled() {
         aiMovementAction?.onFailure() // AI移動タスクをキャンセル
         aiMovementAction = null
         currentState = BerserkerState.IDLE
     }
 
-    override fun tick() {
+    override fun onTick() {
         client.player ?: return
         when (currentState) {
             BerserkerState.IDLE -> startMovement() // IDLEから開始

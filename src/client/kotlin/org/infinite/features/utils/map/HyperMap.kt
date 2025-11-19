@@ -317,7 +317,7 @@ class HyperMap : ConfigurableFeature() {
         return isForceSolid || isBelowThreshold || isSkyObscured
     }
 
-    override fun tick() {
+    override fun onTick() {
         nearbyMobs = findTargetMobs()
         if (renderTerrain.value) {
             tickCounter++
@@ -672,7 +672,7 @@ class HyperMap : ConfigurableFeature() {
         HyperMapRenderer.render(graphics2D, this, actualMode)
     }
 
-    override fun disabled() {
+    override fun onDisabled() {
         MapTextureManager.clearCache()
     }
 }

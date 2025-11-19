@@ -12,7 +12,7 @@ import org.infinite.settings.FeatureSetting
 class AutoConnect : ConfigurableFeature() {
     var lastServer: ServerInfo? = null
 
-    override fun start() {
+    override fun onStart() {
         lastServer = MinecraftClient.getInstance().currentServerEntry
     }
 

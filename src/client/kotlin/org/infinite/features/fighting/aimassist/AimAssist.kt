@@ -148,7 +148,7 @@ class AimAssist : ConfigurableFeature(initialEnabled = false) {
         }
     }
 
-    override fun tick() {
+    override fun onTick() {
         summonTask()
     }
 
