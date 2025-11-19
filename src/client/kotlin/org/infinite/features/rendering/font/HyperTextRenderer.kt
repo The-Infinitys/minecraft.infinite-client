@@ -1,5 +1,6 @@
 package org.infinite.features.rendering.font
 
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.BakedGlyph
 import net.minecraft.client.font.FontManager
 import net.minecraft.client.font.FontStorage
@@ -11,7 +12,6 @@ import net.minecraft.text.Style
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.random.Random
-import org.infinite.InfiniteClient
 
 class HyperTextRenderer(
     val fontManager: FontManager,
@@ -20,8 +20,6 @@ class HyperTextRenderer(
     init {
         this.handler = TextHandler(this)
     }
-
-    private fun shouldInject(): Boolean = InfiniteClient.isFeatureEnabled(HyperFont::class.java) && isEnabled
 
     override fun getWidth(
         codePoint: Int,
@@ -39,14 +37,18 @@ class HyperTextRenderer(
     )
 
     // カスタムフォントのIdentifier
-    private val hyperFonts =
+    private var hyperFonts: HyperFonts =
         HyperFonts(
-            Identifier.of("minecraft", "infinite_regular"),
-            Identifier.of("minecraft", "infinite_italic"),
-            Identifier.of("minecraft", "infinite_bold"),
-            Identifier.of("minecraft", "infinite_bolditalic"),
+            Identifier.of("minecraft", "default"),
+            Identifier.of("minecraft", "default"),
+            Identifier.of("minecraft", "default"),
+            Identifier.of("minecraft", "default"),
         )
     private val random = Random.create()
+
+    fun defineFont(hyperFonts: HyperFonts) {
+        this.hyperFonts = hyperFonts
+    }
 
     private fun getHyperFontIdentifier(style: Style): Identifier =
         when {
@@ -81,25 +83,17 @@ class HyperTextRenderer(
         style: Style?,
     ): BakedGlyph? {
         val style = style ?: return null
-
-        // shouldInject() の判定は変更なし
-        if (!shouldInject()) {
+        if (!isEnabled) {
             return super.getGlyph(codePoint, style)
         }
-
-        // 1. カスタムフォントから通常のグリフを取得 (太字・斜体はIdentifierで分離済み)
         val fontId = getHyperFontIdentifier(style)
         val fontStorage: FontStorage = fontManager.getStorageInternal(fontId)
         val glyphProvider: GlyphProvider = fontStorage.getGlyphs(false)
         var bakedGlyph = glyphProvider.get(codePoint)
-
-        // 2. 難読化処理は変更なし
         if (style.isObfuscated && codePoint != 32) {
             val i = MathHelper.ceil(bakedGlyph.metrics.getAdvance(false))
             bakedGlyph = glyphProvider.getObfuscated(random, i)
         }
-
-        // 3. ✨ 太字の場合、getBoldOffset() が 0.0F の Metrics を持つラッパーを返す
         if (style.isBold) {
             // 太字スタイルのグリフが取得できた場合、標準の二重描画を抑制する
             val zeroBoldMetrics = ZeroBoldOffsetMetrics(bakedGlyph.metrics)
@@ -110,12 +104,21 @@ class HyperTextRenderer(
     }
 
     private var isEnabled = false
+    private val client: MinecraftClient
+        get() = MinecraftClient.getInstance()
+
+    private fun reinitChatHud() {
+        val chatHud = client.inGameHud.chatHud
+        chatHud.refresh()
+    }
 
     fun enable() {
         isEnabled = true
+        reinitChatHud()
     }
 
     fun disable() {
         isEnabled = false
+        reinitChatHud()
     }
 }
