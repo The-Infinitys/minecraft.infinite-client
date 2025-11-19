@@ -55,4 +55,14 @@ public class CancelRenderUiMixin {
   private void infinite$cancelCrossHairRender(CallbackInfo ci) {
     if (shouldCancel()) ci.cancel();
   }
+
+  @Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
+  private void infinite$cancelHotbarRender(CallbackInfo ci) {
+    if (shouldCancel()) ci.cancel();
+  }
+
+  @Inject(method = "renderHeldItemTooltip", at = @At("HEAD"), cancellable = true)
+  private void infinite$cancelHeldItemTooltipRender(CallbackInfo ci) {
+    if (shouldCancel()) ci.cancel();
+  }
 }

@@ -1,7 +1,7 @@
 package org.infinite.features.rendering.ui
 
-// 必要なimportはそのまま
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.network.ClientPlayerEntity
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
 import org.infinite.gui.theme.ThemeColors
@@ -15,7 +15,8 @@ import kotlin.math.min
 // EasingManager, DamageCalculator, RayCastRenderer, ElytraFlightUiRenderer は既存のものを使用
 
 class HyperUi : ConfigurableFeature() {
-    // --- 設定 ---
+    override val render2DTiming: Timing =
+        Timing.Start
     private val easeSpeedSetting = FeatureSetting.DoubleSetting("EasingSpeed", 0.25, 0.0, 1.0)
     private val alphaSetting = FeatureSetting.DoubleSetting("Transparency", 0.5, 0.0, 1.0)
     val heightSetting = FeatureSetting.IntSetting("Height", 24, 8, 32)
@@ -37,6 +38,7 @@ class HyperUi : ConfigurableFeature() {
     private val statsModel = PlayerStatsModel(statsManager, damageCalculator, easeSpeedSetting)
     private val barRenderer = UiBarRenderer(renderConfig)
     private val compassRenderer = CompassRenderer(renderConfig)
+    private val hotbarRenderer = HotbarRenderer(renderConfig) // HotbarRendererのインスタンスを追加
 
     // --- ライフサイクル/Tick処理 ---
 
@@ -77,6 +79,9 @@ class HyperUi : ConfigurableFeature() {
             saturationProgress,
         )
 
+        // ホットバーとアイテム情報の描画
+        hotbarRenderer.render(graphics2D, colors)
+
         // 飛行UIレンダリング (変更なし)
         if (player.isGliding) {
             flightUiRenderer.render(graphics2D)
@@ -99,7 +104,7 @@ class HyperUi : ConfigurableFeature() {
     // 省略: renderStatsTextの実装 (元のコードから必要な部分を抽出・調整)
     private fun renderStatsText(
         graphics2D: Graphics2D,
-        player: net.minecraft.client.network.ClientPlayerEntity,
+        player: ClientPlayerEntity,
         colors: ThemeColors,
     ) {
         val statsManager = PlayerStatsManager // 再度参照

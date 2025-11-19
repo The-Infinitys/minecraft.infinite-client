@@ -23,12 +23,14 @@ abstract class ConfigurableFeature(
         Cheat, // サーバー側で簡単に検知される
     }
 
-    enum class TickTiming {
+    enum class Timing {
         Start,
         End,
     }
 
-    open val tickTiming: TickTiming = TickTiming.Start
+    open val render2DTiming: Timing = Timing.End
+    open val render3DTiming: Timing = Timing.End
+    open val tickTiming: Timing = Timing.Start
     internal var enabled: Property<Boolean> = Property(initialEnabled)
     private val disabled: Property<Boolean> = Property(!initialEnabled)
     open val toggleKeyBind: Property<Int> = Property(GLFW.GLFW_DONT_CARE)

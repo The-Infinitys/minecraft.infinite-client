@@ -1,5 +1,6 @@
 package org.infinite.features.utils.map
 
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.Click
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -266,7 +267,7 @@ class FullScreenMapScreen(
         mapWorldWidth: Double, // X方向のワールド表示半径 (アスペクト比考慮済)
         mapWorldHeight: Double, // Z方向のワールド表示半径
     ) {
-        val client = graphics2D.client
+        val client = MinecraftClient.getInstance()
         val player = client.player ?: return
 
         val centerBlockX = centerX.toInt()
@@ -363,7 +364,7 @@ class FullScreenMapScreen(
         mapWorldWidth: Double, // X方向のワールド表示半径
         mapWorldHeight: Double, // Z方向のワールド表示半径
     ) {
-        val client = graphics2D.client
+        val client = MinecraftClient.getInstance()
         val player = client.player ?: return
 
         val mobDotRadius = 2

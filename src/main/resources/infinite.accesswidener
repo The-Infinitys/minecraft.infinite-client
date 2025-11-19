@@ -51,3 +51,7 @@ accessible method net/minecraft/client/font/FontManager getStorageInternal (Lnet
 accessible field net/minecraft/client/font/FontManager fontStorages Ljava/util/Map;
 accessible field net/minecraft/client/font/TextRenderer handler Lnet/minecraft/client/font/TextHandler;
 mutable field net/minecraft/client/font/TextRenderer handler Lnet/minecraft/client/font/TextHandler;
+extendable class net/minecraft/client/gui/render/state/ItemGuiElementRenderState
+accessible method net/minecraft/client/gui/render/state/ItemGuiElementRenderState createOversizedBounds ()Lnet/minecraft/client/gui/ScreenRect;
+accessible method net/minecraft/client/gui/render/state/ItemGuiElementRenderState createBounds (Lnet/minecraft/client/gui/ScreenRect;)Lnet/minecraft/client/gui/ScreenRect;
+extendable method net/minecraft/client/gui/render/state/ItemGuiElementRenderState createBounds (Lnet/minecraft/client/gui/ScreenRect;)Lnet/minecraft/client/gui/ScreenRect;

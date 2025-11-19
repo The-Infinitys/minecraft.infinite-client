@@ -13,7 +13,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class QuickMove : ConfigurableFeature() {
-    override val tickTiming: TickTiming = TickTiming.End
+    override val tickTiming: Timing = Timing.End
 
     // 基準となる各環境の移動速度（ブロック/秒）を定義
     private val currentMode: MoveMode

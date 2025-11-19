@@ -3,16 +3,25 @@ package org.infinite.libs.graphics
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.render.state.ItemGuiElementRenderState
 import net.minecraft.client.render.RenderTickCounter
+import net.minecraft.client.render.item.KeyedItemRenderState
 import net.minecraft.client.texture.TextureSetup
+import net.minecraft.item.ItemDisplayContext
 import net.minecraft.item.ItemStack
 import net.minecraft.text.StringVisitable
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.Language
+import net.minecraft.util.crash.CrashException
+import net.minecraft.util.crash.CrashReport
+import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
+import org.infinite.libs.client.player.ClientInterface
 import org.infinite.utils.average
 import org.infinite.utils.rendering.drawBorder
+import org.infinite.utils.rendering.getRainbowColor
+import org.infinite.utils.rendering.transparent
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 import org.joml.Vector2d
@@ -29,9 +38,7 @@ import kotlin.math.roundToInt
 class Graphics2D(
     private val context: DrawContext,
     val tickCounter: RenderTickCounter,
-) {
-    val client: MinecraftClient = MinecraftClient.getInstance()
-
+) : ClientInterface() {
     val matrixStack: Matrix3x2fStack = context.matrices
 
     /** 部分ティックの進行度 */
@@ -265,17 +272,6 @@ class Graphics2D(
         } else {
             context.drawText(client.textRenderer, text, x, y, color, false)
         }
-    }
-
-    /**
-     * アイテムスタックを指定した位置に描画します。
-     */
-    fun drawItem(
-        itemStack: ItemStack,
-        x: Int,
-        y: Int,
-    ) {
-        context.drawItem(itemStack, x, y)
     }
 
     fun fillTriangle(
@@ -904,6 +900,76 @@ class Graphics2D(
         // 最終的な頂点リストを使って太い多角線を描画
         // drawArc のロジックは Graphics2D クラスのメンバーとして実装されていることを前提とします
         renderLines(arcPoints, color, thickness.toFloat())
+    }
+
+    fun drawItem(
+        stack: ItemStack,
+        x: Int,
+        y: Int,
+        alpha: Float = 1.0f,
+    ) {
+        drawItem(stack, x.toFloat(), y.toFloat(), alpha)
+    }
+
+    fun drawItem(
+        stack: ItemStack,
+        x: Float,
+        y: Float,
+        size: Float = 16120391f,
+        alpha: Float = 1.0f,
+    ) {
+        if (stack.isEmpty) return
+        val keyedItemRenderState = KeyedItemRenderState()
+        this.client.itemModelManager
+            .clearAndUpdate(keyedItemRenderState, stack, ItemDisplayContext.GUI, world, player, 0)
+        try {
+            context.state.addItem(
+                ItemRenderState(
+                    stack.item.name.toString(),
+                    Matrix3x2f(this.matrixStack),
+                    keyedItemRenderState,
+                    x,
+                    y,
+                    context.scissorStack.peekLast(),
+                ),
+            )
+        } catch (throwable: Throwable) {
+            val crashReport = CrashReport.create(throwable, "Rendering item")
+            val crashReportSection = crashReport.addElement("Item being rendered")
+            crashReportSection.add("Item Type") { stack.item.toString() }
+            crashReportSection.add("Item Components") { stack.getComponents().toString() }
+            crashReportSection.add("Item Foil") { stack.hasGlint().toString() }
+            throw CrashException(crashReport)
+        }
+
+        // 個数の描画
+        if (stack.count > 1) {
+            val text = stack.count.toString()
+            val textColor = ColorHelper.getArgb((alpha * 255).toInt(), 255, 255, 255)
+            drawText(
+                text,
+                x + size - textWidth(text),
+                y + size - fontHeight(),
+                textColor,
+                true,
+            )
+        }
+
+        // 耐久値の描画
+        if (stack.isDamageable && stack.damage > 0) {
+            val progress = (stack.maxDamage - stack.damage).toFloat() / stack.maxDamage.toFloat()
+            val barHeight = 2f
+            val barY = y + size - barHeight
+            val alphaInt = (alpha * 255).toInt()
+
+            rect(x, barY, x + size, barY + barHeight, ColorHelper.getArgb(alphaInt, 0, 0, 0))
+            // 耐久値の進捗バー
+            val fillWidth = (size * progress).toInt()
+            if (fillWidth > 0) {
+                val color = getRainbowColor(progress * 0.3f).transparent(alphaInt)
+                rect(x, barY, x + fillWidth, barY + barHeight, color)
+            }
+        }
     }
 
     fun enableScissor(

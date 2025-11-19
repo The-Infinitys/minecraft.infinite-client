@@ -8,16 +8,13 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
+import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.transparent
 import org.infinite.utils.toRadians
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
-object HyperMapRenderer {
+object HyperMapRenderer: ClientInterface() {
     /**
      * エンティティの種類に基づいてドットの色を決定します。（アルファ値は含まない）
      */
@@ -65,8 +62,7 @@ object HyperMapRenderer {
         hyperMapFeature: HyperMap,
         mode: HyperMap.Mode, // Mode を受け取るように変更
     ) {
-        val client = graphics2d.client
-        val player = client.player ?: return
+        val player = player ?: return
         val font = client.textRenderer
 
         val screenWidth = graphics2d.width
@@ -230,8 +226,7 @@ object HyperMapRenderer {
         hyperMapFeature: HyperMap,
         mode: HyperMap.Mode, // Mode を受け取るように変更
     ) {
-        val client = graphics2d.client
-        val player = client.player ?: return
+        val player = player ?: return
         val camera = client.cameraEntity ?: return
         val screenWidth = graphics2d.width
         val screenHeight = graphics2d.height

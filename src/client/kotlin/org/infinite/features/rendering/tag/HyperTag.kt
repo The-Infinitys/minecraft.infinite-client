@@ -439,7 +439,7 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         val x = -(itemRenderSize / 2)
         val y = -(itemRenderSize / 2) - 32
 
-        renderEquipmentStack(graphics2D, stack, x, y, alpha)
+        graphics2D.drawItem(stack, x, y, alpha)
     }
 
     // ----------------------------------------------------------------------
@@ -480,16 +480,19 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
                         .theme()
                         .colors.infoColor
                         .transparent(alphaInt)
+
                 is HostileEntity ->
                     InfiniteClient
                         .theme()
                         .colors.errorColor
                         .transparent(alphaInt)
+
                 is PassiveEntity ->
                     InfiniteClient
                         .theme()
                         .colors.greenAccentColor
                         .transparent(alphaInt)
+
                 else ->
                     InfiniteClient
                         .theme()
@@ -557,7 +560,7 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
             val itemStack = entity.getEquippedStack(slot)
             val renderStack = if (itemStack.isEmpty) ItemStack(Items.AIR) else itemStack
 
-            renderEquipmentStack(graphics2D, renderStack, currentX, armorY, alpha)
+            graphics2D.drawItem(renderStack, currentX, armorY, alpha)
 
             currentX += itemRenderSize + itemPaddingSize
         }
@@ -570,58 +573,10 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
 
         // メインハンド (タグの右端外側)
         val mainHandX = tagStartX + tagWidth + itemPaddingSize
-        renderEquipmentStack(graphics2D, mainHandStack, mainHandX, handY, alpha)
+        graphics2D.drawItem(mainHandStack, mainHandX, handY, alpha)
 
         // オフハンド (タグの左端外側)
         val offHandX = tagStartX - itemRenderSize - itemPaddingSize
-        renderEquipmentStack(graphics2D, offHandStack, offHandX, handY, alpha)
-    }
-
-    // ----------------------------------------------------------------------
-    // アイテムアイコン、個数、耐久値を描画するヘルパー
-    // ----------------------------------------------------------------------
-
-    private fun renderEquipmentStack(
-        graphics2D: Graphics2D,
-        stack: ItemStack,
-        x: Int,
-        y: Int,
-        alpha: Float = 1.0f,
-    ) {
-        if (stack.isEmpty && stack.item != Items.AIR) return
-        val size = itemRenderSize
-
-        // アイコンの描画
-        graphics2D.drawItem(stack, x, y)
-
-        // 個数の描画
-        if (stack.count > 1) {
-            val text = stack.count.toString()
-            val textColor = ColorHelper.getArgb((alpha * 255).toInt(), 255, 255, 255)
-            graphics2D.drawText(
-                text,
-                x + size - graphics2D.textWidth(text),
-                y + size - graphics2D.fontHeight(),
-                textColor,
-                true,
-            )
-        }
-
-        // 耐久値の描画
-        if (stack.isDamageable && stack.damage > 0) {
-            val progress = (stack.maxDamage - stack.damage).toFloat() / stack.maxDamage.toFloat()
-            val barHeight = 2
-            val barY = y + size - barHeight
-            val alphaInt = (alpha * 255).toInt()
-
-            // 耐久値バーの背景
-            graphics2D.fill(x, barY, size, barHeight, ColorHelper.getArgb(alphaInt, 0, 0, 0))
-            // 耐久値の進捗バー
-            val fillWidth = (size * progress).toInt()
-            if (fillWidth > 0) {
-                val color = getRainbowColor(progress * 0.3f).transparent(alphaInt)
-                graphics2D.fill(x, barY, fillWidth, barHeight, color)
-            }
-        }
+        graphics2D.drawItem(offHandStack, offHandX, handY, alpha)
     }
 }

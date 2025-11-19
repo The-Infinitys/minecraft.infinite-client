@@ -158,7 +158,7 @@ object InfiniteClient : ClientModInitializer {
             for (category in featureCategories) {
                 for (feature in category.features) {
                     if (feature.instance.isEnabled() && feature.instance.tickTiming ==
-                        ConfigurableFeature.TickTiming.Start
+                        ConfigurableFeature.Timing.Start
                     ) {
                         feature.instance.tick()
                     }
@@ -169,7 +169,7 @@ object InfiniteClient : ClientModInitializer {
             for (category in featureCategories) {
                 for (feature in category.features) {
                     if (feature.instance.isEnabled() && feature.instance.tickTiming ==
-                        ConfigurableFeature.TickTiming.End
+                        ConfigurableFeature.Timing.End
                     ) {
                         feature.instance.tick()
                     }
@@ -326,12 +326,13 @@ object InfiniteClient : ClientModInitializer {
     fun handle2dGraphics(
         context: DrawContext,
         tickCounter: RenderTickCounter,
+        timing: ConfigurableFeature.Timing,
     ) {
         val graphics2D = Graphics2D(context, tickCounter)
         for (category in featureCategories) {
             for (features in category.features) {
                 val feature = features.instance
-                if (feature.isEnabled()) {
+                if (feature.isEnabled() && feature.render2DTiming == timing) {
                     feature.render2d(graphics2D)
                 }
             }
@@ -349,6 +350,7 @@ object InfiniteClient : ClientModInitializer {
         gpuBufferSlice: com.mojang.blaze3d.buffers.GpuBufferSlice,
         vector4f: org.joml.Vector4f,
         bl: Boolean,
+        timing: ConfigurableFeature.Timing,
     ) {
         val graphics3D =
             Graphics3D(
@@ -366,7 +368,7 @@ object InfiniteClient : ClientModInitializer {
         for (category in featureCategories) {
             for (features in category.features) {
                 val feature = features.instance
-                if (feature.isEnabled()) {
+                if (feature.isEnabled() && feature.render3DTiming == timing) {
                     feature.render3d(graphics3D)
                 }
             }
