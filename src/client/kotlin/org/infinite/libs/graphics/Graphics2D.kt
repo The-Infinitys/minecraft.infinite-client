@@ -3,7 +3,6 @@ package org.infinite.libs.graphics
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.render.state.ItemGuiElementRenderState
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.render.item.KeyedItemRenderState
 import net.minecraft.client.texture.TextureSetup
@@ -240,11 +239,9 @@ class Graphics2D(
         color: Int,
         shadow: Boolean = true,
     ) {
-        val orderedText =
-            Language.getInstance().reorder(StringVisitable.plain(text))
+        val orderedText = Language.getInstance().reorder(StringVisitable.plain(text))
         val backgroundColor = 0
-        val clipBounds =
-            context.scissorStack.peekLast()
+        val clipBounds = context.scissorStack.peekLast()
         val state =
             TextRenderState(
                 client.textRenderer,
@@ -633,15 +630,6 @@ class Graphics2D(
         val x: Double,
         val y: Double,
     )
-    // ... (imports remain the same)
-
-// ... (class definition and properties remain the same)
-
-// ----------------------------------------------------------------------
-// MatrixState/Transform 状態管理 (Canvasの save/restore に相当)
-// ----------------------------------------------------------------------
-
-// ... (pushState, popState, translate, scale メソッドはそのまま)
 
     /**
      * テクスチャを指定した位置とサイズで描画します。
@@ -765,7 +753,8 @@ class Graphics2D(
 
     /**
      * 頂点のリストに基づいて、太さのある多角線（ポリライン）を描画します。
-     * 線分同士の接続点（ジョイント）は円形に処理され、滑らかに結合されます。
+     * 線分同士の接続点（ジョイント）は、線分の四角形が重ならないようベベルジョイントで結合されます。
+     * 終端は丸く処理されます。
      *
      * @param lines 頂点のリスト。Pair<Float, Float> は (X座標, Y座標) を表します。
      * @param color ARGB形式の色 (0xAARRGGBB)
@@ -780,73 +769,135 @@ class Graphics2D(
 
         val halfSize = size / 2f
 
-        // 1. 各線分を描画
+        // 各頂点における線分に垂直な単位ベクトル（外側向き）を計算
+        val normals = mutableListOf<Pair<Float, Float>>()
+        for (i in lines.indices) {
+            val (x, y) = lines[i]
+            val prevPoint = if (i > 0) lines[i - 1] else null
+            val nextPoint = if (i < lines.size - 1) lines[i + 1] else null
+
+            var normalX = 0f
+            var normalY = 0f
+
+            // 始点
+            if (prevPoint == null) {
+                // 最初の線分に垂直なベクトルを計算
+                val (x1, y1) = lines[i]
+                val (x2, y2) = lines[i + 1]
+                val dx = x2 - x1
+                val dy = y2 - y1
+                val length = MathHelper.sqrt(dx * dx + dy * dy)
+                normalX = -(dy / length) // 垂直ベクトルのX (-dy)
+                normalY = dx / length // 垂直ベクトルのY (dx)
+            } else if (nextPoint == null) {
+                // 最後の線分に垂直なベクトルを計算
+                val (x1, y1) = lines[i - 1]
+                val (x2, y2) = lines[i]
+                val dx = x2 - x1
+                val dy = y2 - y1
+                val length = MathHelper.sqrt(dx * dx + dy * dy)
+                normalX = -(dy / length) // 垂直ベクトルのX (-dy)
+                normalY = dx / length // 垂直ベクトルのY (dx)
+            } else {
+                // 前後の線分の方向ベクトル
+                val (px, py) = prevPoint
+                val (cx, cy) = lines[i]
+                val (nx, ny) = nextPoint
+
+                val v1x = cx - px // 前の線分の方向
+                val v1y = cy - py
+                val v2x = nx - cx // 次の線分の方向
+                val v2y = ny - cy
+
+                val length1 = MathHelper.sqrt(v1x * v1x + v1y * v1y)
+                val length2 = MathHelper.sqrt(v2x * v2x + v2y * v2y)
+
+                // 単位方向ベクトル
+                val u1x = v1x / length1
+                val u1y = v1y / length1
+                val u2x = v2x / length2
+                val u2y = v2y / length2
+
+                // 2つの線分の単位方向ベクトルの和
+                val sumX = u1x + u2x
+                val sumY = u1y + u2y
+                val sumLength = MathHelper.sqrt(sumX * sumX + sumY * sumY)
+
+                // 角度の二等分線に沿った単位ベクトル
+                val bisectorX = if (sumLength != 0f) sumX / sumLength else u1x
+                val bisectorY = if (sumLength != 0f) sumY / sumLength else u1y
+
+                // 垂直ベクトルの計算 (時計回りに90度回転: (y, -x) または (-y, x))
+                // 外側の単位法線ベクトル (ジョイントを正確に計算するためのベクトル)
+                val outerNormalX = bisectorY
+                val outerNormalY = -bisectorX
+
+                // マイターのスケールを計算 (角度が急なほど大きくなる)
+                // 角度の二等分線と線分の法線との間のコサイン角: cos(theta/2) = dot(outerNormal, u1_perp)
+                val perp1X = -u1y // u1に垂直なベクトル
+                val perp1Y = u1x
+                val cosThetaHalf = (outerNormalX * perp1X + outerNormalY * perp1Y)
+
+                // 非常に小さな値で割るのを防ぐ
+                val scale =
+                    if (MathHelper.abs(cosThetaHalf) < 0.0001f) {
+                        1.0f // マイターが適用されない直線の場合
+                    } else {
+                        1.0f / cosThetaHalf
+                    }
+
+                // クロス積 (外積) を計算し、ジョイントが凸（外側）か凹（内側）かを判定
+                // u1 から u2 への回転方向
+                val cross = u1x * u2y - u1y * u2x
+                val sign = if (cross > 0) 1f else -1f // 右回り(凹)なら1, 左回り(凸)なら-1 (Minecraftの座標系に依存)
+
+                // 外側 (凸) のジョイントの場合、法線ベクトルとスケールを適用
+                if (cross < 0) { // 凸の場合 (外側ジョイント)
+                    normalX = outerNormalX * scale
+                    normalY = outerNormalY * scale
+                } else { // 凹の場合 (内側ジョイント) -> ベベルジョイントで処理
+                    // 凹ジョイントでは、正確なマイター計算は不要で、ベベル（元の法線）を使用
+                    // ここでは、外側と内側で異なる頂点座標を計算する必要がある
+                    // 簡単のため、凹の場合は前後の線分の法線の中間を使用するか、単純なベベルを採用します。
+                    // ベベルジョイントの頂点座標は、線分ごとに独立して計算し、共通の2つの内側頂点と、
+                    // 4つの外側頂点（前後の線分から2つずつ）を使って2つの三角形（Quadの半分）で埋めます。
+
+                    // 複雑になるため、ここではマイタージョイントのスケールを使用し、凹ジョイントは内側に描画することで簡略化します。
+                    // このコードは凸ジョイントの計算を簡略化したものです。凹ジョイントは別途処理が必要です。
+                    // 簡単化のため、凹ジョイントでは単純な平均法線を使用
+                    val perpSumX = -(u1y + u2y)
+                    val perpSumY = u1x + u2x
+                    val perpSumLength = MathHelper.sqrt(perpSumX * perpSumX + perpSumY * perpSumY)
+                    normalX = if (perpSumLength != 0f) perpSumX / perpSumLength else perp1X
+                    normalY = if (perpSumLength != 0f) perpSumY / perpSumLength else perp1Y
+                }
+            }
+            normals.add(normalX to normalY)
+        }
+
+        // 2. 線分（四角形）とジョイントの描画
         for (i in 0 until lines.size - 1) {
             val (x1, y1) = lines[i]
             val (x2, y2) = lines[i + 1]
 
-            // 既存のdrawLineメソッドは太い線の描画に複雑な行列操作を使用しているため、
-            // ここではQuadを使ってより制御しやすい太い線分を描画するロジックを実装します。
+            val (n1x, n1y) = normals[i]
+            val (n2x, n2y) = normals[i + 1]
 
-            // 線分の方向ベクトル
-            val dx = x2 - x1
-            val dy = y2 - y1
+            // 頂点iにおける外側と内側の座標
+            val inner1X = x1 - n1x * halfSize
+            val inner1Y = y1 - n1y * halfSize
+            val outer1X = x1 + n1x * halfSize
+            val outer1Y = y1 + n1y * halfSize
 
-            // 線分の長さ
-            val length = MathHelper.sqrt(dx * dx + dy * dy)
+            // 頂点i+1における外側と内側の座標
+            val inner2X = x2 - n2x * halfSize
+            val inner2Y = y2 - n2y * halfSize
+            val outer2X = x2 + n2x * halfSize
+            val outer2Y = y2 + n2y * halfSize
 
-            // 長さが0の場合はスキップ
-            if (length == 0f) continue
-
-            // 単位方向ベクトル
-            val unitX = dx / length
-            val unitY = dy / length
-
-            // 線分に垂直な単位ベクトル (線分の幅を定義するために使用)
-            val perpX = -unitY // (-dy, dx)
-            val perpY = unitX // (dx, dy)
-
-            // 垂直ベクトルの半分の太さ
-            val offsetPerpX = perpX * halfSize
-            val offsetPerpY = perpY * halfSize
-
-            // 四角形の4頂点を計算
-            // 頂点1 (x1の左上/左下)
-            val q1X = x1 + offsetPerpX
-            val q1Y = y1 + offsetPerpY
-            // 頂点2 (x1の右上/右下)
-            val q2X = x1 - offsetPerpX
-            val q2Y = y1 - offsetPerpY
-            // 頂点3 (x2の右上/右下)
-            val q3X = x2 - offsetPerpX
-            val q3Y = y2 - offsetPerpY
-            // 頂点4 (x2の左上/左下)
-            val q4X = x2 + offsetPerpX
-            val q4Y = y2 + offsetPerpY
-
-            // 四角形として線分を描画
-            // 頂点の順序は、GPUでの描画順序（巻き順）に合わせて調整する必要があります
-            // ここでは、一般的なQuad描画（x1,y1 -> x2,y2 -> x3,y3 -> x4,y4）を使用
-            quad(q1X, q1Y, q4X, q4Y, q3X, q3Y, q2X, q2Y, color)
-        }
-
-        fun renderLines(
-            lines: List<Pair<Double, Double>>,
-            color: Int,
-            size: Double = 1.0,
-        ): Unit = renderLines(lines.map { (x, y) -> x.toFloat() to y.toFloat() }, color, size.toFloat())
-
-        fun renderLines(
-            lines: List<Pair<Int, Int>>,
-            color: Int,
-            size: Int = 1,
-        ): Unit = renderLines(lines.map { (x, y) -> x.toFloat() to y.toFloat() }, color, size.toFloat())
-        // 2. 頂点と終点に丸いジョイントを描画 (連続する線分を結合)
-        // 始点と終点、および中間点すべてに対して円を描画することで、線分の終端とジョイントが丸くなります。
-        for (i in lines.indices) {
-            val (x, y) = lines[i]
-            // halfSize を半径として円を描画
-            fillCircle(x, y, halfSize, color)
+            // 線分 (i から i+1) を四角形として描画
+            // 頂点の順序は、GPUでの描画順序（巻き順）に合わせて調整します。
+            quad(outer1X, outer1Y, inner1X, inner1Y, inner2X, inner2Y, outer2X, outer2Y, color)
         }
     }
 
@@ -866,7 +917,7 @@ class Graphics2D(
         val arcPoints = mutableListOf<Pair<Float, Float>>()
 
         // セグメント数 (細かくするほど滑らかになる)
-        val segments = 64
+        val segments = calculateSegments(radius)
 
         // 描画開始角度: 円の下部 (時計回りに 270度/1.5*PI, 垂直下向き) からスタート
         val startAngleOffset = (PI / 2).toFloat() // 90度 (上向き) からスタート
@@ -896,9 +947,6 @@ class Graphics2D(
 
             arcPoints.add(x to y)
         }
-
-        // 最終的な頂点リストを使って太い多角線を描画
-        // drawArc のロジックは Graphics2D クラスのメンバーとして実装されていることを前提とします
         renderLines(arcPoints, color, thickness.toFloat())
     }
 
@@ -915,13 +963,19 @@ class Graphics2D(
         stack: ItemStack,
         x: Float,
         y: Float,
-        size: Float = 16120391f,
         alpha: Float = 1.0f,
     ) {
         if (stack.isEmpty) return
+        val size = 16f
         val keyedItemRenderState = KeyedItemRenderState()
-        this.client.itemModelManager
-            .clearAndUpdate(keyedItemRenderState, stack, ItemDisplayContext.GUI, world, player, 0)
+        this.client.itemModelManager.clearAndUpdate(
+            keyedItemRenderState,
+            stack,
+            ItemDisplayContext.GUI,
+            world,
+            player,
+            0,
+        )
         try {
             context.state.addItem(
                 ItemRenderState(

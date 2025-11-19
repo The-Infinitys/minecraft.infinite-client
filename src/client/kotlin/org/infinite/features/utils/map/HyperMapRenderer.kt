@@ -12,9 +12,13 @@ import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.transparent
 import org.infinite.utils.toRadians
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
-object HyperMapRenderer: ClientInterface() {
+object HyperMapRenderer : ClientInterface() {
     /**
      * エンティティの種類に基づいてドットの色を決定します。（アルファ値は含まない）
      */
