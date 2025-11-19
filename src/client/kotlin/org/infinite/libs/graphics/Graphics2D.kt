@@ -1026,6 +1026,15 @@ class Graphics2D(
         }
     }
 
+    fun drawItem(
+        stack: ItemStack,
+        x: Double,
+        y: Double,
+        alpha: Float = 1.0f,
+    ) {
+        drawItem(stack, x.toFloat(), y.toFloat(), alpha)
+    }
+
     fun enableScissor(
         x1: Int,
         y1: Int,

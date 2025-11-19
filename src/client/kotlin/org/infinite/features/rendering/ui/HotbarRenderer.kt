@@ -56,19 +56,19 @@ class HotbarRenderer(
                 centerX +
                     when (player.mainArm) {
                         Arm.LEFT -> hotbarWidth / 2 + padding
-                        Arm.RIGHT -> -hotbarWidth / 2 - padding
+                        Arm.RIGHT -> -hotbarWidth / 2 - padding * 2 - stackBoxSize
                     }
-            val startX = offHandItemX + innerPadding / 2
+            val startX = offHandItemX + innerPadding
             val startY =
                 hotbarY + innerPadding / 2
             graphics2D.rect(
                 startX,
                 startY,
-                offHandItemX + stackBoxSize - innerPadding / 2,
+                offHandItemX + stackBoxSize,
                 hotbarY + stackBoxSize - innerPadding / 2,
                 backgroundColor,
             )
-            graphics2D.drawItem(offHandStack, startX.roundToInt(), startY.roundToInt())
+            graphics2D.drawItem(offHandStack, startX + innerPadding / 2, startY + innerPadding / 2)
         }
         val selectedSlot = player.inventory.selectedSlot
         for (i in 0..8) {
