@@ -1,8 +1,6 @@
 package org.infinite.features.fighting.gun
 
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.util.hit.HitResult
@@ -19,14 +17,9 @@ import kotlin.math.sin
 object GunnerRenderer {
     private fun gunner(): Gunner? = InfiniteClient.getFeature(Gunner::class.java)
 
-    fun renderInfo(
-        context: DrawContext,
-        tickCounter: RenderTickCounter,
-    ) {
-        val graphics2D = Graphics2D(context, tickCounter)
-        val scaledWidth = context.scaledWindowWidth
-        val scaledHeight = context.scaledWindowHeight // 注意: getScaledWindowHeight() を使用（DrawContextのメソッド）
-
+    fun renderInfo(graphics2D: Graphics2D) {
+        val width = graphics2D.width
+        val height = graphics2D.height
         val gunner = gunner() ?: return
         val gunnerCount = gunner.gunnerCount()
         val totalCrossbow = gunner.totalCrossbows()
@@ -42,8 +35,8 @@ object GunnerRenderer {
             }.toInt()
 
         // ホットバーの位置を模倣: 中央X = scaledWidth / 2, Y = scaledHeight - 22 (ホットバー背景のY)
-        val hotbarY = scaledHeight - 22
-        val centerX = scaledWidth / 2
+        val hotbarY = height - 22
+        val centerX = width / 2
 
         // ホットバー背景を描画（mixinで標準ホットバーを取り消しているため、カスタム背景を追加）
         // ホットバー幅182px、高さ22pxを基準に
@@ -53,7 +46,7 @@ object GunnerRenderer {
         graphics2D.fill(hotbarX, hotbarY, hotbarWidth, hotbarHeight, 0x80000000.toInt()) // 半透明黒背景（標準ホットバーの代わり）
 
         // クロスボウ状況テキスト: ホットバー中央に配置（アイテム描画位置を参考にY調整）
-        val itemRenderY = scaledHeight - 16 - 3 // hotbarコードのo位置
+        val itemRenderY = height - 16 - 3 // hotbarコードのo位置
         val bowText = "$loadedCrossbow / $totalCrossbow"
         val bowTextWidth = MinecraftClient.getInstance().textRenderer.getWidth(bowText)
         graphics2D.drawText(

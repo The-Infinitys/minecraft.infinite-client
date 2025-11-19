@@ -225,6 +225,95 @@ class UiBarRenderer(
             BarSide.Right,
             hasOffHand,
         )
+
+        // 5. 経験値バー
+        renderExperienceBar(graphics2D, e, colors, player)
+    }
+
+    // 経験値バーのレンダリング関数
+    private fun renderExperienceBar(
+        graphics2D: Graphics2D,
+        e: EasingManager,
+        colors: ThemeColors,
+        player: ClientPlayerEntity,
+    ) {
+        val screenWidth = graphics2D.width
+        val screenHeight = graphics2D.height
+        val hotBarWidth = 180.0 // ホットバーの幅
+        val barHeight = 8.0 // 経験値バーの高さ
+        val barOffset = 16.0
+        val padding = config.padding.toDouble()
+
+        // 経験値バーの横幅はホットバーと同じくらいにする
+        val barWidth = hotBarWidth
+
+        // 経験値バーの開始X座標 (中央揃え)
+        val startX = (screenWidth - barWidth) / 2.0
+        // 経験値バーのY座標 (ホットバーの上あたり)
+        val endX = startX + barWidth
+        val endY = screenHeight - padding - barHeight - barOffset
+        val startY = endY - barHeight
+
+        val progress = e.easingExperienceProgress.coerceIn(0.0, 1.0)
+        val level = e.easingExperienceLevel
+
+        // バーの背景
+        graphics2D.rect(
+            startX,
+            startY,
+            endX,
+            endY,
+            colors.backgroundColor.transparent((255 * config.alpha).toInt()),
+        )
+
+        // 経験値バー本体
+        graphics2D.rect(
+            startX,
+            startY,
+            startX + barWidth * progress,
+            endY,
+            colors.limeAccentColor.transparent((255 * config.alpha).toInt()),
+        )
+
+        // 経験値レベルの表示
+        if (level >= 0) { // レベル0でも表示するように変更
+            val levelText = level.toString()
+            val textWidth = graphics2D.textWidth(levelText)
+            val textX = startX + (barWidth - textWidth) / 2.0 // バーの中央に配置
+            val textY = startY + (barHeight - graphics2D.fontHeight()) / 2.0 // バーの垂直方向中央に配置
+
+            graphics2D.drawText(
+                levelText,
+                textX,
+                textY - graphics2D.fontHeight() / 2,
+                colors.limeAccentColor,
+                true, // shadow
+            )
+
+            // バーの左端に経験値量を表示
+            val currentExperienceAmount = (progress * player.nextLevelExperience).toInt()
+            val totalExperienceAmount = player.nextLevelExperience
+            val requiredForNextLevel = player.nextLevelExperience - currentExperienceAmount
+            val experienceAmountText = "$currentExperienceAmount / $totalExperienceAmount"
+            val requiredForNextLevelText = "($requiredForNextLevel)"
+            val expTextX = startX + 2.0 // バーの左端から少し右にオフセット
+            val expTextY = textY // レベルテキストと同じ高さ
+
+            graphics2D.drawText(
+                experienceAmountText,
+                expTextX,
+                expTextY,
+                colors.limeAccentColor,
+                true, // shadow
+            )
+            graphics2D.drawText(
+                requiredForNextLevelText,
+                endX - graphics2D.textWidth(requiredForNextLevelText),
+                expTextY,
+                colors.limeAccentColor,
+                true, // shadow
+            )
+        }
     }
 
     // 描画を簡略化するためのヘルパー関数

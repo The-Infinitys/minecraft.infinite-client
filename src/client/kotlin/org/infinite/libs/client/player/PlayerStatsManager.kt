@@ -35,6 +35,8 @@ object PlayerStatsManager : ClientInterface() {
         val isJumping: Boolean,
         val totalFoodProgress: Double, // 回復予測用の食料進捗
         val canNaturallyRegenerate: Boolean, // 自然回復フラグ
+        val experienceProgress: Double, // 経験値の進捗 (0.0 - 1.0)
+        val experienceLevel: Int, // 経験値レベル
     )
 
     private const val MAX_EXHAUSTION = HungerConstants.EXHAUSTION_UNIT.toDouble()
@@ -163,6 +165,8 @@ object PlayerStatsManager : ClientInterface() {
             isJumping = player.isJumping,
             totalFoodProgress = totalFoodProgress.coerceIn(0.0, 1.0),
             canNaturallyRegenerate = canNaturallyRegenerate,
+            experienceProgress = player.experienceProgress.toDouble(),
+            experienceLevel = player.experienceLevel,
         )
     }
 

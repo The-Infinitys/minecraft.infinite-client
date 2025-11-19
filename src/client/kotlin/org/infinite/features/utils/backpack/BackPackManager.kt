@@ -71,13 +71,12 @@ class BackPackManager : ConfigurableFeature() {
     }
 
     private fun process() {
-        val client = MinecraftClient.getInstance()
-        val player = client.player ?: return
-
+        val player = player ?: return
+        val world = world ?: return
         // --- 1. 定期ソート機能 ---
-        if (sortEnabled.value && (client.world?.time?.minus(lastSortTick) ?: 0) >= sortInterval.value) {
+        if (sortEnabled.value && world.time.minus(lastSortTick) >= sortInterval.value) {
             InventoryManager.sort()
-            lastSortTick = client.world?.time ?: 0
+            lastSortTick = world.time
             updateSlotsInfo()
         }
 
@@ -130,20 +129,13 @@ class BackPackManager : ConfigurableFeature() {
     }
 
     override fun tick() {
-        val client = MinecraftClient.getInstance()
-        client.player ?: return
-
         val currentScreen = client.currentScreen
-
-        // インベントリが閉じられた瞬間を検出
         if (isInventoryOpen && currentScreen == null) {
             updateSlotsInfo()
-            updateSlotsInfo() // 【修正点】: インベントリが閉じられたら、ホットバーの情報を登録し直し
+            return
         }
         isInventoryOpen = (currentScreen != null)
-
-        // インベントリが開いている間は処理を停止
-        if (currentScreen != null) {
+        if (isInventoryOpen) {
             return
         }
 

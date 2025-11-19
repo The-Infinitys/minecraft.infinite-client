@@ -38,10 +38,10 @@ class Graphics2D(
     val tickProgress: Float = tickCounter.getTickProgress(false)
 
     /** 画面の幅 */
-    val width: Int = context.scaledWindowWidth
-
-    /** 画面の高さ */
-    val height: Int = context.scaledWindowHeight
+    val width: Int
+        get() = context.scaledWindowWidth
+    val height: Int
+        get() = context.scaledWindowHeight
 
     // ----------------------------------------------------------------------
     // MatrixState/Transform 状態管理 (Canvasの save/restore に相当)

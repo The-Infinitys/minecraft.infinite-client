@@ -27,6 +27,10 @@ class EasingManager(
         private set
     var easingVehicleHealth = 0.0
         private set
+    var easingExperienceProgress = 0.0
+        private set
+    var easingExperienceLevel = 0
+        private set
 
     // 目標値
     private var targetHp = 0.0
@@ -37,6 +41,8 @@ class EasingManager(
     private var targetSaturation = 0.0
     private var targetAir = 0.0
     private var targetVehicleHealth = 0.0
+    private var targetExperienceProgress = 0.0
+    private var targetExperienceLevel = 0
 
     /**
      * 最新のPlayerStatsを目標値として設定します。
@@ -50,6 +56,10 @@ class EasingManager(
         targetSaturation = s.saturationProgress
         targetAir = s.airProgress
         targetVehicleHealth = s.vehicleHealthProgress
+        targetExperienceProgress = s.experienceProgress
+        targetExperienceLevel = s.experienceLevel
+        // easingExperienceLevelはイージングしないのでここで直接更新
+        easingExperienceLevel = s.experienceLevel
     }
 
     /**
@@ -65,6 +75,7 @@ class EasingManager(
         easingSaturation = (1 - e) * easingSaturation + e * targetSaturation
         easingAir = (1 - e) * easingAir + e * targetAir
         easingVehicleHealth = (1 - e) * easingVehicleHealth + e * targetVehicleHealth
+        easingExperienceProgress = (1 - e) * easingExperienceProgress + e * targetExperienceProgress
     }
 
     /**
@@ -79,5 +90,7 @@ class EasingManager(
         easingSaturation = 0.0
         easingAir = 0.0
         easingVehicleHealth = 0.0
+        easingExperienceProgress = 0.0
+        easingExperienceLevel = 0
     }
 }

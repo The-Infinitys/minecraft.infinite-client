@@ -12,6 +12,7 @@ import org.infinite.InfiniteClient
 import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex
+import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
@@ -97,11 +98,29 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
     private var intervalCount = 0
 
     override fun tick() {
+        if (client.currentScreen != null) return
         switchMode()
         val manager = InventoryManager
         val backPackManager = InfiniteClient.getFeature(BackPackManager::class.java)
 
         backPackManager?.register {
+            // --- 👇 追加された花火オフハンドのロジック ---
+            val offHand = manager.get(InventoryIndex.OffHand())
+            val fireworkRocketItem = Registries.ITEM.get(Identifier.of("minecraft:firework_rocket"))
+
+            // オフハンドが花火アイテムでない、かつ、花火アイテムがある場合
+            if (offHand.item != fireworkRocketItem) {
+                val fireworkIndex = findFirstStarFirework() // 星付き花火を検索
+
+                if (fireworkIndex != null) {
+                    // オフハンドと花火をスワップ
+                    manager.swap(InventoryIndex.OffHand(), fireworkIndex)
+                    // スワップ後は、クロスボウ関連のtick処理をスキップ
+                    return@register
+                }
+            }
+            // --- 👆 ここまで追加された花火オフハンドのロジック ---
+
             // tick()全体をregisterで囲む
             when (mode) {
                 GunnerMode.SHOT -> {
@@ -250,6 +269,50 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
         }
 
         return null
+    }
+
+    // --- 👇 追加された花火ロジック関連のプライベート関数 ---
+
+    /**
+     * ItemStackが、星（ペイロード）を持つ花火アイテムであるか判定する。
+     * * NOTE: 厳密には FireworkExplosion の Type を確認するべきだが、ここでは
+     * 花火ロケットであり、何らかのペイロードを持っていること（ロケット花火として機能すること）
+     * をもって「星の入った花火」と見なす。
+     */
+    private fun isStarFirework(stack: ItemStack): Boolean {
+        // 1. アイテムが花火ロケットか確認
+        val fireworkRocketItem = Registries.ITEM.get(Identifier.of("minecraft:firework_rocket"))
+        if (stack.item != fireworkRocketItem) return false
+
+        // 2. ペイロード（花火の星）のコンポーネントを取得
+        val firework = stack.get(DataComponentTypes.FIREWORKS)
+        // ペイロードが null でない、かつ、花火の星リストが空でないことを確認
+        return firework != null && !firework.explosions.isEmpty()
+    }
+
+    /**
+     * インベントリ（バックパックとホットバー）から最初の星付き花火を検索する。
+     */
+    private fun findFirstStarFirework(): InventoryIndex? {
+        // バックパック (0-26)
+        for (i in 0 until 27) {
+            val index = InventoryIndex.Backpack(i)
+            val stack = InventoryManager.get(index)
+            if (isStarFirework(stack)) return index
+        }
+        // ホットバー (0-8)
+        for (i in 0 until 9) {
+            val index = InventoryIndex.Hotbar(i)
+            val stack = InventoryManager.get(index)
+            if (isStarFirework(stack)) return index
+        }
+        return null
+    }
+
+    // --- 👆 ここまで追加された花火ロジック関連のプライベート関数 ---
+
+    override fun render2d(graphics2D: Graphics2D) {
+        GunnerRenderer.renderInfo(graphics2D)
     }
 
     override fun render3d(graphics3D: Graphics3D) {

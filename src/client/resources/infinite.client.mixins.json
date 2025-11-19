@@ -32,6 +32,7 @@
     "features.rendering.hyperfont.FontManagerMixin",
     "features.rendering.hypertag.EntityRendererMixin",
     "features.rendering.hypertag.LivingEntityRendererMixin",
+    "features.rendering.hyperui.CancelRenderInteractionsMixin",
     "features.rendering.hyperui.CancelRenderUiMixin",
     "features.rendering.hyperui.CancelRenderWorldMixin",
     "features.rendering.portalgui.PortalGuiMixin",
