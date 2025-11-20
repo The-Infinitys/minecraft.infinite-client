@@ -909,18 +909,15 @@ class Graphics2D(
         cx: Float,
         cy: Float,
         radius: Float,
+        startAngle: Float, // 0 から 2*PI までの開始角度
         endAngle: Float, // 0 から 2*PI までの完了角度
         thickness: Int, // 線の太さ
         color: Int,
     ) {
         // 円弧の中心線となる頂点リスト
         val arcPoints = mutableListOf<Pair<Float, Float>>()
-
-        // セグメント数 (細かくするほど滑らかになる)
         val segments = calculateSegments(radius)
-
-        // 描画開始角度: 円の下部 (時計回りに 270度/1.5*PI, 垂直下向き) からスタート
-        val startAngleOffset = (PI / 2).toFloat() // 90度 (上向き) からスタート
+        val startAngleOffset = (startAngle / (2 * PI)).toFloat() // 90度 (上向き) からスタート
 
         // 描画するセグメント数 (endAngle に比例)
         val segmentsToDraw = (segments * (endAngle / (2 * PI))).toInt()
@@ -947,7 +944,33 @@ class Graphics2D(
 
             arcPoints.add(x to y)
         }
-        renderLines(arcPoints, color, thickness.toFloat())
+        val startOffsets = 0f to 0f
+        val firstPointOffset = 0f to 0f
+        val endPointOffset = 0f to 0f
+        val endOffsets = 0f to 0f
+        quad(
+            arcPoints[0].first + startOffsets.first,
+            arcPoints[0].second + startOffsets.second,
+            arcPoints[1].first + firstPointOffset.first,
+            arcPoints[1].second + firstPointOffset.second,
+            arcPoints[1].first - firstPointOffset.first,
+            arcPoints[1].second - firstPointOffset.second,
+            arcPoints[0].first - startOffsets.first,
+            arcPoints[0].second - startOffsets.second,
+            color,
+        )
+        renderLines(arcPoints.subList(1, arcPoints.size - 2), color, thickness.toFloat())
+        quad(
+            arcPoints[arcPoints.size - 2].first + endPointOffset.first,
+            arcPoints[arcPoints.size - 2].second + endPointOffset.second,
+            arcPoints[arcPoints.size - 1].first + endOffsets.first,
+            arcPoints[arcPoints.size - 1].second + endPointOffset.second,
+            arcPoints[arcPoints.size - 1].first - endOffsets.first,
+            arcPoints[arcPoints.size - 1].second - endPointOffset.second,
+            arcPoints[arcPoints.size - 2].first - endPointOffset.first,
+            arcPoints[arcPoints.size - 2].second - endPointOffset.second,
+            color,
+        )
     }
 
     fun drawItem(
