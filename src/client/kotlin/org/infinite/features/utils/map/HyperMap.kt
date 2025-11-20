@@ -8,7 +8,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.Heightmap
 import net.minecraft.world.World
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.rendering.transparent

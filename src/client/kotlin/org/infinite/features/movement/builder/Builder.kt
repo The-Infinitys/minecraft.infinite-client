@@ -1,8 +1,8 @@
 package org.infinite.features.movement.builder
 
 import net.minecraft.util.math.Direction
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 import org.lwjgl.glfw.GLFW
 

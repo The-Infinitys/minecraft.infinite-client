@@ -1,6 +1,6 @@
 package org.infinite.features.rendering.font
 
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class HyperFont : ConfigurableFeature() {

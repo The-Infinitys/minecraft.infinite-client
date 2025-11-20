@@ -5,8 +5,8 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ServerInfo
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class ServerInfo : ConfigurableFeature() {

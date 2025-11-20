@@ -2,7 +2,7 @@ package org.infinite.features.movement.sprint
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 import kotlin.math.atan2
 

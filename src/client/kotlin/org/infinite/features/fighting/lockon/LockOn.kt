@@ -3,8 +3,8 @@ package org.infinite.features.fighting.lockon
 import net.minecraft.client.MinecraftClient
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.fighting.aimassist.AimAssist
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.task.AimTask

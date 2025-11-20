@@ -5,8 +5,8 @@ import net.minecraft.entity.vehicle.VehicleEntity
 import net.minecraft.util.Hand
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.automatic.pilot.AutoPilot
 import org.infinite.libs.client.aim.camera.CameraRoll
 import org.infinite.settings.FeatureSetting

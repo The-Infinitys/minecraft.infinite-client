@@ -7,8 +7,8 @@ import net.minecraft.component.type.FoodComponent
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.consume.ApplyEffectsConsumeEffect
 import net.minecraft.item.consume.TeleportRandomlyConsumeEffect
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.settings.FeatureSetting

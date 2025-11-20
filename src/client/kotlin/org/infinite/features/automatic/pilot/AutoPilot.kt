@@ -18,8 +18,8 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Heightmap
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.movement.vehicle.HoverVehicle
 import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.aim.AimInterface

@@ -7,7 +7,7 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.Feature
 import org.infinite.gui.widget.InfiniteBlockColorListField
 import org.infinite.gui.widget.InfiniteBlockListField

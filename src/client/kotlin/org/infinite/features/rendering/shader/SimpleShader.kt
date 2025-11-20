@@ -1,7 +1,7 @@
 package org.infinite.features.rendering.shader
 
 import net.minecraft.client.MinecraftClient
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
 import org.lwjgl.glfw.GLFW

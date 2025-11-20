@@ -3,8 +3,8 @@ package org.infinite.features.rendering.camera
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property

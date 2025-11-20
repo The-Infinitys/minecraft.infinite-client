@@ -11,8 +11,8 @@ import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.Feature
 import org.infinite.gui.widget.FeatureSearchWidget
 import org.infinite.gui.widget.InfiniteButton

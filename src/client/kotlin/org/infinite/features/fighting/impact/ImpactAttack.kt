@@ -6,7 +6,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.math.MathHelper
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 import kotlin.math.sqrt
 

@@ -36,7 +36,7 @@ import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.MathHelper
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
 import java.nio.file.Path

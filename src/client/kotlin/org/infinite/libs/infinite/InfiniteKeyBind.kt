@@ -6,8 +6,8 @@ import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.gui.screen.InfiniteScreen
 import org.infinite.utils.toSnakeCase
 import org.lwjgl.glfw.GLFW

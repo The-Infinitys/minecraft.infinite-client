@@ -2,7 +2,7 @@ package org.infinite.features.movement.walk
 
 import net.minecraft.client.MinecraftClient // MinecraftClient のインポートを追加
 import net.minecraft.client.option.KeyBinding // KeyBinding のインポートを追加
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.client.control.ControllerInterface
 import org.infinite.settings.FeatureSetting
 

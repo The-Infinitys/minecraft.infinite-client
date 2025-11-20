@@ -1,6 +1,6 @@
 package org.infinite.features.movement.fall
 
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.movement.hunger.AntiHunger
 import org.infinite.settings.FeatureSetting
 

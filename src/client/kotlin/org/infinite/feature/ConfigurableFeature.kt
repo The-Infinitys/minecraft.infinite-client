@@ -1,10 +1,11 @@
-package org.infinite
+package org.infinite.feature
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
+import org.infinite.InfiniteClient
 import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
@@ -13,6 +14,7 @@ import org.infinite.settings.FeatureSetting
 import org.infinite.settings.Property
 import org.infinite.utils.toSnakeCase
 import org.lwjgl.glfw.GLFW
+import kotlin.collections.forEach
 
 abstract class ConfigurableFeature(
     private val initialEnabled: Boolean = false,

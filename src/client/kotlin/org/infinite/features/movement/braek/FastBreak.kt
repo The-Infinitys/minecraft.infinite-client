@@ -2,7 +2,7 @@ package org.infinite.features.movement.braek
 
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.math.BlockPos
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.mixin.features.movement.fastbreak.ClientPlayerInteractionManagerAccessor
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.block.BlockUtils

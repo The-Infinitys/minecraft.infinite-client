@@ -2,8 +2,8 @@ package org.infinite.features.fighting.totem
 
 import net.minecraft.item.Items
 import net.minecraft.screen.slot.SlotActionType
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.async.AsyncInterface
 import org.infinite.libs.client.inventory.InventoryManager

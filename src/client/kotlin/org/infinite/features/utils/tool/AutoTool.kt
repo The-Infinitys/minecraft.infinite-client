@@ -4,8 +4,8 @@ import net.minecraft.block.Block
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.movement.braek.LinearBreak
 import org.infinite.features.movement.braek.VeinBreak
 import org.infinite.features.rendering.detailinfo.ToolChecker

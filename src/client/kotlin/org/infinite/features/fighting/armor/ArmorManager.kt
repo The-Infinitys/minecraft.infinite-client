@@ -7,8 +7,8 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.client.inventory.InventoryManager
 import org.infinite.libs.client.inventory.InventoryManager.InventoryIndex

@@ -13,8 +13,8 @@ import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.infinite.ConfigManager
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.Feature
 import org.infinite.settings.FeatureSetting
 

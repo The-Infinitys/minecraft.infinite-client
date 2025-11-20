@@ -4,7 +4,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.util.math.Vec3d
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
 import kotlin.math.cos

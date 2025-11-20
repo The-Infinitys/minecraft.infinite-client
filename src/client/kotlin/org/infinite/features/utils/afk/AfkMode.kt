@@ -1,8 +1,8 @@
 package org.infinite.features.utils.afk
 
 import net.minecraft.text.Text
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class AfkMode : ConfigurableFeature(initialEnabled = false) {

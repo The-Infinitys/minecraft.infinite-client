@@ -1,8 +1,8 @@
 package org.infinite.features.fighting.berserk
 
 import net.minecraft.entity.LivingEntity
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.fighting.lockon.LockOn
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.movement.EntityPosMovementAction

@@ -7,7 +7,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.player.PlayerEntity
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.rendering.sensory.esp.ContainerEsp
 import org.infinite.features.rendering.sensory.esp.ItemEsp
 import org.infinite.features.rendering.sensory.esp.MobEsp

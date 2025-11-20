@@ -5,8 +5,8 @@ import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.render.RenderUtils
 import org.infinite.settings.FeatureSetting

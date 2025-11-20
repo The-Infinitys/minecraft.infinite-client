@@ -1,6 +1,6 @@
 package org.infinite.features.fighting.mace
 
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class HyperMace : ConfigurableFeature(initialEnabled = false) {

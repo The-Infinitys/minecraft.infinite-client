@@ -14,6 +14,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.ColorHelper
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.FeatureCategory
 import org.infinite.features.automatic.AutomaticFeatureCategory
 import org.infinite.features.fighting.FightingFeatureCategory

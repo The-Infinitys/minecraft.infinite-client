@@ -8,8 +8,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.movement.braek.FastBreak
 import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.ai.AiInterface

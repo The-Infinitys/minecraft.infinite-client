@@ -2,7 +2,7 @@ package org.infinite.features.movement.brawler
 
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class Brawler : ConfigurableFeature(initialEnabled = false) {

@@ -1,8 +1,8 @@
 package org.infinite.features
 
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 
 open class FeatureCategory(
     val name: String,
-    val features: MutableList<Feature<out ConfigurableFeature>>,
+    open val features: MutableList<Feature<out ConfigurableFeature>>,
 )

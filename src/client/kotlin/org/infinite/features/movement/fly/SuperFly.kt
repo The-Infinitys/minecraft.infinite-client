@@ -3,7 +3,7 @@ package org.infinite.features.movement.fly
 import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.util.math.Vec3d
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.client.aim.camera.CameraRoll
 import org.infinite.settings.FeatureSetting
 import org.infinite.utils.toRadians

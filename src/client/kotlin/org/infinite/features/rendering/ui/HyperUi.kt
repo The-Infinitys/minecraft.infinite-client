@@ -2,8 +2,8 @@ package org.infinite.features.rendering.ui
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayerEntity
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.gui.theme.ThemeColors
 import org.infinite.libs.client.player.PlayerStatsManager
 import org.infinite.libs.graphics.Graphics2D

@@ -6,7 +6,7 @@ import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
 import net.minecraft.client.network.ServerAddress
 import net.minecraft.client.network.ServerInfo
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class AutoConnect : ConfigurableFeature() {

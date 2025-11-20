@@ -3,7 +3,7 @@ package org.infinite.features.fighting.counter
 import net.minecraft.client.MinecraftClient
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.task.AimTask
 import org.infinite.libs.client.aim.task.condition.AimTaskConditionByFrame

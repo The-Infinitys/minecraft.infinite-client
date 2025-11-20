@@ -13,8 +13,8 @@ import net.minecraft.entity.mob.SlimeEntity
 import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.item.Items
 import net.minecraft.util.math.Vec3d
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.libs.client.aim.AimInterface
 import org.infinite.libs.client.aim.task.AimTask
 import org.infinite.libs.client.aim.task.condition.ImmediatelyAimTaskCondition

@@ -6,7 +6,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 import net.minecraft.world.RaycastContext.FluidHandling
 import net.minecraft.world.RaycastContext.ShapeType
-import org.infinite.ConfigurableFeature
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.settings.FeatureSetting
 
 class QuickLand : ConfigurableFeature(initialEnabled = false) {

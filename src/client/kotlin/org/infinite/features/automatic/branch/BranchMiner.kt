@@ -5,8 +5,8 @@ import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
-import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.utils.backpack.BackPackManager
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.ai.actions.block.MineBlockAction
