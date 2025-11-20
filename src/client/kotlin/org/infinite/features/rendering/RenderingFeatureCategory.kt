@@ -10,6 +10,7 @@ import org.infinite.features.rendering.overlay.AntiOverlay
 import org.infinite.features.rendering.portalgui.PortalGui
 import org.infinite.features.rendering.search.BlockSearch
 import org.infinite.features.rendering.sensory.ExtraSensory
+import org.infinite.features.rendering.shader.SimpleShader
 import org.infinite.features.rendering.sight.SuperSight
 import org.infinite.features.rendering.tag.HyperTag
 import org.infinite.features.rendering.ui.HyperUi
@@ -37,6 +38,9 @@ class RenderingFeatureCategory :
                 // 追加
                 FreeCamera(), // 追加
                 // 追加
+            ),
+            Feature(
+                SimpleShader(),
             ),
             Feature(
                 ExtraSensory(),
