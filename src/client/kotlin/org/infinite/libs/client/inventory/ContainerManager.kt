@@ -208,7 +208,10 @@ object ContainerManager : ClientInterface() {
 
         return when (handlerType) {
             // プレイヤーインベントリ/汎用チェスト系
-            ScreenHandlerType.GENERIC_9X1 -> ContainerType.Inventory
+            ScreenHandlerType.GENERIC_9X1 -> {
+                ContainerType.Inventory
+            }
+
             ScreenHandlerType.GENERIC_9X2,
             ScreenHandlerType.GENERIC_9X3,
             ScreenHandlerType.GENERIC_9X4,
@@ -221,31 +224,87 @@ object ContainerManager : ClientInterface() {
             }
 
             // 3x3 グリッド系
-            ScreenHandlerType.GENERIC_3X3 -> ContainerType.Generic3x3
-            ScreenHandlerType.CRAFTER_3X3 -> ContainerType.Crafter3x3
+            ScreenHandlerType.GENERIC_3X3 -> {
+                ContainerType.Generic3x3
+            }
+
+            ScreenHandlerType.CRAFTER_3X3 -> {
+                ContainerType.Crafter3x3
+            }
 
             // 溶鉱炉系
-            ScreenHandlerType.FURNACE -> ContainerType.Furnace
-            ScreenHandlerType.SMOKER -> ContainerType.Smoker
-            ScreenHandlerType.BLAST_FURNACE -> ContainerType.BlastFurnace
+            ScreenHandlerType.FURNACE -> {
+                ContainerType.Furnace
+            }
+
+            ScreenHandlerType.SMOKER -> {
+                ContainerType.Smoker
+            }
+
+            ScreenHandlerType.BLAST_FURNACE -> {
+                ContainerType.BlastFurnace
+            }
 
             // ツール/特殊系
-            ScreenHandlerType.ANVIL -> ContainerType.Anvil
-            ScreenHandlerType.BEACON -> ContainerType.Beacon
-            ScreenHandlerType.BREWING_STAND -> ContainerType.BrewingStand
-            ScreenHandlerType.CRAFTING -> ContainerType.Crafting
-            ScreenHandlerType.ENCHANTMENT -> ContainerType.Enchantment
-            ScreenHandlerType.GRINDSTONE -> ContainerType.Grindstone
-            ScreenHandlerType.HOPPER -> ContainerType.Hopper
-            ScreenHandlerType.LECTERN -> ContainerType.Lectern
-            ScreenHandlerType.LOOM -> ContainerType.Loom
-            ScreenHandlerType.MERCHANT -> ContainerType.Merchant
-            ScreenHandlerType.SHULKER_BOX -> ContainerType.ShulkerBox
-            ScreenHandlerType.SMITHING -> ContainerType.Smithing
-            ScreenHandlerType.CARTOGRAPHY_TABLE -> ContainerType.Cartography
-            ScreenHandlerType.STONECUTTER -> ContainerType.Stonecutter
+            ScreenHandlerType.ANVIL -> {
+                ContainerType.Anvil
+            }
 
-            else -> ContainerType.None
+            ScreenHandlerType.BEACON -> {
+                ContainerType.Beacon
+            }
+
+            ScreenHandlerType.BREWING_STAND -> {
+                ContainerType.BrewingStand
+            }
+
+            ScreenHandlerType.CRAFTING -> {
+                ContainerType.Crafting
+            }
+
+            ScreenHandlerType.ENCHANTMENT -> {
+                ContainerType.Enchantment
+            }
+
+            ScreenHandlerType.GRINDSTONE -> {
+                ContainerType.Grindstone
+            }
+
+            ScreenHandlerType.HOPPER -> {
+                ContainerType.Hopper
+            }
+
+            ScreenHandlerType.LECTERN -> {
+                ContainerType.Lectern
+            }
+
+            ScreenHandlerType.LOOM -> {
+                ContainerType.Loom
+            }
+
+            ScreenHandlerType.MERCHANT -> {
+                ContainerType.Merchant
+            }
+
+            ScreenHandlerType.SHULKER_BOX -> {
+                ContainerType.ShulkerBox
+            }
+
+            ScreenHandlerType.SMITHING -> {
+                ContainerType.Smithing
+            }
+
+            ScreenHandlerType.CARTOGRAPHY_TABLE -> {
+                ContainerType.Cartography
+            }
+
+            ScreenHandlerType.STONECUTTER -> {
+                ContainerType.Stonecutter
+            }
+
+            else -> {
+                ContainerType.None
+            }
         }
     }
 
@@ -256,13 +315,36 @@ object ContainerManager : ClientInterface() {
     private fun getContainerSlotCount(): Int {
         val handler = player?.currentScreenHandler ?: return 0
         return when (val type = containerType()) {
-            is ContainerType.Generic -> type.size
-            ContainerType.ShulkerBox -> 27 // ShulkerBox は Generic に含まれないため別途定義
-            ContainerType.Furnace, ContainerType.Smoker, ContainerType.BlastFurnace -> 3
-            ContainerType.BrewingStand -> 5
-            ContainerType.Smithing, ContainerType.Anvil -> 3
-            ContainerType.Hopper, ContainerType.Generic3x3 -> 9
-            ContainerType.Inventory -> 0 // プレイヤーインベントリ画面の場合、コンテナスロットは 0 として扱う
+            is ContainerType.Generic -> {
+                type.size
+            }
+
+            ContainerType.ShulkerBox -> {
+                27
+            }
+
+            // ShulkerBox は Generic に含まれないため別途定義
+            ContainerType.Furnace, ContainerType.Smoker, ContainerType.BlastFurnace -> {
+                3
+            }
+
+            ContainerType.BrewingStand -> {
+                5
+            }
+
+            ContainerType.Smithing, ContainerType.Anvil -> {
+                3
+            }
+
+            ContainerType.Hopper, ContainerType.Generic3x3 -> {
+                9
+            }
+
+            ContainerType.Inventory -> {
+                0
+            }
+
+            // プレイヤーインベントリ画面の場合、コンテナスロットは 0 として扱う
             // その他のタイプも、必要に応じて手動でスロット数を定義するか、handler.slots.size - 36 (プレイヤーインベントリ数) を使用します。
             // 既存の ContainerIndex でサポートされているタイプのみスロット数を定義します。
             else -> {
@@ -308,6 +390,7 @@ object ContainerManager : ClientInterface() {
                         ContainerIndex.FurnaceLike.Product -> 2
                     }
                 }
+
                 // ... (その他のコンテナIndexの処理は変更なし) ...
                 is ContainerIndex.Brewing -> {
                     if (currentType != ContainerType.BrewingStand) return null

@@ -453,14 +453,17 @@ class ShieldMachine : ConfigurableFeature() {
                     xOffset = forwardOffset
                     zOffset = widthRelativeOffset
                 }
+
                 Direction.West -> {
                     xOffset = 0
                     zOffset = -widthRelativeOffset
                 }
+
                 Direction.North -> {
                     xOffset = widthRelativeOffset
                     zOffset = 0
                 }
+
                 Direction.South -> {
                     xOffset = -widthRelativeOffset
                     zOffset = forwardOffset

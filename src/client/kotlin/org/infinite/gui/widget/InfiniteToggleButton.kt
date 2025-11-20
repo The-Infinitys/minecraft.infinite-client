@@ -49,12 +49,13 @@ class InfiniteToggleButton(
 
         val backgroundColor =
             when {
-                !isEnabled ->
+                !isEnabled -> {
                     InfiniteClient
                         .theme()
                         .colors.backgroundColor
+                }
 
-                state ->
+                state -> {
                     if (isHovered) {
                         InfiniteClient
                             .theme()
@@ -64,8 +65,9 @@ class InfiniteToggleButton(
                             .theme()
                             .colors.primaryColor // ON state
                     }
+                }
 
-                else ->
+                else -> {
                     if (isHovered) {
                         InfiniteClient
                             .theme()
@@ -75,6 +77,7 @@ class InfiniteToggleButton(
                             .theme()
                             .colors.backgroundColor // OFF state
                     }
+                }
             }
 
         // ノブのサイズを基準にバーの幅を決定

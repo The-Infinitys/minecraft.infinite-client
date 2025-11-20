@@ -65,19 +65,26 @@ object MobEsp {
      */
     private fun mobColor(entity: LivingEntity): Int =
         when (entity) {
-            is HostileEntity ->
+            is HostileEntity -> {
                 org.infinite.InfiniteClient
                     .theme()
-                    .colors.redAccentColor // 敵対モブ -> 赤
-            is PassiveEntity ->
+                    .colors.redAccentColor
+            }
+
+            // 敵対モブ -> 赤
+            is PassiveEntity -> {
                 org.infinite.InfiniteClient
                     .theme()
-                    .colors.greenAccentColor // 友好モブ -> 緑
+                    .colors.greenAccentColor
+            }
+
+            // 友好モブ -> 緑
             // 中立モブ、あるいはどちらにも分類されないモブ -> 黄
-            else ->
+            else -> {
                 org.infinite.InfiniteClient
                     .theme()
                     .colors.yellowAccentColor
+            }
         }
 
     /**

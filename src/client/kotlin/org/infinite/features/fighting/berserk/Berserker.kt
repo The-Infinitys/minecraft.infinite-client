@@ -42,9 +42,13 @@ class Berserker : ConfigurableFeature() {
     override fun onTick() {
         client.player ?: return
         when (currentState) {
-            BerserkerState.IDLE -> startMovement() // IDLEから開始
+            BerserkerState.IDLE -> startMovement()
+
+            // IDLEから開始
             BerserkerState.MOVING_TO_TARGET -> monitorMovement()
+
             BerserkerState.ATTACKING -> performContinuousAttack(targetEntity!!)
+
             BerserkerState.COMPLETED -> disable() // 完了したら無効化
         }
     }

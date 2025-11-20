@@ -165,12 +165,30 @@ class BranchMiner : ConfigurableFeature() {
         }
 
         when (state) {
-            State.Initialize -> handleInitialize()
-            State.Scan -> handleScan()
-            State.Branch -> handleBranch()
-            State.Mining -> handleMining()
-            State.Check -> handleCheck()
-            State.Next -> handleNext()
+            State.Initialize -> {
+                handleInitialize()
+            }
+
+            State.Scan -> {
+                handleScan()
+            }
+
+            State.Branch -> {
+                handleBranch()
+            }
+
+            State.Mining -> {
+                handleMining()
+            }
+
+            State.Check -> {
+                handleCheck()
+            }
+
+            State.Next -> {
+                handleNext()
+            }
+
             State.Idle -> {}
         }
     }
@@ -477,8 +495,14 @@ class BranchMiner : ConfigurableFeature() {
                 ContainerManager.open(nearestChest!!)
             }
 
-            waitTicks == 10 -> storeMinedItems()
-            waitTicks == 30 -> ContainerManager.close()
+            waitTicks == 10 -> {
+                storeMinedItems()
+            }
+
+            waitTicks == 30 -> {
+                ContainerManager.close()
+            }
+
             waitTicks > 30 -> {
                 InfiniteClient.log(Text.literal("§a[BranchMiner] Items stored in chest"))
                 returnToBranchStart()
@@ -511,17 +535,63 @@ class BranchMiner : ConfigurableFeature() {
         val hotbarSize = 9
 
         // コンテナスロットの数 (N) を取得。プレイヤーインベントリのスロットIDは N から始まります。
+        // BranchMiner.kt (修正例)
+// BranchMiner.kt (修正後の when 式)
+
+// コンテナスロットの数 (N) を取得。プレイヤーインベントリのスロットIDは N から始まります。
         val containerSlotCount =
             when (currentType) {
                 is ContainerManager.ContainerType.Generic -> currentType.size
-                is ContainerManager.ContainerType.ShulkerBox -> 27
-                is ContainerManager.ContainerType.Loom -> 3
-                is ContainerManager.ContainerType.None -> 0
-                is ContainerManager.ContainerType.Beacon -> 1
-                is ContainerManager.ContainerType.Anvil -> 3
-                else -> 0
-            }
 
+                // サイズが動的
+                is ContainerManager.ContainerType.Inventory -> 46
+
+                // プレイヤーインベントリ: 4x9(インベントリ/ホットバー) + 4(防具) + 1(オフハンド) + 1(クラフト結果) + 4(クラフトグリッド) = 46 (ただし、クラフトグリッドは通常、プレイヤーインベントリのスロット範囲外) -> **46が一般的**
+                is ContainerManager.ContainerType.ShulkerBox -> 27
+
+                is ContainerManager.ContainerType.Hopper -> 5
+
+                is ContainerManager.ContainerType.Crafting -> 10
+
+                is ContainerManager.ContainerType.Crafter3x3 -> 10
+
+                is ContainerManager.ContainerType.Generic3x3 -> 10
+
+                is ContainerManager.ContainerType.Furnace -> 3
+
+                is ContainerManager.ContainerType.Smoker -> 3
+
+                is ContainerManager.ContainerType.BlastFurnace -> 3
+
+                is ContainerManager.ContainerType.Anvil -> 3
+
+                is ContainerManager.ContainerType.Grindstone -> 3
+
+                is ContainerManager.ContainerType.Cartography -> 3
+
+                is ContainerManager.ContainerType.Merchant -> 3
+
+                // 2つの入力 + 1つの出力
+                is ContainerManager.ContainerType.BrewingStand -> 5
+
+                // 3つのポーション + 1つの燃料 + 1つの素材
+                is ContainerManager.ContainerType.Enchantment -> 2
+
+                // 本 + ラピスラズリ
+                is ContainerManager.ContainerType.Loom -> 3
+
+                is ContainerManager.ContainerType.Stonecutter -> 2
+
+                is ContainerManager.ContainerType.Smithing -> 4
+
+                // 鍛冶台の新しいレイアウト (3つの入力 + 1つの出力)
+                is ContainerManager.ContainerType.Beacon -> 1
+
+                is ContainerManager.ContainerType.Lectern -> 1
+
+                // 書物スロット
+                is ContainerManager.ContainerType.None -> 0 // 開いているコンテナがない状態
+            }
         val startSlot = containerSlotCount + hotbarSize
         val endSlot = containerSlotCount + playerInvSize
 

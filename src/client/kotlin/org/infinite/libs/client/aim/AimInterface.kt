@@ -12,8 +12,16 @@ object AimInterface {
 
     fun addTask(task: AimTask) {
         when (task.priority) {
-            AimPriority.Normally -> tasks.addLast(task) // 一番後ろに追加 (通常のタスク)
-            AimPriority.Immediately -> tasks.addFirst(task) // 一番前に追加 (即時実行タスク)
+            AimPriority.Normally -> {
+                tasks.addLast(task)
+            }
+
+            // 一番後ろに追加 (通常のタスク)
+            AimPriority.Immediately -> {
+                tasks.addFirst(task)
+            }
+
+            // 一番前に追加 (即時実行タスク)
             AimPriority.Preferentially -> {
                 val insertionIndex = tasks.indexOfFirst { it.priority == AimPriority.Normally }
                 if (insertionIndex != -1) {

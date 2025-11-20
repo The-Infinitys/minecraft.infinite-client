@@ -75,27 +75,55 @@ object ConfigManager {
                                     (
                                         setting.name to
                                             when (setting) {
-                                                is FeatureSetting.BooleanSetting -> JsonPrimitive(setting.value)
-                                                is FeatureSetting.IntSetting -> JsonPrimitive(setting.value)
-                                                is FeatureSetting.FloatSetting -> JsonPrimitive(setting.value)
-                                                is FeatureSetting.DoubleSetting -> JsonPrimitive(setting.value)
-                                                is FeatureSetting.StringSetting -> JsonPrimitive(setting.value)
-                                                is FeatureSetting.StringListSetting ->
-                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                is FeatureSetting.BooleanSetting -> {
+                                                    JsonPrimitive(setting.value)
+                                                }
 
-                                                is FeatureSetting.EnumSetting<*> -> JsonPrimitive(setting.value.name)
-                                                is FeatureSetting.BlockIDSetting -> JsonPrimitive(setting.value)
-                                                is FeatureSetting.EntityIDSetting -> JsonPrimitive(setting.value)
-                                                is FeatureSetting.BlockListSetting ->
-                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                is FeatureSetting.IntSetting -> {
+                                                    JsonPrimitive(setting.value)
+                                                }
 
-                                                is FeatureSetting.EntityListSetting ->
-                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                is FeatureSetting.FloatSetting -> {
+                                                    JsonPrimitive(setting.value)
+                                                }
 
-                                                is FeatureSetting.PlayerListSetting ->
-                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                is FeatureSetting.DoubleSetting -> {
+                                                    JsonPrimitive(setting.value)
+                                                }
 
-                                                is FeatureSetting.BlockColorListSetting ->
+                                                is FeatureSetting.StringSetting -> {
+                                                    JsonPrimitive(setting.value)
+                                                }
+
+                                                is FeatureSetting.StringListSetting -> {
+                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                }
+
+                                                is FeatureSetting.EnumSetting<*> -> {
+                                                    JsonPrimitive(setting.value.name)
+                                                }
+
+                                                is FeatureSetting.BlockIDSetting -> {
+                                                    JsonPrimitive(setting.value)
+                                                }
+
+                                                is FeatureSetting.EntityIDSetting -> {
+                                                    JsonPrimitive(setting.value)
+                                                }
+
+                                                is FeatureSetting.BlockListSetting -> {
+                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                }
+
+                                                is FeatureSetting.EntityListSetting -> {
+                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                }
+
+                                                is FeatureSetting.PlayerListSetting -> {
+                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                }
+
+                                                is FeatureSetting.BlockColorListSetting -> {
                                                     JsonArray(
                                                         setting.value.map { (blockId, color) ->
                                                             buildJsonObject {
@@ -104,6 +132,7 @@ object ConfigManager {
                                                             }
                                                         },
                                                     )
+                                                }
                                             }
                                     )
                                 }
@@ -144,60 +173,75 @@ object ConfigManager {
                     featureConfig.settings.forEach { (settingName, jsonElement) ->
                         configurableFeature.settings.find { it.name == settingName }?.let { setting ->
                             when (setting) {
-                                is FeatureSetting.BooleanSetting ->
+                                is FeatureSetting.BooleanSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
+                                }
 
-                                is FeatureSetting.IntSetting ->
+                                is FeatureSetting.IntSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
+                                }
 
-                                is FeatureSetting.FloatSetting ->
+                                is FeatureSetting.FloatSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
+                                }
 
-                                is FeatureSetting.DoubleSetting ->
+                                is FeatureSetting.DoubleSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
+                                }
 
-                                is FeatureSetting.StringSetting ->
+                                is FeatureSetting.StringSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
+                                }
 
-                                is FeatureSetting.StringListSetting ->
+                                is FeatureSetting.StringListSetting -> {
                                     setting.value =
                                         json
                                             .decodeFromJsonElement<List<String>>(jsonElement)
-                                            .toMutableList() // **Changed to MutableList**
+                                            .toMutableList()
+                                }
+
+                                // **Changed to MutableList**
 
                                 // 🚀 **追加されたBlockIDSettingとEntityIDSettingの処理**
-                                is FeatureSetting.BlockIDSetting ->
+                                is FeatureSetting.BlockIDSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
+                                }
 
-                                is FeatureSetting.EntityIDSetting ->
+                                is FeatureSetting.EntityIDSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement(jsonElement)
+                                }
 
                                 // 🚀 **追加されたBlockListSettingの処理**
-                                is FeatureSetting.BlockListSetting ->
+                                is FeatureSetting.BlockListSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                }
 
-                                is FeatureSetting.EntityListSetting ->
+                                is FeatureSetting.EntityListSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                }
 
-                                is FeatureSetting.PlayerListSetting ->
+                                is FeatureSetting.PlayerListSetting -> {
                                     setting.value =
                                         json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                }
 
-                                is FeatureSetting.BlockColorListSetting ->
+                                is FeatureSetting.BlockColorListSetting -> {
                                     setting.value =
                                         json
                                             .decodeFromJsonElement<List<Map<String, JsonPrimitive>>>(jsonElement)
                                             .associate { it["blockId"]!!.content to it["color"]!!.content.toInt() }
                                             .toMutableMap()
+                                }
+
                                 is FeatureSetting.EnumSetting -> {
                                     val enumName = json.decodeFromJsonElement<String>(jsonElement)
                                     setting.set(enumName)

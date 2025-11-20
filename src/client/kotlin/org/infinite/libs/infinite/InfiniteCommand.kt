@@ -242,7 +242,7 @@ object InfiniteCommand {
 
                 val suggestions =
                     when (setting) {
-                        is FeatureSetting.BlockListSetting ->
+                        is FeatureSetting.BlockListSetting -> {
                             if (isDel) {
                                 setting.value
                             } else if (isAdd) {
@@ -250,7 +250,9 @@ object InfiniteCommand {
                             } else {
                                 emptyList()
                             }
-                        is FeatureSetting.EntityListSetting ->
+                        }
+
+                        is FeatureSetting.EntityListSetting -> {
                             if (isDel) {
                                 setting.value
                             } else if (isAdd) {
@@ -258,7 +260,9 @@ object InfiniteCommand {
                             } else {
                                 emptyList()
                             }
-                        is FeatureSetting.PlayerListSetting ->
+                        }
+
+                        is FeatureSetting.PlayerListSetting -> {
                             if (isDel) {
                                 setting.value
                             } else if (isAdd) {
@@ -269,10 +273,23 @@ object InfiniteCommand {
                             } else {
                                 emptyList()
                             }
-                        is FeatureSetting.StringListSetting -> if (isDel) setting.value else emptyList()
-                        is FeatureSetting.BooleanSetting -> listOf("true", "false")
-                        is FeatureSetting.EnumSetting<*> -> setting.options.map { it.toString() }
-                        else -> emptyList()
+                        }
+
+                        is FeatureSetting.StringListSetting -> {
+                            if (isDel) setting.value else emptyList()
+                        }
+
+                        is FeatureSetting.BooleanSetting -> {
+                            listOf("true", "false")
+                        }
+
+                        is FeatureSetting.EnumSetting<*> -> {
+                            setting.options.map { it.toString() }
+                        }
+
+                        else -> {
+                            emptyList()
+                        }
                     }
                 CommandSource.suggestMatching(suggestions, b)
             } catch (_: Exception) {
@@ -359,20 +376,24 @@ object InfiniteCommand {
             }
 
         when {
-            cat == null ->
+            cat == null -> {
                 InfiniteClient.featureCategories.forEach { c ->
                     c.features.forEach { f ->
                         f.instance.reset()
                         f.instance.settings.forEach { it.reset() }
                     }
                 }
-            feat == null ->
+            }
+
+            feat == null -> {
                 InfiniteClient.featureCategories.find { it.name == cat }?.features?.forEach { f ->
                     f.instance.reset()
                     f.instance.settings.forEach { it.reset() }
                 }
                     ?: return 0
-            key == null ->
+            }
+
+            key == null -> {
                 InfiniteClient.searchFeature(cat, feat)?.let {
                     it.reset()
                     it.settings.forEach { setting ->
@@ -380,7 +401,11 @@ object InfiniteCommand {
                         setting.reset()
                     }
                 } ?: return 0
-            else -> InfiniteClient.searchFeature(cat, feat)?.getSetting(key)?.reset() ?: return 0
+            }
+
+            else -> {
+                InfiniteClient.searchFeature(cat, feat)?.getSetting(key)?.reset() ?: return 0
+            }
         }
         InfiniteClient.info(Text.translatable("command.infinite.config.reset.all").string)
         return 1
@@ -569,7 +594,7 @@ object InfiniteCommand {
 
             val suggestions =
                 when (s) {
-                    is FeatureSetting.BlockListSetting ->
+                    is FeatureSetting.BlockListSetting -> {
                         if (isDel) {
                             s.value
                         } else if (isAdd) {
@@ -577,7 +602,9 @@ object InfiniteCommand {
                         } else {
                             emptyList()
                         }
-                    is FeatureSetting.EntityListSetting ->
+                    }
+
+                    is FeatureSetting.EntityListSetting -> {
                         if (isDel) {
                             s.value
                         } else if (isAdd) {
@@ -585,7 +612,9 @@ object InfiniteCommand {
                         } else {
                             emptyList()
                         }
-                    is FeatureSetting.PlayerListSetting ->
+                    }
+
+                    is FeatureSetting.PlayerListSetting -> {
                         if (isDel) {
                             s.value
                         } else if (isAdd) {
@@ -596,10 +625,23 @@ object InfiniteCommand {
                         } else {
                             emptyList()
                         }
-                    is FeatureSetting.StringListSetting -> if (isDel) s.value else emptyList()
-                    is FeatureSetting.BooleanSetting -> listOf("true", "false")
-                    is FeatureSetting.EnumSetting<*> -> s.options.map { it.toString() }
-                    else -> emptyList()
+                    }
+
+                    is FeatureSetting.StringListSetting -> {
+                        if (isDel) s.value else emptyList()
+                    }
+
+                    is FeatureSetting.BooleanSetting -> {
+                        listOf("true", "false")
+                    }
+
+                    is FeatureSetting.EnumSetting<*> -> {
+                        s.options.map { it.toString() }
+                    }
+
+                    else -> {
+                        emptyList()
+                    }
                 }
             CommandSource.suggestMatching(suggestions, b)
             b.buildFuture()

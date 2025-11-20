@@ -132,9 +132,13 @@ object ToolChecker {
         val toolKind =
             when {
                 state.isIn(BlockTags.AXE_MINEABLE) -> ToolKind.Axe
+
                 state.isIn(BlockTags.PICKAXE_MINEABLE) -> ToolKind.PickAxe
+
                 state.isIn(BlockTags.SHOVEL_MINEABLE) -> ToolKind.Shovel
+
                 state.isIn(BlockTags.HOE_MINEABLE) -> ToolKind.Hoe
+
                 state.isIn(BlockTags.LEAVES) || Registries.BLOCK
                     .getId(block)
                     .toString() == "minecraft:cobweb" -> ToolKind.Sword

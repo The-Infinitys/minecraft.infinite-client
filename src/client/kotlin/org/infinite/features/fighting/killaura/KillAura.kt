@@ -127,13 +127,12 @@ class KillAura : ConfigurableFeature(initialEnabled = false) {
         val randomizer = randomizerSetting.value
         val priority = prioritySetting.value
 
-        // --- ターゲットの選定ロジック (変更なし) ---
         val attackableEntities =
             world.entities
                 .filter {
                     it != player &&
                         player.distanceTo(it) <= range && it is LivingEntity &&
-                        (it is PlayerEntity && attackPlayers || it !is PlayerEntity && attackMobs)
+                        ((it is PlayerEntity && attackPlayers) || (it !is PlayerEntity && attackMobs))
                 }.map { it as LivingEntity }
                 .sortedBy {
                     when (priority) {

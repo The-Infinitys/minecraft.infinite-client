@@ -133,25 +133,29 @@ object BlockContentRenderer {
                 ICON_SIZE,
                 ICON_SIZE,
                 when (correctTool.checkPlayerToolStatus()) {
-                    0 ->
+                    0 -> {
                         InfiniteClient
                             .theme()
                             .colors.greenAccentColor
+                    }
 
-                    1 ->
+                    1 -> {
                         InfiniteClient
                             .theme()
                             .colors.warnColor
+                    }
 
-                    2 ->
+                    2 -> {
                         InfiniteClient
                             .theme()
                             .colors.errorColor
+                    }
 
-                    else ->
+                    else -> {
                         InfiniteClient
                             .theme()
                             .colors.foregroundColor
+                    }
                 },
             )
             InventoryRenderer.drawItemWithDurability(

@@ -24,9 +24,15 @@ object HyperMapRenderer : ClientInterface() {
      */
     fun getBaseDotColor(entity: LivingEntity): Int =
         when (entity) {
-            is PlayerEntity -> InfiniteClient.theme().colors.infoColor // プレイヤー: 水色 (ARGBのAなし)
-            is HostileEntity -> InfiniteClient.theme().colors.errorColor // 敵対モブ: 赤色
-            is PassiveEntity -> InfiniteClient.theme().colors.greenAccentColor // 友好モブ: 緑色
+            is PlayerEntity -> InfiniteClient.theme().colors.infoColor
+
+            // プレイヤー: 水色 (ARGBのAなし)
+            is HostileEntity -> InfiniteClient.theme().colors.errorColor
+
+            // 敵対モブ: 赤色
+            is PassiveEntity -> InfiniteClient.theme().colors.greenAccentColor
+
+            // 友好モブ: 緑色
             else -> InfiniteClient.theme().colors.warnColor // それ以外（中立モブなど）: 黄色
         }
 
@@ -193,19 +199,27 @@ object HyperMapRenderer : ClientInterface() {
             val blendFactor = (abs(relativeHeight) / featureHeight).coerceIn(0.0, maxBlendFactor).toFloat()
             val blendedColor =
                 when {
-                    relativeHeight > 0 ->
+                    relativeHeight > 0 -> {
                         ColorHelper.lerp(
                             blendFactor,
                             baseColor,
                             0xFFFFFFFF.toInt(),
-                        ) // Blend with white
-                    relativeHeight < 0 ->
+                        )
+                    }
+
+                    // Blend with white
+                    relativeHeight < 0 -> {
                         ColorHelper.lerp(
                             blendFactor,
                             baseColor,
                             0xFF000000.toInt(),
-                        ) // Blend with black
-                    else -> baseColor
+                        )
+                    }
+
+                    // Blend with black
+                    else -> {
+                        baseColor
+                    }
                 }
 
             val alpha = getAlphaBasedOnHeight(mob, player.y, featureHeight)
@@ -261,7 +275,10 @@ object HyperMapRenderer : ClientInterface() {
         // ------------------------------------------------
         val textureFileName =
             when (mode) {
-                HyperMap.Mode.Flat -> "surface.png"
+                HyperMap.Mode.Flat -> {
+                    "surface.png"
+                }
+
                 HyperMap.Mode.Solid -> {
                     // プレイヤーのY座標からセクションの開始Y座標を計算 (例: Y=64 -> 64)
                     val sectionY = (player.blockY / 16) * 16

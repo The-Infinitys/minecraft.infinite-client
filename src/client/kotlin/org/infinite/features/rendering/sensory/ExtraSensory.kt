@@ -132,6 +132,7 @@ class ExtraSensory : ConfigurableFeature(initialEnabled = false) {
                     ItemEsp.handleRenderState(entity, state, tickProgress, ci)
                 }
             }
+
             is PlayerEntity -> {
                 if (state is PlayerEntityRenderState) {
                     PlayerEsp.handleRenderState(entity, state, tickProgress, ci)

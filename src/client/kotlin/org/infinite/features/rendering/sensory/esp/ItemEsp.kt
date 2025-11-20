@@ -58,30 +58,35 @@ object ItemEsp {
 
     fun rarityColor(stack: ItemStack): Int =
         when (stack.rarity) {
-            Rarity.COMMON ->
+            Rarity.COMMON -> {
                 org.infinite.InfiniteClient
                     .theme()
                     .colors.foregroundColor
+            }
 
-            Rarity.UNCOMMON ->
+            Rarity.UNCOMMON -> {
                 org.infinite.InfiniteClient
                     .theme()
                     .colors.yellowAccentColor
+            }
 
-            Rarity.RARE ->
+            Rarity.RARE -> {
                 org.infinite.InfiniteClient
                     .theme()
                     .colors.aquaAccentColor
+            }
 
-            Rarity.EPIC ->
+            Rarity.EPIC -> {
                 org.infinite.InfiniteClient
                     .theme()
                     .colors.magentaAccentColor
+            }
 
-            else ->
+            else -> {
                 org.infinite.InfiniteClient
                     .theme()
                     .colors.foregroundColor
+            }
         }
 
     fun rarityColor(entity: ItemEntity): Int = rarityColor(entity.stack)

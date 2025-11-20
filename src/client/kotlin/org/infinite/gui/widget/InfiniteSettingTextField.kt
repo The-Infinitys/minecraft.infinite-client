@@ -43,17 +43,40 @@ class InfiniteSettingTextField(
         textField.text = setting.value.toString()
         textField.setChangedListener { newText ->
             when (setting) {
-                is FeatureSetting.IntSetting -> setting.value = newText.toIntOrNull() ?: setting.value
-                is FeatureSetting.FloatSetting -> setting.value = newText.toFloatOrNull() ?: setting.value
-                is FeatureSetting.StringSetting -> setting.value = newText
-                is FeatureSetting.BlockIDSetting -> setting.value = newText
-                is FeatureSetting.EntityIDSetting -> setting.value = newText
-                is FeatureSetting.BooleanSetting -> setting.value = newText.toBooleanStrictOrNull() ?: setting.value
+                is FeatureSetting.IntSetting -> {
+                    setting.value = newText.toIntOrNull() ?: setting.value
+                }
+
+                is FeatureSetting.FloatSetting -> {
+                    setting.value = newText.toFloatOrNull() ?: setting.value
+                }
+
+                is FeatureSetting.StringSetting -> {
+                    setting.value = newText
+                }
+
+                is FeatureSetting.BlockIDSetting -> {
+                    setting.value = newText
+                }
+
+                is FeatureSetting.EntityIDSetting -> {
+                    setting.value = newText
+                }
+
+                is FeatureSetting.BooleanSetting -> {
+                    setting.value = newText.toBooleanStrictOrNull() ?: setting.value
+                }
+
                 is FeatureSetting.EnumSetting<*> -> {}
+
                 is FeatureSetting.StringListSetting -> {}
+
                 is FeatureSetting.BlockListSetting -> {}
+
                 is FeatureSetting.EntityListSetting -> {}
+
                 is FeatureSetting.PlayerListSetting -> {}
+
                 else -> {} // Handle BlockColorListSetting and other unhandled types
             }
         }

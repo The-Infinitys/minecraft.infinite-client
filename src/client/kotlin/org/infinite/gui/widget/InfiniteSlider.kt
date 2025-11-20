@@ -140,7 +140,9 @@ class InfiniteSlider<T : Number>(
                 (setting.value - setting.min).toFloat() / range
             }
 
-            else -> throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
+            else -> {
+                throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
+            }
         }
 
     private fun setValueFromMouse(mouseX: Double) {
@@ -172,7 +174,9 @@ class InfiniteSlider<T : Number>(
                 (setting as FeatureSetting.DoubleSetting).value = newValue
             }
 
-            else -> throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
+            else -> {
+                throw IllegalStateException("InfiniteSlider can only be used with IntSetting or FloatSetting")
+            }
         }
         updateMessage()
     }

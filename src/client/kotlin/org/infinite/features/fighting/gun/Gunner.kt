@@ -173,13 +173,14 @@ class Gunner : ConfigurableFeature(initialEnabled = false) {
                 .getInstance()
                 .options.sneakKey.isPressed
         when (changeMode.value) {
-            ChangeMode.Fixed ->
+            ChangeMode.Fixed -> {
                 mode =
                     if (isKeyPressed) {
                         GunnerMode.RELOAD
                     } else {
                         GunnerMode.SHOT
                     }
+            }
 
             ChangeMode.Toggle -> {
                 if (isKeyPressed && !beforeSneaked) {

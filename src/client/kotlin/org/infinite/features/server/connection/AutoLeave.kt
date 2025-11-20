@@ -54,6 +54,7 @@ class AutoLeave : ConfigurableFeature(initialEnabled = false) {
                 when {
 //                isLowHp && isLowTotems -> "lowhp_and_lowtotems"
                     isLowHp -> "lowhp"
+
                     else -> "lowtotems"
                 }
             // サーバーを抜ける理由メッセージを作成
@@ -89,6 +90,7 @@ class AutoLeave : ConfigurableFeature(initialEnabled = false) {
                     // サーバーが不正なチャットとしてプレイヤーをキックすることを期待
                     handler.sendChatMessage("\u00a7")
                 }
+
                 Method.SelfHurt -> {
                     // 4. SelfHurt: 自身を対象とした攻撃パケットを送信
                     // サーバーが不正なエンティティ操作としてプレイヤーをキックすることを期待

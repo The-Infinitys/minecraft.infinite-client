@@ -40,11 +40,22 @@ sealed class AimTarget {
             val center = blockPos.toCenterPos()
             return when (this.face) {
                 BlockFace.Center -> center
-                BlockFace.Top -> center.add(0.0, 0.5 * (2 * offset - 1), 0.0) // Y+
-                BlockFace.Bottom -> center.add(0.0, -0.5 * (2 * offset - 1), 0.0) // Y-
-                BlockFace.North -> center.add(0.0, 0.0, -0.5 * (2 * offset - 1)) // Z-
-                BlockFace.East -> center.add(0.5 * (2 * offset - 1), 0.0, 0.0) // X+
-                BlockFace.South -> center.add(0.0, 0.0, 0.5 * (2 * offset - 1)) // Z+
+
+                BlockFace.Top -> center.add(0.0, 0.5 * (2 * offset - 1), 0.0)
+
+                // Y+
+                BlockFace.Bottom -> center.add(0.0, -0.5 * (2 * offset - 1), 0.0)
+
+                // Y-
+                BlockFace.North -> center.add(0.0, 0.0, -0.5 * (2 * offset - 1))
+
+                // Z-
+                BlockFace.East -> center.add(0.5 * (2 * offset - 1), 0.0, 0.0)
+
+                // X+
+                BlockFace.South -> center.add(0.0, 0.0, 0.5 * (2 * offset - 1))
+
+                // Z+
                 BlockFace.West -> center.add(-0.5 * (2 * offset - 1), 0.0, 0.0) // X-
             }
         }

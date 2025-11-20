@@ -52,7 +52,9 @@ class EntityPosMovementAction(
             AiActionState.Failure
         } else {
             stateRegister() ?: when {
-                !registered || baritone.pathingBehavior.goal == goal -> AiActionState.Progress // 既に何かしらのアクションが行われている
+                !registered || baritone.pathingBehavior.goal == goal -> AiActionState.Progress
+
+                // 既に何かしらのアクションが行われている
                 registered && (
                     if (radius == null) {
                         baritone.pathingBehavior.goal != goal

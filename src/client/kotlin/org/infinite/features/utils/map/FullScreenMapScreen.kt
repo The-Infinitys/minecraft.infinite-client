@@ -290,7 +290,10 @@ class FullScreenMapScreen(
 
         val textureFileName =
             when (actualMode) {
-                HyperMap.Mode.Flat -> "surface.png"
+                HyperMap.Mode.Flat -> {
+                    "surface.png"
+                }
+
                 HyperMap.Mode.Solid -> {
                     val sectionY = (player.blockY / 16) * 16
                     "section_$sectionY.png"
@@ -390,21 +393,25 @@ class FullScreenMapScreen(
                 (kotlin.math.abs(relativeHeight) / hyperMap.heightSetting.value).coerceIn(0.0, maxBlendFactor).toFloat()
             val blendedColor =
                 when {
-                    relativeHeight > 0 ->
+                    relativeHeight > 0 -> {
                         ColorHelper.lerp(
                             blendFactor,
                             baseColor,
                             0xFFFFFFFF.toInt(),
                         )
+                    }
 
-                    relativeHeight < 0 ->
+                    relativeHeight < 0 -> {
                         ColorHelper.lerp(
                             blendFactor,
                             baseColor,
                             0xFF000000.toInt(),
                         )
+                    }
 
-                    else -> baseColor
+                    else -> {
+                        baseColor
+                    }
                 }
 
             val alpha = HyperMapRenderer.getAlphaBasedOnHeight(mob, player.y, hyperMap.heightSetting.value)

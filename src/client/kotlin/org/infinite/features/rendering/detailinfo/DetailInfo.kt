@@ -234,15 +234,41 @@ class DetailInfo : ConfigurableFeature(initialEnabled = false) {
                                                 }
                                             }
 
-                                            is BarrelBlockEntity -> ScreenHandlerType.GENERIC_9X3
-                                            is ShulkerBoxBlockEntity -> ScreenHandlerType.SHULKER_BOX
-                                            is EnderChestBlockEntity -> ScreenHandlerType.GENERIC_9X3
-                                            is HopperBlockEntity -> ScreenHandlerType.HOPPER
-                                            is FurnaceBlockEntity -> ScreenHandlerType.FURNACE
-                                            is SmokerBlockEntity -> ScreenHandlerType.SMOKER
-                                            is BlastFurnaceBlockEntity -> ScreenHandlerType.BLAST_FURNACE
-                                            is BrewingStandBlockEntity -> ScreenHandlerType.BREWING_STAND
-                                            else -> null // Should not happen with the check above, but for safety
+                                            is BarrelBlockEntity -> {
+                                                ScreenHandlerType.GENERIC_9X3
+                                            }
+
+                                            is ShulkerBoxBlockEntity -> {
+                                                ScreenHandlerType.SHULKER_BOX
+                                            }
+
+                                            is EnderChestBlockEntity -> {
+                                                ScreenHandlerType.GENERIC_9X3
+                                            }
+
+                                            is HopperBlockEntity -> {
+                                                ScreenHandlerType.HOPPER
+                                            }
+
+                                            is FurnaceBlockEntity -> {
+                                                ScreenHandlerType.FURNACE
+                                            }
+
+                                            is SmokerBlockEntity -> {
+                                                ScreenHandlerType.SMOKER
+                                            }
+
+                                            is BlastFurnaceBlockEntity -> {
+                                                ScreenHandlerType.BLAST_FURNACE
+                                            }
+
+                                            is BrewingStandBlockEntity -> {
+                                                ScreenHandlerType.BREWING_STAND
+                                            }
+
+                                            else -> {
+                                                null
+                                            } // Should not happen with the check above, but for safety
                                         }
 
                                     if (expectedScreenType != null) {

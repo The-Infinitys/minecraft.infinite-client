@@ -28,8 +28,10 @@ class RayCastRenderer : ClientInterface() {
 
         when (rayCastResult.type) {
             HitResult.Type.MISS -> return
+
             // EntityHitResult の場合はエンティティをハイライト
             HitResult.Type.ENTITY -> renderEntityHighLight(graphics3D, rayCastResult as EntityHitResult)
+
             // BlockHitResult の場合はブロックをハイライト
             HitResult.Type.BLOCK -> renderBlockHighLight(graphics3D, rayCastResult as BlockHitResult)
         }

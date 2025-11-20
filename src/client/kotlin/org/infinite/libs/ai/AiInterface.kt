@@ -12,7 +12,10 @@ object AiInterface : ClientInterface() {
         val currentAction = actions.firstOrNull() ?: return
         val state = currentAction.state()
         when (state) {
-            AiAction.AiActionState.Progress -> currentAction.tick()
+            AiAction.AiActionState.Progress -> {
+                currentAction.tick()
+            }
+
             AiAction.AiActionState.Success -> {
                 currentAction.onSuccess()
                 actions.remove(currentAction)

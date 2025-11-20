@@ -31,8 +31,12 @@ class AutoPilotAimTask(
         AimCalculateMethod.Linear,
         when (state) {
             PilotState.EmergencyLanding -> 16.0
+
             PilotState.Landing -> 4.0
-            PilotState.TakingOff -> 2.0 // 【新規】離陸時のスムーズな移動
+
+            PilotState.TakingOff -> 2.0
+
+            // 【新規】離陸時のスムーズな移動
             else -> 2.0
         },
     )
@@ -245,19 +249,32 @@ class PilotAimTarget(
             return CameraRoll(
                 when (state) {
                     PilotState.Circling -> calculateCirclingYaw()
+
                     PilotState.Landing -> calculateLandingYaw()
+
                     PilotState.EmergencyLanding -> calculateEmergencyYaw()
-                    PilotState.TakingOff -> calculateTargetYaw() // 【新規】離陸時はターゲット方向
+
+                    PilotState.TakingOff -> calculateTargetYaw()
+
+                    // 【新規】離陸時はターゲット方向
                     else -> calculateTargetYaw()
                 },
                 when (state) {
                     PilotState.Landing -> handleLandingPitch()
+
                     PilotState.EmergencyLanding -> handleEmergencyLandingPitch()
+
                     PilotState.Circling -> autoPilot.glidingDir.value / 2.0
+
                     PilotState.FallFlying -> autoPilot.fallDir.value
+
                     PilotState.RiseFlying -> autoPilot.riseDir.value
+
                     PilotState.Gliding -> autoPilot.glidingDir.value
-                    PilotState.TakingOff -> autoPilot.riseDir.value // 【新規】離陸時は上昇ピッチ
+
+                    PilotState.TakingOff -> autoPilot.riseDir.value
+
+                    // 【新規】離陸時は上昇ピッチ
                     else -> 0.0
                 },
             )

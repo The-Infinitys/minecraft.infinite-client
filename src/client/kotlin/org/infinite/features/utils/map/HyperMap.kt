@@ -113,14 +113,22 @@ class HyperMap : ConfigurableFeature() {
         val x = pos.x.toDouble()
         val z = pos.z.toDouble()
         return when (block) {
-            Blocks.GRASS_BLOCK, Blocks.SHORT_GRASS, Blocks.TALL_GRASS ->
+            Blocks.GRASS_BLOCK, Blocks.SHORT_GRASS, Blocks.TALL_GRASS -> {
                 BiomeColors.GRASS_COLOR.getColor(biome, x, z)
+            }
 
-            is LeavesBlock -> BiomeColors.FOLIAGE_COLOR.getColor(biome, x, z)
-            Blocks.WATER -> BiomeColors.WATER_COLOR.getColor(biome, x, z)
-            else ->
+            is LeavesBlock -> {
+                BiomeColors.FOLIAGE_COLOR.getColor(biome, x, z)
+            }
+
+            Blocks.WATER -> {
+                BiomeColors.WATER_COLOR.getColor(biome, x, z)
+            }
+
+            else -> {
                 // MapColor.colorはRGB整数値なので、アルファ値を255として追加
                 state.getMapColor(world, pos).color.transparent(255)
+            }
         }
     }
 

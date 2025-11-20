@@ -114,23 +114,30 @@ class DamageCalculator {
                 damage = 0.8
                 intervalTicks = 25
             }
+
             2 -> {
                 damage = 1.66
                 intervalTicks = 12
             }
+
             3 -> {
                 damage = 3.32
                 intervalTicks = 12
             }
+
             4 -> {
                 damage = 6.66
                 intervalTicks = 12
             }
+
             in 5..Int.MAX_VALUE -> {
                 damage = 20.0
                 intervalTicks = 10
             }
-            else -> return 0.0
+
+            else -> {
+                return 0.0
+            }
         }
 
         // ダメージを与える回数 = floor(持続ティック数 / ダメージ間隔ティック数)

@@ -22,12 +22,20 @@ class QuickMove : ConfigurableFeature() {
             return when {
                 // 最も優先度の高い状態からチェック
                 player.hasVehicle() && allowWithVehicle.value -> MoveMode.Vehicle
-                allowOnSwimming.value && player.isSwimming -> MoveMode.Swimming // 泳ぎを水よりも優先
+
+                allowOnSwimming.value && player.isSwimming -> MoveMode.Swimming
+
+                // 泳ぎを水よりも優先
                 allowOnGliding.value && player.isGliding -> MoveMode.Gliding
+
                 player.isOnGround && allowOnGround.value -> MoveMode.Ground
+
                 player.isInLava && allowInLava.value -> MoveMode.Lava
+
                 player.isTouchingWater && allowInWater.value -> MoveMode.Water
+
                 !player.isOnGround && allowInAir.value -> MoveMode.Air
+
                 else -> MoveMode.None
             }
         }
@@ -57,10 +65,11 @@ class QuickMove : ConfigurableFeature() {
                     }
                 }
 
-                else ->
+                else -> {
                     attributes.getValue(
                         EntityAttributes.MOVEMENT_SPEED,
                     )
+                }
             }
         }
     private val currentFriction: Double
@@ -70,7 +79,7 @@ class QuickMove : ConfigurableFeature() {
             val entity = player.vehicle ?: player
             val attributes = player.attributes
             return when (currentMode) {
-                MoveMode.Ground ->
+                MoveMode.Ground -> {
                     world
                         .getBlockState(
                             entity.blockPos.add(
@@ -79,16 +88,25 @@ class QuickMove : ConfigurableFeature() {
                                 0,
                             ),
                         ).block.slipperiness * if (player.isSneaking) attributes.getValue(EntityAttributes.SNEAKING_SPEED) else 1.0
+                }
 
-                MoveMode.Swimming, MoveMode.Water ->
+                MoveMode.Swimming, MoveMode.Water -> {
                     0.8
+                }
 
-                MoveMode.Lava -> // 溶岩
+                MoveMode.Lava -> {
+                    // 溶岩
                     0.5
+                }
 
-                MoveMode.Air, MoveMode.Gliding -> // 空中/滑空
-                    0.98 // 例: 空気抵抗に近い高い摩擦（低い減速）
-                MoveMode.Vehicle -> // 乗り物
+                MoveMode.Air, MoveMode.Gliding -> {
+                    // 空中/滑空
+                    0.98
+                }
+
+                // 例: 空気抵抗に近い高い摩擦（低い減速）
+                MoveMode.Vehicle -> {
+                    // 乗り物
                     world
                         .getBlockState(
                             player.vehicle!!.blockPos.add(
@@ -98,9 +116,11 @@ class QuickMove : ConfigurableFeature() {
                             ),
                         ).block.slipperiness
                         .toDouble()
+                }
 
-                MoveMode.None ->
-                    1.0 // 動きがない、またはデフォルト
+                MoveMode.None -> {
+                    1.0
+                } // 動きがない、またはデフォルト
             }
         }
     private val currentMaxSpeed: Double
@@ -281,15 +301,21 @@ class QuickMove : ConfigurableFeature() {
         val accelerationFactor: Double =
             when {
                 // 最高速度制限未満の場合はフル加速
-                currentMoveSpeed <= startSpeed -> 1.0
+                currentMoveSpeed <= startSpeed -> {
+                    1.0
+                }
+
                 // 減速区間: 速度が startSpeed と endSpeed の間
                 currentMoveSpeed < endSpeed -> {
                     // 線形補間: (1.0 - (現在速度 - 開始速度) / (終了速度 - 開始速度))
                     val ratio = (currentMoveSpeed - startSpeed) / (endSpeed - startSpeed)
                     1.0 - ratio
                 }
+
                 // 速度が endSpeed 以上になったら加速はゼロ
-                else -> 0.0
+                else -> {
+                    0.0
+                }
             }
         val accelerationLimit = (endSpeed - currentMoveSpeed).coerceAtLeast(0.0)
         val currentAcceleration =

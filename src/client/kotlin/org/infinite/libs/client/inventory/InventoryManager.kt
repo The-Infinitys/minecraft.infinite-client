@@ -50,25 +50,49 @@ object InventoryManager : ClientInterface() {
     fun get(index: InventoryIndex): ItemStack {
         val playerInv = inventory ?: return ItemStack.EMPTY // nullチェック
         return when (index) {
-            is InventoryIndex.Armor ->
+            is InventoryIndex.Armor -> {
                 playerInv.getStack(
                     when (index) {
-                        is InventoryIndex.Armor.Head -> 39
-                        is InventoryIndex.Armor.Chest -> 38
-                        is InventoryIndex.Armor.Legs -> 37
-                        is InventoryIndex.Armor.Foots -> 36
+                        is InventoryIndex.Armor.Head -> {
+                            39
+                        }
+
+                        is InventoryIndex.Armor.Chest -> {
+                            38
+                        }
+
+                        is InventoryIndex.Armor.Legs -> {
+                            37
+                        }
+
+                        is InventoryIndex.Armor.Foots -> {
+                            36
+                        }
+
                         else -> {
                             throw IllegalStateException("Illegal State on InventoryIndex.Armor")
                         }
                     },
                 ) ?: ItemStack.EMPTY
+            }
 
-            is InventoryIndex.Hotbar -> playerInv.getStack(index.index) ?: ItemStack.EMPTY
-            is InventoryIndex.Backpack -> playerInv.getStack(9 + index.index) ?: ItemStack.EMPTY
-            is InventoryIndex.MainHand ->
+            is InventoryIndex.Hotbar -> {
+                playerInv.getStack(index.index) ?: ItemStack.EMPTY
+            }
+
+            is InventoryIndex.Backpack -> {
+                playerInv.getStack(9 + index.index) ?: ItemStack.EMPTY
+            }
+
+            is InventoryIndex.MainHand -> {
                 playerInv.getStack(playerInv.selectedSlot)
-                    ?: ItemStack.EMPTY // 修正: メインハンドは選択されたホットバーのスロット
-            is InventoryIndex.OffHand -> playerInv.getStack(40) ?: ItemStack.EMPTY // 修正: オフハンドは内部スロット40
+                    ?: ItemStack.EMPTY
+            }
+
+            // 修正: メインハンドは選択されたホットバーのスロット
+            is InventoryIndex.OffHand -> {
+                playerInv.getStack(40) ?: ItemStack.EMPTY
+            } // 修正: オフハンドは内部スロット40
         }
     }
 
@@ -316,7 +340,7 @@ object InventoryManager : ClientInterface() {
      */
     private fun indexToSlot(index: InventoryIndex): Int? =
         when (index) {
-            is InventoryIndex.Armor ->
+            is InventoryIndex.Armor -> {
                 when (index) {
                     is InventoryIndex.Armor.Head -> 39
                     is InventoryIndex.Armor.Chest -> 38
@@ -324,11 +348,23 @@ object InventoryManager : ClientInterface() {
                     is InventoryIndex.Armor.Foots -> 36
                     else -> null
                 }
+            }
 
-            is InventoryIndex.Hotbar -> index.index
-            is InventoryIndex.Backpack -> 9 + index.index
-            is InventoryIndex.OffHand -> 40
-            is InventoryIndex.MainHand -> inventory?.selectedSlot // nullチェックを追加
+            is InventoryIndex.Hotbar -> {
+                index.index
+            }
+
+            is InventoryIndex.Backpack -> {
+                9 + index.index
+            }
+
+            is InventoryIndex.OffHand -> {
+                40
+            }
+
+            is InventoryIndex.MainHand -> {
+                inventory?.selectedSlot
+            } // nullチェックを追加
         }
 
     /**
@@ -339,10 +375,13 @@ object InventoryManager : ClientInterface() {
         when (internalSlot) {
             // ホットバー (内部 0-8 -> ネットワーク 36-44)
             in 0..8 -> internalSlot + 36
+
             // 防具 (内部 36-39 -> ネットワーク 5-8: 逆順)
             in 36..39 -> 44 - internalSlot
+
             // オフハンド (内部 40 -> ネットワーク 45)
             40 -> 45
+
             // バックパック (内部 9-35 -> ネットワーク 9-35)
             else -> internalSlot
         }

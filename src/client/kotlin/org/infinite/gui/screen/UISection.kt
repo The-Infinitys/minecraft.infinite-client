@@ -110,12 +110,16 @@ class UISection(
 
         val titleText =
             when (id) {
-                "main" -> "Main"
-                else ->
+                "main" -> {
+                    "Main"
+                }
+
+                else -> {
                     id
                         .replace("-settings", "")
                         .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() } +
                         " Settings"
+                }
             }
 
         if (id == "main") {

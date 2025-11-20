@@ -151,8 +151,16 @@ object GunnerRenderer {
             // 距離に基づいてアルファ値を計算
             val alpha: Int =
                 when {
-                    drawTick < fadeStart -> 0xFF // 10fまで不透明
-                    drawTick >= fadeEnd -> 0x00 // 20f以降は完全に透明
+                    drawTick < fadeStart -> {
+                        0xFF
+                    }
+
+                    // 10fまで不透明
+                    drawTick >= fadeEnd -> {
+                        0x00
+                    }
+
+                    // 20f以降は完全に透明
                     else -> {
                         // 10f から 20f の間で線形に減衰
                         // progress は 0.0 (fadeStart) から 1.0 (fadeEnd) へ

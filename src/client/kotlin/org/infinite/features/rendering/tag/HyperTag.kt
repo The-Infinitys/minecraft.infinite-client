@@ -159,17 +159,21 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         for (entity in filteredEntities) {
             val aboveHeadPos =
                 when (entity) {
-                    is LivingEntity ->
+                    is LivingEntity -> {
                         entity
                             .getLerpedPos(graphics3D.tickCounter.getTickProgress(false))
                             .add(0.0, entity.getEyeHeight(entity.pose) + 1.5, 0.0)
+                    }
 
-                    is ItemEntity ->
+                    is ItemEntity -> {
                         entity
                             .getLerpedPos(graphics3D.tickCounter.getTickProgress(false))
                             .add(0.0, 0.5, 0.0)
+                    }
 
-                    else -> continue
+                    else -> {
+                        continue
+                    }
                 }
             val pos2d = graphics3D.toDisplayPos(aboveHeadPos)
 
@@ -475,29 +479,33 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
         val alphaInt = (alpha * 255).toInt()
         val tagColor =
             when (entity) {
-                is PlayerEntity ->
+                is PlayerEntity -> {
                     InfiniteClient
                         .theme()
                         .colors.infoColor
                         .transparent(alphaInt)
+                }
 
-                is HostileEntity ->
+                is HostileEntity -> {
                     InfiniteClient
                         .theme()
                         .colors.errorColor
                         .transparent(alphaInt)
+                }
 
-                is PassiveEntity ->
+                is PassiveEntity -> {
                     InfiniteClient
                         .theme()
                         .colors.greenAccentColor
                         .transparent(alphaInt)
+                }
 
-                else ->
+                else -> {
                     InfiniteClient
                         .theme()
                         .colors.foregroundColor
                         .transparent(alphaInt)
+                }
             }
         val bgColor =
             InfiniteClient

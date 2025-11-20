@@ -172,7 +172,9 @@ open class AimTask(
                     }
                 }
 
-                AimCalculateMethod.Immediate -> rollDiff
+                AimCalculateMethod.Immediate -> {
+                    rollDiff
+                }
             }
         return result.diffNormalize()
     }

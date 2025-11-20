@@ -35,13 +35,20 @@ class AutoWalk : ConfigurableFeature(initialEnabled = false) {
         val keysToPress: List<KeyBinding> =
             when (waySetting.value) {
                 Way.Forward -> listOf(options.forwardKey)
+
                 Way.Back -> listOf(options.backKey)
+
                 Way.Left -> listOf(options.leftKey)
+
                 Way.Right -> listOf(options.rightKey)
+
                 // 斜め方向は2つのキーを同時に押す
                 Way.ForwardLeft -> listOf(options.forwardKey, options.leftKey)
+
                 Way.ForwardRight -> listOf(options.forwardKey, options.rightKey)
+
                 Way.BackLeft -> listOf(options.backKey, options.leftKey)
+
                 Way.BackRight -> listOf(options.backKey, options.rightKey)
             }
 

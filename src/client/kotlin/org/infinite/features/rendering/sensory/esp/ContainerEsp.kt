@@ -84,14 +84,24 @@ object ContainerEsp {
     private fun getColorForBlock(blockId: String): Int? =
         when {
             blockId.endsWith("trapped_chest") -> TRAP_CHEST_COLOR
+
             blockId.endsWith("chest") -> CHEST_COLOR
+
             blockId.endsWith("ender_chest") -> ENDER_CHEST_COLOR
+
             blockId.endsWith("furnace") || blockId.endsWith("blast_furnace") || blockId.endsWith("smoker") -> FURNACE_COLOR
+
             blockId.endsWith("hopper") -> HOPPER_COLOR
+
             blockId.endsWith("barrel") -> BARREL_COLOR
-            blockId.contains("shulker_box") -> SHULKER_BOX_COLOR // 全ての色のシュルカーボックスを検出
+
+            blockId.contains("shulker_box") -> SHULKER_BOX_COLOR
+
+            // 全ての色のシュルカーボックスを検出
             blockId.endsWith("dispenser") || blockId.endsWith("dropper") -> DISPENSER_DROPPER_COLOR
+
             blockId.endsWith("brewing_stand") -> BREWING_STAND_COLOR
+
             else -> null
         }
 
