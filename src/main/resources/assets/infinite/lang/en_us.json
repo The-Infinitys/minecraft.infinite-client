@@ -404,6 +404,7 @@
   "key.infinite-client.toggle.movement.quick_land": "Toggle Quick Land",
   "infinite.feature.movement.quick_land.description": "Quickly land from a fall.",
   "infinite.feature.movement.quick_land.safe_fall_distance.description": "The maximum fall distance from which a safe landing is possible.",
+  "infinite.feature.fighting.hyper_mace.fall_multiply.description": "Damage multiply by Hyper Mace",
   "infinite.feature.movement.fast_break.safe_mode.description": "Enables safe mode for FastBreak.",
   "infinite.feature.movement.linear_break.range.description": "Sets the range for LinearBreak.",
   "infinite.feature.movement.linear_break.max_blocks.description": "Sets the maximum number of blocks to break at once with LinearBreak.",

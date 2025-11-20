@@ -162,7 +162,7 @@ class HyperTag : ConfigurableFeature(initialEnabled = false) {
                     is LivingEntity -> {
                         entity
                             .getLerpedPos(graphics3D.tickCounter.getTickProgress(false))
-                            .add(0.0, entity.getEyeHeight(entity.pose) + 1.5, 0.0)
+                            .add(0.0, entity.height.toDouble(), 0.0)
                     }
 
                     is ItemEntity -> {

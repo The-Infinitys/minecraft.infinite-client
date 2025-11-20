@@ -257,7 +257,8 @@ class LockOn : ConfigurableFeature(initialEnabled = false) {
 
         // 1. 座標変換を実行し、プライベートフィールドに格納
         // ターゲットの目の高さの中央をターゲット座標とする
-        val targetPos = target.eyePos
+        val targetPos =
+            target.getLerpedPos(graphics3D.tickProgress).add(0.0, target.getEyeHeight(target.pose).toDouble(), 0.0)
         screenPos = graphics3D.toDisplayPos(targetPos)
 
         // 画面外の場合は、screenPos が null になり、2D 描画はスキップされる

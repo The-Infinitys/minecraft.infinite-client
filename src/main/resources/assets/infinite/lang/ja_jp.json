@@ -109,6 +109,7 @@
   "infinite.feature.fighting.hyper_mace.description": "メイスのダメージを大幅に増加させます。",
   "infinite.feature.fighting.hyper_mace.damage_boost.description": "Hyper Maceによるダメージブースト。",
   "infinite.feature.fighting.hyper_mace.fall_distance.description": "Hyper Mace効果が発動させる最小落下距離。",
+  "infinite.feature.fighting.hyper_mace.fall_multiply.description": "Hyper Mace効果によるダメージ倍率",
   "infinite.feature.fighting.mace_assist.description": "メイス武器の使用をアシストします。",
   "infinite.feature.fighting.mace_assist.search_tick.description": "ターゲットを検索するティック間隔を設定します。",
   "infinite.feature.fighting.mace_assist.react_tick.description": "ターゲットに反応するティック間隔を設定します。",
