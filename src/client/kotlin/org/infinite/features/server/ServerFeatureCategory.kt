@@ -5,8 +5,8 @@ import org.infinite.features.FeatureCategory
 import org.infinite.features.server.anti.AntiVulcan
 import org.infinite.features.server.connection.AutoConnect
 import org.infinite.features.server.connection.AutoLeave
-import org.infinite.features.server.meta.DetectServer
-import org.infinite.features.server.meta.ServerInfo
+import org.infinite.features.server.detect.DetectServer
+import org.infinite.features.server.info.ServerInfo
 
 class ServerFeatureCategory :
     FeatureCategory(

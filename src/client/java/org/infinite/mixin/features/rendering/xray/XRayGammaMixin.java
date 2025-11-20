@@ -21,11 +21,14 @@ public class XRayGammaMixin {
     }
   }
 
-  @Inject(method = "getLuminance", at = @At("HEAD"), cancellable = true)
+  @Inject(method = "getLuminance", at = @At("RETURN"), cancellable = true)
   private void xray$forceFullLuminance(CallbackInfoReturnable<Integer> cir) {
+    int originalValue = cir.getReturnValue();
+    int modifiedValue = 15;
     if (InfiniteClient.INSTANCE.isFeatureEnabled(XRay.class)) {
-      cir.setReturnValue(15); // 非常に明るい値
-      cir.cancel(); // 元のメソッドの実行をキャンセル
+      cir.setReturnValue(modifiedValue); // 非常に明るい値
+    } else {
+      cir.setReturnValue(originalValue);
     }
   }
 }
