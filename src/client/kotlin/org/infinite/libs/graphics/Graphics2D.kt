@@ -944,33 +944,7 @@ class Graphics2D(
 
             arcPoints.add(x to y)
         }
-        val startOffsets = 0f to 0f
-        val firstPointOffset = 0f to 0f
-        val endPointOffset = 0f to 0f
-        val endOffsets = 0f to 0f
-        quad(
-            arcPoints[0].first + startOffsets.first,
-            arcPoints[0].second + startOffsets.second,
-            arcPoints[1].first + firstPointOffset.first,
-            arcPoints[1].second + firstPointOffset.second,
-            arcPoints[1].first - firstPointOffset.first,
-            arcPoints[1].second - firstPointOffset.second,
-            arcPoints[0].first - startOffsets.first,
-            arcPoints[0].second - startOffsets.second,
-            color,
-        )
-        renderLines(arcPoints.subList(1, arcPoints.size - 2), color, thickness.toFloat())
-        quad(
-            arcPoints[arcPoints.size - 2].first + endPointOffset.first,
-            arcPoints[arcPoints.size - 2].second + endPointOffset.second,
-            arcPoints[arcPoints.size - 1].first + endOffsets.first,
-            arcPoints[arcPoints.size - 1].second + endPointOffset.second,
-            arcPoints[arcPoints.size - 1].first - endOffsets.first,
-            arcPoints[arcPoints.size - 1].second - endPointOffset.second,
-            arcPoints[arcPoints.size - 2].first - endPointOffset.first,
-            arcPoints[arcPoints.size - 2].second - endPointOffset.second,
-            color,
-        )
+        renderLines(arcPoints, color, thickness.toFloat())
     }
 
     fun drawItem(
