@@ -14,9 +14,8 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.infinite.ConfigManager
 import org.infinite.ConfigurableFeature
-import org.infinite.Feature
 import org.infinite.InfiniteClient
-import org.infinite.featureCategories
+import org.infinite.features.Feature
 import org.infinite.settings.FeatureSetting
 
 object InfiniteCommand {
@@ -69,7 +68,7 @@ object InfiniteCommand {
                 )
 
         val featureRoot = ClientCommandManager.literal("feature")
-        featureCategories.forEach { category ->
+        InfiniteClient.featureCategories.forEach { category ->
             val catLiteral = ClientCommandManager.literal(category.name)
             category.features.forEach { feature ->
                 val featBuilder = ClientCommandManager.literal(feature.name)
@@ -197,7 +196,12 @@ object InfiniteCommand {
     private fun getIValueArg() = ClientCommandManager.argument("value", StringArgumentType.greedyString()).suggests(getIValueSuggestions())
 
     private fun getAllFeatureSuggestions(): SuggestionProvider<FabricClientCommandSource> =
-        SuggestionProvider { _, b -> CommandSource.suggestMatching(featureCategories.flatMap { it.features.map { f -> f.name } }, b) }
+        SuggestionProvider {
+            _,
+            b,
+            ->
+            CommandSource.suggestMatching(InfiniteClient.featureCategories.flatMap { it.features.map { f -> f.name } }, b)
+        }
 
     private fun getIKeySuggestions(): SuggestionProvider<FabricClientCommandSource> =
         SuggestionProvider { ctx, b ->
@@ -276,8 +280,8 @@ object InfiniteCommand {
             b.buildFuture()
         }
 
-    private fun findFeature(name: String): Feature? =
-        featureCategories.flatMap { it.features }.find { it.name.equals(name, ignoreCase = true) }
+    private fun findFeature(name: String): Feature<out ConfigurableFeature>? =
+        InfiniteClient.featureCategories.flatMap { it.features }.find { it.name.equals(name, ignoreCase = true) }
 
     private fun runAction(
         ctx: CommandContext<FabricClientCommandSource>,
@@ -289,7 +293,7 @@ object InfiniteCommand {
             return sendError("command.infinite.action.notsupported", action, name)
         }
 
-        val category = featureCategories.find { it.features.contains(entry) }!!
+        val category = InfiniteClient.featureCategories.find { it.features.contains(entry) }!!
         return when (action) {
             "enable" -> toggleFeature(category.name, entry.name, true)
             "disable" -> toggleFeature(category.name, entry.name, false)
@@ -356,14 +360,14 @@ object InfiniteCommand {
 
         when {
             cat == null ->
-                featureCategories.forEach { c ->
+                InfiniteClient.featureCategories.forEach { c ->
                     c.features.forEach { f ->
                         f.instance.reset()
                         f.instance.settings.forEach { it.reset() }
                     }
                 }
             feat == null ->
-                featureCategories.find { it.name == cat }?.features?.forEach { f ->
+                InfiniteClient.featureCategories.find { it.name == cat }?.features?.forEach { f ->
                     f.instance.reset()
                     f.instance.settings.forEach { it.reset() }
                 }
@@ -507,13 +511,13 @@ object InfiniteCommand {
         ClientCommandManager.argument("value", StringArgumentType.greedyString()).suggests(getSettingValueSuggestions(f))
 
     private fun getCategorySuggestions(): SuggestionProvider<FabricClientCommandSource> =
-        SuggestionProvider { _, b -> CommandSource.suggestMatching(featureCategories.map { it.name }, b) }
+        SuggestionProvider { _, b -> CommandSource.suggestMatching(InfiniteClient.featureCategories.map { it.name }, b) }
 
     private fun getFeatureNameSuggestions(): SuggestionProvider<FabricClientCommandSource> =
         SuggestionProvider { ctx, b ->
             try {
                 val cat = StringArgumentType.getString(ctx, "category")
-                val c = featureCategories.find { it.name.equals(cat, true) }
+                val c = InfiniteClient.featureCategories.find { it.name.equals(cat, true) }
                 CommandSource.suggestMatching(c?.features?.map { it.name } ?: emptyList(), b)
             } catch (_: Exception) {
             }

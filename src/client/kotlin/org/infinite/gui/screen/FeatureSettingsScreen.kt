@@ -7,7 +7,8 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
-import org.infinite.Feature
+import org.infinite.ConfigurableFeature
+import org.infinite.features.Feature
 import org.infinite.gui.widget.InfiniteBlockColorListField
 import org.infinite.gui.widget.InfiniteBlockListField
 import org.infinite.gui.widget.InfiniteButton
@@ -23,7 +24,7 @@ import org.infinite.settings.FeatureSetting
 
 class FeatureSettingsScreen(
     private val parent: Screen,
-    private val feature: Feature,
+    private val feature: Feature<out ConfigurableFeature>,
 ) : Screen(Text.literal(feature.name)) {
     private var savedPageIndex: Int = 0
 

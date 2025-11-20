@@ -1,6 +1,6 @@
 package org.infinite.libs.infinite
 
-import org.infinite.FeatureCategory
+import org.infinite.features.FeatureCategory
 import org.infinite.gui.theme.Theme
 
 interface InfiniteAddon {

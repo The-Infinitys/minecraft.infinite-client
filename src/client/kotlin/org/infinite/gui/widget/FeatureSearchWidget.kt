@@ -10,8 +10,9 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
-import org.infinite.Feature
-import org.infinite.featureCategories
+import org.infinite.ConfigurableFeature
+import org.infinite.InfiniteClient
+import org.infinite.features.Feature
 import org.infinite.gui.screen.FeatureSettingsScreen
 import org.lwjgl.glfw.GLFW
 
@@ -25,8 +26,8 @@ class FeatureSearchWidget(
     private val textRenderer: TextRenderer = MinecraftClient.getInstance().textRenderer
     private lateinit var searchField: InfiniteTextField
     private lateinit var scrollableContainer: InfiniteScrollableContainer
-    private var allFeatures: List<Feature> = featureCategories.flatMap { it.features }
-    private var filteredFeatures: List<Feature>
+    private var allFeatures: List<Feature<out ConfigurableFeature>> = InfiniteClient.featureCategories.flatMap { it.features }
+    private var filteredFeatures: List<Feature<out ConfigurableFeature>>
     private var isInitialized = false
     private var selectedIndex: Int = -1 // -1 means no item is selected
 
@@ -40,7 +41,7 @@ class FeatureSearchWidget(
                 allFeatures
             } else {
                 allFeatures.filter { feature ->
-                    val categoryName = featureCategories.find { it.features.contains(feature) }?.name ?: ""
+                    val categoryName = InfiniteClient.featureCategories.find { it.features.contains(feature) }?.name ?: ""
                     feature.name.contains(searchText, ignoreCase = true) ||
                         categoryName.contains(
                             searchText,
@@ -59,7 +60,7 @@ class FeatureSearchWidget(
         }
     }
 
-    private fun createFeatureToggleWidgets(features: List<Feature>): List<ClickableWidget> =
+    private fun createFeatureToggleWidgets(features: List<Feature<out ConfigurableFeature>>): List<ClickableWidget> =
         features.mapIndexed { index, feature ->
             InfiniteFeatureToggle(
                 0,

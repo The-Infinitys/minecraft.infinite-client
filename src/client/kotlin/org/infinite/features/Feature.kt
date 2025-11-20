@@ -1,20 +1,14 @@
-package org.infinite
+package org.infinite.features
 
-import org.infinite.features.automatic.automatic
-import org.infinite.features.fighting.fighting
-import org.infinite.features.movement.movement
-import org.infinite.features.rendering.rendering
-import org.infinite.features.server.server
-import org.infinite.features.utils.utils
+import org.infinite.ConfigurableFeature
 import org.infinite.utils.toSnakeCase
 
-class Feature(
-    val name: String,
-    val instance: ConfigurableFeature,
+class Feature<T : ConfigurableFeature>(
+    val instance: T,
 ) {
+    val name: String = instance.javaClass.simpleName
+
     init {
-        // --- Name Validation ---
-        // 1. nameが空でないこと
         if (name.isEmpty()) {
             throw IllegalArgumentException("FeatureSetting name must not be empty.")
         }
@@ -38,23 +32,3 @@ class Feature(
         return descriptionKey
     }
 }
-
-data class FeatureCategory(
-    val name: String,
-    val features: MutableList<Feature>,
-)
-
-fun <T : ConfigurableFeature> feature(
-    name: String,
-    instance: T,
-): Feature = Feature(name, instance)
-
-val featureCategories =
-    mutableListOf(
-        FeatureCategory("Movement", movement),
-        FeatureCategory("Rendering", rendering),
-        FeatureCategory("Fighting", fighting),
-        FeatureCategory("Automatic", automatic),
-        FeatureCategory("Server", server),
-        FeatureCategory("Utils", utils),
-    )

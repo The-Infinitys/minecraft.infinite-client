@@ -6,8 +6,9 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
-import org.infinite.Feature
+import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.features.Feature
 import org.infinite.utils.rendering.drawBorder
 
 class InfiniteFeatureToggle(
@@ -15,7 +16,7 @@ class InfiniteFeatureToggle(
     y: Int,
     width: Int,
     height: Int,
-    val feature: Feature,
+    val feature: Feature<out ConfigurableFeature>,
     private val isSelected: Boolean, // New parameter
     val onSettings: () -> Unit, // Made public
 ) : ClickableWidget(x, y, width, height, Text.literal(feature.name)) {

@@ -14,7 +14,14 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.ColorHelper
+import org.infinite.features.FeatureCategory
+import org.infinite.features.automatic.AutomaticFeatureCategory
+import org.infinite.features.fighting.FightingFeatureCategory
+import org.infinite.features.movement.MovementFeatureCategory
+import org.infinite.features.rendering.RenderingFeatureCategory
 import org.infinite.features.rendering.font.HyperTextRenderer
+import org.infinite.features.server.ServerFeatureCategory
+import org.infinite.features.utils.UtilsFeatureCategory
 import org.infinite.gui.theme.Theme
 import org.infinite.gui.theme.official.officialThemes
 import org.infinite.libs.ai.AiInterface
@@ -30,6 +37,16 @@ import org.infinite.libs.world.WorldManager
 import org.infinite.utils.LogQueue
 
 object InfiniteClient : ClientModInitializer {
+    val featureCategories: MutableList<FeatureCategory> =
+        mutableListOf(
+            MovementFeatureCategory(),
+            RenderingFeatureCategory(),
+            FightingFeatureCategory(),
+            AutomaticFeatureCategory(),
+            ServerFeatureCategory(),
+            UtilsFeatureCategory(),
+        )
+
     lateinit var worldManager: WorldManager
     var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"

@@ -11,8 +11,9 @@ import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import net.minecraft.util.math.ColorHelper
-import org.infinite.Feature
+import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
+import org.infinite.features.Feature
 import org.infinite.gui.widget.FeatureSearchWidget
 import org.infinite.gui.widget.InfiniteButton
 import org.infinite.gui.widget.InfiniteFeatureToggle
@@ -23,7 +24,7 @@ import org.infinite.utils.rendering.transparent
 class UISection(
     val id: String,
     private val screen: Screen,
-    featureList: List<Feature>? = null,
+    featureList: List<Feature<out ConfigurableFeature>>? = null,
 ) {
     private var closeButton: InfiniteButton? = null
     val widgets = mutableListOf<ClickableWidget>()
@@ -44,7 +45,7 @@ class UISection(
         }
     }
 
-    private fun setupFeatureWidgets(features: List<Feature>) {
+    private fun setupFeatureWidgets(features: List<Feature<out ConfigurableFeature>>) {
         val featureWidgets =
             features.map { feature ->
                 feature.name

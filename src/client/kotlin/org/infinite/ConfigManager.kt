@@ -65,7 +65,7 @@ object ConfigManager {
 
         val configFile = configDir.resolve("config.json")
         val featureConfigs =
-            featureCategories
+            InfiniteClient.featureCategories
                 .flatMap { category ->
                     category.features.map { feature ->
                         val configurableFeature = feature.instance
@@ -134,7 +134,7 @@ object ConfigManager {
             InfiniteClient.currentTheme = appConfig.currentTheme // Load currentTheme
 
             appConfig.features.forEach { featureConfig ->
-                featureCategories.flatMap { it.features }.find { it.name == featureConfig.nameKey }?.let { feature ->
+                InfiniteClient.featureCategories.flatMap { it.features }.find { it.name == featureConfig.nameKey }?.let { feature ->
                     val configurableFeature = feature.instance
                     if (featureConfig.enabled) {
                         configurableFeature.enable()

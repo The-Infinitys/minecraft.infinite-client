@@ -2,7 +2,6 @@ package org.infinite.features.server.meta
 
 import org.infinite.ConfigurableFeature
 import org.infinite.InfiniteClient
-import org.infinite.featureCategories
 import org.infinite.settings.FeatureSetting
 
 class DetectServer : ConfigurableFeature(initialEnabled = true) {
@@ -18,7 +17,7 @@ class DetectServer : ConfigurableFeature(initialEnabled = true) {
 
     override fun onTick() {
         val maxAllowedLevel = getSetting("FeatureLevel")?.value as? FeatureLevel ?: FeatureLevel.Extend
-        featureCategories.forEach { category ->
+        InfiniteClient.featureCategories.forEach { category ->
             category.features.forEach { feature ->
                 val configurableFeature = feature.instance
                 if (configurableFeature.isEnabled() && configurableFeature.level.ordinal > maxAllowedLevel.ordinal) {
