@@ -9,7 +9,7 @@ import net.minecraft.client.gui.screen.option.OptionsScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.GridWidget;
 import net.minecraft.text.Text;
-import org.infinite.gui.screen.GeneralSettingScreen;
+import org.infinite.gui.screen.GlobalSettingsScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -57,6 +57,6 @@ public abstract class OptionsScreenMixin extends Screen {
     adder.add(
         this.createButton(
             Text.literal("Infinite Client Settings"),
-            () -> new GeneralSettingScreen((OptionsScreen) (Object) this)));
+            () -> new GlobalSettingsScreen((OptionsScreen) (Object) this)));
   }
 }

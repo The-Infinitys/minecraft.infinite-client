@@ -2,6 +2,7 @@ package org.infinite
 
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
@@ -23,6 +24,8 @@ import org.infinite.features.rendering.RenderingFeatureCategory
 import org.infinite.features.rendering.font.HyperTextRenderer
 import org.infinite.features.server.ServerFeatureCategory
 import org.infinite.features.utils.UtilsFeatureCategory
+import org.infinite.global.GlobalFeatureCategory
+import org.infinite.global.rendering.GlobalRenderingFeatureCategory
 import org.infinite.gui.theme.Theme
 import org.infinite.gui.theme.official.officialThemes
 import org.infinite.libs.ai.AiInterface
@@ -47,7 +50,10 @@ object InfiniteClient : ClientModInitializer {
             ServerFeatureCategory(),
             UtilsFeatureCategory(),
         )
-
+    val globalFeatureCategories: MutableList<GlobalFeatureCategory> =
+        mutableListOf(
+            GlobalRenderingFeatureCategory(),
+        )
     lateinit var worldManager: WorldManager
     var themes: List<Theme> = listOf()
     var currentTheme: String = "infinite"
@@ -74,6 +80,20 @@ object InfiniteClient : ClientModInitializer {
                 }
             }
         }
+        for (category in globalFeatureCategories) {
+            for (feature in category.features) {
+                val key = feature.generateKey(category.name)
+                if (Text.translatable(key).string == key) {
+                    result.add(key)
+                }
+                for (setting in feature.instance.settings) {
+                    val key = setting.generateKey(category.name, feature.name, setting.name)
+                    if (Text.translatable(key).string == key) {
+                        result.add(key)
+                    }
+                }
+            }
+        }
         return result
     }
 
@@ -84,7 +104,6 @@ object InfiniteClient : ClientModInitializer {
                 log("Loading addon: ${addon.id} v${addon.version}")
                 val providedCategories = addon.features
                 addonFeatureMap[addon] = providedCategories // Store provided categories
-
                 for (addonCategory in providedCategories) {
                     val existingCategory = featureCategories.find { it.name == addonCategory.name }
                     if (existingCategory != null) {
@@ -109,6 +128,23 @@ object InfiniteClient : ClientModInitializer {
         AsyncInterface.init()
         updateFeatureInstances()
         InfiniteKeyBind.registerKeybindings()
+        ConfigManager.loadGlobalConfig()
+        ClientLifecycleEvents.CLIENT_STARTED.register { _ ->
+            for (globalFeatureCategory in globalFeatureCategories) {
+                for (globalFeature in globalFeatureCategory.features) {
+                    val feature = globalFeature.instance
+                    feature.onInit()
+                }
+            }
+        }
+        ClientLifecycleEvents.CLIENT_STOPPING.register { _ ->
+            for (globalFeatureCategory in globalFeatureCategories) {
+                for (globalFeature in globalFeatureCategory.features) {
+                    val feature = globalFeature.instance
+                    feature.onShutdown()
+                }
+            }
+        }
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             loadAddons() // ここで loadedThemes が更新される
             themes = officialThemes + loadedThemes // officialThemesとloadedThemesを結合
@@ -120,11 +156,9 @@ object InfiniteClient : ClientModInitializer {
                     Identifier.of("minecraft", "infinite_bolditalic"),
                 ),
             )
-            ConfigManager.loadGlobalConfig() // Load global config before feature config
             ConfigManager.loadConfig()
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
-
             log("version $modVersion")
             val lackedTranslations = checkTranslations() + InfiniteKeyBind.checkTranslations()
             if (lackedTranslations.isEmpty()) {

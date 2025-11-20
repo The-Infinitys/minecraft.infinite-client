@@ -4,7 +4,7 @@ import org.infinite.feature.ConfigurableFeature
 import org.infinite.utils.toSnakeCase
 
 open class Feature<T : ConfigurableFeature>(
-    open val instance: T,
+    val instance: T,
 ) {
     val name: String = instance.javaClass.simpleName
 
