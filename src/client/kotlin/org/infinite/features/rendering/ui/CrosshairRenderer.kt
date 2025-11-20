@@ -6,6 +6,7 @@ import org.infinite.features.rendering.detailinfo.DetailInfo
 import org.infinite.libs.client.player.ClientInterface
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.transparent
+import org.infinite.utils.toRadians
 import kotlin.math.PI
 
 class CrosshairRenderer : ClientInterface() {
@@ -89,7 +90,7 @@ class CrosshairRenderer : ClientInterface() {
                 centerX,
                 centerY,
                 radius,
-                180f,
+                toRadians(180f),
                 arcAngle,
                 lineThickness,
                 accentColor.transparent(128),
