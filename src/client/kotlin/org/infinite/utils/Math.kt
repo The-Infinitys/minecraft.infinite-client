@@ -1,9 +1,8 @@
 package org.infinite.utils
 
-import net.minecraft.util.math.MathHelper
 import kotlin.math.PI
 
-fun toRadians(direction: Float) = direction / 180f * MathHelper.PI
+fun toRadians(direction: Float) = (direction / 180.0 * PI).toFloat()
 
 fun toRadians(direction: Double) = direction / 180.0 * PI
 

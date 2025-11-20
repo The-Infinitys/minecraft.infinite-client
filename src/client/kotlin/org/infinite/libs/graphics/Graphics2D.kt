@@ -772,12 +772,12 @@ class Graphics2D(
         // 各頂点における線分に垂直な単位ベクトル（外側向き）を計算
         val normals = mutableListOf<Pair<Float, Float>>()
         for (i in lines.indices) {
-            val (x, y) = lines[i]
+            val (_, _) = lines[i]
             val prevPoint = if (i > 0) lines[i - 1] else null
             val nextPoint = if (i < lines.size - 1) lines[i + 1] else null
 
-            var normalX = 0f
-            var normalY = 0f
+            var normalX: Float
+            var normalY: Float
 
             // 始点
             if (prevPoint == null) {
@@ -849,7 +849,6 @@ class Graphics2D(
                 // クロス積 (外積) を計算し、ジョイントが凸（外側）か凹（内側）かを判定
                 // u1 から u2 への回転方向
                 val cross = u1x * u2y - u1y * u2x
-                val sign = if (cross > 0) 1f else -1f // 右回り(凹)なら1, 左回り(凸)なら-1 (Minecraftの座標系に依存)
 
                 // 外側 (凸) のジョイントの場合、法線ベクトルとスケールを適用
                 if (cross < 0) { // 凸の場合 (外側ジョイント)
@@ -917,7 +916,6 @@ class Graphics2D(
         // 円弧の中心線となる頂点リスト
         val arcPoints = mutableListOf<Pair<Float, Float>>()
         val segments = calculateSegments(radius)
-        val startAngleOffset = (startAngle / (2 * PI)).toFloat() // 90度 (上向き) からスタート
 
         // 描画するセグメント数 (endAngle に比例)
         val segmentsToDraw = (segments * (endAngle / (2 * PI))).toInt()
@@ -927,7 +925,7 @@ class Graphics2D(
         val angleStep = endAngle / segmentsToDraw.toFloat()
 
         // 開始点 (クールダウンバーの始点)
-        var currentAngle = startAngleOffset
+        var currentAngle = startAngle
 
         // 最初の点を追加
         val startX = cx + MathHelper.cos(currentAngle) * radius
@@ -936,7 +934,7 @@ class Graphics2D(
 
         // 中間点を計算し、リストに追加
         for (i in 1..segmentsToDraw) {
-            currentAngle = startAngleOffset + i * angleStep
+            currentAngle = startAngle + i * angleStep
 
             // 描画する円弧上の頂点の座標を計算
             val x = cx + MathHelper.cos(currentAngle) * radius

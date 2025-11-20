@@ -90,7 +90,7 @@ class CrosshairRenderer : ClientInterface() {
                 centerX,
                 centerY,
                 radius,
-                toRadians(180f),
+                toRadians(90f),
                 arcAngle,
                 lineThickness,
                 accentColor.transparent(128),
