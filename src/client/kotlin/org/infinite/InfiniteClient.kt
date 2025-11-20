@@ -109,8 +109,8 @@ object InfiniteClient : ClientModInitializer {
         updateFeatureInstances()
         InfiniteKeyBind.registerKeybindings()
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
-            themes = officialThemes
-            loadAddons()
+            loadAddons() // ここで loadedThemes が更新される
+            themes = officialThemes + loadedThemes // officialThemesとloadedThemesを結合
             (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.defineFont(
                 HyperTextRenderer.HyperFonts(
                     Identifier.of("minecraft", "infinite_regular"),
@@ -119,6 +119,7 @@ object InfiniteClient : ClientModInitializer {
                     Identifier.of("minecraft", "infinite_bolditalic"),
                 ),
             )
+            ConfigManager.loadGlobalConfig() // Load global config before feature config
             ConfigManager.loadConfig()
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
@@ -140,6 +141,7 @@ object InfiniteClient : ClientModInitializer {
         // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             ConfigManager.saveConfig()
+            ConfigManager.saveGlobalConfig() // Save global config after feature config
             (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.disable()
             for (addon in loadedAddons) { // Addon shutdown
                 addon.onShutdown()

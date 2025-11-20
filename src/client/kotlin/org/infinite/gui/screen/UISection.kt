@@ -30,11 +30,12 @@ class UISection(
     val widgets = mutableListOf<ClickableWidget>()
     private var featureSearchWidget: FeatureSearchWidget? = null
     private var isMainSectionInitialized = false
+    private val themeButtons = mutableListOf<InfiniteButton>()
 
     init {
         when (id) {
             "main" -> {
-                // Initialization moved to renderMain
+                // Theme selection buttons will be initialized in renderMain
             }
 
             else -> {
@@ -176,16 +177,30 @@ class UISection(
         renderTitle(context, x, y, width, textRenderer, "Main", isSelected)
         if (!renderContent) return
 
-        if (!isMainSectionInitialized) {
-            featureSearchWidget = FeatureSearchWidget(x + 20, y + 50, width - 40, height - 70, screen)
+        // Initialize theme buttons if not already initialized or if context changes
+        if (!isMainSectionInitialized || themeButtons.isEmpty()) {
+            themeButtons.clear()
+            val currentY = y + 50 // Start position for theme buttons
+            featureSearchWidget = FeatureSearchWidget(x + 20, currentY + 10, width - 40, height - (currentY + 10 - y), screen)
             isMainSectionInitialized = true
+        }
+
+        // Update positions and render theme buttons
+        var currentY = y + 50
+        val buttonHeight = 20
+        val padding = 5
+        themeButtons.forEach { button ->
+            button.x = x + 20
+            button.y = currentY
+            button.render(context, mouseX, mouseY, delta)
+            currentY += buttonHeight + padding
         }
 
         featureSearchWidget?.let {
             it.x = x + 20
-            it.y = y + 50
+            it.y = currentY + 10
             it.width = width - 40
-            it.height = height - 70
+            it.height = height - (currentY + 10 - y) // Adjust height based on theme buttons
             it.render(context, mouseX, mouseY, delta)
         }
     }
@@ -282,7 +297,14 @@ class UISection(
             return true
         }
 
-        // 2. 他のウィジェットのクリック
+        // 2. テーマボタンのクリック
+        for (button in themeButtons) {
+            if (button.mouseClicked(click, doubled)) {
+                return true
+            }
+        }
+
+        // 3. 他のウィジェットのクリック
         for (widget in widgets) {
             if (widget.mouseClicked(click, doubled)) {
                 return true // ★ 最初に応答したウィジェットで停止し、フォーカスを与える
@@ -300,6 +322,7 @@ class UISection(
 
         if (id == "main") {
             featureSearchWidget?.keyPressed(input)
+            themeButtons.forEach { it.keyPressed(input) } // Add this line
         }
 
         // keyPressed は一般的に全ての子に転送されます
@@ -319,6 +342,11 @@ class UISection(
             featureSearchWidget
                 ?.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
                 ?.let { if (it) return true }
+            for (button in themeButtons) { // Add this loop
+                if (button.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) {
+                    return true
+                }
+            }
         }
 
         for (widget in widgets) {
@@ -340,6 +368,11 @@ class UISection(
 
         if (id == "main") {
             featureSearchWidget?.mouseDragged(click, offsetX, offsetY)?.let { if (it) return true }
+            for (button in themeButtons) { // Add this loop
+                if (button.mouseDragged(click, offsetX, offsetY)) {
+                    return true
+                }
+            }
         }
 
         // closeButtonへのドラッグを処理
@@ -365,6 +398,11 @@ class UISection(
 
         if (id == "main") {
             featureSearchWidget?.mouseReleased(click)?.let { if (it) return true }
+            for (button in themeButtons) { // Add this loop
+                if (button.mouseReleased(click)) {
+                    return true
+                }
+            }
         }
 
         // closeButtonの mouseReleased を処理
@@ -389,6 +427,11 @@ class UISection(
 
         if (id == "main") {
             featureSearchWidget?.charTyped(input)?.let { if (it) return true }
+            for (button in themeButtons) { // Add this loop
+                if (button.charTyped(input)) {
+                    return true
+                }
+            }
         }
 
         for (widget in widgets) {

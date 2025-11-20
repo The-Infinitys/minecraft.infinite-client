@@ -27,7 +27,11 @@ object ConfigManager {
     @Serializable
     data class AppConfig(
         val features: List<FeatureConfig>,
-        val currentTheme: String = "infinite", // Add currentTheme to AppConfig
+    )
+
+    @Serializable
+    data class GlobalConfig(
+        val currentTheme: String = "infinite",
     )
 
     // Function to get config directory based on server type
@@ -54,6 +58,44 @@ object ConfigManager {
             configDir.resolve("single_player").resolve(serverName)
         } else {
             configDir.resolve("multi_player").resolve(serverName)
+        }
+    }
+
+    private fun getGlobalConfigPath(): Path {
+        val gameDir = FabricLoader.getInstance().gameDir
+        return gameDir.resolve("infinite").resolve("config").resolve("global_config.json")
+    }
+
+    fun saveGlobalConfig() {
+        val globalConfigFile = getGlobalConfigPath().toFile()
+        if (!globalConfigFile.parentFile.exists()) {
+            globalConfigFile.parentFile.mkdirs()
+        }
+
+        val globalConfig = GlobalConfig(InfiniteClient.currentTheme)
+        val jsonString = json.encodeToString(GlobalConfig.serializer(), globalConfig)
+        globalConfigFile.writeText(jsonString)
+        InfiniteClient.log("Global configuration saved to ${globalConfigFile.absolutePath}")
+    }
+
+    fun loadGlobalConfig() {
+        val globalConfigFile = getGlobalConfigPath().toFile()
+
+        if (!globalConfigFile.exists()) {
+            InfiniteClient.warn("Global configuration file not found: ${globalConfigFile.absolutePath}. Using default theme.")
+            InfiniteClient.currentTheme = "infinite" // Default value
+            return
+        }
+
+        try {
+            val jsonString = globalConfigFile.readText()
+            val globalConfig = json.decodeFromString(GlobalConfig.serializer(), jsonString)
+            InfiniteClient.currentTheme = globalConfig.currentTheme
+            InfiniteClient.log("Global configuration loaded from ${globalConfigFile.absolutePath}")
+        } catch (e: Exception) {
+            InfiniteClient.error("Failed to load global configuration: ${e.message}. Using default theme.")
+            InfiniteClient.currentTheme = "infinite" // Fallback to default
+            e.printStackTrace()
         }
     }
 
@@ -141,7 +183,7 @@ object ConfigManager {
                     }
                 }
 
-        val appConfig = AppConfig(featureConfigs, InfiniteClient.currentTheme) // Pass currentTheme here
+        val appConfig = AppConfig(featureConfigs)
         val jsonString = json.encodeToString(AppConfig.serializer(), appConfig)
         configFile.writeText(jsonString)
         InfiniteClient.log("Configuration saved to ${configFile.absolutePath}")
@@ -159,8 +201,6 @@ object ConfigManager {
         try {
             val jsonString = configFile.readText()
             val appConfig = json.decodeFromString(AppConfig.serializer(), jsonString)
-
-            InfiniteClient.currentTheme = appConfig.currentTheme // Load currentTheme
 
             appConfig.features.forEach { featureConfig ->
                 InfiniteClient.featureCategories.flatMap { it.features }.find { it.name == featureConfig.nameKey }?.let { feature ->
