@@ -1042,4 +1042,16 @@ class Graphics2D(
     fun disableScissor() {
         context.disableScissor()
     }
+
+    fun centeredText(
+        text: Text,
+        x: Int,
+        y: Int,
+        color: Int,
+        shadow: Boolean = true,
+    ) {
+        val width = textWidth(text.string)
+        val height = fontHeight()
+        drawText(text.string, x - width / 2.0, y - height / 2.0, color, shadow)
+    }
 }
