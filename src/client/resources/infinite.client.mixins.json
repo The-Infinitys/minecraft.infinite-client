@@ -51,6 +51,9 @@
     "infinite.client.player.ClientPlayerInteractionManagerMixin",
     "infinite.graphics.InGameHudMixin",
     "infinite.graphics.WorldRendererMixin",
+    "infinite.gui.ButtonWidgetMixin",
+    "infinite.gui.ScreenMixin",
+    "infinite.gui.TextFieldWidgetMixin",
     "infinite.interfaces.WorldRendererMixin",
     "infinite.settings.OptionsScreenMixin",
     "infinite.world.ClientPlayNetworkHandlerMixin"

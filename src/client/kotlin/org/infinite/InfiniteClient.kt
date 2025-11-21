@@ -7,7 +7,6 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.text.MutableText
@@ -20,7 +19,6 @@ import org.infinite.features.automatic.AutomaticFeatureCategory
 import org.infinite.features.fighting.FightingFeatureCategory
 import org.infinite.features.movement.MovementFeatureCategory
 import org.infinite.features.rendering.RenderingFeatureCategory
-import org.infinite.features.rendering.font.HyperTextRenderer
 import org.infinite.features.server.ServerFeatureCategory
 import org.infinite.features.utils.UtilsFeatureCategory
 import org.infinite.global.GlobalFeatureCategory
@@ -216,7 +214,6 @@ object InfiniteClient : ClientModInitializer {
         // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             ConfigManager.saveConfig()
-            (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.disable()
             for (addon in loadedAddons) { // Addon shutdown
                 addon.onShutdown()
                 addonFeatureMap[addon]?.let { providedCategories ->
