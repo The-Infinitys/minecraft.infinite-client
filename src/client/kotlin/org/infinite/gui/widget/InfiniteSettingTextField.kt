@@ -73,8 +73,6 @@ class InfiniteSettingTextField(
 
                 is FeatureSetting.EnumSetting<*> -> {}
 
-                is FeatureSetting.StringListSetting -> {}
-
                 is FeatureSetting.BlockListSetting -> {}
 
                 is FeatureSetting.EntityListSetting -> {}

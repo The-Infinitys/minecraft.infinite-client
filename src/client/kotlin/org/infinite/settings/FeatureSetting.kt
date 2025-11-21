@@ -75,8 +75,13 @@ sealed class FeatureSetting<T>(
 
     class StringListSetting(
         name: String,
-        defaultValue: List<String>,
-    ) : FeatureSetting<List<String>>(name, defaultValue, defaultValue)
+        defaultValue: String,
+        val options: List<String>,
+    ) : FeatureSetting<String>(name, defaultValue, defaultValue) {
+        fun set(value: String) {
+            this.value = options.find { it == value } ?: return
+        }
+    }
 
     class EnumSetting<E : Enum<E>>(
         name: String,

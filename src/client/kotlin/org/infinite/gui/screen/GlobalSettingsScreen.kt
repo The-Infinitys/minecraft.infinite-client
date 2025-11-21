@@ -17,11 +17,10 @@ import org.infinite.gui.widget.InfiniteEntityListField
 import org.infinite.gui.widget.InfiniteGlobalFeatureToggle
 import org.infinite.gui.widget.InfinitePlayerListField
 import org.infinite.gui.widget.InfiniteScrollableContainer
-import org.infinite.gui.widget.InfiniteSelectionList
+import org.infinite.gui.widget.InfiniteSelectionListField
 import org.infinite.gui.widget.InfiniteSettingTextField
 import org.infinite.gui.widget.InfiniteSettingToggle
 import org.infinite.gui.widget.InfiniteSlider
-import org.infinite.gui.widget.InfiniteStringListField
 import org.infinite.gui.widget.TabButton
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
@@ -228,11 +227,11 @@ class GlobalSettingsScreen(
                 }
 
                 is FeatureSetting.StringListSetting -> {
-                    settingWidgets.add(InfiniteStringListField(0, 0, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(InfiniteSelectionListField(0, 0, widgetWidth, defaultWidgetHeight, setting))
                 }
 
                 is FeatureSetting.EnumSetting<*> -> {
-                    settingWidgets.add(InfiniteSelectionList(0, 0, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(InfiniteSelectionListField(0, 0, widgetWidth, defaultWidgetHeight, setting))
                 }
 
                 is FeatureSetting.BlockIDSetting -> {

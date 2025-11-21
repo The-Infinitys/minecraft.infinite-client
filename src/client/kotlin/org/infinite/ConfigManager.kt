@@ -114,7 +114,7 @@ object ConfigManager {
                                                 }
 
                                                 is FeatureSetting.StringListSetting -> {
-                                                    JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                    JsonPrimitive(setting.value)
                                                 }
 
                                                 is FeatureSetting.EnumSetting<*> -> {
@@ -211,8 +211,8 @@ object ConfigManager {
                                     }
 
                                     is FeatureSetting.StringListSetting -> {
-                                        setting.value =
-                                            json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                        val loadedString = json.decodeFromJsonElement<String>(jsonElement)
+                                        setting.set(loadedString)
                                     }
 
                                     // **Changed to MutableList**
@@ -305,7 +305,7 @@ object ConfigManager {
                                             }
 
                                             is FeatureSetting.StringListSetting -> {
-                                                JsonArray(setting.value.map { JsonPrimitive(it) })
+                                                JsonPrimitive(setting.value)
                                             }
 
                                             is FeatureSetting.EnumSetting<*> -> {
@@ -404,8 +404,8 @@ object ConfigManager {
                                     }
 
                                     is FeatureSetting.StringListSetting -> {
-                                        setting.value =
-                                            json.decodeFromJsonElement<List<String>>(jsonElement).toMutableList()
+                                        val loadedString = json.decodeFromJsonElement<String>(jsonElement)
+                                        setting.set(loadedString)
                                     }
 
                                     // **Changed to MutableList**

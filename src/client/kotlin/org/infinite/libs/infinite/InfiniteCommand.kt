@@ -214,8 +214,7 @@ object InfiniteCommand {
                 val filtered =
                     feature.settings.filter { s ->
                         val isListSetting =
-                            s is FeatureSetting.StringListSetting ||
-                                s is FeatureSetting.BlockListSetting ||
+                            s is FeatureSetting.BlockListSetting ||
                                 s is FeatureSetting.EntityListSetting ||
                                 s is FeatureSetting.PlayerListSetting
                         when {
@@ -276,7 +275,7 @@ object InfiniteCommand {
                         }
 
                         is FeatureSetting.StringListSetting -> {
-                            if (isDel) setting.value else emptyList()
+                            setting.options
                         }
 
                         is FeatureSetting.BooleanSetting -> {
@@ -466,7 +465,7 @@ object InfiniteCommand {
                     is Float -> raw.toFloat()
                     is Double -> raw.toDouble()
                     is String -> raw
-                    is List<*> -> raw.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                    is String -> raw
                     is Enum<*> -> (s as FeatureSetting.EnumSetting).options.first { it.name.equals(raw, true) }
                     else -> return 0
                 }
@@ -491,7 +490,7 @@ object InfiniteCommand {
         val f = InfiniteClient.searchFeature(cat, feat) ?: return 0
         val s = f.getSetting(key) ?: return 0
 
-        if (s !is FeatureSetting.StringListSetting && s !is FeatureSetting.BlockListSetting &&
+        if (s !is FeatureSetting.BlockListSetting &&
             s !is FeatureSetting.EntityListSetting && s !is FeatureSetting.PlayerListSetting
         ) {
             return 0
@@ -566,7 +565,7 @@ object InfiniteCommand {
             val filtered =
                 target.settings.filter {
                     val list =
-                        it is FeatureSetting.StringListSetting || it is FeatureSetting.BlockListSetting ||
+                        it is FeatureSetting.BlockListSetting ||
                             it is FeatureSetting.EntityListSetting || it is FeatureSetting.PlayerListSetting
                     isList == list
                 }
@@ -628,7 +627,7 @@ object InfiniteCommand {
                     }
 
                     is FeatureSetting.StringListSetting -> {
-                        if (isDel) s.value else emptyList()
+                        s.options
                     }
 
                     is FeatureSetting.BooleanSetting -> {

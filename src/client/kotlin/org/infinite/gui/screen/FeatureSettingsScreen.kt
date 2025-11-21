@@ -15,11 +15,10 @@ import org.infinite.gui.widget.InfiniteButton
 import org.infinite.gui.widget.InfiniteEntityListField
 import org.infinite.gui.widget.InfinitePlayerListField
 import org.infinite.gui.widget.InfiniteScrollableContainer
-import org.infinite.gui.widget.InfiniteSelectionList
+import org.infinite.gui.widget.InfiniteSelectionListField
 import org.infinite.gui.widget.InfiniteSettingTextField
 import org.infinite.gui.widget.InfiniteSettingToggle
 import org.infinite.gui.widget.InfiniteSlider
-import org.infinite.gui.widget.InfiniteStringListField
 import org.infinite.settings.FeatureSetting
 
 class FeatureSettingsScreen(
@@ -72,12 +71,12 @@ class FeatureSettingsScreen(
                 }
 
                 is FeatureSetting.StringListSetting -> {
-                    settingWidgets.add(InfiniteStringListField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(InfiniteSelectionListField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
                     currentY += defaultWidgetHeight + padding
                 }
 
                 is FeatureSetting.EnumSetting<*> -> {
-                    settingWidgets.add(InfiniteSelectionList(20, currentY, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(InfiniteSelectionListField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
                     currentY += defaultWidgetHeight + padding
                 }
 
