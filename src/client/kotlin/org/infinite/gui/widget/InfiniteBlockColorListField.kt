@@ -206,14 +206,14 @@ class InfiniteBlockColorListField(
         val blockIdTextFieldX = x + padding
         val blockIdTextFieldY = y + totalLabelHeight + padding
         blockIdTextField.x = blockIdTextFieldX
-        blockIdTextField.y = blockIdTextFieldY
+        blockIdTextField.y = blockIdTextFieldY + (inputFieldHeight - blockIdTextField.height) / 2
         blockIdTextField.render(context, mouseX, mouseY, delta)
 
         // Color TextField
         val colorTextFieldX = blockIdTextFieldX + blockIdTextField.width + padding
         val colorTextFieldY = y + totalLabelHeight + padding
         colorTextField.x = colorTextFieldX
-        colorTextField.y = colorTextFieldY
+        colorTextField.y = colorTextFieldY + (inputFieldHeight - colorTextField.height) / 2
         colorTextField.render(context, mouseX, mouseY, delta)
 
         // Add Button

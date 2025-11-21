@@ -205,7 +205,7 @@ class InfiniteBlockListField(
 
         // TextFieldの位置を調整
         val textFieldX = x + padding
-        val textFieldY = y + totalLabelHeight + padding
+        val textFieldY = y + totalLabelHeight + padding + (inputFieldHeight - textField.height) / 2 // 垂直中央揃え
         textField.x = textFieldX
         textField.y = textFieldY
         textField.render(context, mouseX, mouseY, delta)
@@ -320,6 +320,5 @@ class InfiniteBlockListField(
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {
         textField.appendNarrations(builder)
-        // Removed: scrollableContainer.appendClickableNarrations(builder) as it's a protected method.
     }
 }

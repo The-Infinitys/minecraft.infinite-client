@@ -22,15 +22,19 @@ class InfiniteStringListField(
     private val textRenderer = MinecraftClient.getInstance().textRenderer
 
     init {
+        val padding = 2
+        val labelWidth = textRenderer.getWidth(setting.name)
+        val inputFieldWidth = width - (padding * 3) - labelWidth // ボタンがないため、ボタンのスペースを考慮しない
+
         textField =
             InfiniteTextField(
                 textRenderer,
-                x + 5 + textRenderer.getWidth(setting.name) + 5, // Position after label
-                y,
-                150, // Fixed width for debugging
+                0, // x, y will be set in renderWidget
+                0, // x, y will be set in renderWidget
+                inputFieldWidth, // <-- ここを修正
                 height,
                 Text.literal(setting.value.joinToString(", ")),
-                InfiniteTextField.InputType.BLOCK_ID,
+                InfiniteTextField.InputType.ANY_TEXT, // <-- ここを修正
             )
         textField.text = setting.value.joinToString(", ")
         textField.setChangedListener { newText ->
@@ -87,8 +91,10 @@ class InfiniteStringListField(
             )
         }
 
-        textField.x = x + 5 + textRenderer.getWidth(setting.name) + 5
-        textField.y = y
+        val currentLabelWidth = textRenderer.getWidth(Text.translatable(setting.name))
+        textField.x = x + 5 + currentLabelWidth + 5
+        textField.y = y + (height - textField.height) / 2 // 垂直方向中央揃え
+        textField.setWidth(width - (textField.x - x) - 5) // 親ウィジェットの幅を考慮してテキストフィールドの幅を設定
         textField.render(context, mouseX, mouseY, delta)
     }
 
