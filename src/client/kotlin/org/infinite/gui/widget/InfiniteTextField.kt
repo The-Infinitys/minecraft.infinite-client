@@ -220,8 +220,8 @@ class InfiniteTextField(
         deltaTicks: Float,
     ) {
         // 1. テキストフィールドの背景と枠線の描画
-        context.fill(x, y, x + width, y + height, InfiniteClient.theme().colors.backgroundColor)
-        context.drawBorder(x, y, width, height, InfiniteClient.theme().colors.primaryColor)
+        context.fill(x, y, x + width, y + height, InfiniteClient.getCurrentColors().backgroundColor)
+        context.drawBorder(x, y, width, height, InfiniteClient.getCurrentColors().primaryColor)
 
         // 2. 親クラスの描画（テキスト、カーソル、選択範囲）
         super.renderWidget(context, mouseX, mouseY, deltaTicks)
@@ -242,7 +242,7 @@ class InfiniteTextField(
                 suggestionY,
                 suggestionX + suggestionWidth,
                 suggestionY + displayHeight,
-                InfiniteClient.theme().colors.backgroundColor,
+                InfiniteClient.getCurrentColors().backgroundColor,
             )
 
             // クリップ (Scissor) を設定して、枠外の描画を防ぐ
@@ -263,8 +263,8 @@ class InfiniteTextField(
                 val isSelected = i == suggestionIndex
 
                 // 選択色と非選択色
-                val selectedBgColor = InfiniteClient.theme().colors.secondaryColor
-                val defaultTextColor = InfiniteClient.theme().colors.foregroundColor
+                val selectedBgColor = InfiniteClient.getCurrentColors().secondaryColor
+                val defaultTextColor = InfiniteClient.getCurrentColors().foregroundColor
 
                 // 選択されている候補の背景をハイライト
                 if (isSelected) {
@@ -303,8 +303,8 @@ class InfiniteTextField(
                     scrollbarX + scrollbarWidth,
                     suggestionY + displayHeight,
                     InfiniteClient
-                        .theme()
-                        .colors.backgroundColor,
+                        .getCurrentColors()
+                        .backgroundColor,
                 )
                 // スクロールつまみ (サム)
                 context.fill(
@@ -313,8 +313,8 @@ class InfiniteTextField(
                     scrollbarX + scrollbarWidth,
                     (scrollbarY + scrollbarHeight).toInt(),
                     InfiniteClient
-                        .theme()
-                        .colors.foregroundColor,
+                        .getCurrentColors()
+                        .foregroundColor,
                 )
             }
         }

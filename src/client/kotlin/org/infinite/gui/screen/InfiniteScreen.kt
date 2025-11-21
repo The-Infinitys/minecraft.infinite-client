@@ -131,7 +131,13 @@ class InfiniteScreen(
         renderedSections.sortByDescending { it.z3d }
 
         if (animationProgress >= 1.0f) {
-            context.drawCenteredTextWithShadow(textRenderer, title, width / 2, startY + 15, 0xFFFFFF)
+            context.drawCenteredTextWithShadow(
+                textRenderer,
+                title,
+                width / 2,
+                startY + 15,
+                InfiniteClient.getCurrentColors().foregroundColor,
+            )
         }
 
         val minZ = zOffset - radius

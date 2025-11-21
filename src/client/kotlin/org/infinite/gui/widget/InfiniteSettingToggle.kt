@@ -55,8 +55,8 @@ class InfiniteSettingToggle(
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
             context.drawTextWithShadow(
                 textRenderer,
@@ -64,8 +64,8 @@ class InfiniteSettingToggle(
                 textX,
                 descriptionY,
                 org.infinite.InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
         } else {
             totalTextHeight = textRenderer.fontHeight // Only name
@@ -77,8 +77,8 @@ class InfiniteSettingToggle(
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
         }
 

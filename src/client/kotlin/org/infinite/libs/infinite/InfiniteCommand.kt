@@ -16,6 +16,7 @@ import org.infinite.ConfigManager
 import org.infinite.InfiniteClient
 import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.Feature
+import org.infinite.global.rendering.theme.ThemeSetting
 import org.infinite.settings.FeatureSetting
 
 object InfiniteCommand {
@@ -74,13 +75,25 @@ object InfiniteCommand {
                 val featBuilder = ClientCommandManager.literal(feature.name)
 
                 if (feature.instance.preRegisterCommands.contains("enable")) {
-                    featBuilder.then(ClientCommandManager.literal("enable").executes { toggleFeature(category.name, feature.name, true) })
+                    featBuilder.then(
+                        ClientCommandManager
+                            .literal("enable")
+                            .executes { toggleFeature(category.name, feature.name, true) },
+                    )
                 }
                 if (feature.instance.preRegisterCommands.contains("disable")) {
-                    featBuilder.then(ClientCommandManager.literal("disable").executes { toggleFeature(category.name, feature.name, false) })
+                    featBuilder.then(
+                        ClientCommandManager
+                            .literal("disable")
+                            .executes { toggleFeature(category.name, feature.name, false) },
+                    )
                 }
                 if (feature.instance.preRegisterCommands.contains("toggle")) {
-                    featBuilder.then(ClientCommandManager.literal("toggle").executes { toggleFeatureState(category.name, feature.name) })
+                    featBuilder.then(
+                        ClientCommandManager
+                            .literal("toggle")
+                            .executes { toggleFeatureState(category.name, feature.name) },
+                    )
                 }
 
                 if (feature.instance.preRegisterCommands.contains("set")) {
@@ -116,7 +129,14 @@ object InfiniteCommand {
                                 getSettingKeyArgument(feature.instance)
                                     .then(
                                         getSettingValueArgument(feature.instance)
-                                            .executes { addRemoveFeatureSetting(it, category.name, feature.name, true) },
+                                            .executes {
+                                                addRemoveFeatureSetting(
+                                                    it,
+                                                    category.name,
+                                                    feature.name,
+                                                    true,
+                                                )
+                                            },
                                     ),
                             ),
                     )
@@ -130,7 +150,14 @@ object InfiniteCommand {
                                 getSettingKeyArgument(feature.instance)
                                     .then(
                                         getSettingValueArgument(feature.instance)
-                                            .executes { addRemoveFeatureSetting(it, category.name, feature.name, false) },
+                                            .executes {
+                                                addRemoveFeatureSetting(
+                                                    it,
+                                                    category.name,
+                                                    feature.name,
+                                                    false,
+                                                )
+                                            },
                                     ),
                             ),
                     )
@@ -200,7 +227,10 @@ object InfiniteCommand {
             _,
             b,
             ->
-            CommandSource.suggestMatching(InfiniteClient.featureCategories.flatMap { it.features.map { f -> f.name } }, b)
+            CommandSource.suggestMatching(
+                InfiniteClient.featureCategories.flatMap { it.features.map { f -> f.name } },
+                b,
+            )
         }
 
     private fun getIKeySuggestions(): SuggestionProvider<FabricClientCommandSource> =
@@ -335,7 +365,13 @@ object InfiniteCommand {
     // ========================================
     private fun getTheme(): Int {
         InfiniteClient.info(Text.translatable("command.infinite.theme.current", InfiniteClient.currentTheme).string)
-        InfiniteClient.info(Text.translatable("command.infinite.theme.available", InfiniteClient.themes.joinToString { it.name }).string)
+        InfiniteClient.info(
+            Text
+                .translatable(
+                    "command.infinite.theme.available",
+                    InfiniteClient.themes.joinToString { it.name },
+                ).string,
+        )
         return 1
     }
 
@@ -348,8 +384,8 @@ object InfiniteCommand {
             InfiniteClient.error(Text.translatable("command.infinite.theme.notfound", name).string)
             return 0
         }
-        InfiniteClient.currentTheme = name
-        ConfigManager.saveConfig()
+        InfiniteClient.getGlobalFeature(ThemeSetting::class.java)?.themeSetting?.value = name
+        ConfigManager.saveGlobalConfig()
         InfiniteClient.info(Text.translatable("command.infinite.theme.changed", name).string)
         return 1
     }
@@ -412,7 +448,11 @@ object InfiniteCommand {
 
     private fun getVersion(): Int =
         1.also {
-            InfiniteClient.log("version ${FabricLoader.getInstance().getModContainer("infinite").get().metadata.version.friendlyString}")
+            InfiniteClient.log(
+                "version ${
+                    FabricLoader.getInstance().getModContainer("infinite").get().metadata.version.friendlyString
+                }",
+            )
         }
 
     private fun saveConfig(): Int =
@@ -430,7 +470,12 @@ object InfiniteCommand {
         val f = InfiniteClient.searchFeature(cat, feat) ?: return 0
         f.toggle()
         InfiniteClient.info(
-            Text.translatable("command.infinite.feature.toggled", feat, if (f.isEnabled()) "enabled" else "disabled").string,
+            Text
+                .translatable(
+                    "command.infinite.feature.toggled",
+                    feat,
+                    if (f.isEnabled()) "enabled" else "disabled",
+                ).string,
         )
         return 1
     }
@@ -443,7 +488,14 @@ object InfiniteCommand {
         val f = InfiniteClient.searchFeature(cat, feat) ?: return 0
         if (f.isEnabled() == enable) return 0
         if (enable) f.enable() else f.disable()
-        InfiniteClient.info(Text.translatable("command.infinite.feature.toggled", feat, if (enable) "enabled" else "disabled").string)
+        InfiniteClient.info(
+            Text
+                .translatable(
+                    "command.infinite.feature.toggled",
+                    feat,
+                    if (enable) "enabled" else "disabled",
+                ).string,
+        )
         return 1
     }
 
@@ -464,7 +516,6 @@ object InfiniteCommand {
                     is Int -> raw.toInt()
                     is Float -> raw.toFloat()
                     is Double -> raw.toDouble()
-                    is String -> raw
                     is String -> raw
                     is Enum<*> -> (s as FeatureSetting.EnumSetting).options.first { it.name.equals(raw, true) }
                     else -> return 0
@@ -497,7 +548,7 @@ object InfiniteCommand {
         }
 
         @Suppress("UNCHECKED_CAST")
-        val list = s.value as MutableList<String>
+        val list = s.value
         if (add) {
             if (!list.contains(value)) list.add(value)
             InfiniteClient.info(Text.translatable("command.infinite.setting.list.added", value, key).string)
@@ -532,10 +583,17 @@ object InfiniteCommand {
         ClientCommandManager.argument("key", StringArgumentType.word()).suggests(getSettingKeySuggestions(f))
 
     private fun getSettingValueArgument(f: ConfigurableFeature? = null) =
-        ClientCommandManager.argument("value", StringArgumentType.greedyString()).suggests(getSettingValueSuggestions(f))
+        ClientCommandManager
+            .argument("value", StringArgumentType.greedyString())
+            .suggests(getSettingValueSuggestions(f))
 
     private fun getCategorySuggestions(): SuggestionProvider<FabricClientCommandSource> =
-        SuggestionProvider { _, b -> CommandSource.suggestMatching(InfiniteClient.featureCategories.map { it.name }, b) }
+        SuggestionProvider { _, b ->
+            CommandSource.suggestMatching(
+                InfiniteClient.featureCategories.map { it.name },
+                b,
+            )
+        }
 
     private fun getFeatureNameSuggestions(): SuggestionProvider<FabricClientCommandSource> =
         SuggestionProvider { ctx, b ->

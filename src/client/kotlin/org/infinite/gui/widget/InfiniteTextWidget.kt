@@ -14,7 +14,7 @@ class InfiniteTextWidget(
     y: Int,
     height: Int,
     private val text: Text,
-    private val color: Int,
+    private val color: Int, // The color is directly passed, so no theme colors here.
 ) : ClickableWidget(x, y, width, height, text) {
     private val padding = 2
 
@@ -30,7 +30,7 @@ class InfiniteTextWidget(
             text,
             this.x + padding,
             this.y + padding,
-            color,
+            color, // This color is already dynamic, no change needed.
         )
     }
 

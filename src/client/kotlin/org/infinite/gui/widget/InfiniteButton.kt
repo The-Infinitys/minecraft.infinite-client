@@ -25,8 +25,8 @@ class InfiniteButton(
         // Animation colors (same as InfiniteScreen)
         val interpolatedColor =
             InfiniteClient
-                .theme()
-                .colors.primaryColor
+                .getCurrentColors()
+                .primaryColor
 
         // Button rendering logic (similar to InfiniteScreen)
         // 1. Outer background
@@ -36,8 +36,8 @@ class InfiniteButton(
             x + width,
             y + height,
             InfiniteClient
-                .theme()
-                .colors.backgroundColor,
+                .getCurrentColors()
+                .backgroundColor,
         )
 
         // 2. Animated border
@@ -56,16 +56,16 @@ class InfiniteButton(
             x + width - borderWidth * 2,
             y + height - borderWidth * 2,
             InfiniteClient
-                .theme()
-                .colors.backgroundColor,
+                .getCurrentColors()
+                .backgroundColor,
         )
 
         // Draw button text
         val textColor =
             if (isHovered) {
-                InfiniteClient.theme().colors.primaryColor
+                InfiniteClient.getCurrentColors().primaryColor
             } else {
-                InfiniteClient.theme().colors.foregroundColor // Darker foreground when hovered, foreground otherwise
+                InfiniteClient.getCurrentColors().foregroundColor // Darker foreground when hovered, foreground otherwise
             }
         context.drawCenteredTextWithShadow(
             MinecraftClient.getInstance().textRenderer, // Use MinecraftClient's textRenderer

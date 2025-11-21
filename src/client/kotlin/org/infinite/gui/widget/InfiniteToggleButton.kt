@@ -44,38 +44,38 @@ class InfiniteToggleButton(
         // レインボーアニメーションのロジック
         val interpolatedColor =
             InfiniteClient
-                .theme()
-                .colors.primaryColor
+                .getCurrentColors()
+                .primaryColor
 
         val backgroundColor =
             when {
                 !isEnabled -> {
                     InfiniteClient
-                        .theme()
-                        .colors.backgroundColor
+                        .getCurrentColors()
+                        .backgroundColor
                 }
 
                 state -> {
                     if (isHovered) {
                         InfiniteClient
-                            .theme()
-                            .colors.greenAccentColor
+                            .getCurrentColors()
+                            .greenAccentColor
                     } else {
                         InfiniteClient
-                            .theme()
-                            .colors.primaryColor // ON state
+                            .getCurrentColors()
+                            .primaryColor // ON state
                     }
                 }
 
                 else -> {
                     if (isHovered) {
                         InfiniteClient
-                            .theme()
-                            .colors.secondaryColor
+                            .getCurrentColors()
+                            .secondaryColor
                     } else {
                         InfiniteClient
-                            .theme()
-                            .colors.backgroundColor // OFF state
+                            .getCurrentColors()
+                            .backgroundColor // OFF state
                     }
                 }
             }
@@ -116,8 +116,8 @@ class InfiniteToggleButton(
                 interpolatedColor
             } else {
                 InfiniteClient
-                    .theme()
-                    .colors.backgroundColor
+                    .getCurrentColors()
+                    .backgroundColor
             }
         context.fill(currentKnobX.toInt(), knobY, currentKnobX.toInt() + knobSize, knobY + knobSize, knobBorderColor)
 
@@ -125,12 +125,12 @@ class InfiniteToggleButton(
         val knobInnerColor =
             if (isHovered) {
                 InfiniteClient
-                    .theme()
-                    .colors.primaryColor
+                    .getCurrentColors()
+                    .primaryColor
             } else {
                 InfiniteClient
-                    .theme()
-                    .colors.foregroundColor
+                    .getCurrentColors()
+                    .foregroundColor
             }
         context.fill(
             currentKnobX.toInt() + knobBorder,

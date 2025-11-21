@@ -68,8 +68,8 @@ class BlockListItemWidget(
                 this.x + this.width,
                 this.y + this.height,
                 InfiniteClient
-                    .theme()
-                    .colors.primaryColor,
+                    .getCurrentColors()
+                    .primaryColor,
             )
         }
 
@@ -90,8 +90,8 @@ class BlockListItemWidget(
             textX,
             textY,
             InfiniteClient
-                .theme()
-                .colors.foregroundColor,
+                .getCurrentColors()
+                .foregroundColor,
         )
 
         // 4. 削除ボタンの描画
@@ -99,12 +99,12 @@ class BlockListItemWidget(
 
         val baseColor =
             InfiniteClient
-                .theme()
-                .colors.errorColor
+                .getCurrentColors()
+                .errorColor
         val hoverColor =
             InfiniteClient
-                .theme()
-                .colors.errorColor
+                .getCurrentColors()
+                .errorColor
         val removeColor = if (isRemoveButtonHovered) hoverColor else baseColor
 
         context.fill(
@@ -120,8 +120,8 @@ class BlockListItemWidget(
             removeButtonWidth,
             removeButtonHeight,
             InfiniteClient
-                .theme()
-                .colors.backgroundColor,
+                .getCurrentColors()
+                .backgroundColor,
         )
 
         // 削除テキスト 'x' の描画
@@ -131,8 +131,8 @@ class BlockListItemWidget(
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
             InfiniteClient
-                .theme()
-                .colors.foregroundColor,
+                .getCurrentColors()
+                .foregroundColor,
             false,
         )
     }

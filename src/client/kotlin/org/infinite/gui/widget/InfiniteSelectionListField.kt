@@ -111,8 +111,8 @@ class InfiniteSelectionListField(
                 textX,
                 nameY,
                 InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
             context.drawTextWithShadow(
                 textRenderer,
@@ -120,8 +120,8 @@ class InfiniteSelectionListField(
                 textX,
                 descriptionY,
                 InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
         } else {
             totalTextHeight = textRenderer.fontHeight // Only name
@@ -133,8 +133,8 @@ class InfiniteSelectionListField(
                 textX,
                 nameY,
                 InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
         }
 

@@ -26,7 +26,9 @@ import org.infinite.features.server.ServerFeatureCategory
 import org.infinite.features.utils.UtilsFeatureCategory
 import org.infinite.global.GlobalFeatureCategory
 import org.infinite.global.rendering.GlobalRenderingFeatureCategory
+import org.infinite.global.rendering.theme.ThemeSetting
 import org.infinite.gui.theme.Theme
+import org.infinite.gui.theme.ThemeColors
 import org.infinite.gui.theme.official.officialThemes
 import org.infinite.libs.ai.AiInterface
 import org.infinite.libs.client.async.AsyncInterface
@@ -61,8 +63,30 @@ object InfiniteClient : ClientModInitializer {
     var loadedThemes: MutableList<Theme> = mutableListOf()
     private val addonFeatureMap: MutableMap<InfiniteAddon, List<FeatureCategory>> = mutableMapOf()
     private val featureInstances: MutableMap<Class<out ConfigurableFeature>, ConfigurableFeature> = mutableMapOf()
+    private val globalFeatureInstances: MutableMap<Class<out ConfigurableFeature>, ConfigurableFeature> = mutableMapOf()
+
+    object DefaultThemeColors : ThemeColors() {
+        override val primaryColor: Int = 0xFF55FFFF.toInt() // Cyan-like
+        override val secondaryColor: Int = 0xFF33AAFF.toInt() // Lighter Blue
+        override val greenAccentColor: Int = 0xFF00FF00.toInt() // Green
+        override val redAccentColor: Int = 0xFFFF0000.toInt() // Red
+        override val foregroundColor: Int = 0xFFFFFFFF.toInt() // White
+        override val backgroundColor: Int = 0xFF222222.toInt() // Dark Gray
+        override val infoColor: Int = 0xFF00FFFF.toInt() // Cyan
+        override val warnColor: Int = 0xFFFFAA00.toInt() // Orange
+        override val errorColor: Int = 0xFFFF5555.toInt() // Reddish-Orange
+    }
 
     fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: Theme.default()
+
+    fun getCurrentColors(): ThemeColors {
+        val themeSetting = getGlobalFeature(ThemeSetting::class.java)
+        return if (themeSetting?.isEnabled() == true) {
+            theme().colors
+        } else {
+            DefaultThemeColors
+        }
+    }
 
     private fun checkTranslations(): List<String> {
         val result = mutableListOf<String>()
@@ -364,11 +388,30 @@ object InfiniteClient : ClientModInitializer {
         return featureInstances[featureClass] as? T
     }
 
+    fun <T : ConfigurableFeature> getGlobalFeature(featureClass: Class<T>): T? {
+        @Suppress("UNCHECKED_CAST")
+        return globalFeatureInstances[featureClass] as? T
+    }
+
     fun searchFeature(
         category: String,
         name: String,
     ): ConfigurableFeature? =
         featureCategories
+            .find { it.name.equals(category, ignoreCase = true) }
+            ?.features
+            ?.find {
+                it.name.equals(
+                    name,
+                    ignoreCase = true,
+                )
+            }?.instance
+
+    fun searchGlobalFeature(
+        category: String,
+        name: String,
+    ): ConfigurableFeature? =
+        globalFeatureCategories
             .find { it.name.equals(category, ignoreCase = true) }
             ?.features
             ?.find {
@@ -487,6 +530,13 @@ object InfiniteClient : ClientModInitializer {
             for (feature in category.features) {
                 // 新しいインスタンス（または既存のインスタンス）をマップに追加
                 featureInstances[feature.instance.javaClass] = feature.instance
+            }
+        }
+        globalFeatureInstances.clear() // 既存のマップをクリア
+        for (category in globalFeatureCategories) {
+            for (feature in category.features) {
+                // 新しいインスタンス（または既存のインスタンス）をマップに追加
+                globalFeatureInstances[feature.instance.javaClass] = feature.instance
             }
         }
     }

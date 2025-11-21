@@ -52,8 +52,8 @@ class InfiniteSlider<T : Number>(
             textX,
             currentY,
             InfiniteClient
-                .theme()
-                .colors.foregroundColor,
+                .getCurrentColors()
+                .foregroundColor,
         )
 
         // --- 値の描画 (右上) ---
@@ -74,8 +74,8 @@ class InfiniteSlider<T : Number>(
             valueTextX,
             currentY, // 設定名と同じY座標
             InfiniteClient
-                .theme()
-                .colors.primaryColor, // 例としてプライマリカラーを使用
+                .getCurrentColors()
+                .primaryColor, // 例としてプライマリカラーを使用
         )
         // -----------------------
 
@@ -88,8 +88,8 @@ class InfiniteSlider<T : Number>(
                 textX,
                 currentY,
                 InfiniteClient
-                    .theme()
-                    .colors.secondaryColor,
+                    .getCurrentColors()
+                    .secondaryColor,
             )
             // textRenderer.fontHeight + 2 // Move Y down after description - この行はコメントアウトまたは削除
         }
@@ -102,8 +102,8 @@ class InfiniteSlider<T : Number>(
             x + width - 5,
             sliderBackgroundY + 2,
             InfiniteClient
-                .theme()
-                .colors.secondaryColor,
+                .getCurrentColors()
+                .secondaryColor,
         )
 
         // Draw slider knob
@@ -118,8 +118,8 @@ class InfiniteSlider<T : Number>(
             knobX.toInt() + knobWidth,
             knobY + 6,
             InfiniteClient
-                .theme()
-                .colors.primaryColor,
+                .getCurrentColors()
+                .primaryColor,
         )
     }
 

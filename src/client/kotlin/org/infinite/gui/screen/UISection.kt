@@ -257,24 +257,9 @@ class UISection(
                     .theme()
                     .colors.foregroundColor
             } else {
-                ColorHelper.getArgb(
-                    255,
-                    ColorHelper.getRed(
-                        InfiniteClient
-                            .theme()
-                            .colors.foregroundColor,
-                    ) / 2,
-                    ColorHelper.getGreen(
-                        InfiniteClient
-                            .theme()
-                            .colors.foregroundColor,
-                    ) / 2,
-                    ColorHelper.getBlue(
-                        InfiniteClient
-                            .theme()
-                            .colors.foregroundColor,
-                    ) / 2,
-                )
+                InfiniteClient
+                    .theme()
+                    .colors.secondaryColor
             }
         context.drawTextWithShadow(textRenderer, title, textX, textY, color)
     }

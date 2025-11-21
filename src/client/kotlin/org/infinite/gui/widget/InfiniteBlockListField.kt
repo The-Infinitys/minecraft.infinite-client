@@ -190,8 +190,8 @@ class InfiniteBlockListField(
             labelX,
             y + padding,
             InfiniteClient
-                .theme()
-                .colors.foregroundColor,
+                .getCurrentColors()
+                .foregroundColor,
         )
         if (setting.descriptionKey.isNotBlank()) {
             context.drawTextWithShadow(
@@ -199,7 +199,7 @@ class InfiniteBlockListField(
                 Text.translatable(setting.descriptionKey),
                 labelX,
                 y + padding + baseLabelHeight + 2,
-                InfiniteClient.theme().colors.foregroundColor,
+                InfiniteClient.getCurrentColors().foregroundColor,
             )
         }
 
@@ -221,12 +221,12 @@ class InfiniteBlockListField(
             textFieldY + buttonSize,
             if (isAddButtonHovered) {
                 InfiniteClient
-                    .theme()
-                    .colors.primaryColor
+                    .getCurrentColors()
+                    .primaryColor
             } else {
                 InfiniteClient
-                    .theme()
-                    .colors.greenAccentColor
+                    .getCurrentColors()
+                    .greenAccentColor
             },
         )
         context.drawText(
@@ -235,8 +235,8 @@ class InfiniteBlockListField(
             addButtonX + buttonSize / 2 - 3,
             textFieldY + buttonSize / 2 - 4,
             InfiniteClient
-                .theme()
-                .colors.foregroundColor,
+                .getCurrentColors()
+                .foregroundColor,
             false,
         )
     }

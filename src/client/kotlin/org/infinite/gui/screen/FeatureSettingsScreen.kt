@@ -7,6 +7,7 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
+import org.infinite.InfiniteClient
 import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.Feature
 import org.infinite.gui.widget.InfiniteBlockColorListField
@@ -20,6 +21,7 @@ import org.infinite.gui.widget.InfiniteSettingTextField
 import org.infinite.gui.widget.InfiniteSettingToggle
 import org.infinite.gui.widget.InfiniteSlider
 import org.infinite.settings.FeatureSetting
+import org.infinite.utils.rendering.transparent
 
 class FeatureSettingsScreen(
     private val parent: Screen,
@@ -239,21 +241,34 @@ class FeatureSettingsScreen(
         delta: Float,
     ) {
         // 背景の描画 (半透明の黒)
-        context.fill(0, 0, width, height, 0x80000000.toInt())
+        context.fill(
+            0,
+            0,
+            width,
+            height,
+            InfiniteClient
+                .getCurrentColors()
+                .backgroundColor
+                .transparent(128),
+        )
 
         context.drawCenteredTextWithShadow(
             textRenderer,
             Text.literal(feature.name),
             width / 2,
             20,
-            0xFFFFFFFF.toInt(),
+            InfiniteClient
+                .getCurrentColors()
+                .foregroundColor,
         )
         context.drawCenteredTextWithShadow(
             textRenderer,
             Text.translatable(feature.descriptionKey),
             width / 2,
             35,
-            0xFFAAAAAA.toInt(),
+            InfiniteClient
+                .getCurrentColors()
+                .secondaryColor,
         )
 
         // ウィジェットの描画 (scrollableContainerを含む)

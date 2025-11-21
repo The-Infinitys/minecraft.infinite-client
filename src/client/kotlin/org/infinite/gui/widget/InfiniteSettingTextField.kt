@@ -106,8 +106,8 @@ class InfiniteSettingTextField(
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
             context.drawTextWithShadow(
                 textRenderer,
@@ -115,8 +115,8 @@ class InfiniteSettingTextField(
                 textX,
                 descriptionY,
                 org.infinite.InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
         } else {
             totalTextHeight = textRenderer.fontHeight // Only name
@@ -128,8 +128,8 @@ class InfiniteSettingTextField(
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
-                    .theme()
-                    .colors.foregroundColor,
+                    .getCurrentColors()
+                    .foregroundColor,
             )
         }
 

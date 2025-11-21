@@ -70,8 +70,8 @@ class BlockColorListItemWidget(
                 this.x + this.width,
                 this.y + this.height,
                 InfiniteClient
-                    .theme()
-                    .colors.primaryColor,
+                    .getCurrentColors()
+                    .primaryColor,
             )
         }
 
@@ -92,8 +92,8 @@ class BlockColorListItemWidget(
             textX,
             textY,
             InfiniteClient
-                .theme()
-                .colors.foregroundColor,
+                .getCurrentColors()
+                .foregroundColor,
         )
 
         // 4. カラーボックスの描画
@@ -112,8 +112,8 @@ class BlockColorListItemWidget(
             colorBoxSize,
             colorBoxSize,
             InfiniteClient
-                .theme()
-                .colors.backgroundColor,
+                .getCurrentColors()
+                .backgroundColor,
         )
 
         // 5. 削除ボタンの描画
@@ -121,12 +121,12 @@ class BlockColorListItemWidget(
 
         val baseColor =
             InfiniteClient
-                .theme()
-                .colors.errorColor
+                .getCurrentColors()
+                .errorColor
         val hoverColor =
             InfiniteClient
-                .theme()
-                .colors.errorColor
+                .getCurrentColors()
+                .errorColor
         val removeColor = if (isRemoveButtonHovered) hoverColor else baseColor
 
         context.fill(
@@ -142,8 +142,8 @@ class BlockColorListItemWidget(
             removeButtonWidth,
             removeButtonHeight,
             InfiniteClient
-                .theme()
-                .colors.backgroundColor,
+                .getCurrentColors()
+                .backgroundColor,
         )
 
         // 削除テキスト 'x' の描画
@@ -153,8 +153,8 @@ class BlockColorListItemWidget(
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
             InfiniteClient
-                .theme()
-                .colors.foregroundColor,
+                .getCurrentColors()
+                .foregroundColor,
             false,
         )
     }

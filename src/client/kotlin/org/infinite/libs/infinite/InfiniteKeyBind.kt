@@ -69,9 +69,8 @@ object InfiniteKeyBind {
         }
 
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            // メニューキーバインドの処理
             while (menuKeyBinding!!.wasPressed()) {
-                client.setScreen(InfiniteScreen(Text.literal("Infinite Client Menu")))
+                client.setScreen(InfiniteScreen(Text.literal("")))
             }
             for (toggleKeyBind in toggleKeyBindings) {
                 while (toggleKeyBind.keyBinding.wasPressed()) {

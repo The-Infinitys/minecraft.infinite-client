@@ -24,7 +24,7 @@ class TabButton(
         delta: Float,
     ) {
         val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
-        val colors = InfiniteClient.theme().colors
+        val colors = InfiniteClient.getCurrentColors()
         val textColor = if (isSelected || isHighlighted) colors.primaryColor else colors.foregroundColor
         val backgroundColor = if (isSelected || isHighlighted) colors.backgroundColor else colors.secondaryColor
         graphics2D.fill(x, y, width, height, backgroundColor)
