@@ -134,7 +134,30 @@ object InfiniteClient : ClientModInitializer {
                 for (globalFeature in globalFeatureCategory.features) {
                     globalFeature.generateKey(globalFeatureCategory.name)
                     val feature = globalFeature.instance
+                    for (setting in feature.settings) {
+                        setting.generateKey(globalFeatureCategory.name, globalFeature.name, setting.name)
+                    }
                     feature.onInit()
+                }
+            }
+        }
+        ClientTickEvents.END_CLIENT_TICK.register { _ ->
+            for (globalFeatureCategory in globalFeatureCategories) {
+                for (globalFeature in globalFeatureCategory.features) {
+                    val feature = globalFeature.instance
+                    if (feature.tickTiming == ConfigurableFeature.Timing.End) {
+                        feature.onTick()
+                    }
+                }
+            }
+        }
+        ClientTickEvents.START_CLIENT_TICK.register { _ ->
+            for (globalFeatureCategory in globalFeatureCategories) {
+                for (globalFeature in globalFeatureCategory.features) {
+                    val feature = globalFeature.instance
+                    if (feature.tickTiming == ConfigurableFeature.Timing.Start) {
+                        feature.onTick()
+                    }
                 }
             }
         }
