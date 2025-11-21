@@ -128,8 +128,8 @@ object InfiniteClient : ClientModInitializer {
         AsyncInterface.init()
         updateFeatureInstances()
         InfiniteKeyBind.registerKeybindings()
-        ConfigManager.loadGlobalConfig()
         ClientLifecycleEvents.CLIENT_STARTED.register { _ ->
+            ConfigManager.loadGlobalConfig()
             for (globalFeatureCategory in globalFeatureCategories) {
                 for (globalFeature in globalFeatureCategory.features) {
                     val feature = globalFeature.instance
@@ -138,6 +138,7 @@ object InfiniteClient : ClientModInitializer {
             }
         }
         ClientLifecycleEvents.CLIENT_STOPPING.register { _ ->
+            ConfigManager.saveGlobalConfig() // Save global config after feature config
             for (globalFeatureCategory in globalFeatureCategories) {
                 for (globalFeature in globalFeatureCategory.features) {
                     val feature = globalFeature.instance
@@ -176,7 +177,6 @@ object InfiniteClient : ClientModInitializer {
         // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             ConfigManager.saveConfig()
-            ConfigManager.saveGlobalConfig() // Save global config after feature config
             (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.disable()
             for (addon in loadedAddons) { // Addon shutdown
                 addon.onShutdown()

@@ -7,6 +7,7 @@ import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.infinite.InfiniteClient
 import org.infinite.global.GlobalFeatureCategory
+import org.infinite.gui.widget.InfiniteScrollableContainer
 import org.infinite.gui.widget.TabButton
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.transparent
@@ -17,12 +18,17 @@ class GlobalSettingsScreen(
 ) : Screen(Text.literal("Infinite Client Global Settings")) {
     private val parent: Screen = optionsScreen
     private var selectedCategory: GlobalFeatureCategory? = null
-    private val tabButtons: MutableList<TabButton> = mutableListOf()
+    private val sections: MutableMap<GlobalFeatureCategory, Section> = mutableMapOf()
     private val categories = InfiniteClient.globalFeatureCategories
+
+    class Section(
+        val tab: TabButton,
+        val contents: InfiniteScrollableContainer,
+    )
 
     override fun init() {
         super.init()
-        tabButtons.clear()
+        sections.clear()
         val tabSpacing = 2
         val tabWidth =
             categories.maxOf { textRenderer.getWidth(it.name) + tabSpacing * 2 }.coerceAtLeast(width / categories.size)
@@ -33,7 +39,7 @@ class GlobalSettingsScreen(
             val tabButton =
                 TabButton(
                     x,
-                    20,
+                    0,
                     tabWidth,
                     tabHeight,
                     Text.translatable(category.name),
@@ -41,9 +47,11 @@ class GlobalSettingsScreen(
                     selectedCategory = category
                     updateTabButtonStates()
                 }
-            tabButtons.add(tabButton)
-            this.addDrawableChild(tabButton)
+            val contents = InfiniteScrollableContainer(0, tabHeight, width, height - tabHeight, mutableListOf())
             x += tabWidth + tabSpacing
+            sections[category] = Section(tabButton, contents)
+            addSelectableChild(tabButton)
+            addSelectableChild(contents)
         }
 
         selectedCategory = categories.firstOrNull()
@@ -51,7 +59,9 @@ class GlobalSettingsScreen(
     }
 
     private fun updateTabButtonStates() {
-        tabButtons.forEach { it.isHighlighted = it.message.string == getCategoryDisplayName(selectedCategory) }
+        sections
+            .map { it.value }
+            .forEach { it.tab.isHighlighted = it.tab.message.string == getCategoryDisplayName(selectedCategory) }
     }
 
     private fun getCategoryDisplayName(category: GlobalFeatureCategory?): String =
@@ -77,6 +87,7 @@ class GlobalSettingsScreen(
                 .colors.backgroundColor
                 .transparent(100),
         )
+        sections.map { it.value }.forEach { it.tab.render(context, mouseX, mouseY, delta) }
         selectedCategory?.let { category ->
             renderCategoryContent(context, category, mouseX, mouseY, delta)
         }
@@ -89,24 +100,8 @@ class GlobalSettingsScreen(
         mouseY: Int,
         delta: Float,
     ) {
-        val graphics = Graphics2D(context, client!!.renderTickCounter)
-        val contentX = this.width / 2 - 150
-        val contentY = 50
-        graphics.drawText(
-            Text.literal("Settings for ${getCategoryDisplayName(category)}").string,
-            contentX,
-            contentY,
-            0xFFFFFF,
-        )
-        var currentY = contentY + 20
-        category.features.forEach { globalFeature ->
-            graphics.drawText("  - ${globalFeature.name}", contentX, currentY, 0xAAAAAA)
-            currentY += 12
-            globalFeature.instance.settings.forEach { setting ->
-                graphics.drawText("    - ${setting.name}: ${setting.value}", contentX, currentY, 0x888888)
-                currentY += 12
-            }
-        }
+        val section = sections[category] ?: return
+        section.contents.render(context, mouseX, mouseY, delta)
     }
 
     override fun keyPressed(input: KeyInput): Boolean {
