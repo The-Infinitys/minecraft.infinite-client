@@ -82,7 +82,7 @@ object InfiniteClient : ClientModInitializer {
         }
         for (category in globalFeatureCategories) {
             for (feature in category.features) {
-                val key = feature.generateKey(category.name)
+                val key = feature.descriptionKey
                 if (Text.translatable(key).string == key) {
                     result.add(key)
                 }
@@ -132,6 +132,7 @@ object InfiniteClient : ClientModInitializer {
             ConfigManager.loadGlobalConfig()
             for (globalFeatureCategory in globalFeatureCategories) {
                 for (globalFeature in globalFeatureCategory.features) {
+                    globalFeature.generateKey(globalFeatureCategory.name)
                     val feature = globalFeature.instance
                     feature.onInit()
                 }

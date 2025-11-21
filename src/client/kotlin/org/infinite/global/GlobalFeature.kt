@@ -1,6 +1,5 @@
 package org.infinite.global
 
-import org.infinite.features.Feature
 import org.infinite.utils.toSnakeCase
 
 class GlobalFeature<T : ConfigurableGlobalFeature>(
