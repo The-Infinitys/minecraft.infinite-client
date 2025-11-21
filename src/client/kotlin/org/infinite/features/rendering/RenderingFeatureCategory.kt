@@ -5,7 +5,6 @@ import org.infinite.features.FeatureCategory
 import org.infinite.features.rendering.camera.CameraConfig
 import org.infinite.features.rendering.camera.FreeCamera
 import org.infinite.features.rendering.detailinfo.DetailInfo
-import org.infinite.features.rendering.font.HyperFont
 import org.infinite.features.rendering.overlay.AntiOverlay
 import org.infinite.features.rendering.portalgui.PortalGui
 import org.infinite.features.rendering.search.BlockSearch
@@ -21,39 +20,16 @@ class RenderingFeatureCategory :
         "Rendering",
         mutableListOf(
             Feature(HyperUi()),
-            Feature(HyperFont()),
-            Feature(
-                AntiOverlay(),
-            ),
-            Feature(
-                SuperSight(),
-            ),
-            Feature(
-                XRay(),
-            ),
-            Feature(
-                CameraConfig(),
-            ),
-            Feature(
-                // 追加
-                FreeCamera(), // 追加
-                // 追加
-            ),
-            Feature(
-                SimpleShader(),
-            ),
-            Feature(
-                ExtraSensory(),
-            ),
-            Feature(
-                DetailInfo(),
-            ),
-            Feature(
-                HyperTag(),
-            ),
+            Feature(AntiOverlay()),
+            Feature(SuperSight()),
+            Feature(XRay()),
+            Feature(CameraConfig()),
+            Feature(FreeCamera()), // 追加),
+            Feature(SimpleShader()),
+            Feature(ExtraSensory()),
+            Feature(DetailInfo()),
+            Feature(HyperTag()),
             Feature(PortalGui()),
-            Feature(
-                BlockSearch(),
-            ),
+            Feature(BlockSearch()),
         ),
     )

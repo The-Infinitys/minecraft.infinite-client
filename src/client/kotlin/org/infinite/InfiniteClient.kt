@@ -13,7 +13,6 @@ import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.ColorHelper
 import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.FeatureCategory
@@ -197,14 +196,6 @@ object InfiniteClient : ClientModInitializer {
             }
         }
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
-            (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.defineFont(
-                HyperTextRenderer.HyperFonts(
-                    Identifier.of("minecraft", "infinite_regular"),
-                    Identifier.of("minecraft", "infinite_italic"),
-                    Identifier.of("minecraft", "infinite_bold"),
-                    Identifier.of("minecraft", "infinite_bolditalic"),
-                ),
-            )
             ConfigManager.loadConfig()
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")

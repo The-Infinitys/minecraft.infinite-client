@@ -2,6 +2,7 @@ package org.infinite.global.rendering
 
 import org.infinite.global.GlobalFeature
 import org.infinite.global.GlobalFeatureCategory
+import org.infinite.global.rendering.font.FontSetting
 import org.infinite.global.rendering.theme.ThemeSetting
 
 class GlobalRenderingFeatureCategory :
@@ -9,5 +10,6 @@ class GlobalRenderingFeatureCategory :
         "Rendering",
         mutableListOf(
             GlobalFeature(ThemeSetting()),
+            GlobalFeature(FontSetting()),
         ),
     )
