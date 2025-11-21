@@ -11,13 +11,14 @@ import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.math.MathHelper
 import org.infinite.InfiniteClient
+import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.drawBorder
 import org.lwjgl.glfw.GLFW
 import kotlin.math.max
 import kotlin.math.min
 
 class InfiniteTextField(
-    private val textRenderer: TextRenderer,
+    textRenderer: TextRenderer,
     x: Int,
     y: Int,
     width: Int,
@@ -219,6 +220,8 @@ class InfiniteTextField(
         mouseY: Int,
         deltaTicks: Float,
     ) {
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
         // 1. テキストフィールドの背景と枠線の描画
         context.fill(x, y, x + width, y + height, InfiniteClient.getCurrentColors().backgroundColor)
         context.drawBorder(x, y, width, height, InfiniteClient.getCurrentColors().primaryColor)
@@ -234,7 +237,7 @@ class InfiniteTextField(
             val contentCount = suggestions.size
 
             // 表示する最大領域の高さ
-            val displayHeight = min(contentCount, maxVisibleSuggestions) * suggestionItemHeight
+            val displayHeight = min(suggestions.size, maxVisibleSuggestions) * suggestionItemHeight
 
             // スクロールコンテナの背景
             context.fill(
@@ -279,7 +282,7 @@ class InfiniteTextField(
 
                 // テキストの描画
                 val textColor = if (isSelected) selectedBgColor else defaultTextColor
-                context.drawTextWithShadow(textRenderer, suggestion, suggestionX + 2, currentY + 2, textColor)
+                graphics2D.drawText(suggestion, suggestionX + 2, currentY + 2, textColor, true)
             }
 
             context.disableScissor()

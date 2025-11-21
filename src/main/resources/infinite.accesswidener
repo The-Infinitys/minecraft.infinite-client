@@ -40,7 +40,6 @@ accessible method net/minecraft/client/gui/render/state/GuiRenderState findAndGo
 accessible field net/minecraft/client/gui/render/state/GuiRenderState currentLayer Lnet/minecraft/client/gui/render/state/GuiRenderState$Layer;
 accessible method net/minecraft/client/gui/render/state/GuiRenderState onElementAdded (Lnet/minecraft/client/gui/ScreenRect;)V
 extendable class net/minecraft/client/gui/render/state/TextGuiElementRenderState
-
 # --- Font Renderer ---
 accessible class net/minecraft/client/font/FontManager$Fonts
 accessible field net/minecraft/client/font/TextRenderer fonts Lnet/minecraft/client/font/TextRenderer$GlyphsProvider;
@@ -61,3 +60,8 @@ accessible method net/minecraft/client/gui/hud/ChatHud refresh ()V
 
 # --- Builder Feature ---
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager interactBlockInternal (Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;
+
+# --- Theme Settings ---
+accessible class net/minecraft/client/gui/widget/ScrollableLayoutWidget$Container
+accessible field net/minecraft/client/gui/widget/SliderWidget value D
+accessible method net/minecraft/client/gui/widget/ClickableWidget drawScrollableText (Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/font/TextRenderer;II)V

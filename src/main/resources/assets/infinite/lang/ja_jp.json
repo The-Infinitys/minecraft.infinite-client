@@ -460,5 +460,6 @@
   "key.infinite-client.action.movement.builder.move_forward": "Builder: 前へ移動",
   "key.infinite-client.action.movement.builder.move_backward": "Builder: 後ろへ移動",
   "key.infinite-client.action.movement.builder.move_left": "Builder: 左へ移動",
-  "key.infinite-client.action.movement.builder.move_right": "Builder: 右へ移動"
+  "key.infinite-client.action.movement.builder.move_right": "Builder: 右へ移動",
+  "infinite.general_feature.rendering.font_setting.description": "フォントをカスタマイズできます。"
 }

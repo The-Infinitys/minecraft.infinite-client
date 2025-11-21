@@ -8,6 +8,7 @@ import net.minecraft.client.gui.screen.narration.NarrationPart
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
 import org.infinite.InfiniteClient
+import org.infinite.libs.graphics.Graphics2D
 
 class PlayerListItemWidget(
     x: Int,
@@ -17,7 +18,6 @@ class PlayerListItemWidget(
     private val playerName: String,
     private val onRemove: (String) -> Unit,
 ) : ClickableWidget(x, y, width, height, Text.literal(playerName)) {
-    private val textRenderer = MinecraftClient.getInstance().textRenderer
     private val padding = 8
     private val removeButtonWidth = 20
 
@@ -27,16 +27,18 @@ class PlayerListItemWidget(
         mouseY: Int,
         delta: Float,
     ) {
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
         val textX = x + padding
         val textY = y + this.height / 2 - 4
-        context.drawTextWithShadow(
-            textRenderer,
+        graphics2D.drawText(
             Text.literal(playerName),
             textX,
             textY,
             InfiniteClient
                 .getCurrentColors()
                 .foregroundColor,
+            true, // shadow = true
         )
 
         val removeButtonX = x + width - padding - removeButtonWidth
@@ -65,15 +67,14 @@ class PlayerListItemWidget(
             removeButtonY + this.height,
             removeColor,
         )
-        context.drawText(
-            textRenderer,
+        graphics2D.drawText(
             "x",
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
             InfiniteClient
                 .getCurrentColors()
                 .foregroundColor,
-            false,
+            false, // shadow = false
         )
     }
 

@@ -13,6 +13,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import org.infinite.InfiniteClient
+import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.drawBorder
 
 class BlockListItemWidget(
@@ -23,7 +24,6 @@ class BlockListItemWidget(
     private val blockId: String,
     private val onRemove: (String) -> Unit,
 ) : ClickableWidget(x, y, width, height, Text.literal(blockId)) {
-    private val textRenderer = MinecraftClient.getInstance().textRenderer
     private val padding = 8
     private val iconSize = 16
     private val iconPadding = 2
@@ -60,6 +60,8 @@ class BlockListItemWidget(
         mouseY: Int,
         delta: Float,
     ) {
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
         // 1. アイテム全体の背景 (ホバー時のみ)
         if (this.isHovered) {
             context.fill(
@@ -84,14 +86,14 @@ class BlockListItemWidget(
         // 3. テキストの描画
         val textX = iconX + iconTotalWidth
         val textY = y + this.height / 2 - 4
-        context.drawTextWithShadow(
-            textRenderer,
+        graphics2D.drawText(
             Text.literal(blockId),
             textX,
             textY,
             InfiniteClient
                 .getCurrentColors()
                 .foregroundColor,
+            true, // shadow = true
         )
 
         // 4. 削除ボタンの描画
@@ -125,15 +127,14 @@ class BlockListItemWidget(
         )
 
         // 削除テキスト 'x' の描画
-        context.drawText(
-            textRenderer,
+        graphics2D.drawText(
             "x",
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
             InfiniteClient
                 .getCurrentColors()
                 .foregroundColor,
-            false,
+            false, // shadow = false
         )
     }
 

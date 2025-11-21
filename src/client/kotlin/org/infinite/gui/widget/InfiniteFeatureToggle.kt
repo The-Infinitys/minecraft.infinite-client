@@ -9,6 +9,7 @@ import net.minecraft.text.Text
 import org.infinite.InfiniteClient
 import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.Feature
+import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.drawBorder
 
 class InfiniteFeatureToggle(
@@ -23,7 +24,6 @@ class InfiniteFeatureToggle(
     val toggleButton: InfiniteToggleButton
     private val settingsButton: InfiniteButton
     private val resetButton: InfiniteButton // New reset button
-    private val textRenderer = MinecraftClient.getInstance().textRenderer
 
     init {
         val buttonWidth = 50
@@ -85,15 +85,17 @@ class InfiniteFeatureToggle(
         mouseY: Int,
         delta: Float,
     ) {
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
         // Draw button text
-        context.drawTextWithShadow(
-            textRenderer,
+        graphics2D.drawText(
             Text.literal(feature.name),
             x + 60,
             y + (height - 8) / 2,
             InfiniteClient
                 .getCurrentColors()
                 .foregroundColor,
+            true, // shadow = true
         )
 
         toggleButton.x = x + width - toggleButton.width

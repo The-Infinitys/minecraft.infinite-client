@@ -460,6 +460,6 @@
   "key.infinite-client.action.movement.builder.move_forward": "Builder: Move forward",
   "key.infinite-client.action.movement.builder.move_backward": "Builder: Move backward",
   "key.infinite-client.action.movement.builder.move_left": "Builder: Move left",
-  "key.infinite-client.action.movement.builder.move_right": "Builder: Move right"
-
+  "key.infinite-client.action.movement.builder.move_right": "Builder: Move right",
+  "infinite.general_feature.rendering.font_setting.description": "Customize Fonts"
 }

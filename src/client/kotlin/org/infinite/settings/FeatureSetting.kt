@@ -91,6 +91,11 @@ sealed class FeatureSetting<T>(
         fun set(enumName: String) {
             this.value = options.find { it.name == enumName } ?: return
         }
+
+        fun updateValueFromEnumStar(newEnumValue: Enum<*>) {
+            @Suppress("UNCHECKED_CAST")
+            this.value = newEnumValue as E
+        }
     }
 
     class BlockIDSetting(

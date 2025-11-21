@@ -36,7 +36,7 @@ import kotlin.math.roundToInt
  */
 class Graphics2D(
     private val context: DrawContext,
-    val tickCounter: RenderTickCounter,
+    val tickCounter: RenderTickCounter = MinecraftClient.getInstance().renderTickCounter,
 ) : ClientInterface() {
     val matrixStack: Matrix3x2fStack = context.matrices
 

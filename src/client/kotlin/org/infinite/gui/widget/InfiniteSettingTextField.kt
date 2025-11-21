@@ -8,6 +8,7 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
+import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
 
 class InfiniteSettingTextField(
@@ -90,6 +91,8 @@ class InfiniteSettingTextField(
         mouseY: Int,
         delta: Float,
     ) {
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
         val textX = x + 5 // Padding from left edge
         val totalTextHeight: Int
         val nameY: Int
@@ -100,36 +103,36 @@ class InfiniteSettingTextField(
             nameY = y + (height - totalTextHeight) / 2
             descriptionY = nameY + textRenderer.fontHeight + 2
 
-            context.drawTextWithShadow(
-                textRenderer,
+            graphics2D.drawText(
                 Text.translatable(setting.name),
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
                     .getCurrentColors()
                     .foregroundColor,
+                true, // shadow = true
             )
-            context.drawTextWithShadow(
-                textRenderer,
+            graphics2D.drawText(
                 Text.translatable(setting.descriptionKey),
                 textX,
                 descriptionY,
                 org.infinite.InfiniteClient
                     .getCurrentColors()
                     .foregroundColor,
+                true, // shadow = true
             )
         } else {
             totalTextHeight = textRenderer.fontHeight // Only name
             nameY = y + (height - totalTextHeight) / 2
 
-            context.drawTextWithShadow(
-                textRenderer,
+            graphics2D.drawText(
                 Text.translatable(setting.name),
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
                     .getCurrentColors()
                     .foregroundColor,
+                true, // shadow = true
             )
         }
 

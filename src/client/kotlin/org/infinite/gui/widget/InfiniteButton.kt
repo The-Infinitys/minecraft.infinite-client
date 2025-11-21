@@ -5,6 +5,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.text.Text
 import org.infinite.InfiniteClient
+import org.infinite.libs.graphics.Graphics2D
 
 class InfiniteButton(
     x: Int,
@@ -20,6 +21,8 @@ class InfiniteButton(
         mouseY: Int,
         delta: Float,
     ) {
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
         val borderWidth = 1 // 1px border
 
         // Animation colors (same as InfiniteScreen)
@@ -67,12 +70,12 @@ class InfiniteButton(
             } else {
                 InfiniteClient.getCurrentColors().foregroundColor // Darker foreground when hovered, foreground otherwise
             }
-        context.drawCenteredTextWithShadow(
-            MinecraftClient.getInstance().textRenderer, // Use MinecraftClient's textRenderer
+        graphics2D.centeredText(
             message,
             x + width / 2,
-            y + (height - MinecraftClient.getInstance().textRenderer.fontHeight) / 2, // Center text vertically, 8 is approx text height
+            y + height / 2,
             textColor,
+            true, // shadow = true
         )
     }
 }

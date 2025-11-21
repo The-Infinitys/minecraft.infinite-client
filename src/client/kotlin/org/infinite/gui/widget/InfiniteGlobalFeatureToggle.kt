@@ -9,6 +9,7 @@ import net.minecraft.text.Text
 import org.infinite.InfiniteClient
 import org.infinite.global.ConfigurableGlobalFeature
 import org.infinite.global.GlobalFeature
+import org.infinite.libs.graphics.Graphics2D
 import org.infinite.utils.rendering.drawBorder
 
 class InfiniteGlobalFeatureToggle(
@@ -78,23 +79,25 @@ class InfiniteGlobalFeatureToggle(
         mouseY: Int,
         delta: Float,
     ) {
-        context.drawTextWithShadow(
-            textRenderer,
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
+        graphics2D.drawText(
             Text.literal(globalFeature.name),
             x + 5, // 左端から少しパディング
             y + (height - textRenderer.fontHeight) / 2, // 垂直方向中央
             InfiniteClient.getCurrentColors().foregroundColor,
+            true, // shadow = true
         )
 
         var descriptionY = y + (height - textRenderer.fontHeight) / 2 + textRenderer.fontHeight + 2 // タイトルの下2ピクセル
 
         featureDescription.split("\n").forEach { line ->
-            context.drawTextWithShadow(
-                textRenderer,
+            graphics2D.drawText(
                 Text.literal(line),
                 x + 5, // 左端から少しパディング
                 descriptionY,
                 InfiniteClient.getCurrentColors().secondaryColor,
+                true, // shadow = true
             )
             descriptionY += textRenderer.fontHeight + 1 // 次の行へ
         }

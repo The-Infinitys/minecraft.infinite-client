@@ -6,13 +6,9 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.screen.narration.NarrationPart
 import net.minecraft.client.gui.widget.ClickableWidget
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.SpawnEggItem
-import net.minecraft.registry.Registries
 import net.minecraft.text.Text
-import net.minecraft.util.Identifier
 import org.infinite.InfiniteClient
+import org.infinite.libs.graphics.Graphics2D
 
 class EntityListItemWidget(
     x: Int,
@@ -22,25 +18,11 @@ class EntityListItemWidget(
     private val entityId: String,
     private val onRemove: (String) -> Unit,
 ) : ClickableWidget(x, y, width, height, Text.literal(entityId)) {
-    private val textRenderer = MinecraftClient.getInstance().textRenderer
     private val padding = 8
     private val iconSize = 16
     private val iconPadding = 2
     private val iconTotalWidth = iconSize + iconPadding
     private val removeButtonWidth = 20
-
-    /**
-     * エンティティID文字列から対応するItemStackを取得します。
-     * IDが無効な場合は代替となるItemStack（例：バリアブロック）を返します。
-     */
-    private fun getItemStackFromId(id: String): ItemStack =
-        try {
-            val identifier = Identifier.of(id)
-            val entityType = Registries.ENTITY_TYPE.get(identifier)
-            SpawnEggItem.forEntity(entityType)?.defaultStack ?: Items.BARRIER.defaultStack
-        } catch (_: Exception) {
-            Items.BARRIER.defaultStack
-        }
 
     override fun renderWidget(
         context: DrawContext,
@@ -48,16 +30,18 @@ class EntityListItemWidget(
         mouseY: Int,
         delta: Float,
     ) {
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
         val textX = iconTotalWidth
         val textY = y + this.height / 2 - 4
-        context.drawTextWithShadow(
-            textRenderer,
+        graphics2D.drawText(
             Text.literal(entityId),
             textX,
             textY,
             InfiniteClient
                 .getCurrentColors()
                 .foregroundColor,
+            true, // shadow = true
         )
 
         val removeButtonX = x + width - padding - removeButtonWidth
@@ -85,15 +69,14 @@ class EntityListItemWidget(
             removeButtonY + this.height,
             removeColor,
         )
-        context.drawText(
-            textRenderer,
+        graphics2D.drawText(
             "x",
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
             InfiniteClient
                 .getCurrentColors()
                 .foregroundColor,
-            false,
+            false, // shadow = false
         )
     }
 

@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.text.Text
 import org.infinite.InfiniteClient
+import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
 
 class InfiniteSelectionListField(
@@ -62,7 +63,7 @@ class InfiniteSelectionListField(
                 // setting を一旦 EnumSetting<Enum<*>> として扱うことで、T の情報を回復させる
                 // 実際には T は特定の Enum 型です
                 @Suppress("UNCHECKED_CAST")
-                val enumSetting = setting as FeatureSetting.EnumSetting<Enum<*>>
+                val enumSetting = setting
 
                 // 1. 現在のインデックスを取得
                 val currentIndex = enumSetting.options.indexOf(enumSetting.value)
@@ -72,7 +73,7 @@ class InfiniteSelectionListField(
 
                 // 3. 修正: options リストから次の「値」を取得して代入
                 // これで、enumSetting.value が期待する型 (Enum<*>) の値が代入されます。
-                enumSetting.value = enumSetting.options[nextIndex] // 修正箇所
+                enumSetting.updateValueFromEnumStar(enumSetting.options[nextIndex])
 
                 // 4. ボタンのメッセージを更新
                 cycleButton.message = Text.literal(enumSetting.value.name)
@@ -95,6 +96,8 @@ class InfiniteSelectionListField(
         mouseY: Int,
         delta: Float,
     ) {
+        val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
+
         val textX = x + 5 // Padding from left edge
         val totalTextHeight: Int
         val nameY: Int
@@ -105,36 +108,36 @@ class InfiniteSelectionListField(
             nameY = y + (height - totalTextHeight) / 2
             descriptionY = nameY + textRenderer.fontHeight + 2
 
-            context.drawTextWithShadow(
-                textRenderer,
+            graphics2D.drawText(
                 Text.translatable(setting.name),
                 textX,
                 nameY,
                 InfiniteClient
                     .getCurrentColors()
                     .foregroundColor,
+                true, // shadow = true
             )
-            context.drawTextWithShadow(
-                textRenderer,
+            graphics2D.drawText(
                 Text.translatable(setting.descriptionKey),
                 textX,
                 descriptionY,
                 InfiniteClient
                     .getCurrentColors()
                     .foregroundColor,
+                true, // shadow = true
             )
         } else {
             totalTextHeight = textRenderer.fontHeight // Only name
             nameY = y + (height - totalTextHeight) / 2
 
-            context.drawTextWithShadow(
-                textRenderer,
+            graphics2D.drawText(
                 Text.translatable(setting.name),
                 textX,
                 nameY,
                 InfiniteClient
                     .getCurrentColors()
                     .foregroundColor,
+                true, // shadow = true
             )
         }
 
