@@ -129,6 +129,8 @@ object InfiniteClient : ClientModInitializer {
         updateFeatureInstances()
         InfiniteKeyBind.registerKeybindings()
         ClientLifecycleEvents.CLIENT_STARTED.register { _ ->
+            loadAddons() // ここで loadedThemes が更新される
+            themes = officialThemes + loadedThemes // officialThemesとloadedThemesを結合
             ConfigManager.loadGlobalConfig()
             for (globalFeatureCategory in globalFeatureCategories) {
                 for (globalFeature in globalFeatureCategory.features) {
@@ -171,8 +173,6 @@ object InfiniteClient : ClientModInitializer {
             }
         }
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
-            loadAddons() // ここで loadedThemes が更新される
-            themes = officialThemes + loadedThemes // officialThemesとloadedThemesを結合
             (MinecraftClient.getInstance().textRenderer as? HyperTextRenderer)?.defineFont(
                 HyperTextRenderer.HyperFonts(
                     Identifier.of("minecraft", "infinite_regular"),

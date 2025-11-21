@@ -76,7 +76,7 @@ sealed class FeatureSetting<T>(
     class StringListSetting(
         name: String,
         defaultValue: String,
-        val options: List<String>,
+        val options: MutableList<String>,
     ) : FeatureSetting<String>(name, defaultValue, defaultValue) {
         fun set(value: String) {
             this.value = options.find { it == value } ?: return
