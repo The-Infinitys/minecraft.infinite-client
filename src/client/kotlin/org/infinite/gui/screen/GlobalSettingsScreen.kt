@@ -5,7 +5,6 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
 import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.widget.ClickableWidget
-import net.minecraft.client.gui.widget.Widget
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
 import org.infinite.InfiniteClient
@@ -15,6 +14,7 @@ import org.infinite.global.GlobalFeatureCategory
 import org.infinite.gui.widget.InfiniteBlockColorListField
 import org.infinite.gui.widget.InfiniteBlockListField
 import org.infinite.gui.widget.InfiniteEntityListField
+import org.infinite.gui.widget.InfiniteGlobalFeatureToggle
 import org.infinite.gui.widget.InfinitePlayerListField
 import org.infinite.gui.widget.InfiniteScrollableContainer
 import org.infinite.gui.widget.InfiniteSelectionList
@@ -22,7 +22,6 @@ import org.infinite.gui.widget.InfiniteSettingTextField
 import org.infinite.gui.widget.InfiniteSettingToggle
 import org.infinite.gui.widget.InfiniteSlider
 import org.infinite.gui.widget.InfiniteStringListField
-import org.infinite.gui.widget.InfiniteSummaryWidget
 import org.infinite.gui.widget.TabButton
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.settings.FeatureSetting
@@ -152,17 +151,21 @@ class GlobalSettingsScreen(
         val allCategoryWidgets = mutableListOf<ClickableWidget>()
         val contentWidth = width - 40
         val padding = 5
+        val defaultWidgetHeight = 20 // ここに追加
 
         category.features.forEach { feature ->
-            val featureTitle = Text.translatable(feature.name)
+            Text.translatable(feature.name)
             val featureDescription = Text.translatable(feature.descriptionKey).string
+
+            // isEnabledトグルボタンを追加
             allCategoryWidgets.add(
-                InfiniteSummaryWidget(
+                InfiniteGlobalFeatureToggle(
                     0, // x は ScrollableContainer が設定
                     0, // y は ScrollableContainer が設定
                     contentWidth,
-                    50, // 概要ウィジェットの高さ
-                    featureTitle,
+                    defaultWidgetHeight,
+                    feature,
+                    false,
                     featureDescription,
                 ),
             )
@@ -209,7 +212,6 @@ class GlobalSettingsScreen(
         val defaultWidgetHeight = 20
         val sliderWidgetHeight = 35
         val blockListFieldHeight = height / 2
-        val padding = 5
 
         feature.instance.settings.forEach { setting ->
             when (setting) {

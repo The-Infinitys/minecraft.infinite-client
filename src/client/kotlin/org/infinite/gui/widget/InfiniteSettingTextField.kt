@@ -156,9 +156,17 @@ class InfiniteSettingTextField(
         click: Click,
         doubled: Boolean,
     ): Boolean {
+        // まず、内部のtextFieldがクリックされたかどうかを試す
         if (textField.mouseClicked(click, doubled)) {
-            return true
+            isFocused = false
+            return true // イベントを消費し、親のClickableWidgetのmouseClickedは呼ばない
+        } else {
+            // textFieldがクリックを処理しなかった場合、または領域外だった場合
+            // textFieldのフォーカスを解除する（他の場所がクリックされたと見なす）
+            textField.isFocused = false
         }
+
+        // textFieldがクリックを処理しなかった場合、親のClickableWidgetのmouseClickedを呼び出す
         return super.mouseClicked(click, doubled)
     }
 
