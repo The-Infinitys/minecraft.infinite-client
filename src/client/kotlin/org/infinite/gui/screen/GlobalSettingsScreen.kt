@@ -154,7 +154,6 @@ class GlobalSettingsScreen(
         val padding = 5
 
         category.features.forEach { feature ->
-            // フィーチャー自身の概要ウィジェット (タイトルと説明) を追加
             val featureTitle = Text.translatable(feature.name)
             val featureDescription = Text.translatable(feature.descriptionKey).string
             allCategoryWidgets.add(
@@ -183,20 +182,17 @@ class GlobalSettingsScreen(
                     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {}
                 },
             )
-
-            // このフィーチャーの実際の設定ウィジェットを追加
             allCategoryWidgets.addAll(generateWidgets(feature))
 
             // 各フィーチャー間の視覚的な区切りとして大きなスペーサーを追加
             allCategoryWidgets.add(
-                object : ClickableWidget(0, 0, contentWidth, 20, Text.empty()) {
+                object : ClickableWidget(0, 0, contentWidth, padding, Text.empty()) {
                     override fun renderWidget(
                         context: DrawContext,
                         mouseX: Int,
                         mouseY: Int,
                         delta: Float,
                     ) {
-                        // スペーサー、自身の視覚的レンダリングは不要
                     }
 
                     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {}

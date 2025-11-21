@@ -40,11 +40,6 @@ class InfiniteSummaryWidget(
         val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
         val colors = InfiniteClient.theme().colors
 
-        // 背景の描画
-        graphics2D.fill(this.x, this.y, this.width, this.height, colors.backgroundColor)
-        // ボーダーの描画
-        graphics2D.drawBorder(this.x, this.y, this.width, this.height, colors.primaryColor)
-
         // タイトルの描画
         graphics2D.drawText(
             title,
