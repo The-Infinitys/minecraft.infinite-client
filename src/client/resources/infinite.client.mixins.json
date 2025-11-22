@@ -61,7 +61,8 @@
     "infinite.interfaces.WorldRendererMixin",
     "infinite.settings.OptionsScreenMixin",
     "infinite.world.ClientPlayNetworkHandlerMixin",
-    "features.fighting.counterattack.DamageListenerMixin"
+    "features.fighting.counterattack.DamageListenerMixin",
+    "infinite.client.network.ClientConnectionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -24,6 +24,7 @@ import org.infinite.features.utils.UtilsFeatureCategory
 import org.infinite.global.GlobalFeatureCategory
 import org.infinite.global.rendering.GlobalRenderingFeatureCategory
 import org.infinite.global.rendering.theme.ThemeSetting
+import org.infinite.global.server.GlobalServerFeatureCategory
 import org.infinite.gui.theme.Theme
 import org.infinite.gui.theme.ThemeColors
 import org.infinite.gui.theme.official.officialThemes
@@ -52,6 +53,7 @@ object InfiniteClient : ClientModInitializer {
     val globalFeatureCategories: MutableList<GlobalFeatureCategory> =
         mutableListOf(
             GlobalRenderingFeatureCategory(),
+            GlobalServerFeatureCategory(),
         )
     lateinit var worldManager: WorldManager
     var themes: List<Theme> = listOf()
