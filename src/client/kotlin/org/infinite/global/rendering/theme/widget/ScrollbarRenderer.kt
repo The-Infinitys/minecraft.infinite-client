@@ -19,7 +19,7 @@ class ScrollbarRenderer(
         delta: Float, // delta is not used in the original drawScrollbar, but kept for consistency
     ) {
         val graphics2D = Graphics2D(context, MinecraftClient.getInstance().renderTickCounter)
-        val colors: ThemeColors = InfiniteClient.getCurrentColors()
+        val colors: ThemeColors = InfiniteClient.currentColors()
 
         if (widget.overflows()) {
             val i = widget.scrollbarX

@@ -113,7 +113,7 @@ class InfiniteSelectionListField(
                 textX,
                 nameY,
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )
@@ -122,7 +122,7 @@ class InfiniteSelectionListField(
                 textX,
                 descriptionY,
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )
@@ -135,7 +135,7 @@ class InfiniteSelectionListField(
                 textX,
                 nameY,
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )

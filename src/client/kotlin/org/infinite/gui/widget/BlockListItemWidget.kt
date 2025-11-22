@@ -70,7 +70,7 @@ class BlockListItemWidget(
                 this.x + this.width,
                 this.y + this.height,
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .primaryColor,
             )
         }
@@ -91,7 +91,7 @@ class BlockListItemWidget(
             textX,
             textY,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             true, // shadow = true
         )
@@ -101,11 +101,11 @@ class BlockListItemWidget(
 
         val baseColor =
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .errorColor
         val hoverColor =
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .errorColor
         val removeColor = if (isRemoveButtonHovered) hoverColor else baseColor
 
@@ -122,7 +122,7 @@ class BlockListItemWidget(
             removeButtonWidth,
             removeButtonHeight,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .backgroundColor,
         )
 
@@ -132,7 +132,7 @@ class BlockListItemWidget(
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             false, // shadow = false
         )

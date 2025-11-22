@@ -136,7 +136,7 @@ class InfiniteScreen(
                 title,
                 width / 2,
                 startY + 15,
-                InfiniteClient.getCurrentColors().foregroundColor,
+                InfiniteClient.currentColors().foregroundColor,
             )
         }
 

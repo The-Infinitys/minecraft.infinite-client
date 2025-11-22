@@ -267,7 +267,7 @@ class FeatureSettingsScreen(
             width,
             height,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .backgroundColor
                 .transparent(128),
         )
@@ -278,7 +278,7 @@ class FeatureSettingsScreen(
             width / 2,
             20,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
         )
         context.drawCenteredTextWithShadow(
@@ -287,7 +287,7 @@ class FeatureSettingsScreen(
             width / 2,
             35,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .secondaryColor,
         )
 

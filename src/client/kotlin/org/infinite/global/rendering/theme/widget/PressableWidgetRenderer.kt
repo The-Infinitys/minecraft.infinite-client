@@ -29,7 +29,7 @@ class PressableWidgetRenderer(
         val height = widget.height
         val active = widget.active
         val hovered = widget.isHovered
-        val colors: ThemeColors = InfiniteClient.getCurrentColors()
+        val colors: ThemeColors = InfiniteClient.currentColors()
 
         // --- (背景とボーダーの描画ロジックは変更なし) ---
         var backgroundColor = colors.backgroundColor

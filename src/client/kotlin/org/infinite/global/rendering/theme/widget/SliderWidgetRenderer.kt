@@ -24,7 +24,7 @@ class SliderWidgetRenderer(
         val height = widget.height
         val active = widget.active
         val hovered = widget.isHovered
-        val colors: ThemeColors = InfiniteClient.getCurrentColors()
+        val colors: ThemeColors = InfiniteClient.currentColors()
 
         // --- 1. カスタム背景とボーダーの描画 ---
         var backgroundColor = colors.backgroundColor

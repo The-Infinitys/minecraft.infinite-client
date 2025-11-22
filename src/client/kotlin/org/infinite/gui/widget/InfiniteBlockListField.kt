@@ -192,7 +192,7 @@ class InfiniteBlockListField(
             labelX,
             y + padding,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             true, // shadow = true
         )
@@ -201,7 +201,7 @@ class InfiniteBlockListField(
                 Text.translatable(setting.descriptionKey),
                 labelX,
                 y + padding + baseLabelHeight + 2,
-                InfiniteClient.getCurrentColors().foregroundColor,
+                InfiniteClient.currentColors().foregroundColor,
                 true, // shadow = true
             )
         }
@@ -224,11 +224,11 @@ class InfiniteBlockListField(
             textFieldY + buttonSize,
             if (isAddButtonHovered) {
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .primaryColor
             } else {
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .greenAccentColor
             },
         )
@@ -237,7 +237,7 @@ class InfiniteBlockListField(
             addButtonX + buttonSize / 2 - 3,
             textFieldY + buttonSize / 2 - 4,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             false, // shadow = false
         )

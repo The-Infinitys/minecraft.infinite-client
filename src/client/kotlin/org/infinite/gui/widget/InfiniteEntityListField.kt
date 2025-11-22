@@ -192,7 +192,7 @@ class InfiniteEntityListField(
             labelX,
             y + padding,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             true, // shadow = true
         )
@@ -202,7 +202,7 @@ class InfiniteEntityListField(
                 labelX,
                 y + padding + baseLabelHeight + 2,
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )
@@ -226,11 +226,11 @@ class InfiniteEntityListField(
             textFieldY + buttonSize,
             if (isAddButtonHovered) {
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .primaryColor
             } else {
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .greenAccentColor
             },
         )
@@ -239,7 +239,7 @@ class InfiniteEntityListField(
             addButtonX + buttonSize / 2 - 3,
             textFieldY + buttonSize / 2 - 4,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             false, // shadow = false
         )

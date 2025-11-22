@@ -26,6 +26,9 @@
         "value": "org.infinite.InfiniteDataGenerator",
         "adapter": "kotlin"
       }
+    ],
+    "modmenu": [
+      "org.infinite.libs.mods.modmenu.InfiniteModMenuApi"
     ]
   },
   "mixins": [
@@ -40,10 +43,23 @@
     "minecraft": "~1.21.8",
     "java": ">=21",
     "fabric-api": "*",
-
     "fabric-language-kotlin": "*"
   },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://discord.gg/Xc3p52yDgK",
+        "modmenu.issues": "https://github.com/The-Infinitys/minecraft.infinite-client/issues"
+      },
+      "badges": [
+        "client"
+      ],
+      "configuredScreen": "org.infinite.gui.screen.GlobalSettingsScreen::create",
+      "update_checker": true
+    }
+  },
   "suggests": {
-    "baritone": "~1.21.10"
+    "baritone": "~1.21.10",
+    "modmenu": "~16"
   }
 }

@@ -44,25 +44,25 @@ class InfiniteToggleButton(
         // レインボーアニメーションのロジック
         val interpolatedColor =
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .primaryColor
 
         val backgroundColor =
             when {
                 !isEnabled -> {
                     InfiniteClient
-                        .getCurrentColors()
+                        .currentColors()
                         .backgroundColor
                 }
 
                 state -> {
                     if (isHovered) {
                         InfiniteClient
-                            .getCurrentColors()
+                            .currentColors()
                             .greenAccentColor
                     } else {
                         InfiniteClient
-                            .getCurrentColors()
+                            .currentColors()
                             .primaryColor // ON state
                     }
                 }
@@ -70,11 +70,11 @@ class InfiniteToggleButton(
                 else -> {
                     if (isHovered) {
                         InfiniteClient
-                            .getCurrentColors()
+                            .currentColors()
                             .secondaryColor
                     } else {
                         InfiniteClient
-                            .getCurrentColors()
+                            .currentColors()
                             .backgroundColor // OFF state
                     }
                 }
@@ -116,7 +116,7 @@ class InfiniteToggleButton(
                 interpolatedColor
             } else {
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .backgroundColor
             }
         context.fill(currentKnobX.toInt(), knobY, currentKnobX.toInt() + knobSize, knobY + knobSize, knobBorderColor)
@@ -125,11 +125,11 @@ class InfiniteToggleButton(
         val knobInnerColor =
             if (isHovered) {
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .primaryColor
             } else {
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor
             }
         context.fill(

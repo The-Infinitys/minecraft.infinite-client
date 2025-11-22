@@ -1,6 +1,7 @@
 package org.infinite.libs.infinite
 
 import org.infinite.features.FeatureCategory
+import org.infinite.global.GlobalFeatureCategory
 import org.infinite.gui.theme.Theme
 
 interface InfiniteAddon {
@@ -8,9 +9,10 @@ interface InfiniteAddon {
     val version: String
 
     val features: List<FeatureCategory>
+    val globalFeatures: List<GlobalFeatureCategory>
     val themes: List<Theme>
 
-    fun onInitialize()
+    fun onInit()
 
     fun onShutdown()
 }

@@ -108,7 +108,7 @@ class InfiniteSettingTextField(
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )
@@ -117,7 +117,7 @@ class InfiniteSettingTextField(
                 textX,
                 descriptionY,
                 org.infinite.InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )
@@ -130,7 +130,7 @@ class InfiniteSettingTextField(
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )

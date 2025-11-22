@@ -26,19 +26,17 @@ object LogQueue : ClientTickEvents.EndTick {
      * キューからメッセージを取り出し、プレイヤーに送信します。
      */
     override fun onEndTick(client: MinecraftClient) {
-        if (client.player == null) {
-            return
-        }
-
-        // 1ティックあたり最大N個のメッセージを処理
-        for (i in 0 until MESSAGES_PER_TICK) {
+        repeat(MESSAGES_PER_TICK) {
             val message = messageQueue.poll() // キューからメッセージを取り出す
             if (message != null) {
-                // 'false' はメッセージがチャット履歴に残らないことを意味します
-                client.player!!.sendMessage(message, false)
+                val player = client.player
+                if (player == null) {
+                    println(message)
+                } else {
+                    player.sendMessage(message, false)
+                }
             } else {
-                // キューが空になったらループを終了
-                break
+                return
             }
         }
     }

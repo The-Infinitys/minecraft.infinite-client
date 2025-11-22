@@ -61,6 +61,7 @@ object InfiniteClient : ClientModInitializer {
     var loadedAddons: MutableList<InfiniteAddon> = mutableListOf()
     var loadedThemes: MutableList<Theme> = mutableListOf()
     private val addonFeatureMap: MutableMap<InfiniteAddon, List<FeatureCategory>> = mutableMapOf()
+    private val addonGlobalFeatureMap: MutableMap<InfiniteAddon, List<GlobalFeatureCategory>> = mutableMapOf()
     private val featureInstances: MutableMap<Class<out ConfigurableFeature>, ConfigurableFeature> = mutableMapOf()
     private val globalFeatureInstances: MutableMap<Class<out ConfigurableFeature>, ConfigurableFeature> = mutableMapOf()
 
@@ -78,7 +79,7 @@ object InfiniteClient : ClientModInitializer {
 
     fun theme(name: String = currentTheme): Theme = themes.find { it.name == name } ?: Theme.default()
 
-    fun getCurrentColors(): ThemeColors {
+    fun currentColors(): ThemeColors {
         val themeSetting = getGlobalFeature(ThemeSetting::class.java)
         return if (themeSetting?.isEnabled() == true) {
             theme().colors
@@ -126,19 +127,29 @@ object InfiniteClient : ClientModInitializer {
             for (addon in loadedAddons) { // Addon initialize
                 log("Loading addon: ${addon.id} v${addon.version}")
                 val providedCategories = addon.features
+                val providedGlobalCategories = addon.globalFeatures
                 addonFeatureMap[addon] = providedCategories // Store provided categories
+                addonGlobalFeatureMap[addon] = providedGlobalCategories // Store provided global categories
+
                 for (addonCategory in providedCategories) {
                     val existingCategory = featureCategories.find { it.name == addonCategory.name }
                     if (existingCategory != null) {
-                        // Merge features into existing category
                         existingCategory.features.addAll(addonCategory.features)
                     } else {
-                        // Add new category
                         featureCategories.add(addonCategory)
                     }
                 }
+
+                for (addonGlobalCategory in providedGlobalCategories) {
+                    val existingGlobalCategory = globalFeatureCategories.find { it.name == addonGlobalCategory.name }
+                    if (existingGlobalCategory != null) {
+                        existingGlobalCategory.features.addAll(addonGlobalCategory.features)
+                    } else {
+                        globalFeatureCategories.add(addonGlobalCategory)
+                    }
+                }
                 loadedThemes += addon.themes
-                addon.onInitialize()
+                addon.onInit()
             }
         }
         updateFeatureInstances()
@@ -194,6 +205,40 @@ object InfiniteClient : ClientModInitializer {
                     feature.onShutdown()
                 }
             }
+            for (addon in loadedAddons) { // Addon shutdown
+                addon.onShutdown()
+                addonFeatureMap[addon]?.let { providedCategories ->
+                    for (addonCategory in providedCategories) {
+                        val existingCategory = featureCategories.find { it.name == addonCategory.name }
+                        if (existingCategory != null) {
+                            existingCategory.features.removeAll(addonCategory.features.toSet())
+                            if (existingCategory.features.isEmpty() && providedCategories.contains(existingCategory)) {
+                                featureCategories.remove(existingCategory)
+                            }
+                        } else {
+                            featureCategories.remove(addonCategory)
+                        }
+                    }
+                }
+                addonGlobalFeatureMap[addon]?.let { providedGlobalCategories ->
+                    for (addonGlobalCategory in providedGlobalCategories) {
+                        val existingGlobalCategory =
+                            globalFeatureCategories.find { it.name == addonGlobalCategory.name }
+                        if (existingGlobalCategory != null) {
+                            existingGlobalCategory.features.removeAll(addonGlobalCategory.features.toSet())
+                            if (existingGlobalCategory.features.isEmpty() &&
+                                providedGlobalCategories.contains(
+                                    existingGlobalCategory,
+                                )
+                            ) {
+                                globalFeatureCategories.remove(existingGlobalCategory)
+                            }
+                        } else {
+                            globalFeatureCategories.remove(addonGlobalCategory)
+                        }
+                    }
+                }
+            }
         }
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             ConfigManager.loadConfig()
@@ -216,22 +261,6 @@ object InfiniteClient : ClientModInitializer {
         // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             ConfigManager.saveConfig()
-            for (addon in loadedAddons) { // Addon shutdown
-                addon.onShutdown()
-                addonFeatureMap[addon]?.let { providedCategories ->
-                    for (addonCategory in providedCategories) {
-                        val existingCategory = featureCategories.find { it.name == addonCategory.name }
-                        if (existingCategory != null) {
-                            existingCategory.features.removeAll(addonCategory.features.toSet())
-                            if (existingCategory.features.isEmpty() && providedCategories.contains(existingCategory)) {
-                                featureCategories.remove(existingCategory)
-                            }
-                        } else {
-                            featureCategories.remove(addonCategory)
-                        }
-                    }
-                }
-            }
             for (category in featureCategories) {
                 for (feature in category.features) {
                     feature.instance.stop()

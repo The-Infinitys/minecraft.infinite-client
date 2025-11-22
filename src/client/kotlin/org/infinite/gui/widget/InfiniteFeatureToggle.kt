@@ -93,7 +93,7 @@ class InfiniteFeatureToggle(
             x + 60,
             y + (height - 8) / 2,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             true, // shadow = true
         )
@@ -113,7 +113,7 @@ class InfiniteFeatureToggle(
         if (isSelected) {
             val interpolatedColor =
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .primaryColor
             context.drawBorder(x, y, width, height, interpolatedColor)
         }

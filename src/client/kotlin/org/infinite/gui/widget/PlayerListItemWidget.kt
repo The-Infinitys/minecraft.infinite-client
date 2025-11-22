@@ -36,7 +36,7 @@ class PlayerListItemWidget(
             textX,
             textY,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             true, // shadow = true
         )
@@ -51,11 +51,11 @@ class PlayerListItemWidget(
 
         val baseColor =
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .errorColor
         val hoverColor =
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .errorColor
 
         val removeColor = if (isRemoveButtonHovered) hoverColor else baseColor
@@ -72,7 +72,7 @@ class PlayerListItemWidget(
             removeButtonX + removeButtonWidth / 2 - 3,
             removeButtonY + this.height / 2 - 4,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             false, // shadow = false
         )

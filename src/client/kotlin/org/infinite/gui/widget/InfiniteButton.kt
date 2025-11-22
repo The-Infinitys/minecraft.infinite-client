@@ -28,7 +28,7 @@ class InfiniteButton(
         // Animation colors (same as InfiniteScreen)
         val interpolatedColor =
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .primaryColor
 
         // Button rendering logic (similar to InfiniteScreen)
@@ -39,7 +39,7 @@ class InfiniteButton(
             x + width,
             y + height,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .backgroundColor,
         )
 
@@ -59,16 +59,16 @@ class InfiniteButton(
             x + width - borderWidth * 2,
             y + height - borderWidth * 2,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .backgroundColor,
         )
 
         // Draw button text
         val textColor =
             if (isHovered) {
-                InfiniteClient.getCurrentColors().primaryColor
+                InfiniteClient.currentColors().primaryColor
             } else {
-                InfiniteClient.getCurrentColors().foregroundColor // Darker foreground when hovered, foreground otherwise
+                InfiniteClient.currentColors().foregroundColor // Darker foreground when hovered, foreground otherwise
             }
         graphics2D.centeredText(
             message,

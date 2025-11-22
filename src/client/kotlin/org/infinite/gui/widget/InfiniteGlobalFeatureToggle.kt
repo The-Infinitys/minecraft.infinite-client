@@ -85,7 +85,7 @@ class InfiniteGlobalFeatureToggle(
             Text.literal(globalFeature.name),
             x + 5, // 左端から少しパディング
             y + (height - textRenderer.fontHeight) / 2, // 垂直方向中央
-            InfiniteClient.getCurrentColors().foregroundColor,
+            InfiniteClient.currentColors().foregroundColor,
             true, // shadow = true
         )
 
@@ -96,7 +96,7 @@ class InfiniteGlobalFeatureToggle(
                 Text.literal(line),
                 x + 5, // 左端から少しパディング
                 descriptionY,
-                InfiniteClient.getCurrentColors().secondaryColor,
+                InfiniteClient.currentColors().secondaryColor,
                 true, // shadow = true
             )
             descriptionY += textRenderer.fontHeight + 1 // 次の行へ
@@ -111,7 +111,7 @@ class InfiniteGlobalFeatureToggle(
         if (isSelected) {
             val interpolatedColor =
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .primaryColor
             context.drawBorder(x, y, width, height, interpolatedColor)
         }

@@ -54,7 +54,7 @@ class InfiniteSlider<T : Number>(
             textX,
             currentY,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .foregroundColor,
             true, // shadow = true
         )
@@ -76,7 +76,7 @@ class InfiniteSlider<T : Number>(
             valueTextX,
             currentY, // 設定名と同じY座標
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .primaryColor, // 例としてプライマリカラーを使用
             true, // shadow = true
         )
@@ -90,7 +90,7 @@ class InfiniteSlider<T : Number>(
                 textX,
                 currentY,
                 InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .secondaryColor,
                 true, // shadow = true
             )
@@ -105,7 +105,7 @@ class InfiniteSlider<T : Number>(
             x + width - 5,
             sliderBackgroundY + 2,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .secondaryColor,
         )
 
@@ -121,7 +121,7 @@ class InfiniteSlider<T : Number>(
             knobX.toInt() + knobWidth,
             knobY + 6,
             InfiniteClient
-                .getCurrentColors()
+                .currentColors()
                 .primaryColor,
         )
     }

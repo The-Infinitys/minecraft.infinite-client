@@ -28,7 +28,7 @@ class TextFieldWidgetRenderer(
         if (widget.isVisible) {
             val graphics2D = Graphics2D(context)
             // テーマ色を取得
-            val colors = InfiniteClient.getCurrentColors()
+            val colors = InfiniteClient.currentColors()
             val backgroundColor = colors.backgroundColor
             val primaryColor = colors.primaryColor // 枠線に適用
             val foregroundColor = colors.foregroundColor

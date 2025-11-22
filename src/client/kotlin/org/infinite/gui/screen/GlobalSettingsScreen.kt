@@ -28,9 +28,13 @@ import org.infinite.utils.rendering.transparent
 import org.lwjgl.glfw.GLFW
 
 class GlobalSettingsScreen(
-    optionsScreen: OptionsScreen,
+    parentScreen: Screen?,
 ) : Screen(Text.literal("Infinite Client Global Settings")) {
-    private val parent: Screen = optionsScreen
+    companion object {
+        fun create(parent: net.minecraft.client.gui.screen.Screen): net.minecraft.client.gui.screen.Screen = GlobalSettingsScreen(parent)
+    }
+
+    private val parent: Screen? = parentScreen
     private var selectedCategory: GlobalFeatureCategory? = null
     private val sections: MutableMap<GlobalFeatureCategory, Section> = mutableMapOf()
     private val categories = InfiniteClient.globalFeatureCategories

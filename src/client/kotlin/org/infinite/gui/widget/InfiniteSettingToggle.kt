@@ -57,7 +57,7 @@ class InfiniteSettingToggle(
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )
@@ -66,7 +66,7 @@ class InfiniteSettingToggle(
                 textX,
                 descriptionY,
                 org.infinite.InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )
@@ -79,7 +79,7 @@ class InfiniteSettingToggle(
                 textX,
                 nameY,
                 org.infinite.InfiniteClient
-                    .getCurrentColors()
+                    .currentColors()
                     .foregroundColor,
                 true, // shadow = true
             )

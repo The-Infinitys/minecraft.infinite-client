@@ -23,7 +23,7 @@ class LoadingWidgetRenderer(
         val width = widget.width
         val height = widget.height
         val hovered = widget.isHovered
-        val colors: ThemeColors = InfiniteClient.getCurrentColors()
+        val colors: ThemeColors = InfiniteClient.currentColors()
 
         // テーマとホバー状態に基づいて色を決定
         var backgroundColor = colors.backgroundColor

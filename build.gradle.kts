@@ -14,13 +14,18 @@ version = property("mod_version")!!
 
 repositories {
     maven {
+        name = "Modrinth"
+        url = uri("https://api.modrinth.com/maven")
+    }
+    maven {
         name = "meteor-maven-snapshots"
         url = uri("https://maven.meteordev.org/snapshots")
     }
     maven {
         name = "babbaj-repo"
         url = uri("https://babbaj.github.io/maven/")
-    } // Add repositories to retrieve artifacts from in here.
+    }
+    // Add repositories to retrieve artifacts from in here.
     // You should only use this when depending on other mods because
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
@@ -33,10 +38,13 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_api_version")}")
+    modImplementation("maven.modrinth:modmenu:${property("mod_menu_version")}")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("dev.babbaj:nether-pathfinder:${property("nether_pathfinder_version")}")
     modImplementation("meteordevelopment:baritone:${property("baritone_version")}")
     implementation("org.lwjgl:lwjgl-stb:${property("lwjgl_version")}")
+    implementation("com.squareup.okhttp3:okhttp:${property("ok_http_version")}")
+    implementation("org.apache.maven:maven-artifact:${property("maven_artifact_version")}")
 }
 tasks {
     processResources {
