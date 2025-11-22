@@ -32,6 +32,10 @@ class FeatureSettingsScreen(
     // 遅延初期化を維持
     private lateinit var scrollableContainer: InfiniteScrollableContainer
 
+    override fun close() {
+        client?.setScreen(parent)
+    }
+
     override fun init() {
         super.init()
 
@@ -73,12 +77,28 @@ class FeatureSettingsScreen(
                 }
 
                 is FeatureSetting.StringListSetting -> {
-                    settingWidgets.add(InfiniteSelectionListField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(
+                        InfiniteSelectionListField(
+                            20,
+                            currentY,
+                            widgetWidth,
+                            defaultWidgetHeight,
+                            setting,
+                        ),
+                    )
                     currentY += defaultWidgetHeight + padding
                 }
 
                 is FeatureSetting.EnumSetting<*> -> {
-                    settingWidgets.add(InfiniteSelectionListField(20, currentY, widgetWidth, defaultWidgetHeight, setting))
+                    settingWidgets.add(
+                        InfiniteSelectionListField(
+                            20,
+                            currentY,
+                            widgetWidth,
+                            defaultWidgetHeight,
+                            setting,
+                        ),
+                    )
                     currentY += defaultWidgetHeight + padding
                 }
 

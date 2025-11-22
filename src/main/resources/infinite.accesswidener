@@ -62,6 +62,33 @@ accessible method net/minecraft/client/gui/hud/ChatHud refresh ()V
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager interactBlockInternal (Lnet/minecraft/client/network/ClientPlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/hit/BlockHitResult;)Lnet/minecraft/util/ActionResult;
 
 # --- Theme Settings ---
+accessible class net/minecraft/client/gui/widget/ScrollableLayoutWidget
+accessible method net/minecraft/client/gui/widget/ScrollableWidget drawScrollbar (Lnet/minecraft/client/gui/DrawContext;II)V
+accessible method net/minecraft/client/gui/widget/ScrollableWidget overflows ()Z
+accessible method net/minecraft/client/gui/widget/ScrollableWidget getScrollbarX ()I
+accessible method net/minecraft/client/gui/widget/ScrollableWidget getScrollbarThumbHeight ()I
+accessible method net/minecraft/client/gui/widget/ScrollableWidget getScrollbarThumbY ()I
+accessible method net/minecraft/client/gui/widget/ScrollableWidget isInScrollbar (DD)Z
+accessible field net/minecraft/client/gui/widget/ScrollableWidget scrollbarDragged Z
 accessible class net/minecraft/client/gui/widget/ScrollableLayoutWidget$Container
 accessible field net/minecraft/client/gui/widget/SliderWidget value D
 accessible method net/minecraft/client/gui/widget/ClickableWidget drawScrollableText (Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/font/TextRenderer;II)V
+accessible field net/minecraft/client/gui/widget/ClickableWidget alpha F
+accessible method net/minecraft/client/gui/widget/TextFieldWidget isEditable ()Z
+accessible field net/minecraft/client/gui/widget/TextFieldWidget firstCharacterIndex I
+accessible field net/minecraft/client/gui/widget/TextFieldWidget selectionStart I
+accessible field net/minecraft/client/gui/widget/TextFieldWidget selectionEnd I
+accessible field net/minecraft/client/gui/widget/TextFieldWidget textX I
+accessible field net/minecraft/client/gui/widget/TextFieldWidget textY I
+accessible field net/minecraft/client/gui/widget/TextFieldWidget placeholder Lnet/minecraft/text/Text;
+accessible field net/minecraft/client/gui/widget/TextFieldWidget lastSwitchFocusTime J
+accessible field net/minecraft/client/gui/widget/TextFieldWidget textShadow Z
+accessible field net/minecraft/client/gui/widget/TextFieldWidget maxLength I
+accessible method net/minecraft/client/gui/widget/TextFieldWidget format (Ljava/lang/String;I)Lnet/minecraft/text/OrderedText;
+accessible field net/minecraft/client/gui/widget/TextFieldWidget suggestion Ljava/lang/String;
+accessible method net/minecraft/client/gui/widget/ScrollableWidget overflows ()Z
+accessible method net/minecraft/client/gui/widget/ScrollableWidget getScrollbarX ()I
+accessible method net/minecraft/client/gui/widget/ScrollableWidget getScrollbarThumbHeight ()I
+accessible method net/minecraft/client/gui/widget/ScrollableWidget getScrollbarThumbY ()I
+accessible method net/minecraft/client/gui/widget/ScrollableWidget getScrollbarThumbY ()I
+accessible field net/minecraft/client/gui/widget/ScrollableWidget scrollbarDragged Z

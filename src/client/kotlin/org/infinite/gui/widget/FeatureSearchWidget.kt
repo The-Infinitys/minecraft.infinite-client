@@ -44,7 +44,6 @@ class FeatureSearchWidget(
                 // 最新のコードに合わせて InputType.ANY_TEXT を使用
                 InfiniteTextField.InputType.ANY_TEXT,
             )
-        InfiniteClient.log("INIT")
         searchField.setChangedListener { newText ->
             filterFeatures(newText)
         }

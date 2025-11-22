@@ -50,3 +50,5 @@ fun Int.transparent(alpha: Int): Int {
 }
 
 fun Int.transparent(alpha: Double): Int = this.transparent(alpha.roundToInt())
+
+fun Int.transparent(alpha: Float): Int = this.transparent(alpha.roundToInt())

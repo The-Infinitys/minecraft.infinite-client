@@ -56,14 +56,16 @@
     "infinite.gui.PlayerSkinWidgetMixin",
     "infinite.gui.PressableWidgetMixin",
     "infinite.gui.SliderWidgetMixin",
+    "infinite.gui.TextFieldWidgetMixin",
+    "infinite.gui.ScrollableWidgetMixin",
     "infinite.interfaces.WorldRendererMixin",
     "infinite.settings.OptionsScreenMixin",
-    "infinite.world.ClientPlayNetworkHandlerMixin"
+    "infinite.world.ClientPlayNetworkHandlerMixin",
+    "features.fighting.counterattack.DamageListenerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "mixins": [
-    "features.fighting.counterattack.DamageListenerMixin"
   ]
 }
