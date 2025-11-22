@@ -24,15 +24,30 @@ class FeatureSearchWidget(
     private val parentScreen: Screen,
 ) : ClickableWidget(x, y, width, height, Text.empty()) {
     private val textRenderer: TextRenderer = MinecraftClient.getInstance().textRenderer
-    private lateinit var searchField: InfiniteTextField
+    private val searchField: InfiniteTextField
     private lateinit var scrollableContainer: InfiniteScrollableContainer
-    private var allFeatures: List<Feature<out ConfigurableFeature>> = InfiniteClient.featureCategories.flatMap { it.features }
+    private var allFeatures: List<Feature<out ConfigurableFeature>> =
+        InfiniteClient.featureCategories.flatMap { it.features }
     private var filteredFeatures: List<Feature<out ConfigurableFeature>>
     private var isInitialized = false
     private var selectedIndex: Int = -1 // -1 means no item is selected
 
     init {
         filteredFeatures = allFeatures
+        searchField =
+            InfiniteTextField(
+                textRenderer,
+                x,
+                y,
+                width,
+                20, // Height of the search field
+                Text.literal("Search features..."),
+                InfiniteTextField.InputType.BLOCK_ID,
+            )
+        // searchFieldのmaxLengthとPredicateはInfiniteTextField側で適切に設定されている前提です。
+        searchField.setChangedListener { newText ->
+            filterFeatures(newText)
+        }
     }
 
     private fun filterFeatures(searchText: String) {
@@ -41,7 +56,8 @@ class FeatureSearchWidget(
                 allFeatures
             } else {
                 allFeatures.filter { feature ->
-                    val categoryName = InfiniteClient.featureCategories.find { it.features.contains(feature) }?.name ?: ""
+                    val categoryName =
+                        InfiniteClient.featureCategories.find { it.features.contains(feature) }?.name ?: ""
                     feature.name.contains(searchText, ignoreCase = true) ||
                         categoryName.contains(
                             searchText,
@@ -82,20 +98,6 @@ class FeatureSearchWidget(
         delta: Float,
     ) {
         if (!isInitialized) {
-            searchField =
-                InfiniteTextField(
-                    textRenderer,
-                    x,
-                    y,
-                    width,
-                    20, // Height of the search field
-                    Text.literal("Search features..."),
-                    InfiniteTextField.InputType.ANY_TEXT,
-                )
-            searchField.setChangedListener { newText ->
-                filterFeatures(newText)
-            }
-
             scrollableContainer =
                 InfiniteScrollableContainer(
                     x,
@@ -111,7 +113,7 @@ class FeatureSearchWidget(
         searchField.x = x
         searchField.y = y
         searchField.render(context, mouseX, mouseY, delta)
-        searchField.isFocused = true // Always keep focus on the search field
+        searchField.isFocused = true // Always keep focus on the search field (Good, but not enough)
 
         scrollableContainer.x = x
         scrollableContainer.y = y + searchField.height + 5
@@ -132,6 +134,11 @@ class FeatureSearchWidget(
     }
 
     override fun keyPressed(input: KeyInput): Boolean {
+        // キーボード操作の際に、フォーカスが外れていた場合に再設定する
+        if (!searchField.isFocused) {
+            searchField.isFocused = true
+        }
+
         if (searchField.keyPressed(input)) {
             return true
         }
@@ -224,6 +231,7 @@ class FeatureSearchWidget(
         if (searchField.charTyped(input)) {
             return true
         }
+
         if (scrollableContainer.charTyped(input)) {
             return true
         }
@@ -232,7 +240,7 @@ class FeatureSearchWidget(
 
     override fun appendClickableNarrations(builder: NarrationMessageBuilder) {
         searchField.appendNarrations(builder)
-        // scrollableContainer.appendClickableNarrations(builder) // Protected method
+        scrollableContainer.appendNarrations(builder) // Protected method
     }
 
     private enum class MoveWay {

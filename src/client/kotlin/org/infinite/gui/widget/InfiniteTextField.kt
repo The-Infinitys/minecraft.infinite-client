@@ -50,9 +50,9 @@ class InfiniteTextField(
 
     override fun charTyped(input: CharInput): Boolean {
         if (!isFocused) return false
-        val chr = input.toString().toCharArray().first()
-
-        // InputType に基づく文字フィルタリング
+        val inputString = input.toString()
+        if (inputString.isEmpty()) return false
+        val chr = inputString.toCharArray().first()
         val canType =
             when (inputType) {
                 InputType.BLOCK_ID, InputType.ENTITY_ID -> {
@@ -75,17 +75,13 @@ class InfiniteTextField(
                     true
                 }
             }
-
-        if (!canType) return false
-
-        // 文字入力処理を親クラスに委譲
-        val result = super.charTyped(input)
-
-        // ID系の入力タイプであれば、入力後にサジェストを更新
-        if (result && (inputType == InputType.BLOCK_ID || inputType == InputType.ENTITY_ID)) {
+        if (canType) {
+            super.write(input.asString())
             updateSuggestions()
+            return true
+        } else {
+            return false
         }
-        return result
     }
 
     private fun updateSuggestions() {
@@ -350,7 +346,6 @@ class InfiniteTextField(
                 }
             }
         }
-
         // 2. 通常のクリック処理
         // super.mouseClicked() が isFocused の設定/解除とカーソルの位置設定を行います。
         return super.mouseClicked(click, doubled)

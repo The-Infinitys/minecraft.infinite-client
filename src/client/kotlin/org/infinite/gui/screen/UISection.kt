@@ -409,7 +409,6 @@ class UISection(
         isSelected: Boolean,
     ): Boolean {
         if (!isSelected) return false
-
         if (id == "main") {
             featureSearchWidget?.charTyped(input)?.let { if (it) return true }
             for (button in themeButtons) { // Add this loop
