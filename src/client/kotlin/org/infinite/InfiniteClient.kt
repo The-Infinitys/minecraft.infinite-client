@@ -157,6 +157,16 @@ object InfiniteClient : ClientModInitializer {
 
     var hasLoadedAddons = false
 
+    private fun debugTranslations() {
+        val lackedTranslations = checkTranslations() + InfiniteKeyBind.checkTranslations()
+        if (lackedTranslations.isEmpty()) {
+            log("Mod initialized successfully.")
+        } else {
+            val translationList = lackedTranslations.joinToString(",") { "\"$it\":\"$it\"" }
+            warn("Missing Translations: [$translationList]")
+        }
+    }
+
     override fun onInitializeClient() {
         LogQueue.registerTickEvent()
         AsyncInterface.init()
@@ -242,23 +252,16 @@ object InfiniteClient : ClientModInitializer {
         }
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             ConfigManager.loadConfig()
+            debugTranslations()
             val modContainer = FabricLoader.getInstance().getModContainer("infinite")
             val modVersion = modContainer.map { it.metadata.version.friendlyString }.orElse("unknown")
             log("version $modVersion")
-            val lackedTranslations = checkTranslations() + InfiniteKeyBind.checkTranslations()
-            if (lackedTranslations.isEmpty()) {
-                log("Mod initialized successfully.")
-            } else {
-                val translationList = lackedTranslations.joinToString(",") { "\"$it\":\"$it\"" }
-                warn("Missing Translations: [$translationList]")
-            }
             for (category in featureCategories) {
                 for (feature in category.features) {
                     feature.instance.onStart()
                 }
             }
         }
-        // --- Event: when player leaves a world ---
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             ConfigManager.saveConfig()
             for (category in featureCategories) {

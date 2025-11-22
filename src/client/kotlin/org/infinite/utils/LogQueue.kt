@@ -31,7 +31,7 @@ object LogQueue : ClientTickEvents.EndTick {
             if (message != null) {
                 val player = client.player
                 if (player == null) {
-                    println(message)
+                    println(message.string)
                 } else {
                     player.sendMessage(message, false)
                 }
