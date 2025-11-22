@@ -3,7 +3,6 @@ package org.infinite.gui.screen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder
-import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
@@ -48,11 +47,13 @@ class GlobalSettingsScreen(
         super.init()
         sections.clear()
         val tabSpacing = 2
+        // タブの幅を計算。最小幅を確保しつつ、テキストに合わせて調整
         val tabWidth =
             categories.maxOf { textRenderer.getWidth(it.name) + tabSpacing * 2 }.coerceAtLeast(width / categories.size)
         val tabHeight = (textRenderer.fontHeight + tabSpacing) * 2
         val totalTabsWidth = (tabWidth + tabSpacing) * categories.size - tabSpacing
         var x = (this.width - totalTabsWidth) / 2
+
         categories.forEach { category ->
             val tabButton =
                 TabButton(
@@ -60,21 +61,47 @@ class GlobalSettingsScreen(
                     0,
                     tabWidth,
                     tabHeight,
-                    Text.translatable(category.name),
+                    // カテゴリ名をローカライズして表示
+                    Text.literal(category.name),
                 ) {
                     selectedCategory = category
+                    updateCategoryContent() // クリックされたらコンテンツを切り替え
                     updateTabButtonStates()
                 }
+
+            // スクロール可能なコンテナを生成
             val contents =
                 InfiniteScrollableContainer(0, tabHeight, width, height - tabHeight, generateWidgets(category))
+
             x += tabWidth + tabSpacing
             sections[category] = Section(tabButton, contents)
+
+            // タブボタンのみをselectableChildとして追加
             addSelectableChild(tabButton)
-            addSelectableChild(contents)
+
+            // コンテンツコンテナはinitではaddSelectableChildせず、renderとupdateCategoryContentで管理する
         }
 
         selectedCategory = categories.firstOrNull()
+        updateCategoryContent() // 初回実行時にコンテンツを有効化
         updateTabButtonStates()
+    }
+
+    // 選択されたカテゴリのコンテンツを有効化/無効化する新しいメソッド
+    private fun updateCategoryContent() {
+        sections.forEach { (category, section) ->
+            val container = section.contents
+            if (category == selectedCategory) {
+                // 選択されているカテゴリのコンテンツを有効化
+                container.visible = true
+                addSelectableChild(container) // childrenリストに追加することでフォーカス対象とする
+            } else {
+                // 選択されていないカテゴリのコンテンツを無効化
+                container.visible = false
+                remove(container) // childrenリストから削除することでフォーカス対象外とする
+            }
+            container.isFocused = category == selectedCategory // フォーカス状態を設定
+        }
     }
 
     private fun updateTabButtonStates() {
@@ -94,8 +121,8 @@ class GlobalSettingsScreen(
         mouseY: Int,
         delta: Float,
     ) {
-        super.render(context, mouseX, mouseY, delta)
-        val graphics2D = Graphics2D(context, client!!.renderTickCounter)
+        // 背景を描画
+        val graphics2D = Graphics2D(context)
         graphics2D.fill(
             0,
             0,
@@ -106,26 +133,19 @@ class GlobalSettingsScreen(
                 .colors.backgroundColor
                 .transparent(100),
         )
-        sections.map { it.value }.forEach { it.tab.render(context, mouseX, mouseY, delta) }
-        selectedCategory?.let { category ->
-            renderCategoryContent(context, category, mouseX, mouseY, delta)
+        sections.forEach { (category, section) ->
+            val selected = category == selectedCategory
+            section.tab.isHighlighted = selected
+            section.tab.render(context, mouseX, mouseY, delta)
+            if (selected) {
+                section.contents.render(context, mouseX, mouseY, delta)
+            }
         }
-    }
-
-    private fun renderCategoryContent(
-        context: DrawContext,
-        category: GlobalFeatureCategory,
-        mouseX: Int,
-        mouseY: Int,
-        delta: Float,
-    ) {
-        val section = sections[category] ?: return
-        section.contents.render(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
     }
 
     override fun keyPressed(input: KeyInput): Boolean {
-        val keyCode = input.key
-        when (keyCode) {
+        when (input.key) {
             GLFW.GLFW_KEY_ESCAPE -> this.close()
             GLFW.GLFW_KEY_LEFT -> selectPreviousCategory()
             GLFW.GLFW_KEY_RIGHT -> selectNextCategory()
@@ -139,6 +159,7 @@ class GlobalSettingsScreen(
         val currentIndex = categories.indexOf(selectedCategory)
         val newIndex = if (currentIndex <= 0) categories.size - 1 else currentIndex - 1
         selectedCategory = categories[newIndex]
+        updateCategoryContent() // コンテンツを切り替える
         updateTabButtonStates()
     }
 
@@ -147,6 +168,7 @@ class GlobalSettingsScreen(
         val currentIndex = categories.indexOf(selectedCategory)
         val newIndex = if (currentIndex >= categories.size - 1) 0 else currentIndex + 1
         selectedCategory = categories[newIndex]
+        updateCategoryContent() // コンテンツを切り替える
         updateTabButtonStates()
     }
 
@@ -154,10 +176,9 @@ class GlobalSettingsScreen(
         val allCategoryWidgets = mutableListOf<ClickableWidget>()
         val contentWidth = width - 40
         val padding = 5
-        val defaultWidgetHeight = 20 // ここに追加
+        val defaultWidgetHeight = 20
 
         category.features.forEach { feature ->
-            Text.translatable(feature.name)
             val featureDescription = Text.translatable(feature.descriptionKey).string
 
             // isEnabledトグルボタンを追加
@@ -210,7 +231,6 @@ class GlobalSettingsScreen(
 
     private fun generateWidgets(feature: GlobalFeature<out ConfigurableGlobalFeature>): MutableList<ClickableWidget> {
         val settingWidgets = mutableListOf<ClickableWidget>()
-        // x, y, width, heightはScrollableContainerが調整するため、暫定的な値
         val widgetWidth = width - 40 // ScrollableContainerの幅に合わせるため、仮の値
         val defaultWidgetHeight = 20
         val sliderWidgetHeight = 35
