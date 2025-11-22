@@ -10,7 +10,6 @@ import net.minecraft.client.gui.widget.ClickableWidget
 import net.minecraft.client.input.CharInput
 import net.minecraft.client.input.KeyInput
 import net.minecraft.text.Text
-import net.minecraft.util.math.ColorHelper
 import org.infinite.InfiniteClient
 import org.infinite.feature.ConfigurableFeature
 import org.infinite.features.Feature
@@ -30,7 +29,6 @@ class UISection(
     val widgets = mutableListOf<ClickableWidget>()
     private var featureSearchWidget: FeatureSearchWidget? = null
     private var isMainSectionInitialized = false
-    private val themeButtons = mutableListOf<InfiniteButton>()
 
     init {
         when (id) {
@@ -178,24 +176,13 @@ class UISection(
         if (!renderContent) return
 
         // Initialize theme buttons if not already initialized or if context changes
-        if (!isMainSectionInitialized || themeButtons.isEmpty()) {
-            themeButtons.clear()
-            val currentY = y + 50 // Start position for theme buttons
-            featureSearchWidget = FeatureSearchWidget(x + 20, currentY + 10, width - 40, height - (currentY + 10 - y), screen)
+        if (!isMainSectionInitialized) {
+            featureSearchWidget = FeatureSearchWidget(x + 20, y + 10, width - 40, height - 80, screen)
             isMainSectionInitialized = true
         }
 
         // Update positions and render theme buttons
-        var currentY = y + 50
-        val buttonHeight = 20
-        val padding = 5
-        themeButtons.forEach { button ->
-            button.x = x + 20
-            button.y = currentY
-            button.render(context, mouseX, mouseY, delta)
-            currentY += buttonHeight + padding
-        }
-
+        val currentY = y + 50
         featureSearchWidget?.let {
             it.x = x + 20
             it.y = currentY + 10
@@ -282,13 +269,6 @@ class UISection(
             return true
         }
 
-        // 2. テーマボタンのクリック
-        for (button in themeButtons) {
-            if (button.mouseClicked(click, doubled)) {
-                return true
-            }
-        }
-
         // 3. 他のウィジェットのクリック
         for (widget in widgets) {
             if (widget.mouseClicked(click, doubled)) {
@@ -307,7 +287,6 @@ class UISection(
 
         if (id == "main") {
             featureSearchWidget?.keyPressed(input)
-            themeButtons.forEach { it.keyPressed(input) } // Add this line
         }
 
         // keyPressed は一般的に全ての子に転送されます
@@ -327,11 +306,6 @@ class UISection(
             featureSearchWidget
                 ?.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
                 ?.let { if (it) return true }
-            for (button in themeButtons) { // Add this loop
-                if (button.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)) {
-                    return true
-                }
-            }
         }
 
         for (widget in widgets) {
@@ -353,11 +327,6 @@ class UISection(
 
         if (id == "main") {
             featureSearchWidget?.mouseDragged(click, offsetX, offsetY)?.let { if (it) return true }
-            for (button in themeButtons) { // Add this loop
-                if (button.mouseDragged(click, offsetX, offsetY)) {
-                    return true
-                }
-            }
         }
 
         // closeButtonへのドラッグを処理
@@ -383,11 +352,6 @@ class UISection(
 
         if (id == "main") {
             featureSearchWidget?.mouseReleased(click)?.let { if (it) return true }
-            for (button in themeButtons) { // Add this loop
-                if (button.mouseReleased(click)) {
-                    return true
-                }
-            }
         }
 
         // closeButtonの mouseReleased を処理
@@ -409,13 +373,9 @@ class UISection(
         isSelected: Boolean,
     ): Boolean {
         if (!isSelected) return false
+
         if (id == "main") {
             featureSearchWidget?.charTyped(input)?.let { if (it) return true }
-            for (button in themeButtons) { // Add this loop
-                if (button.charTyped(input)) {
-                    return true
-                }
-            }
         }
 
         for (widget in widgets) {
