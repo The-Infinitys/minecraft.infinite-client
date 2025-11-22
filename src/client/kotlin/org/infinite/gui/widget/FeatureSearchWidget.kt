@@ -24,7 +24,7 @@ class FeatureSearchWidget(
     private val parentScreen: Screen,
 ) : ClickableWidget(x, y, width, height, Text.empty()) {
     private val textRenderer: TextRenderer = MinecraftClient.getInstance().textRenderer
-    private val searchField: InfiniteTextField
+    private lateinit var searchField: InfiniteTextField
     private lateinit var scrollableContainer: InfiniteScrollableContainer
     private var allFeatures: List<Feature<out ConfigurableFeature>> =
         InfiniteClient.featureCategories.flatMap { it.features }
@@ -34,20 +34,6 @@ class FeatureSearchWidget(
 
     init {
         filteredFeatures = allFeatures
-        searchField =
-            InfiniteTextField(
-                textRenderer,
-                x,
-                y,
-                width,
-                20, // Height of the search field
-                Text.literal("Search features..."),
-                InfiniteTextField.InputType.BLOCK_ID,
-            )
-        // searchFieldのmaxLengthとPredicateはInfiniteTextField側で適切に設定されている前提です。
-        searchField.setChangedListener { newText ->
-            filterFeatures(newText)
-        }
     }
 
     private fun filterFeatures(searchText: String) {
@@ -98,6 +84,19 @@ class FeatureSearchWidget(
         delta: Float,
     ) {
         if (!isInitialized) {
+            searchField =
+                InfiniteTextField(
+                    textRenderer,
+                    x,
+                    y,
+                    width,
+                    20, // Height of the search field
+                    Text.literal("Search features..."),
+                    InfiniteTextField.InputType.ANY_TEXT,
+                )
+            searchField.setChangedListener { newText ->
+                filterFeatures(newText)
+            }
             scrollableContainer =
                 InfiniteScrollableContainer(
                     x,
@@ -113,8 +112,6 @@ class FeatureSearchWidget(
         searchField.x = x
         searchField.y = y
         searchField.render(context, mouseX, mouseY, delta)
-        searchField.isFocused = true // Always keep focus on the search field (Good, but not enough)
-
         scrollableContainer.x = x
         scrollableContainer.y = y + searchField.height + 5
         scrollableContainer.render(context, mouseX, mouseY, delta)
@@ -134,7 +131,6 @@ class FeatureSearchWidget(
     }
 
     override fun keyPressed(input: KeyInput): Boolean {
-        // キーボード操作の際に、フォーカスが外れていた場合に再設定する
         if (!searchField.isFocused) {
             searchField.isFocused = true
         }

@@ -50,7 +50,7 @@ class InfiniteTextField(
 
     override fun charTyped(input: CharInput): Boolean {
         if (!isFocused) return false
-        val inputString = input.toString()
+        val inputString = input.asString()
         if (inputString.isEmpty()) return false
         val chr = inputString.toCharArray().first()
         val canType =
